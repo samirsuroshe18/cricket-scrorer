@@ -1,0 +1,65 @@
+# This file configures the analyzer, which statically analyzes Dart code to check for errors, warnings, and lints.
+include: package:flutter_lints/flutter.yaml
+
+analyzer:
+  # Exclude generated files from analysis to speed up builds and clean up the problems tab
+  exclude:
+    - "**/*.g.dart"
+    - "**/*.freezed.dart"
+    - "lib/generated/**"
+
+  # Strong language type checks for production-grade safety
+  language:
+    strict-casts: true
+    strict-inference: true
+    strict-raw-types: true
+
+  errors:
+    # 1. Fixes your Floor warning: Silences experimental tags across the project
+    experimental_member_use: ignore
+
+    # Upgrade critical flaws from warnings to errors so CI/CD pipelines catch them
+    missing_required_param: error
+    missing_return: error
+    todo: ignore
+    invalid_annotation_target: ignore
+
+linter:
+  rules:
+    # --- Production Code Quality & Safety ---
+    - always_declare_return_types       # Catch missing return types on methods
+    - avoid_empty_else                  # Prevents logic errors in if-else flows
+    - avoid_relative_lib_imports        # Forces consistent 'package:' imports
+    - avoid_shadowing_type_parameters   # Prevents scoped variable confusion
+    - avoid_types_as_parameter_names    # Prevents parameter syntax mixups
+    - await_only_futures                # Stops useless memory allocation on sync code
+    - cancel_subscriptions              # Enforces streams to stop memory leaks
+    - close_sinks                       # Enforces sinks to stop memory leaks
+    - no_duplicate_case_values          # Catches duplicate switch cases early
+    - prefer_void_to_null               # Enforces cleaner functional returns
+    - unawaited_futures                 # Forces futures to be properly handled or marked
+    - valid_regexps                     # Validates RegExp strings at compile-time
+
+    # --- Performance Optimization ---
+    - prefer_const_constructors         # Crucial for Flutter UI rendering performance
+    - prefer_const_declarations         # Encourages compile-time values
+    - prefer_const_literals_to_create_immutables
+
+    # --- Style & Clean Architecture Rules ---
+    - camel_case_types                  # Class names must look like ClassName
+    - file_names                        # File names must look like file_name.dart
+    - library_names                     # Standardizes library declarations
+    - prefer_is_empty                   # Speedier than checking .length == 0
+    - prefer_is_not_empty               # Speedier than checking .length != 0
+    - prefer_iterable_whereType         # Clean filtering for collections
+    - prefer_single_quotes              # Keeps code formatting visually uniform
+    - use_key_in_widget_constructors    # Required for optimal widget tree management
+
+    # --- Code Formatting & Layout Rules ---
+    - curly_braces_in_flow_control_structures # Enforces braces for all if/else loops
+    - require_trailing_commas                 # Forces trailing commas for clean multi-line arguments
+    - missing_whitespace_between_adjacent_strings # Catches missing spaces when splitting long strings
+    - type_init_formals                       # Enforces clean structure in constructor initializations
+
+formatter:
+  trailing_commas: preserve
