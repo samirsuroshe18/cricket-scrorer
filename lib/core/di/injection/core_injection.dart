@@ -4,6 +4,7 @@ import 'package:cricket_scorer/core/network/api_client_service.dart';
 import 'package:cricket_scorer/core/services/flavor_service.dart';
 import 'package:cricket_scorer/core/services/secure_storages_service.dart';
 import 'package:cricket_scorer/core/services/shared_preference_service.dart';
+import 'package:cricket_scorer/core/services/theme_service.dart';
 import 'package:get/get.dart';
 
 class CoreInjection {
@@ -28,6 +29,10 @@ class CoreInjection {
     );
     await Get.putAsync<AppDatabase>(
       () async => $FloorAppDatabase.databaseBuilder('app_database.db').build(),
+      permanent: true,
+    );
+    await Get.putAsync<ThemeService>(
+      () async => ThemeService(),
       permanent: true,
     );
   }

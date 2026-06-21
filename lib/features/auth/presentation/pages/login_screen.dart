@@ -2,6 +2,8 @@ import 'package:cricket_scorer/core/constants/assets_util.dart';
 import 'package:cricket_scorer/core/extensions/space_extension.dart';
 import 'package:cricket_scorer/core/global/widgets/cricket_text.dart';
 import 'package:cricket_scorer/core/global/widgets/cricket_text_field.dart';
+import 'package:cricket_scorer/core/global/widgets/custom_app_bar.dart';
+import 'package:cricket_scorer/core/global/widgets/theme_picker_button.dart';
 import 'package:cricket_scorer/features/auth/presentation/controllers/login_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -14,6 +16,10 @@ class LoginScreen extends StatelessWidget {
     return GetBuilder<LoginController>(
       builder: (controller) {
         return Scaffold(
+          appBar: const CustomAppBar(
+            title: '',
+            actions: [ThemePickerButton()],
+          ),
           body: SafeArea(
             child: SingleChildScrollView(
               padding: 24.p,

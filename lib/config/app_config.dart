@@ -1,6 +1,7 @@
 import 'package:cricket_scorer/config/routes/app_pages.dart';
 import 'package:cricket_scorer/config/routes/app_routes.dart';
 import 'package:cricket_scorer/config/theme/app_theme.dart';
+import 'package:cricket_scorer/core/services/theme_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
@@ -22,7 +23,7 @@ class CricketScorerApp extends StatelessWidget {
     return GetMaterialApp(
       title: 'Cricket Scorer',
       debugShowCheckedModeBanner: false,
-      themeMode: ThemeMode.light,
+      themeMode: Get.find<ThemeService>().themeMode,
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
       initialRoute: AppRoutes.splash,

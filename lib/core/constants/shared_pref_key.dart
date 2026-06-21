@@ -8,4 +8,5 @@ class SharedPrefKey {
   static const String isChartered = 'isChartered';
   static const String userType = 'userType';
   static const String onboardingCompleted = 'onboardingCompleted';
+  static const String themeMode = 'themeMode';
 }
