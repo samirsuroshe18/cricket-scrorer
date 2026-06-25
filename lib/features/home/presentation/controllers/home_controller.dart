@@ -37,8 +37,8 @@ class HomeController extends GetxController {
       CricketLoaderDialog.hide();
 
       if (response.isResult) {
-        unawaited(SecureStorageService.secure.clear());
-        unawaited(SharedPreferenceService.sharedPrefService.clear());
+        await SharedPreferenceService.sharedPrefService.clearForLogout();
+        await SecureStorageService.secure.clearForLogout();
         ApiClient.cancelAllRequests();
 
         unawaited(

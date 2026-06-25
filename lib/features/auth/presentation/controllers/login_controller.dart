@@ -4,9 +4,13 @@ import 'dart:convert';
 import 'package:cricket_scorer/config/routes/app_routes.dart';
 import 'package:cricket_scorer/core/constants/shared_pref_key.dart';
 import 'package:cricket_scorer/core/error/cricket_failure.dart';
+import 'package:cricket_scorer/core/global/domain/usecases/get_language.dart';
+import 'package:cricket_scorer/core/global/domain/usecases/get_user_language.dart';
+import 'package:cricket_scorer/core/global/domain/usecases/get_version.dart';
 import 'package:cricket_scorer/core/global/widgets/dialogue/custom_dialog.dart';
 import 'package:cricket_scorer/core/global/widgets/snackbars/cricket_snackbar.dart';
 import 'package:cricket_scorer/core/network/models/cricket_response.dart';
+import 'package:cricket_scorer/core/services/language_service.dart';
 import 'package:cricket_scorer/core/services/secure_storages_service.dart';
 import 'package:cricket_scorer/core/services/shared_preference_service.dart';
 import 'package:cricket_scorer/core/utils/either_util.dart';
@@ -17,9 +21,16 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 class LoginController extends GetxController {
+  final GetVersionUseCase getVersionUseCase;
+  final GetLanguageUseCase getLanguageUseCase;
+
   final LoginUseCase loginUseCase;
 
-  LoginController({required this.loginUseCase});
+  LoginController({
+    required this.loginUseCase,
+    required this.getVersionUseCase,
+    required this.getLanguageUseCase,
+  });
 
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
@@ -126,6 +137,11 @@ class LoginController extends GetxController {
         }
 
         CricketSnackbar.showSuccessMessage(response.result.message);
+        unawaited(
+          Get.find<LanguageService>().syncLanguageFromServer(
+            getUserLanguageUseCase: Get.find<GetUserLanguageUseCase>(),
+          ),
+        );
         unawaited(Get.offAllNamed<dynamic>(AppRoutes.home));
       } catch (e) {
         CricketSnackbar.showErrorMessage(

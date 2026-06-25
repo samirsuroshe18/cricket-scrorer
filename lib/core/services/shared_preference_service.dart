@@ -1,5 +1,6 @@
 import 'dart:developer';
 
+import 'package:cricket_scorer/core/constants/shared_pref_key.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -110,5 +111,17 @@ class SharedPreferenceService extends GetxService {
   Future<bool?> clear() async {
     _instanceChecker();
     return await _sharedPreferences?.clear();
+  }
+
+  Future<void> clearForLogout() async {
+    _instanceChecker();
+    await _sharedPreferences?.remove(SharedPrefKey.accessToken);
+    await _sharedPreferences?.remove(SharedPrefKey.refreshToken);
+    await _sharedPreferences?.remove(SharedPrefKey.isRegistrationCompleted);
+    await _sharedPreferences?.remove(SharedPrefKey.userDetails);
+    await _sharedPreferences?.remove(SharedPrefKey.isChartered);
+    await _sharedPreferences?.remove(SharedPrefKey.userType);
+    await _sharedPreferences?.remove(SharedPrefKey.onboardingCompleted);
+    await _sharedPreferences?.remove(SharedPrefKey.savedLangVersion);
   }
 }

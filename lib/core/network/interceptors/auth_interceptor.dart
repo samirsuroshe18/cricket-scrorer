@@ -2,14 +2,13 @@ import 'dart:async';
 
 import 'package:cricket_scorer/config/routes/app_routes.dart';
 import 'package:cricket_scorer/core/constants/shared_pref_key.dart';
+import 'package:cricket_scorer/core/global/widgets/snackbars/cricket_snackbar.dart';
+import 'package:cricket_scorer/core/network/api_client_service.dart';
 import 'package:cricket_scorer/core/services/secure_storages_service.dart';
+import 'package:cricket_scorer/core/services/shared_preference_service.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:get/get.dart' hide Response;
-
-import '../../global/widgets/snackbars/cricket_snackbar.dart';
-import '../../services/shared_preference_service.dart';
-import '../api_client_service.dart';
 
 // Holds in-flight refresh so parallel 401s don't trigger multiple refresh calls
 Completer<String>? _refreshCompleter;
@@ -183,8 +182,8 @@ class AuthInterceptor extends Interceptor {
 
   // Force logout
   Future<void> _forceLogout() async {
-    await SecureStorageService.secure.clear();
-    await SharedPreferenceService.sharedPrefService.clear();
+    await SharedPreferenceService.sharedPrefService.clearForLogout();
+    await SecureStorageService.secure.clearForLogout();
 
     unawaited(Get.offAllNamed<dynamic>(AppRoutes.login));
 

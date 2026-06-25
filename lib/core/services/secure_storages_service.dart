@@ -97,4 +97,10 @@ class SecureStorageService extends GetxService {
       return false;
     }
   }
+
+  Future<void> clearForLogout() async {
+    _instanceChecker();
+    await _secureStorage?.delete(key: SharedPrefKey.accessToken);
+    await _secureStorage?.delete(key: SharedPrefKey.refreshToken);
+  }
 }

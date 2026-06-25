@@ -4,6 +4,8 @@ import 'package:cricket_scorer/core/global/widgets/cricket_text.dart';
 import 'package:cricket_scorer/core/global/widgets/cricket_text_field.dart';
 import 'package:cricket_scorer/core/global/widgets/custom_app_bar.dart';
 import 'package:cricket_scorer/core/global/widgets/theme_picker_button.dart';
+import 'package:cricket_scorer/core/services/language_service.dart';
+import 'package:cricket_scorer/core/translations/translation_keys.dart';
 import 'package:cricket_scorer/features/auth/presentation/controllers/login_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -16,9 +18,18 @@ class LoginScreen extends StatelessWidget {
     return GetBuilder<LoginController>(
       builder: (controller) {
         return Scaffold(
-          appBar: const CustomAppBar(
+          appBar: CustomAppBar(
             title: '',
-            actions: [ThemePickerButton()],
+            actions: [
+              const ThemePickerButton(),
+              IconButton(
+                onPressed: () => Get.find<LanguageService>().selectLanguage(
+                  getVersionUseCase: controller.getVersionUseCase,
+                  getLanguageUseCase: controller.getLanguageUseCase,
+                ),
+                icon: const Icon(Icons.language),
+              ),
+            ],
           ),
           body: SafeArea(
             child: SingleChildScrollView(
@@ -120,8 +131,8 @@ class LoginScreen extends StatelessWidget {
                       height: 55,
                       child: ElevatedButton(
                         onPressed: controller.login,
-                        child: const Text(
-                          'Login',
+                        child: CricketText(
+                          text: TranslationKeys.login.tr,
                         ),
                       ),
                     ),
