@@ -27,6 +27,7 @@ class User {
   final bool? profileCompleted;
   @JsonKey(name: 'accountStatus')
   final String? accountStatus;
+  final String? language;
   @JsonKey(name: 'isDeleted')
   final bool? isDeleted;
   @JsonKey(name: 'createdAt')
@@ -43,6 +44,7 @@ class User {
     this.userName,
     this.profileCompleted,
     this.accountStatus,
+    this.language,
     this.isDeleted,
     this.createdAt,
     this.updatedAt,
@@ -56,6 +58,7 @@ class User {
     String? userName,
     bool? profileCompleted,
     String? accountStatus,
+    String? language,
     bool? isDeleted,
     DateTime? createdAt,
     DateTime? updatedAt,
@@ -67,6 +70,7 @@ class User {
     userName: userName ?? this.userName,
     profileCompleted: profileCompleted ?? this.profileCompleted,
     accountStatus: accountStatus ?? this.accountStatus,
+    language: language ?? this.language,
     isDeleted: isDeleted ?? this.isDeleted,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,

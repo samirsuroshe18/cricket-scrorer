@@ -1,82 +1,169 @@
-import 'package:cricket_scorer/core/constants/app_color.dart';
+import 'package:cricket_scorer/config/theme/palettes/app_custom_colors_palette.dart';
+import 'package:cricket_scorer/config/theme/palettes/custom_color_scheme.dart';
 import 'package:flutter/material.dart';
 
 class CustomSelectionTheme {
   CustomSelectionTheme._();
 
-  // --- Light Selectors ---
+  // ==========================================================
+  // LIGHT
+  // ==========================================================
   static ChipThemeData lightChipTheme = ChipThemeData(
-    backgroundColor: AppColor.lightBackground,
-    disabledColor: AppColor.lightBorder.withValues(alpha: 0.5),
-    selectedColor: AppColor.lightBlueLight,
-    secondarySelectedColor: AppColor.lightBlueLight,
-    labelStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: AppColor.lightTextPrimary),
-    secondaryLabelStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColor.lightTeamBlue),
+    backgroundColor: AppCustomColorsPalette.light.chipBackground,
+    disabledColor: CustomColorScheme.lightColorScheme.outline.withValues(
+      alpha: 0.5,
+    ),
+    selectedColor: AppCustomColorsPalette.light.chipSelected,
+    secondarySelectedColor: AppCustomColorsPalette.light.chipSelected,
+    labelStyle: TextStyle(
+      fontSize: 13,
+      fontWeight: FontWeight.w500,
+      color: CustomColorScheme.lightColorScheme.onSurface,
+    ),
+    secondaryLabelStyle: TextStyle(
+      fontSize: 13,
+      fontWeight: FontWeight.w600,
+      color: CustomColorScheme.lightColorScheme.secondary,
+    ),
     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-    side: const BorderSide(color: AppColor.lightBorder, width: 1),
-    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+    side: BorderSide(
+      color: CustomColorScheme.lightColorScheme.outline,
+      width: 1,
+    ),
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(8),
+    ),
   );
 
   static CheckboxThemeData lightCheckboxTheme = CheckboxThemeData(
-    fillColor: WidgetStateProperty.resolveWith((states) => states.contains(WidgetState.selected) ? AppColor.lightTeamBlue : Colors.transparent),
-    side: const BorderSide(color: AppColor.lightTextSecondary, width: 1.5),
-    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+    fillColor: WidgetStateProperty.resolveWith(
+      (states) => states.contains(WidgetState.selected)
+          ? CustomColorScheme.lightColorScheme.secondary
+          : Colors.transparent,
+    ),
+    side: BorderSide(
+      color: CustomColorScheme.lightColorScheme.onSurfaceVariant,
+      width: 1.5,
+    ),
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(4),
+    ),
   );
 
   static RadioThemeData lightRadioTheme = RadioThemeData(
-    fillColor: WidgetStateProperty.resolveWith((states) => states.contains(WidgetState.selected) ? AppColor.lightTeamBlue : AppColor.lightTextSecondary),
+    fillColor: WidgetStateProperty.resolveWith(
+      (states) => states.contains(WidgetState.selected)
+          ? CustomColorScheme.lightColorScheme.secondary
+          : CustomColorScheme.lightColorScheme.onSurfaceVariant,
+    ),
   );
 
   static SwitchThemeData lightSwitchTheme = SwitchThemeData(
-    thumbColor: WidgetStateProperty.resolveWith((states) => states.contains(WidgetState.selected) ? Colors.white : AppColor.lightTextSecondary),
-    trackColor: WidgetStateProperty.resolveWith((states) => states.contains(WidgetState.selected) ? AppColor.lightTeamBlue : AppColor.lightBorder),
-    trackOutlineColor: const WidgetStatePropertyAll(Colors.transparent),
+    thumbColor: WidgetStateProperty.resolveWith(
+      (states) => states.contains(WidgetState.selected)
+          ? Colors.white
+          : CustomColorScheme.lightColorScheme.onSurfaceVariant,
+    ),
+    trackColor: WidgetStateProperty.resolveWith(
+      (states) => states.contains(WidgetState.selected)
+          ? CustomColorScheme.lightColorScheme.secondary
+          : CustomColorScheme.lightColorScheme.outline,
+    ),
+    trackOutlineColor: const WidgetStatePropertyAll(
+      Colors.transparent,
+    ),
   );
 
-  static const SliderThemeData lightSliderTheme = SliderThemeData(
-    activeTrackColor: AppColor.lightTeamBlue,
-    inactiveTrackColor: AppColor.lightBorder,
-    thumbColor: AppColor.lightTeamBlue,
-    overlayColor: AppColor.lightBlueOverlay,
-    valueIndicatorColor: AppColor.navy,
-    valueIndicatorTextStyle: TextStyle(color: Colors.white, fontSize: 12),
+  static SliderThemeData lightSliderTheme = SliderThemeData(
+    activeTrackColor: CustomColorScheme.lightColorScheme.secondary,
+    inactiveTrackColor: CustomColorScheme.lightColorScheme.outline,
+    thumbColor: CustomColorScheme.lightColorScheme.secondary,
+    overlayColor: AppCustomColorsPalette.light.sliderOverlay,
+    valueIndicatorColor: AppCustomColorsPalette.light.valueIndicator,
+    valueIndicatorTextStyle: const TextStyle(
+      color: Colors.white,
+      fontSize: 12,
+    ),
   );
 
-  // --- Dark Selectors ---
+  // ==========================================================
+  // DARK
+  // ==========================================================
   static ChipThemeData darkChipTheme = ChipThemeData(
-    backgroundColor: AppColor.darkChipBg,
-    disabledColor: AppColor.darkBorder.withValues(alpha: 0.3),
-    selectedColor: AppColor.darkBlueTint,
-    secondarySelectedColor: AppColor.darkBlueTint,
-    labelStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: AppColor.darkTextPrimary),
-    secondaryLabelStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColor.darkBlue),
+    backgroundColor: AppCustomColorsPalette.dark.chipBackground,
+    disabledColor: CustomColorScheme.darkColorScheme.outline.withValues(
+      alpha: 0.3,
+    ),
+    selectedColor: AppCustomColorsPalette.dark.chipSelected,
+    secondarySelectedColor: AppCustomColorsPalette.dark.chipSelected,
+    labelStyle: TextStyle(
+      fontSize: 13,
+      fontWeight: FontWeight.w500,
+      color: CustomColorScheme.darkColorScheme.onSurface,
+    ),
+    secondaryLabelStyle: TextStyle(
+      fontSize: 13,
+      fontWeight: FontWeight.w600,
+      color: CustomColorScheme.darkColorScheme.secondary,
+    ),
     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-    side: const BorderSide(color: AppColor.darkBorder, width: 1),
-    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+    side: BorderSide(
+      color: CustomColorScheme.darkColorScheme.outline,
+      width: 1,
+    ),
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(8),
+    ),
   );
 
   static CheckboxThemeData darkCheckboxTheme = CheckboxThemeData(
-    fillColor: WidgetStateProperty.resolveWith((states) => states.contains(WidgetState.selected) ? AppColor.darkBlue : Colors.transparent),
-    side: const BorderSide(color: AppColor.darkTextMuted, width: 1.5),
-    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+    fillColor: WidgetStateProperty.resolveWith(
+      (states) => states.contains(WidgetState.selected)
+          ? CustomColorScheme.darkColorScheme.secondary
+          : Colors.transparent,
+    ),
+    side: BorderSide(
+      color: CustomColorScheme.darkColorScheme.onSurfaceVariant,
+      width: 1.5,
+    ),
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(4),
+    ),
   );
 
   static RadioThemeData darkRadioTheme = RadioThemeData(
-    fillColor: WidgetStateProperty.resolveWith((states) => states.contains(WidgetState.selected) ? AppColor.darkBlue : AppColor.darkTextMuted),
+    fillColor: WidgetStateProperty.resolveWith(
+      (states) => states.contains(WidgetState.selected)
+          ? CustomColorScheme.darkColorScheme.secondary
+          : CustomColorScheme.darkColorScheme.onSurfaceVariant,
+    ),
   );
 
   static SwitchThemeData darkSwitchTheme = SwitchThemeData(
-    thumbColor: WidgetStateProperty.resolveWith((states) => states.contains(WidgetState.selected) ? Colors.white : AppColor.darkTextMuted),
-    trackColor: WidgetStateProperty.resolveWith((states) => states.contains(WidgetState.selected) ? AppColor.darkBlue : AppColor.darkBorder),
-    trackOutlineColor: const WidgetStatePropertyAll(Colors.transparent),
+    thumbColor: WidgetStateProperty.resolveWith(
+      (states) => states.contains(WidgetState.selected)
+          ? Colors.white
+          : CustomColorScheme.darkColorScheme.onSurfaceVariant,
+    ),
+    trackColor: WidgetStateProperty.resolveWith(
+      (states) => states.contains(WidgetState.selected)
+          ? CustomColorScheme.darkColorScheme.secondary
+          : CustomColorScheme.darkColorScheme.outline,
+    ),
+    trackOutlineColor: const WidgetStatePropertyAll(
+      Colors.transparent,
+    ),
   );
 
-  static const SliderThemeData darkSliderTheme = SliderThemeData(
-    activeTrackColor: AppColor.darkBlue,
-    inactiveTrackColor: AppColor.darkBorder,
-    thumbColor: AppColor.darkBlue,
-    overlayColor: AppColor.darkBlueOverlay,
-    valueIndicatorColor: AppColor.darkNavyMid,
-    valueIndicatorTextStyle: TextStyle(color: Colors.white, fontSize: 12),
+  static SliderThemeData darkSliderTheme = SliderThemeData(
+    activeTrackColor: CustomColorScheme.darkColorScheme.secondary,
+    inactiveTrackColor: CustomColorScheme.darkColorScheme.outline,
+    thumbColor: CustomColorScheme.darkColorScheme.secondary,
+    overlayColor: AppCustomColorsPalette.dark.sliderOverlay,
+    valueIndicatorColor: AppCustomColorsPalette.dark.valueIndicator,
+    valueIndicatorTextStyle: const TextStyle(
+      color: Colors.white,
+      fontSize: 12,
+    ),
   );
 }

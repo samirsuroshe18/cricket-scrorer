@@ -1,41 +1,54 @@
-import 'package:cricket_scorer/core/constants/app_color.dart';
+import 'package:cricket_scorer/config/theme/palettes/custom_color_scheme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 class CustomAppBarTheme {
   CustomAppBarTheme._();
 
-  static AppBarTheme lightAppBarTheme = const AppBarTheme(
-    backgroundColor: AppColor.lightBackground,
+  static AppBarTheme lightAppBarTheme = AppBarTheme(
+    backgroundColor: CustomColorScheme.lightColorScheme.surfaceContainerLowest,
     scrolledUnderElevation: 0,
     elevation: 0,
     centerTitle: false,
-    iconTheme: IconThemeData(color: AppColor.lightTextPrimary, size: 24),
-    actionsIconTheme: IconThemeData(color: AppColor.lightTextPrimary, size: 24),
+    iconTheme: IconThemeData(
+      color: CustomColorScheme.lightColorScheme.onSurface,
+      size: 24,
+    ),
+    actionsIconTheme: IconThemeData(
+      color: CustomColorScheme.lightColorScheme.onSurface,
+      size: 24,
+    ),
     titleTextStyle: TextStyle(
       fontSize: 20,
       fontWeight: FontWeight.bold,
-      color: AppColor.lightTextPrimary,
+      color: CustomColorScheme.lightColorScheme.onSurface,
     ),
-    systemOverlayStyle: SystemUiOverlayStyle(
+    systemOverlayStyle: const SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
       statusBarIconBrightness: Brightness.dark,
       statusBarBrightness: Brightness.light,
     ),
   );
-  static AppBarTheme darkAppBarTheme = const AppBarTheme(
-    backgroundColor: AppColor.darkPageBg,
+
+  static AppBarTheme darkAppBarTheme = AppBarTheme(
+    backgroundColor: CustomColorScheme.darkColorScheme.surfaceContainerLowest,
     scrolledUnderElevation: 0,
     elevation: 0,
     centerTitle: false,
-    iconTheme: IconThemeData(color: AppColor.darkTextPrimary, size: 24),
-    actionsIconTheme: IconThemeData(color: AppColor.darkTextPrimary, size: 24),
+    iconTheme: IconThemeData(
+      color: CustomColorScheme.darkColorScheme.onSurface,
+      size: 24,
+    ),
+    actionsIconTheme: IconThemeData(
+      color: CustomColorScheme.darkColorScheme.onSurface,
+      size: 24,
+    ),
     titleTextStyle: TextStyle(
       fontSize: 20,
       fontWeight: FontWeight.bold,
-      color: AppColor.darkTextPrimary,
+      color: CustomColorScheme.darkColorScheme.onSurface,
     ),
-    systemOverlayStyle: SystemUiOverlayStyle(
+    systemOverlayStyle: const SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
       statusBarIconBrightness: Brightness.light,
       statusBarBrightness: Brightness.dark,

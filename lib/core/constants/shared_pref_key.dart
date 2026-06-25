@@ -9,4 +9,6 @@ class SharedPrefKey {
   static const String userType = 'userType';
   static const String onboardingCompleted = 'onboardingCompleted';
   static const String themeMode = 'themeMode';
+  static const String language = 'language';
+  static const String savedLangVersion = 'savedLangVersion';
 }

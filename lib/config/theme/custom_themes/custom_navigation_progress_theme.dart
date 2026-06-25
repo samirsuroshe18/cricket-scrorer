@@ -1,40 +1,58 @@
+import 'package:cricket_scorer/config/theme/palettes/custom_color_scheme.dart';
 import 'package:cricket_scorer/core/constants/app_color.dart';
 import 'package:flutter/material.dart';
 
 class CustomNavigationProgressTheme {
   CustomNavigationProgressTheme._();
 
-  // --- Light Variations ---
-  static const BottomNavigationBarThemeData lightBottomNavigationBarTheme = BottomNavigationBarThemeData(
-    backgroundColor: AppColor.lightCard,
-    elevation: 8,
-    selectedItemColor: AppColor.lightTeamBlue,
-    unselectedItemColor: AppColor.lightTextSecondary,
-    selectedLabelStyle: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
-    unselectedLabelStyle: TextStyle(fontSize: 12, fontWeight: FontWeight.normal),
-    type: BottomNavigationBarType.fixed,
-  );
+  // LIGHT
+  static BottomNavigationBarThemeData lightBottomNavigationBarTheme =
+      BottomNavigationBarThemeData(
+        backgroundColor: CustomColorScheme.lightColorScheme.surface,
+        elevation: 8,
+        selectedItemColor: CustomColorScheme.lightColorScheme.secondary,
+        unselectedItemColor:
+            CustomColorScheme.lightColorScheme.onSurfaceVariant,
+        selectedLabelStyle: const TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+        ),
+        unselectedLabelStyle: const TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.normal,
+        ),
+        type: BottomNavigationBarType.fixed,
+      );
 
-  static const ProgressIndicatorThemeData lightProgressIndicatorTheme = ProgressIndicatorThemeData(
-    color: AppColor.primaryRed,
-    linearTrackColor: AppColor.lightBorder,
-    refreshBackgroundColor: AppColor.primaryRed,
-  );
+  static ProgressIndicatorThemeData lightProgressIndicatorTheme =
+      ProgressIndicatorThemeData(
+        color: AppColor.primaryRed,
+        linearTrackColor: CustomColorScheme.lightColorScheme.outline,
+        refreshBackgroundColor: AppColor.primaryRed,
+      );
 
-  // --- Dark Variations ---
-  static const BottomNavigationBarThemeData darkBottomNavigationBarTheme = BottomNavigationBarThemeData(
-    backgroundColor: AppColor.darkCardBg,
-    elevation: 8,
-    selectedItemColor: AppColor.darkBlue,
-    unselectedItemColor: AppColor.darkTextMuted,
-    selectedLabelStyle: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
-    unselectedLabelStyle: TextStyle(fontSize: 12, fontWeight: FontWeight.normal),
-    type: BottomNavigationBarType.fixed,
-  );
+  // DARK
+  static BottomNavigationBarThemeData darkBottomNavigationBarTheme =
+      BottomNavigationBarThemeData(
+        backgroundColor: CustomColorScheme.darkColorScheme.surface,
+        elevation: 8,
+        selectedItemColor: CustomColorScheme.darkColorScheme.secondary,
+        unselectedItemColor: CustomColorScheme.darkColorScheme.onSurfaceVariant,
+        selectedLabelStyle: const TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+        ),
+        unselectedLabelStyle: const TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.normal,
+        ),
+        type: BottomNavigationBarType.fixed,
+      );
 
-  static const ProgressIndicatorThemeData darkProgressIndicatorTheme = ProgressIndicatorThemeData(
-    color: AppColor.primaryRed,
-    linearTrackColor: AppColor.darkBorder,
-    refreshBackgroundColor: AppColor.primaryRed,
-  );
+  static ProgressIndicatorThemeData darkProgressIndicatorTheme =
+      ProgressIndicatorThemeData(
+        color: AppColor.primaryRed,
+        linearTrackColor: CustomColorScheme.darkColorScheme.outline,
+        refreshBackgroundColor: AppColor.primaryRed,
+      );
 }

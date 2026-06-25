@@ -4,6 +4,7 @@ class AssetsUtil {
   // Gif
 
   // SVG
+  static String englishFlag = 'assets/svg/english_flag.svg';
 
   // Image
   static const String appLogo = 'assets/images/app_logo.png';

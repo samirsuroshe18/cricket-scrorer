@@ -1,13 +1,13 @@
 import 'package:cricket_scorer/config/theme/custom_themes/custom_app_bar_theme.dart';
 import 'package:cricket_scorer/config/theme/custom_themes/custom_button_theme.dart';
-import 'package:cricket_scorer/config/theme/custom_themes/custom_color_scheme.dart';
 import 'package:cricket_scorer/config/theme/custom_themes/custom_container_theme.dart';
 import 'package:cricket_scorer/config/theme/custom_themes/custom_icon_theme.dart';
 import 'package:cricket_scorer/config/theme/custom_themes/custom_input_theme.dart';
 import 'package:cricket_scorer/config/theme/custom_themes/custom_navigation_progress_theme.dart';
 import 'package:cricket_scorer/config/theme/custom_themes/custom_selection_theme.dart';
 import 'package:cricket_scorer/config/theme/custom_themes/custom_text_theme.dart';
-import 'package:cricket_scorer/core/constants/app_color.dart';
+import 'package:cricket_scorer/config/theme/palettes/app_custom_colors_palette.dart';
+import 'package:cricket_scorer/config/theme/palettes/custom_color_scheme.dart';
 import 'package:flutter/material.dart';
 
 class AppTheme {
@@ -18,12 +18,16 @@ class AppTheme {
   // ===========================================================================
   static ThemeData get lightTheme {
     return ThemeData(
+      extensions: const [
+        AppCustomColorsPalette.light,
+      ],
       useMaterial3: true,
       brightness: Brightness.light,
-      scaffoldBackgroundColor: AppColor.lightBackground,
-      canvasColor: AppColor.lightBackground,
-      cardColor: AppColor.lightCard,
-      dividerColor: AppColor.lightBorder,
+      scaffoldBackgroundColor:
+          CustomColorScheme.lightColorScheme.surfaceContainerLowest,
+      canvasColor: CustomColorScheme.lightColorScheme.surfaceContainerLowest,
+      cardColor: CustomColorScheme.lightColorScheme.surface,
+      dividerColor: CustomColorScheme.lightColorScheme.outline,
       colorScheme: CustomColorScheme.lightColorScheme,
       appBarTheme: CustomAppBarTheme.lightAppBarTheme,
       textTheme: CustomTextTheme.lightTextTheme,
@@ -55,12 +59,16 @@ class AppTheme {
   // ===========================================================================
   static ThemeData get darkTheme {
     return ThemeData(
+      extensions: const [
+        AppCustomColorsPalette.dark,
+      ],
       useMaterial3: true,
       brightness: Brightness.dark,
-      scaffoldBackgroundColor: AppColor.darkPageBg,
-      canvasColor: AppColor.darkPageBg,
-      cardColor: AppColor.darkCardBg,
-      dividerColor: AppColor.darkBorder,
+      scaffoldBackgroundColor:
+          CustomColorScheme.darkColorScheme.surfaceContainerLowest,
+      canvasColor: CustomColorScheme.darkColorScheme.surfaceContainerLowest,
+      cardColor: CustomColorScheme.darkColorScheme.surface,
+      dividerColor: CustomColorScheme.darkColorScheme.outline,
       colorScheme: CustomColorScheme.darkColorScheme,
       appBarTheme: CustomAppBarTheme.darkAppBarTheme,
       textTheme: CustomTextTheme.darkTextTheme,

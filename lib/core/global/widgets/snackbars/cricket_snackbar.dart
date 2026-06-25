@@ -1,5 +1,5 @@
-import 'package:cricket_scorer/core/constants/app_color.dart';
 import 'package:cricket_scorer/core/constants/error_string_constants.dart';
+import 'package:cricket_scorer/core/extensions/theme_data_extensions.dart';
 import 'package:cricket_scorer/core/global/widgets/cricket_text.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -8,35 +8,28 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 class CricketSnackbar {
   CricketSnackbar._();
 
-  // Helper method to dynamically switch colors based on theme mode
-  static Color _getThemeColor({required Color light, required Color dark}) {
-    return Get.isDarkMode ? dark : light;
-  }
-
   static void showSuccessMessage(
     String? message, {
     String title = 'Success',
     Duration snackDuration = const Duration(seconds: 3),
   }) {
-    final successColor = _getThemeColor(
-      light: AppColor.lightSuccess,
-      dark: AppColor.darkSuccess,
-    );
-    final bgColor = _getThemeColor(
-      light: AppColor.lightCard,
-      dark: AppColor.darkCardBg,
-    );
-    final textColor = _getThemeColor(
-      light: AppColor.lightTextSecondary,
-      dark: AppColor.darkTextMuted,
-    );
+    final context = Get.theme;
+
+    final successColor = Get.theme.colors.scorePositive;
+    final bgColor = context.colorScheme.surface;
+    final textColor = context.colorScheme.onSurfaceVariant;
 
     Get.showSnackbar(
       GetSnackBar(
         borderRadius: 12,
         backgroundColor: bgColor,
         margin: const EdgeInsets.symmetric(horizontal: 8),
-        boxShadows: const [BoxShadow(blurRadius: 10, color: Colors.black12)],
+        boxShadows: [
+          BoxShadow(
+            blurRadius: 10,
+            color: Colors.black.withValues(alpha: 0.1),
+          ),
+        ],
         padding: EdgeInsets.zero,
         snackPosition: SnackPosition.TOP,
         snackStyle: SnackStyle.FLOATING,
@@ -97,14 +90,14 @@ class CricketSnackbar {
                     children: [
                       CricketText(
                         text: title,
-                        style: Get.context!.textTheme.titleMedium?.copyWith(
+                        style: Get.textTheme.titleMedium?.copyWith(
                           color: successColor,
                         ),
                       ),
                       const SizedBox(height: 4),
                       CricketText(
                         text: message ?? 'Success',
-                        style: Get.context!.textTheme.labelSmall?.copyWith(
+                        style: Get.textTheme.labelSmall?.copyWith(
                           color: textColor,
                         ),
                       ),
@@ -124,25 +117,23 @@ class CricketSnackbar {
     String title = 'Error Occurred',
     Duration snackDuration = const Duration(seconds: 3),
   }) {
-    final errorColor = _getThemeColor(
-      light: AppColor.lightRedDark,
-      dark: AppColor.darkError,
-    );
-    final bgColor = _getThemeColor(
-      light: AppColor.lightCard,
-      dark: AppColor.darkCardBg,
-    );
-    final textColor = _getThemeColor(
-      light: AppColor.lightTextSecondary,
-      dark: AppColor.darkTextMuted,
-    );
+    final context = Get.theme;
+
+    final errorColor = Get.theme.colors.scoreNegative;
+    final bgColor = context.colorScheme.surface;
+    final textColor = context.colorScheme.onSurfaceVariant;
 
     Get.showSnackbar(
       GetSnackBar(
         borderRadius: 12,
         backgroundColor: bgColor,
         margin: const EdgeInsets.symmetric(horizontal: 8),
-        boxShadows: const [BoxShadow(blurRadius: 10, color: Colors.black12)],
+        boxShadows: [
+          BoxShadow(
+            blurRadius: 10,
+            color: Colors.black.withValues(alpha: 0.1),
+          ),
+        ],
         padding: EdgeInsets.zero,
         snackPosition: SnackPosition.TOP,
         snackStyle: SnackStyle.FLOATING,
@@ -232,25 +223,23 @@ class CricketSnackbar {
     String? title,
     Duration snackDuration = const Duration(seconds: 3),
   }) {
-    final warningColor = _getThemeColor(
-      light: AppColor.lightWarning,
-      dark: AppColor.darkWarning,
-    );
-    final bgColor = _getThemeColor(
-      light: AppColor.lightCard,
-      dark: AppColor.darkCardBg,
-    );
-    final textColor = _getThemeColor(
-      light: AppColor.lightTextSecondary,
-      dark: AppColor.darkTextMuted,
-    );
+    final context = Get.theme;
+
+    final warningColor = context.colorScheme.tertiary;
+    final bgColor = context.colorScheme.surface;
+    final textColor = context.colorScheme.onSurfaceVariant;
 
     Get.showSnackbar(
       GetSnackBar(
         borderRadius: 12,
         backgroundColor: bgColor,
         margin: const EdgeInsets.symmetric(horizontal: 8),
-        boxShadows: const [BoxShadow(blurRadius: 10, color: Colors.black12)],
+        boxShadows: [
+          BoxShadow(
+            blurRadius: 10,
+            color: Colors.black.withValues(alpha: 0.1),
+          ),
+        ],
         padding: EdgeInsets.zero,
         snackPosition: SnackPosition.TOP,
         snackStyle: SnackStyle.FLOATING,

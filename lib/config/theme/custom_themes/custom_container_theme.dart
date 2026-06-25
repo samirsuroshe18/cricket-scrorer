@@ -1,73 +1,107 @@
-import 'package:cricket_scorer/core/constants/app_color.dart';
+import 'package:cricket_scorer/config/theme/palettes/custom_color_scheme.dart';
 import 'package:flutter/material.dart';
 
 class CustomContainerTheme {
   CustomContainerTheme._();
 
-  // --- Light Containers ---
+  // ==========================================================
+  // LIGHT
+  // ==========================================================
   static CardThemeData lightCardTheme = CardThemeData(
-    color: AppColor.lightCard,
+    color: CustomColorScheme.lightColorScheme.surface,
     elevation: 0,
     margin: EdgeInsets.zero,
     shape: RoundedRectangleBorder(
       borderRadius: BorderRadius.circular(16),
-      side: const BorderSide(color: AppColor.lightBorder, width: 1),
+      side: BorderSide(
+        color: CustomColorScheme.lightColorScheme.outline,
+      ),
     ),
   );
 
-  static const BottomSheetThemeData lightBottomSheetTheme = BottomSheetThemeData(
-    backgroundColor: AppColor.lightCard,
+  static BottomSheetThemeData lightBottomSheetTheme = BottomSheetThemeData(
+    backgroundColor: CustomColorScheme.lightColorScheme.surface,
     elevation: 0,
     showDragHandle: true,
-    dragHandleColor: AppColor.lightBorder,
-    shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+    dragHandleColor: CustomColorScheme.lightColorScheme.outline,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(
+        top: Radius.circular(20),
+      ),
+    ),
   );
 
   static DialogThemeData lightDialogTheme = DialogThemeData(
-    backgroundColor: AppColor.lightCard,
+    backgroundColor: CustomColorScheme.lightColorScheme.surface,
     elevation: 6,
     alignment: Alignment.center,
-    titleTextStyle: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColor.lightTextPrimary),
-    contentTextStyle: const TextStyle(fontSize: 14, color: AppColor.lightTextSecondary),
-    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+    titleTextStyle: TextStyle(
+      fontSize: 18,
+      fontWeight: FontWeight.bold,
+      color: CustomColorScheme.lightColorScheme.onSurface,
+    ),
+    contentTextStyle: TextStyle(
+      fontSize: 14,
+      color: CustomColorScheme.lightColorScheme.onSurfaceVariant,
+    ),
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(16),
+    ),
   );
 
-  static const DividerThemeData lightDividerTheme = DividerThemeData(
-    color: AppColor.lightBorder,
+  static DividerThemeData lightDividerTheme = DividerThemeData(
+    color: CustomColorScheme.lightColorScheme.outline,
     thickness: 1,
     space: 1,
   );
 
-  // --- Dark Containers ---
+  // ==========================================================
+  // DARK
+  // ==========================================================
   static CardThemeData darkCardTheme = CardThemeData(
-    color: AppColor.darkCardBg,
+    color: CustomColorScheme.darkColorScheme.surface,
     elevation: 0,
     margin: EdgeInsets.zero,
     shape: RoundedRectangleBorder(
       borderRadius: BorderRadius.circular(16),
-      side: const BorderSide(color: AppColor.darkBorder, width: 1),
+      side: BorderSide(
+        color: CustomColorScheme.darkColorScheme.outline,
+      ),
     ),
   );
 
-  static const BottomSheetThemeData darkBottomSheetTheme = BottomSheetThemeData(
-    backgroundColor: AppColor.darkCardBg,
+  static BottomSheetThemeData darkBottomSheetTheme = BottomSheetThemeData(
+    backgroundColor: CustomColorScheme.darkColorScheme.surface,
     elevation: 0,
     showDragHandle: true,
-    dragHandleColor: AppColor.darkBorder,
-    shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+    dragHandleColor: CustomColorScheme.darkColorScheme.outline,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(
+        top: Radius.circular(20),
+      ),
+    ),
   );
 
   static DialogThemeData darkDialogTheme = DialogThemeData(
-    backgroundColor: AppColor.darkCardBg,
+    backgroundColor: CustomColorScheme.darkColorScheme.surface,
     elevation: 6,
     alignment: Alignment.center,
-    titleTextStyle: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColor.darkTextPrimary),
-    contentTextStyle: const TextStyle(fontSize: 14, color: AppColor.darkTextMuted),
-    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+    titleTextStyle: TextStyle(
+      fontSize: 18,
+      fontWeight: FontWeight.bold,
+      color: CustomColorScheme.darkColorScheme.onSurface,
+    ),
+    contentTextStyle: TextStyle(
+      fontSize: 14,
+      color: CustomColorScheme.darkColorScheme.onSurfaceVariant,
+    ),
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(16),
+    ),
   );
 
-  static const DividerThemeData darkDividerTheme = DividerThemeData(
-    color: AppColor.darkBorder,
+  static DividerThemeData darkDividerTheme = DividerThemeData(
+    color: CustomColorScheme.darkColorScheme.outline,
     thickness: 1,
     space: 1,
   );
