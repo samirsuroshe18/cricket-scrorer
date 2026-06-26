@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:cricket_scorer/core/constants/shared_pref_key.dart';
 import 'package:cricket_scorer/core/enums/app_language.dart';
@@ -19,6 +20,7 @@ import 'package:cricket_scorer/core/services/shared_preference_service.dart';
 import 'package:cricket_scorer/core/translations/app_translations.dart';
 import 'package:cricket_scorer/core/translations/translation_keys.dart';
 import 'package:cricket_scorer/core/utils/either_util.dart';
+import 'package:cricket_scorer/features/auth/data/models/user.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -57,11 +59,6 @@ class LanguageService extends GetxService {
         _currentLanguage.value = AppLanguage.isSupported(deviceLang)
             ? deviceLang
             : 'en';
-
-        await SharedPreferenceService.sharedPrefService.set(
-          SharedPrefKey.language,
-          _currentLanguage.value,
-        );
       }
 
       await Get.updateLocale(
@@ -83,18 +80,18 @@ class LanguageService extends GetxService {
               )
               as String?;
 
-      Either<CricketResponse<TranslationVersion>, CricketFailure> version =
+      Either<CricketResponse<TranslationVersion>, CricketFailure> response =
           await getVersionUseCase();
 
-      if (!version.isResult) {
+      if (!response.isResult) {
         if (kDebugMode) {
           print(
-            '[LanguageService] Version fetch failed: ${version.fallback.message}',
+            '[LanguageService] Version fetch failed: ${response.fallback.message}',
           );
         }
       }
 
-      final String? remoteVersion = version.result.data?.globalVersion
+      final String? remoteVersion = response.result.data?.globalVersion
           .toString();
 
       if (savedVersion != null && savedVersion == remoteVersion) {
@@ -114,7 +111,7 @@ class LanguageService extends GetxService {
         Get.addTranslations(translations);
         await SharedPreferenceService.sharedPrefService.set(
           SharedPrefKey.savedLangVersion,
-          version.result.data?.globalVersion.toString() ?? '1',
+          remoteVersion ?? '1',
         );
         return true;
       } else {
@@ -156,6 +153,7 @@ class LanguageService extends GetxService {
   Future<void> selectLanguage({
     required GetVersionUseCase getVersionUseCase,
     required GetLanguageUseCase getLanguageUseCase,
+    UpdateLanguageUseCase? updateLanguageUseCase,
   }) async {
     try {
       final value = await CustomBottomSheet.womatyCustomBottomSheet<dynamic>(
@@ -172,7 +170,10 @@ class LanguageService extends GetxService {
           getLanguageUseCase: getLanguageUseCase,
         );
 
-        await setLanguage(value.language.code);
+        await setLanguage(
+          value.language.code,
+          updateLanguageUseCase: updateLanguageUseCase,
+        );
       }
     } catch (e) {
       if (kDebugMode) {
@@ -210,22 +211,43 @@ class LanguageService extends GetxService {
 
   Future<void> syncLanguageFromServer({
     required GetUserLanguageUseCase getUserLanguageUseCase,
+    required UpdateLanguageUseCase updateLanguageUseCase,
   }) async {
     try {
-      final result = await getUserLanguageUseCase();
+      String? serverLanguage;
+      final String? savedLanguage =
+          await SharedPreferenceService.sharedPrefService.get(
+                SharedPrefKey.language,
+              )
+              as String?;
 
-      if (result.isResult) {
-        final String? serverLanguage =
-            result.result.data?['language'] as String?;
-        if (serverLanguage != null &&
-            serverLanguage != _currentLanguage.value) {
-          await setLanguage(serverLanguage);
-        }
+      // Get the JSON string
+      final String? userJson =
+          await SharedPreferenceService.sharedPrefService.get(
+                SharedPrefKey.userDetails,
+              )
+              as String?;
+
+      // Decode and convert back to your user object
+      if (userJson != null) {
+        final Map<String, dynamic> userMap =
+            jsonDecode(userJson) as Map<String, dynamic>;
+        final user = User.fromJson(userMap);
+        serverLanguage = user.language;
+      }
+
+      if (savedLanguage != null) {
+        unawaited(_syncLanguageToServer(savedLanguage, updateLanguageUseCase));
+        return;
       } else {
-        if (kDebugMode) {
-          print(
-            '[LanguageService] Server language fetch failed: ${result.fallback.message}',
-          );
+        if (serverLanguage != null) {
+          await setLanguage(serverLanguage);
+        } else {
+          if (kDebugMode) {
+            print(
+              '[LanguageService] Server language fetch failed',
+            );
+          }
         }
       }
     } catch (e) {

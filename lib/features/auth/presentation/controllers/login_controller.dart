@@ -7,6 +7,7 @@ import 'package:cricket_scorer/core/error/cricket_failure.dart';
 import 'package:cricket_scorer/core/global/domain/usecases/get_language.dart';
 import 'package:cricket_scorer/core/global/domain/usecases/get_user_language.dart';
 import 'package:cricket_scorer/core/global/domain/usecases/get_version.dart';
+import 'package:cricket_scorer/core/global/domain/usecases/update_language.dart';
 import 'package:cricket_scorer/core/global/widgets/dialogue/custom_dialog.dart';
 import 'package:cricket_scorer/core/global/widgets/snackbars/cricket_snackbar.dart';
 import 'package:cricket_scorer/core/network/models/cricket_response.dart';
@@ -23,6 +24,7 @@ import 'package:get/get.dart';
 class LoginController extends GetxController {
   final GetVersionUseCase getVersionUseCase;
   final GetLanguageUseCase getLanguageUseCase;
+  final UpdateLanguageUseCase updateLanguageUseCase;
 
   final LoginUseCase loginUseCase;
 
@@ -30,6 +32,7 @@ class LoginController extends GetxController {
     required this.loginUseCase,
     required this.getVersionUseCase,
     required this.getLanguageUseCase,
+    required this.updateLanguageUseCase,
   });
 
   final emailController = TextEditingController();
@@ -140,6 +143,7 @@ class LoginController extends GetxController {
         unawaited(
           Get.find<LanguageService>().syncLanguageFromServer(
             getUserLanguageUseCase: Get.find<GetUserLanguageUseCase>(),
+            updateLanguageUseCase: Get.find<UpdateLanguageUseCase>(),
           ),
         );
         unawaited(Get.offAllNamed<dynamic>(AppRoutes.home));

@@ -9,6 +9,7 @@ import 'package:cricket_scorer/core/global/domain/usecases/get_version.dart';
 import 'package:cricket_scorer/core/global/widgets/snackbars/cricket_snackbar.dart';
 import 'package:cricket_scorer/core/network/models/cricket_response.dart';
 import 'package:cricket_scorer/core/services/language_service.dart';
+import 'package:cricket_scorer/core/services/secure_storages_service.dart';
 import 'package:cricket_scorer/core/services/shared_preference_service.dart';
 import 'package:cricket_scorer/core/utils/either_util.dart';
 import 'package:cricket_scorer/features/auth/data/models/user.dart';
@@ -77,6 +78,13 @@ class SplashController extends GetxController
 
   Future<void> _navigate() async {
     try {
+      final tokenExists = await SecureStorageService.secure.authTokenExists();
+
+      if (!tokenExists) {
+        unawaited(Get.offAllNamed<dynamic>(AppRoutes.login));
+        return;
+      }
+
       await Get.find<LanguageService>().fetchTranslationKeys(
         getVersionUseCase: getVersionUseCase,
         getLanguageUseCase: getLanguageUseCase,
