@@ -1,5 +1,6 @@
+import 'package:cricket_scorer/core/constants/app_color.dart';
 import 'package:cricket_scorer/core/constants/error_string_constants.dart';
-import 'package:cricket_scorer/core/extensions/theme_data_extensions.dart';
+import 'package:cricket_scorer/core/extensions/theme_x.dart';
 import 'package:cricket_scorer/core/global/widgets/cricket_text.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -15,7 +16,7 @@ class CricketSnackbar {
   }) {
     final context = Get.theme;
 
-    final successColor = Get.theme.colors.scorePositive;
+    final successColor = Get.context?.colors.scorePositive ?? AppColor.white;
     final bgColor = context.colorScheme.surface;
     final textColor = context.colorScheme.onSurfaceVariant;
 
@@ -119,7 +120,7 @@ class CricketSnackbar {
   }) {
     final context = Get.theme;
 
-    final errorColor = Get.theme.colors.scoreNegative;
+    final errorColor = Get.context?.colors.scoreNegative ?? AppColor.white;
     final bgColor = context.colorScheme.surface;
     final textColor = context.colorScheme.onSurfaceVariant;
 
@@ -194,7 +195,7 @@ class CricketSnackbar {
                     children: [
                       CricketText(
                         text: title,
-                        style: Get.context!.textTheme.titleMedium?.copyWith(
+                        style: context.textTheme.titleMedium?.copyWith(
                           color: errorColor,
                         ),
                       ),
@@ -203,7 +204,7 @@ class CricketSnackbar {
                         text:
                             message ??
                             ErrorStringConstants.genericErrorMessage.tr,
-                        style: Get.context!.textTheme.labelSmall?.copyWith(
+                        style: context.textTheme.labelSmall?.copyWith(
                           color: textColor,
                         ),
                       ),
@@ -300,7 +301,7 @@ class CricketSnackbar {
                     children: [
                       CricketText(
                         text: title ?? 'Alert',
-                        style: Get.context!.textTheme.titleMedium?.copyWith(
+                        style: context.textTheme.titleMedium?.copyWith(
                           color: warningColor,
                         ),
                       ),
@@ -309,7 +310,7 @@ class CricketSnackbar {
                         text:
                             message ??
                             ErrorStringConstants.genericAlertMessage.tr,
-                        style: Get.context!.textTheme.labelSmall?.copyWith(
+                        style: context.textTheme.labelSmall?.copyWith(
                           color: textColor,
                         ),
                       ),

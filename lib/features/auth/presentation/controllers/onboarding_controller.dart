@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:cricket_scorer/config/routes/app_routes.dart';
 import 'package:cricket_scorer/core/constants/shared_pref_key.dart';
+import 'package:cricket_scorer/core/extensions/theme_x.dart';
 import 'package:cricket_scorer/core/services/shared_preference_service.dart';
 import 'package:cricket_scorer/features/auth/data/models/onboarding_item.dart';
 import 'package:flutter/material.dart';
@@ -62,7 +63,7 @@ class OnboardingController extends GetxController {
       title: 'Live Scoring',
       description:
           'Record every run, wicket, current over with intuitive controls.',
-      color: Colors.blue,
+      color: Get.context?.colors.teamA,
     ),
     OnboardingItem(
       image: 'assets/images/onboarding_2.png',

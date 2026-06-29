@@ -1,6 +1,7 @@
 import 'package:cricket_scorer/core/constants/app_color.dart';
 import 'package:flutter/material.dart';
 
+// ColorScheme is intended for Material Design colors
 class CustomColorScheme {
   CustomColorScheme._();
 

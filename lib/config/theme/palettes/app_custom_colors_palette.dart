@@ -1,6 +1,7 @@
 import 'package:cricket_scorer/core/extensions/app_custom_colors.dart';
 import 'package:flutter/material.dart';
 
+// AppCustomColorsPalette colors is for if your app has colors that are specific to cricket
 class AppCustomColorsPalette {
   AppCustomColorsPalette._();
 
