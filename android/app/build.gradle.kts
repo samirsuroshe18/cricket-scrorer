@@ -52,7 +52,7 @@ android {
             resValue(
                 type = "string",
                 name = "app_name",
-                value = "Cricket Scorer-uat"
+                value = "Cricket Scorer (uat)"
             )
             applicationIdSuffix = ".uat"
             signingConfig = signingConfigs.getByName("debug")
@@ -62,7 +62,7 @@ android {
             resValue(
                 type = "string",
                 name = "app_name",
-                value = "Cricket Scorer-dev"
+                value = "Cricket Scorer (dev)"
             )
             applicationIdSuffix = ".dev"
             signingConfig = signingConfigs.getByName("debug")

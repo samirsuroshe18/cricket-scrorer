@@ -51,18 +51,17 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions android = FirebaseOptions(
     apiKey: 'AIzaSyCjTFXm52YgyCuYwOuiEbsvg43PHasJE7M',
-    appId: '1:268814613985:android:e1d7e35156967b694d66a0',
+    appId: '1:268814613985:android:7e230f8bdc56a3da4d66a0',
     messagingSenderId: '268814613985',
     projectId: 'cricket-scorer-dev',
     storageBucket: 'cricket-scorer-dev.firebasestorage.app',
   );
-
   static const FirebaseOptions ios = FirebaseOptions(
     apiKey: 'AIzaSyC8CmlhFKjIDlasp3EVkhabyET_qexKvoc',
-    appId: '1:268814613985:ios:4072a0c2acd4ba094d66a0',
+    appId: '1:268814613985:ios:9add5972aa7e660d4d66a0',
     messagingSenderId: '268814613985',
     projectId: 'cricket-scorer-dev',
     storageBucket: 'cricket-scorer-dev.firebasestorage.app',
-    iosBundleId: 'com.example.cricketScorer',
+    iosBundleId: 'com.example.cricketScorer.dev',
   );
 }
