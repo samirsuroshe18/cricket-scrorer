@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "371042452785",
+    "project_id": "cricket-scorer-51228",
+    "storage_bucket": "cricket-scorer-51228.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:371042452785:android:a2da8d18f1aece37ae5c10",
+        "android_client_info": {
+          "package_name": "com.example.cricket_scorer"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCLXWmSEN32hItf5cDgFhGtbzOhVVd24cU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

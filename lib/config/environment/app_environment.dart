@@ -3,5 +3,5 @@ class AppEnvironment {
 
   static const uatBaseUrl = 'https://uat-api.yourapp.com/api';
 
-  static const prodBaseUrl = 'https://api.yourapp.com/api';
+  static const prodBaseUrl = 'http://192.168.176.114:9000/api';
 }
