@@ -1,5 +1,9 @@
 import 'package:cricket_scorer/core/extensions/space_extension.dart';
+import 'package:cricket_scorer/core/extensions/string_extension.dart';
+import 'package:cricket_scorer/core/global/widgets/cricket_button.dart';
 import 'package:cricket_scorer/core/global/widgets/cricket_text.dart';
+import 'package:cricket_scorer/core/global/widgets/images/cricket_image.dart';
+import 'package:cricket_scorer/core/global/widgets/images/cricket_image_source.dart';
 import 'package:cricket_scorer/features/auth/presentation/controllers/onboarding_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -13,7 +17,7 @@ class OnboardingScreen extends StatelessWidget {
       builder: (OnboardingController controller) {
         return Scaffold(
           body: Padding(
-            padding: const EdgeInsets.all(.0),
+            padding: 24.p,
             child: Column(
               children: [
                 Expanded(
@@ -27,15 +31,16 @@ class OnboardingScreen extends StatelessWidget {
                       return Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Image.asset(
-                            item.image,
-                            color: item.color,
-                            height: 260,
+                          CricketImage(
+                            source: CricketImageSource.asset(item.image),
+                            height: 256,
+                            width: 256,
+                            fit: BoxFit.contain,
                           ),
                           48.h,
                           CricketText(
                             text: item.title,
-                            style: context.textTheme.headlineMedium,
+                            style: context.textTheme.headlineLarge,
                           ),
                           16.h,
                           CricketText(
@@ -70,32 +75,32 @@ class OnboardingScreen extends StatelessWidget {
                     ),
                   ),
                 ),
+                20.h,
 
                 // Buttons
-                Padding(
-                  padding: const EdgeInsets.all(20),
-                  child: Row(
-                    children: [
-                      TextButton(
-                        onPressed: controller.skip,
-                        child: const Text('Skip'),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    TextButton(
+                      onPressed: controller.skip,
+                      child: CricketText(
+                        text: 'Skip'.translation(),
+                        style: context.textTheme.bodyLarge,
                       ),
+                    ),
 
-                      const Spacer(),
-
-                      Obx(
-                        () => ElevatedButton(
-                          onPressed: controller.nextPage,
-                          child: Text(
-                            controller.currentPage.value == 2
-                                ? 'Get Started'
-                                : 'Next',
-                          ),
-                        ),
+                    Obx(
+                      () => CricketButton(
+                        width: 80,
+                        onPressed: controller.nextPage,
+                        buttonText: controller.currentPage.value == 2
+                            ? 'Get Started'.translation()
+                            : 'Next'.translation(),
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
+                24.h,
               ],
             ),
           ),

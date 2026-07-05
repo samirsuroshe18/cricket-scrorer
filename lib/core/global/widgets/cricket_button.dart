@@ -15,6 +15,7 @@ class CricketButton extends StatelessWidget {
     this.isAutoSize = false,
     this.isDisabled = false,
     this.height = 48,
+    this.width = double.infinity,
   });
 
   final Widget? prefixIcon, suffixIcon;
@@ -25,6 +26,7 @@ class CricketButton extends StatelessWidget {
   final bool isDisabled;
   final bool isAutoSize;
   final double height;
+  final double width;
 
   @override
   Widget build(BuildContext context) {
@@ -32,7 +34,7 @@ class CricketButton extends StatelessWidget {
 
     return SizedBox(
       height: height,
-      width: double.infinity,
+      width: width,
       child: ElevatedButton(
         onPressed: effectiveOnPressed,
         style: buttonStyle,

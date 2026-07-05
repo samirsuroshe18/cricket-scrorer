@@ -14,7 +14,7 @@ class CricketImagePreview extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: const CustomAppBar(title: ''),
+      appBar: const CustomAppBar(),
       body: GetBuilder<ImagePreviewController>(
         builder: (controller) {
           switch (controller.source.type) {

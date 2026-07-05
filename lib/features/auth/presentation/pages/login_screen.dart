@@ -24,11 +24,10 @@ class LoginScreen extends StatelessWidget {
       builder: (controller) {
         return Scaffold(
           appBar: CustomAppBar(
-            title: '',
             actions: [
               const ThemePickerButton(),
               const LanguagePickerButton(),
-              12.w
+              12.w,
             ],
           ),
           body: SingleChildScrollView(
@@ -37,7 +36,7 @@ class LoginScreen extends StatelessWidget {
               key: controller.formKey,
               child: Column(
                 children: [
-                  8.rh,
+                  4.rh,
 
                   const CricketImage(
                     source: CricketImageSource.asset(AssetsUtil.appLogo),
@@ -97,7 +96,9 @@ class LoginScreen extends StatelessWidget {
                     alignment: Alignment.centerRight,
                     child: TextButton(
                       onPressed: controller.onForgotPassword,
-                      child: CricketText(text: 'Forgot Password?'.translation()),
+                      child: CricketText(
+                        text: 'Forgot Password?'.translation(),
+                      ),
                     ),
                   ),
 

@@ -1,7 +1,13 @@
 import 'package:cricket_scorer/core/constants/assets_util.dart';
 import 'package:cricket_scorer/core/extensions/space_extension.dart';
+import 'package:cricket_scorer/core/extensions/string_extension.dart';
+import 'package:cricket_scorer/core/extensions/theme_x.dart';
+import 'package:cricket_scorer/core/global/widgets/cricket_button.dart';
 import 'package:cricket_scorer/core/global/widgets/cricket_text.dart';
 import 'package:cricket_scorer/core/global/widgets/cricket_text_field.dart';
+import 'package:cricket_scorer/core/global/widgets/custom_app_bar.dart';
+import 'package:cricket_scorer/core/global/widgets/images/cricket_image.dart';
+import 'package:cricket_scorer/core/global/widgets/images/cricket_image_source.dart';
 import 'package:cricket_scorer/features/auth/presentation/controllers/register_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -14,147 +20,122 @@ class RegisterScreen extends StatelessWidget {
     return GetBuilder<RegisterController>(
       builder: (controller) {
         return Scaffold(
-          body: SafeArea(
-            child: SingleChildScrollView(
-              padding: 24.p,
-              child: Form(
-                key: controller.formKey,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    8.rh,
+          appBar: const CustomAppBar(),
+          body: SingleChildScrollView(
+            padding: 24.p,
+            child: Form(
+              key: controller.formKey,
+              child: Column(
+                children: [
+                  4.rh,
 
-                    Container(
-                      height: 120,
-                      width: 120,
-                      clipBehavior: Clip.antiAlias,
-                      padding: const EdgeInsets.all(12),
-                      decoration: const BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: Colors.white,
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black12,
-                            blurRadius: 10,
-                            offset: Offset(0, 4),
-                          ),
-                        ],
+                  const CricketImage(
+                    source: CricketImageSource.asset(AssetsUtil.appLogo),
+                    height: 120,
+                    width: 120,
+                    borderRadius: BorderRadius.all(Radius.circular(180)),
+                  ),
+
+                  24.h,
+
+                  CricketText(
+                    text: 'Create Account'.translation(),
+                    style: Get.textTheme.headlineLarge,
+                  ),
+
+                  8.h,
+
+                  CricketText(
+                    text: 'Join and start scoring matches'.translation(),
+                    style: Get.textTheme.bodyMedium,
+                  ),
+
+                  40.h,
+
+                  CricketTextField(
+                    controller: controller.fullNameController,
+                    hintText: 'Full Name'.translation(),
+                    prefixIcon: const Icon(Icons.person_outline),
+                    validator: controller.validateFullName,
+                    keyboardType: TextInputType.name,
+                    textCapitalization: TextCapitalization.words,
+                  ),
+
+                  16.h,
+
+                  CricketTextField(
+                    controller: controller.emailController,
+                    hintText: 'Email'.translation(),
+                    prefixIcon: const Icon(Icons.email_outlined),
+                    validator: controller.validateEmail,
+                    keyboardType: TextInputType.emailAddress,
+                  ),
+
+                  16.h,
+
+                  Obx(
+                    () => CricketTextField(
+                      controller: controller.passwordController,
+                      hintText: 'Password'.translation(),
+                      obscureText: !controller.isPasswordVisible.value,
+                      prefixIcon: const Icon(Icons.lock_outline),
+                      suffixIcon: IconButton(
+                        onPressed: controller.togglePasswordVisibility,
+                        icon: Icon(
+                          controller.isPasswordVisible.value
+                              ? Icons.visibility
+                              : Icons.visibility_off,
+                        ),
                       ),
-                      child: Image.asset(
-                        AssetsUtil.appLogo,
-                        fit: BoxFit.contain,
+                      validator: controller.validatePassword,
+                    ),
+                  ),
+
+                  16.h,
+
+                  Obx(
+                    () => CricketTextField(
+                      controller: controller.confirmPasswordController,
+                      hintText: 'Confirm Password'.translation(),
+                      obscureText: !controller.isConfirmPasswordVisible.value,
+                      prefixIcon: const Icon(Icons.lock_outline),
+                      suffixIcon: IconButton(
+                        onPressed: controller.toggleConfirmPasswordVisibility,
+                        icon: Icon(
+                          controller.isConfirmPasswordVisible.value
+                              ? Icons.visibility
+                              : Icons.visibility_off,
+                        ),
                       ),
+                      validator: controller.validateConfirmPassword,
                     ),
+                  ),
 
-                    24.h,
+                  24.h,
 
-                    CricketText(
-                      text: 'Create Account',
-                      style: Get.textTheme.headlineMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
+                  CricketButton(
+                    buttonText: 'Register'.translation(),
+                    onPressed: controller.register,
+                  ),
+
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      CricketText(
+                        text: 'Already have an account? '.translation(),
                       ),
-                      textAlign: TextAlign.center,
-                    ),
-
-                    8.h,
-
-                    CricketText(
-                      text: 'Join and start scoring matches',
-                      style: Get.textTheme.bodyMedium,
-                      textAlign: TextAlign.center,
-                    ),
-
-                    40.h,
-
-                    CricketTextField(
-                      controller: controller.fullNameController,
-                      hintText: 'Full Name',
-                      prefixIcon: const Icon(Icons.person_outline),
-                      validator: controller.validateFullName,
-                      keyboardType: TextInputType.name,
-                      textCapitalization: TextCapitalization.words,
-                    ),
-
-                    16.h,
-
-                    CricketTextField(
-                      controller: controller.emailController,
-                      hintText: 'Email',
-                      prefixIcon: const Icon(Icons.email_outlined),
-                      validator: controller.validateEmail,
-                      keyboardType: TextInputType.emailAddress,
-                    ),
-
-                    16.h,
-
-                    Obx(
-                      () => CricketTextField(
-                        controller: controller.passwordController,
-                        hintText: 'Password',
-                        obscureText: !controller.isPasswordVisible.value,
-                        prefixIcon: const Icon(Icons.lock_outline),
-                        suffixIcon: IconButton(
-                          onPressed: controller.togglePasswordVisibility,
-                          icon: Icon(
-                            controller.isPasswordVisible.value
-                                ? Icons.visibility
-                                : Icons.visibility_off,
+                      TextButton(
+                        onPressed: controller.goToLogin,
+                        child: CricketText(
+                          text: 'Login'.translation(),
+                          style: context.textTheme.bodyMedium?.copyWith(
+                            color: context.colorScheme.primary,
                           ),
                         ),
-                        validator: controller.validatePassword,
                       ),
-                    ),
-
-                    16.h,
-
-                    Obx(
-                      () => CricketTextField(
-                        controller: controller.confirmPasswordController,
-                        hintText: 'Confirm Password',
-                        obscureText: !controller.isConfirmPasswordVisible.value,
-                        prefixIcon: const Icon(Icons.lock_outline),
-                        suffixIcon: IconButton(
-                          onPressed: controller.toggleConfirmPasswordVisibility,
-                          icon: Icon(
-                            controller.isConfirmPasswordVisible.value
-                                ? Icons.visibility
-                                : Icons.visibility_off,
-                          ),
-                        ),
-                        validator: controller.validateConfirmPassword,
-                      ),
-                    ),
-
-                    24.h,
-
-                    SizedBox(
-                      height: 55,
-                      child: ElevatedButton(
-                        onPressed: controller.register,
-                        child: const Text('Register'),
-                      ),
-                    ),
-
-                    24.h,
-
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Text('Already have an account? '),
-                        GestureDetector(
-                          onTap: controller.goToLogin,
-                          child: Text(
-                            'Login',
-                            style: TextStyle(
-                              color: Get.theme.primaryColor,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
+                    ],
+                  ),
+                ],
               ),
             ),
           ),

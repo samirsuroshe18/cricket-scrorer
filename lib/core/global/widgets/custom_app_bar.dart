@@ -15,7 +15,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
     super.key,
     this.isLeading = true,
     this.leading,
-    required this.title,
+    this.title = '',
     this.actions,
     this.bottom,
     this.toolbarHeight = 60,
