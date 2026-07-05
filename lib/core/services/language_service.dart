@@ -156,9 +156,9 @@ class LanguageService extends GetxService {
     UpdateLanguageUseCase? updateLanguageUseCase,
   }) async {
     try {
-      final value = await CustomBottomSheet.womatyCustomBottomSheet<dynamic>(
-        widget: const ChooseLanguage(),
-        heightFactor: 0.7,
+      final value = await CustomBottomSheet.cricketCustomBottomSheet<dynamic>(
+        child: const ChooseLanguage(),
+        heightFactor: 0.5,
         headlineText: TranslationKeys.selectYourLanguage.tr,
       );
       if (value is CricketLanguage) {

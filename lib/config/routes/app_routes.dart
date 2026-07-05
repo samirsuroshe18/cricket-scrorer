@@ -8,4 +8,5 @@ class AppRoutes {
   static const String setPassword = '/set-password';
   static const String onBoarding = '/on-boarding';
   static const String updateProfile = '/update-profile';
+  static const String imagePreview = '/image_preview';
 }

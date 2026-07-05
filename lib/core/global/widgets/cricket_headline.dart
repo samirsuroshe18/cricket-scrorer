@@ -106,14 +106,14 @@ class CricketHeadlineWithFixedOutline extends StatelessWidget {
             flex: 6,
             child: CricketText(
               text: headlineText,
-              style: textStyle ?? context.textTheme.headlineLarge,
+              style: textStyle ?? context.textTheme.titleLarge,
               textAlign: TextAlign.center,
             ),
           )
         else
           CricketText(
             text: headlineText,
-            style: textStyle ?? context.textTheme.headlineLarge,
+            style: textStyle ?? context.textTheme.titleLarge,
             textAlign: TextAlign.center,
           ),
 

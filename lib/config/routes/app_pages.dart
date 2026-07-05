@@ -1,4 +1,6 @@
 import 'package:cricket_scorer/config/routes/app_routes.dart';
+import 'package:cricket_scorer/core/global/presentation/bindings/image_preview_binding.dart';
+import 'package:cricket_scorer/core/global/presentation/pages/cricket_image_preview.dart';
 import 'package:cricket_scorer/features/auth/presentation/bindings/forgot_password_binding.dart';
 import 'package:cricket_scorer/features/auth/presentation/bindings/login_binding.dart';
 import 'package:cricket_scorer/features/auth/presentation/bindings/onboarding_binding.dart';
@@ -65,6 +67,11 @@ abstract class AppPages {
       name: AppRoutes.updateProfile,
       page: () => const UpdateProfileScreen(),
       binding: UpdateProfileBinding(),
+    ),
+    GetPage(
+      name: AppRoutes.imagePreview,
+      page: () => const CricketImagePreview(),
+      binding: ImagePreviewBinding(),
     ),
   ];
 }

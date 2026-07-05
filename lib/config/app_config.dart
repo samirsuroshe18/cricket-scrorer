@@ -1,3 +1,4 @@
+import 'package:cricket_scorer/config/flavors.dart';
 import 'package:cricket_scorer/config/routes/app_pages.dart';
 import 'package:cricket_scorer/config/routes/app_routes.dart';
 import 'package:cricket_scorer/config/theme/app_theme.dart';
@@ -23,7 +24,7 @@ class CricketScorerApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GetMaterialApp(
-      title: 'Cricket Scorer',
+      title: AppFlavor.title,
       debugShowCheckedModeBanner: false,
       translations: Get.find<LanguageService>().appTranslations,
       fallbackLocale: Locale(AppLanguage.english.code),

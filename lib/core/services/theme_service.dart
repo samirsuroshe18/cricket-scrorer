@@ -1,7 +1,12 @@
 import 'dart:async';
 
 import 'package:cricket_scorer/core/constants/shared_pref_key.dart';
+import 'package:cricket_scorer/core/global/data/models/cricket_theme_options.dart';
+import 'package:cricket_scorer/core/global/widgets/bootom_sheets/custom_bottomsheet.dart';
+import 'package:cricket_scorer/core/global/widgets/choose_theme.dart';
 import 'package:cricket_scorer/core/services/shared_preference_service.dart';
+import 'package:cricket_scorer/core/translations/translation_keys.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:get/get.dart';
@@ -53,5 +58,22 @@ class ThemeService extends GetxService {
         value,
       ),
     );
+  }
+
+  Future<void> selectTheme() async {
+    try{
+      final mode = await CustomBottomSheet.cricketCustomBottomSheet<dynamic>(
+        child: const ChooseTheme(),
+        heightFactor: 0.5,
+        headlineText: TranslationKeys.selectYourTheme.tr,
+      );
+      if(mode is CricketThemeOption){
+        unawaited(setTheme(mode.mode));
+      }
+    }catch(e){
+      if (kDebugMode) {
+        print('Error setting language: $e');
+      }
+    }
   }
 }

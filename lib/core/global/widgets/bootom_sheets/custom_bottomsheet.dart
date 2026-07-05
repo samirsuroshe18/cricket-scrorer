@@ -1,5 +1,6 @@
 import 'package:cricket_scorer/core/constants/app_color.dart';
 import 'package:cricket_scorer/core/extensions/space_extension.dart';
+import 'package:cricket_scorer/core/extensions/theme_x.dart';
 import 'package:cricket_scorer/core/global/widgets/cricket_error_widget.dart';
 import 'package:cricket_scorer/core/global/widgets/cricket_headline.dart';
 import 'package:cricket_scorer/core/global/widgets/cricket_outlined_button.dart';
@@ -13,79 +14,68 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 class CustomBottomSheet {
   const CustomBottomSheet._();
 
-  static Future<T?> womatyCustomBottomSheet<T>({
-    required Widget widget,
+  static Future<T?> cricketCustomBottomSheet<T>({
+    required Widget child,
     required String headlineText,
     bool isXButtonRequired = true,
     double? heightFactor = 0.75,
-    void Function()? onBackPressed,
+    VoidCallback? onBackPressed,
   }) {
+    final context = Get.context;
+
     return Get.bottomSheet<T>(
       isDismissible: false,
+      isScrollControlled: true,
+      enableDrag: false,
       Column(
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
-          Column(
-            children: [
-              if (isXButtonRequired)
-                IconButton(
-                  onPressed: () {
-                    if (onBackPressed != null) {
-                      onBackPressed();
-                    } else {
-                      Get.back(result: null);
-                    }
-                  },
-                  style: const ButtonStyle(
-                    side: WidgetStatePropertyAll(
-                      BorderSide(color: Colors.transparent),
+          if (isXButtonRequired) ...[
+            IconButton(
+              onPressed: () {
+                if (onBackPressed != null) {
+                  onBackPressed();
+                } else {
+                  Get.back<T>();
+                }
+              },
+              icon: const Icon(
+                LucideIcons.circleX,
+                size: 38,
+                color: AppColor.white,
+              ),
+            ),
+            16.h,
+          ],
+          SafeArea(
+            top: false,
+            child: SizedBox(
+              height: heightFactor != null
+                  ? Get.height * heightFactor
+                  : null,
+              child: Container(
+                width: Get.width,
+                decoration: BoxDecoration(
+                  color: context?.colorScheme.surface,
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(32),
+                  ),
+                ),
+                child: Column(
+                  children: [
+                    20.h,
+                    CricketHeadlineWithFixedOutline(
+                      headlineText: headlineText,
                     ),
-                  ),
-                  icon: const Icon(
-                    LucideIcons.circleX,
-                    color: Colors.white,
-                    size: 40,
-                    weight: 1.5,
-                  ),
-                ),
-              16.h,
-            ],
-          ),
-          SizedBox(
-            height: heightFactor != null ? Get.height * heightFactor : null,
-            child: Column(
-              children: [
-                Expanded(
-                  child: Container(
-                    width: Get.width,
-                    decoration: const BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.only(
-                        topLeft: Radius.circular(32),
-                        topRight: Radius.circular(32),
-                      ),
-                    ),
-                    child: Column(
-                      children: [
-                        20.h,
-                        CricketHeadlineWithFixedOutline(
-                          headlineText: headlineText,
-                        ),
-                        widget,
-                      ],
-                    ).paddingAll(20),
-                  ),
-                ),
-                Container(
-                  height: Get.context?.mediaQueryPadding.bottom,
-                  color: AppColor.white,
-                ),
-              ],
+
+                    Expanded(child: child),
+                  ],
+                ).paddingAll(20),
+              ),
             ),
           ),
         ],
       ),
-      isScrollControlled: true,
     );
   }
 

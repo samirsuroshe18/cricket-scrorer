@@ -1,7 +1,7 @@
 import 'package:auto_size_text/auto_size_text.dart';
+import 'package:cricket_scorer/core/extensions/space_extension.dart';
 import 'package:cricket_scorer/core/global/widgets/cricket_text.dart';
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 
 class CricketButton extends StatelessWidget {
   const CricketButton({
@@ -12,67 +12,62 @@ class CricketButton extends StatelessWidget {
     required this.onPressed,
     this.buttonTextStyle,
     this.buttonStyle,
-    this.isAutoSize,
+    this.isAutoSize = false,
     this.isDisabled = false,
+    this.height = 48,
   });
 
   final Widget? prefixIcon, suffixIcon;
   final String buttonText;
-  final void Function()? onPressed;
+  final VoidCallback? onPressed;
   final TextStyle? buttonTextStyle;
   final ButtonStyle? buttonStyle;
   final bool isDisabled;
-  final bool? isAutoSize;
+  final bool isAutoSize;
+  final double height;
 
   @override
   Widget build(BuildContext context) {
-    final textColor = (isDisabled || onPressed == null)
-        ? Get.theme.colorScheme.onSurface.withValues(alpha: 0.38)
-        : Get.theme.colorScheme.onPrimary;
+    final effectiveOnPressed = isDisabled ? null : onPressed;
 
-    return FilledButton(
-      onPressed: isDisabled ? null : onPressed,
-      style: buttonStyle,
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        spacing: 8,
-        children: [
-          ?prefixIcon,
+    return SizedBox(
+      height: height,
+      width: double.infinity,
+      child: ElevatedButton(
+        onPressed: effectiveOnPressed,
+        style: buttonStyle,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            if (prefixIcon != null) ...[
+              prefixIcon!,
+              8.w,
+            ],
 
-          Visibility(
-            visible: isAutoSize ?? false,
-            replacement: Flexible(
-              child: CricketText(
-                text: buttonText,
-                maxLines: 2,
-                textAlign: TextAlign.center,
-                style:
-                    buttonTextStyle ??
-                    context.textTheme.headlineLarge?.copyWith(
-                      color: textColor,
-                      overflow: TextOverflow.ellipsis,
+            Flexible(
+              child: isAutoSize
+                  ? AutoSizeText(
+                      buttonText,
+                      maxLines: 1,
+                      minFontSize: 12,
+                      maxFontSize: 16,
+                      textAlign: TextAlign.center,
+                      style: buttonTextStyle,
+                    )
+                  : CricketText(
+                      text: buttonText,
+                      maxLines: 2,
+                      textAlign: TextAlign.center,
+                      style: buttonTextStyle,
                     ),
-              ),
             ),
-            child: Flexible(
-              child: AutoSizeText(
-                buttonText,
-                maxLines: 1,
-                textAlign: TextAlign.center,
-                maxFontSize: 16,
-                minFontSize: 12,
-                style:
-                    buttonTextStyle ??
-                    context.textTheme.headlineLarge?.copyWith(
-                      color: textColor,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-              ),
-            ),
-          ),
 
-          ?suffixIcon,
-        ],
+            if (suffixIcon != null) ...[
+              8.w,
+              suffixIcon!,
+            ],
+          ],
+        ),
       ),
     );
   }

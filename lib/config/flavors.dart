@@ -20,10 +20,10 @@ class AppFlavor {
     appFlavor = flavor;
   }
 
-  /// returns app Title based on Flavor enviornment
+  /// returns app Title based on Flavor environment
   static String get title => switch (appFlavor) {
-    Flavor.dev  => 'Womaty Dev',
-    Flavor.uat  => 'Womaty Uat',
-    Flavor.prod => 'Womaty',
+    Flavor.dev  => 'Cricket Scorer Dev',
+    Flavor.uat  => 'Cricket Scorer Uat',
+    Flavor.prod => 'Cricket Scorer',
   };
 }

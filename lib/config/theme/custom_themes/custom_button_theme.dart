@@ -1,5 +1,4 @@
 import 'package:cricket_scorer/config/theme/palettes/custom_color_scheme.dart';
-import 'package:cricket_scorer/core/constants/app_color.dart';
 import 'package:flutter/material.dart';
 
 class CustomButtonTheme {
@@ -11,8 +10,8 @@ class CustomButtonTheme {
   static ElevatedButtonThemeData lightElevatedButtonTheme =
       ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          backgroundColor: AppColor.primaryRed,
-          foregroundColor: Colors.white,
+          backgroundColor: CustomColorScheme.lightColorScheme.primary,
+          foregroundColor: CustomColorScheme.lightColorScheme.onPrimary,
           disabledBackgroundColor: CustomColorScheme.lightColorScheme.outline,
           disabledForegroundColor:
               CustomColorScheme.lightColorScheme.onSurfaceVariant,
@@ -90,8 +89,8 @@ class CustomButtonTheme {
   static ElevatedButtonThemeData darkElevatedButtonTheme =
       ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          backgroundColor: AppColor.primaryRed,
-          foregroundColor: Colors.white,
+          backgroundColor: CustomColorScheme.darkColorScheme.primary,
+          foregroundColor: CustomColorScheme.darkColorScheme.onPrimary,
           disabledBackgroundColor: CustomColorScheme.darkColorScheme.outline,
           disabledForegroundColor:
               CustomColorScheme.darkColorScheme.onSurfaceVariant,

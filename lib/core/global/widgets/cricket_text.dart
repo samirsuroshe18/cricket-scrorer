@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 
 class CricketText extends StatelessWidget {
   const CricketText({
@@ -23,7 +22,7 @@ class CricketText extends StatelessWidget {
   Widget build(BuildContext context) {
     return Text(
       text,
-      style: style ?? context.textTheme.bodyLarge,
+      style: style,
       maxLines: maxLines,
       overflow: textOverflow,
       textAlign: textAlign,

@@ -10,4 +10,5 @@ class TranslationKeys {
   static const String retry = 'retry';
   static const String confirm = 'confirm';
   static const String selectYourLanguage = 'selectYourLanguage';
+  static const String selectYourTheme = 'selectYourTheme';
 }
