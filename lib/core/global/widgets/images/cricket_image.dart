@@ -66,10 +66,10 @@ class CricketImage extends StatelessWidget {
           width: width,
           height: height,
           fit: fit,
-          colorFilter: ColorFilter.mode(
-            color ?? Theme.of(context).colorScheme.onSurfaceVariant,
-            BlendMode.srcIn,
-          ),
+          // colorFilter: ColorFilter.mode(
+          //   color,
+          //   BlendMode.srcIn,
+          // ),
           placeholderBuilder: (context) => errorPlaceholder(),
         );
         break;

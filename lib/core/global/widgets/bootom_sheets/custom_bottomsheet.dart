@@ -58,7 +58,6 @@ class CustomBottomSheet {
                 : null,
             child: Container(
               width: Get.width,
-              padding: 20.p,
               decoration: BoxDecoration(
                 color: context?.colorScheme.surface,
                 borderRadius: const BorderRadius.vertical(
