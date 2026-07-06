@@ -1,5 +1,11 @@
 import 'package:cricket_scorer/core/extensions/space_extension.dart';
+import 'package:cricket_scorer/core/extensions/string_extension.dart';
+import 'package:cricket_scorer/core/global/widgets/cricket_button.dart';
+import 'package:cricket_scorer/core/global/widgets/cricket_text.dart';
 import 'package:cricket_scorer/core/global/widgets/cricket_text_field.dart';
+import 'package:cricket_scorer/core/global/widgets/custom_app_bar.dart';
+import 'package:cricket_scorer/core/global/widgets/images/cricket_image.dart';
+import 'package:cricket_scorer/core/global/widgets/images/cricket_image_source.dart';
 import 'package:cricket_scorer/features/auth/presentation/controllers/update_profile_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -12,85 +18,71 @@ class UpdateProfileScreen extends StatelessWidget {
     return GetBuilder<UpdateProfileController>(
       builder: (UpdateProfileController controller) {
         return Scaffold(
-          appBar: AppBar(
-            title: const Text('Complete Profile'),
+          appBar: CustomAppBar(
+            title: 'Complete Profile'.translation(),
             centerTitle: true,
           ),
-          body: SafeArea(
-            child: Form(
-              key: controller.formKey,
-              child: SingleChildScrollView(
-                padding: 20.p,
-                child: Column(
-                  children: [
-                    20.h,
-
-                    /// Profile Image
-                    Obx(
-                      () => GestureDetector(
-                        onTap: controller.pickImage,
-                        child: CircleAvatar(
-                          radius: 55,
-                          backgroundImage: controller.profileImage.value != null
-                              ? FileImage(
-                                  controller.profileImage.value!,
-                                )
-                              : null,
-                          child: controller.profileImage.value == null
-                              ? const Icon(
-                                  Icons.camera_alt,
-                                  size: 40,
-                                )
-                              : null,
-                        ),
-                      ),
+          body: Form(
+            key: controller.formKey,
+            child: SingleChildScrollView(
+              padding: 20.p,
+              child: Column(
+                children: [
+                  20.h,
+                  /// Profile Image
+                  Obx(()=>CricketImage(
+                    source: CricketImageSource.file(
+                      controller.selectedImage.value?.path ?? '',
                     ),
+                    height: 120,
+                    width: 120,
+                    borderRadius: const BorderRadius.all(Radius.circular(180)),
+                  )),
 
-                    12.h,
-
-                    TextButton(
-                      onPressed: controller.pickImage,
-                      child: const Text('Add Profile Photo'),
+                  TextButton(
+                    onPressed: controller.pickImageBottomSheet,
+                    style: TextButton.styleFrom(
+                      padding: EdgeInsets.zero,
+                      minimumSize: Size.zero,
                     ),
+                    child: CricketText(text: 'Add Profile Photo'.translation()),
+                  ),
 
-                    30.h,
+                  30.h,
 
-                    /// Username
-                    CricketTextField(
-                      controller: controller.usernameController,
-                      hintText: 'Enter username',
-                      labelText: 'Username *',
-                      prefixIcon: const Icon(Icons.person_outline),
-                      validator: controller.validateUsername,
-                      keyboardType: TextInputType.name,
-                      textCapitalization: TextCapitalization.words,
-                    ),
+                  /// Username
+                  CricketTextField(
+                    controller: controller.usernameController,
+                    hintText: 'Enter username'.translation(),
+                    labelText: 'Username'.translation(),
+                    prefixIcon: const Icon(Icons.person_outline),
+                    validator: controller.validateUsername,
+                    keyboardType: TextInputType.name,
+                    textCapitalization: TextCapitalization.words,
+                    isRequired: true,
+                  ),
 
-                    20.h,
+                  20.h,
 
-                    /// Bio
-                    CricketTextField(
-                      controller: controller.bioController,
-                      hintText: 'Tell us about yourself',
-                      labelText: 'Bio',
-                      prefixIcon: const Icon(Icons.person_outline),
-                      maxLines: 4,
-                      maxLength: 150,
-                      keyboardType: TextInputType.name,
-                      textCapitalization: TextCapitalization.words,
-                    ),
+                  /// Bio
+                  CricketTextField(
+                    controller: controller.bioController,
+                    hintText: 'Tell us about yourself'.translation(),
+                    labelText: 'Bio'.translation(),
+                    prefixIcon: const Icon(Icons.person_outline),
+                    maxLines: 4,
+                    maxLength: 150,
+                    keyboardType: TextInputType.name,
+                    textCapitalization: TextCapitalization.words,
+                  ),
 
-                    30.h,
+                  30.h,
 
-                    SizedBox(
-                      height: 55,
-                      child: ElevatedButton(
-                        onPressed: controller.updateProfile,
-                        child: const Text('Continue'),
-                      ),
-                    ),
-                  ],
-                ),
+                  CricketButton(
+                    onPressed: controller.updateProfile,
+                    buttonText: 'Continue'.translation(),
+                  ),
+                ],
               ),
             ),
           ),

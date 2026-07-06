@@ -1,6 +1,7 @@
 import 'package:cricket_scorer/config/flavor_config.dart';
 import 'package:cricket_scorer/core/database/app_database.dart';
 import 'package:cricket_scorer/core/network/api_client_service.dart';
+import 'package:cricket_scorer/core/services/compression_service.dart';
 import 'package:cricket_scorer/core/services/firebase_service.dart';
 import 'package:cricket_scorer/core/services/flavor_service.dart';
 import 'package:cricket_scorer/core/services/language_service.dart';
@@ -48,6 +49,10 @@ class CoreInjection {
     );
     await Get.putAsync<LanguageService>(
       () async => LanguageService(),
+      permanent: true,
+    );
+    await Get.putAsync<CompressionService>(
+      () async => CompressionService(),
       permanent: true,
     );
   }
