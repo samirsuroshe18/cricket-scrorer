@@ -63,6 +63,7 @@ class ForgotPasswordScreen extends StatelessWidget {
                     onPressed: controller.sendResetCode,
                   ),
 
+                  18.h,
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -71,6 +72,11 @@ class ForgotPasswordScreen extends StatelessWidget {
                       ),
                       TextButton(
                         onPressed: () => Get.back<dynamic>(),
+                        style: TextButton.styleFrom(
+                          padding: EdgeInsets.zero,
+                          minimumSize: Size.zero,
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        ),
                         child: CricketText(
                           text: 'Login'.translation(),
                           style: context.textTheme.bodyMedium?.copyWith(

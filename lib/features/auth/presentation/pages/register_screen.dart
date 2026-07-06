@@ -118,6 +118,7 @@ class RegisterScreen extends StatelessWidget {
                     onPressed: controller.register,
                   ),
 
+                  18.h,
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -126,6 +127,11 @@ class RegisterScreen extends StatelessWidget {
                       ),
                       TextButton(
                         onPressed: controller.goToLogin,
+                        style: TextButton.styleFrom(
+                          padding: EdgeInsets.zero,
+                          minimumSize: Size.zero,
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        ),
                         child: CricketText(
                           text: 'Login'.translation(),
                           style: context.textTheme.bodyMedium?.copyWith(

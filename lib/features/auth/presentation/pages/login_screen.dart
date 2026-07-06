@@ -91,11 +91,17 @@ class LoginScreen extends StatelessWidget {
                       validator: controller.validatePassword,
                     ),
                   ),
+                  12.h,
 
                   Align(
                     alignment: Alignment.centerRight,
                     child: TextButton(
                       onPressed: controller.onForgotPassword,
+                      style: TextButton.styleFrom(
+                        padding: EdgeInsets.zero,
+                        minimumSize: Size.zero,
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      ),
                       child: CricketText(
                         text: 'Forgot Password?'.translation(),
                       ),
@@ -109,6 +115,7 @@ class LoginScreen extends StatelessWidget {
                     onPressed: controller.login,
                   ),
 
+                  12.h,
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -117,6 +124,11 @@ class LoginScreen extends StatelessWidget {
                       ),
                       TextButton(
                         onPressed: controller.goToRegister,
+                        style: TextButton.styleFrom(
+                          padding: EdgeInsets.zero,
+                          minimumSize: Size.zero,
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        ),
                         child: CricketText(
                           text: 'Register'.translation(),
                           style: context.textTheme.bodyMedium?.copyWith(

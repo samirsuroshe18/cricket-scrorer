@@ -1,5 +1,9 @@
 import 'package:cricket_scorer/core/extensions/space_extension.dart';
+import 'package:cricket_scorer/core/extensions/string_extension.dart';
+import 'package:cricket_scorer/core/extensions/theme_x.dart';
+import 'package:cricket_scorer/core/global/widgets/cricket_button.dart';
 import 'package:cricket_scorer/core/global/widgets/cricket_text.dart';
+import 'package:cricket_scorer/core/global/widgets/custom_app_bar.dart';
 import 'package:cricket_scorer/features/auth/presentation/controllers/otp_verification_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -13,124 +17,109 @@ class OtpVerificationScreen extends StatelessWidget {
     return GetBuilder<OtpVerificationController>(
       builder: (controller) {
         return Scaffold(
-          appBar: AppBar(
-            backgroundColor: Colors.transparent,
-            elevation: 0,
-            leading: IconButton(
-              onPressed: () => Get.back<dynamic>(),
-              icon: const Icon(Icons.arrow_back_ios_new_rounded),
-            ),
-          ),
-          body: SafeArea(
-            child: SingleChildScrollView(
-              padding: 24.p,
-              child: Form(
-                key: controller.formKey,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    24.h,
+          appBar: const CustomAppBar(),
+          body: SingleChildScrollView(
+            padding: 24.p,
+            child: Form(
+              key: controller.formKey,
+              child: Column(
+                children: [
+                  24.h,
 
-                    Container(
-                      height: 80,
-                      width: 80,
-                      alignment: Alignment.center,
-                      decoration: BoxDecoration(
-                        color: Get.theme.primaryColor.withValues(alpha: 0.1),
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(
-                        Icons.mark_email_read_outlined,
-                        size: 40,
-                        color: Get.theme.primaryColor,
+                  const Icon(
+                    Icons.mark_email_read_outlined,
+                    size: 80,
+                  ),
+
+                  24.h,
+
+                  CricketText(
+                    text: 'Verify Your Account'.translation(),
+                    style: Get.textTheme.headlineLarge,
+                  ),
+
+                  12.h,
+
+                  Obx(
+                    () => CricketText(
+                      text:
+                          'We sent a 6-digit code to\n${controller.maskedTarget.value}'
+                              .translation(),
+                      style: Get.textTheme.bodyMedium,
+                    ),
+                  ),
+
+                  40.h,
+
+                  // OTP input boxes
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: List.generate(
+                      6,
+                      (index) => _OtpBox(
+                        controller: controller.otpControllers[index],
+                        focusNode: controller.focusNodes[index],
+                        onChanged: (value) =>
+                            controller.onOtpChanged(value, index),
                       ),
                     ),
+                  ),
 
-                    24.h,
+                  32.h,
 
-                    CricketText(
-                      text: 'Verify Your Account',
-                      style: Get.textTheme.headlineMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
+                  CricketButton(
+                    buttonText: 'Verify'.translation(),
+                    onPressed: controller.verifyOtp,
+                  ),
 
-                    12.h,
-
-                    Obx(
-                          () => CricketText(
-                        text:
-                        'We sent a 6-digit code to\n${controller.maskedTarget.value}',
-                        style: Get.textTheme.bodyMedium,
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-
-                    40.h,
-
-                    // OTP input boxes
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: List.generate(
-                        6,
-                            (index) => _OtpBox(
-                          controller: controller.otpControllers[index],
-                          focusNode: controller.focusNodes[index],
-                          onChanged: (value) =>
-                              controller.onOtpChanged(value, index),
-                        ),
-                      ),
-                    ),
-
-                    32.h,
-
-                    SizedBox(
-                      height: 55,
-                      child: ElevatedButton(
-                        onPressed: controller.verifyOtp,
-                        child: const Text('Verify'),
-                      ),
-                    ),
-
-                    24.h,
-
-                    Obx(
-                          () => controller.isResendEnabled.value
-                          ? Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Text("Didn't receive the code? "),
-                          GestureDetector(
-                            onTap: controller.resendOtp,
-                            child: Text(
-                              'Resend',
-                              style: TextStyle(
-                                color: Get.theme.primaryColor,
-                                fontWeight: FontWeight.w600,
+                  24.h,
+                  Obx(
+                    () => controller.isResendEnabled.value
+                        ? Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              CricketText(
+                                text: "Didn't receive the code?  "
+                                    .translation(),
                               ),
-                            ),
-                          ),
-                        ],
-                      )
-                          : Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Text('Resend code in '),
-                          Obx(
-                                () => Text(
-                              '${controller.resendCountdown.value}s',
-                              style: TextStyle(
-                                color: Get.theme.primaryColor,
-                                fontWeight: FontWeight.w600,
+                              TextButton(
+                                onPressed: controller.resendOtp,
+                                style: TextButton.styleFrom(
+                                  padding: EdgeInsets.zero,
+                                  minimumSize: Size.zero,
+                                  tapTargetSize:
+                                      MaterialTapTargetSize.shrinkWrap,
+                                ),
+                                child: CricketText(
+                                  text: 'Resend'.translation(),
+                                  style: context.textTheme.bodyMedium
+                                      ?.copyWith(
+                                        color: context.colorScheme.primary,
+                                      ),
+                                ),
                               ),
-                            ),
+                            ],
+                          )
+                        : Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              CricketText(
+                                text: 'Resend code in  '.translation(),
+                              ),
+                              Obx(
+                                () => CricketText(
+                                  text: '${controller.resendCountdown.value}s'
+                                      .translation(),
+                                  style: context.textTheme.bodyMedium
+                                      ?.copyWith(
+                                        color: context.colorScheme.primary,
+                                      ),
+                                ),
+                              ),
+                            ],
                           ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
           ),

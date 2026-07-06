@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 
 class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   final bool isLeading;
+  final bool centerTitle;
   final Widget? leading;
   final String title;
   final List<Widget>? actions;
@@ -14,6 +15,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   const CustomAppBar({
     super.key,
     this.isLeading = true,
+    this.centerTitle = false,
     this.leading,
     this.title = '',
     this.actions,
@@ -36,6 +38,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   @override
   Widget build(BuildContext context) {
     return AppBar(
+      centerTitle: centerTitle,
       automaticallyImplyLeading: isLeading,
       backgroundColor: backgroundColor,
       surfaceTintColor: Colors.transparent,

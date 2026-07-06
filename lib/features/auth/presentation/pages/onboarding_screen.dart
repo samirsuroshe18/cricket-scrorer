@@ -1,5 +1,6 @@
 import 'package:cricket_scorer/core/extensions/space_extension.dart';
 import 'package:cricket_scorer/core/extensions/string_extension.dart';
+import 'package:cricket_scorer/core/extensions/theme_x.dart';
 import 'package:cricket_scorer/core/global/widgets/cricket_button.dart';
 import 'package:cricket_scorer/core/global/widgets/cricket_text.dart';
 import 'package:cricket_scorer/core/global/widgets/images/cricket_image.dart';
@@ -36,6 +37,7 @@ class OnboardingScreen extends StatelessWidget {
                             height: 256,
                             width: 256,
                             fit: BoxFit.contain,
+                            color: item.title == 'Live Scoring' ? context.colorScheme.onSurfaceVariant : null,
                           ),
                           48.h,
                           CricketText(

@@ -19,61 +19,66 @@ class CustomBottomSheet {
     required String headlineText,
     bool isXButtonRequired = true,
     double? heightFactor = 0.75,
+    bool isDismissible = false,
     VoidCallback? onBackPressed,
   }) {
     final context = Get.context;
 
     return Get.bottomSheet<T>(
-      isDismissible: false,
+      isDismissible: isDismissible,
       isScrollControlled: true,
       enableDrag: false,
       Column(
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
-          if (isXButtonRequired) ...[
+          if (isXButtonRequired)
             IconButton(
               onPressed: () {
                 if (onBackPressed != null) {
                   onBackPressed();
                 } else {
-                  Get.back<T>();
+                  Get.back(result: null);
                 }
               },
-              icon: const Icon(
+              style: IconButton.styleFrom(
+                side: BorderSide.none,
+              ),
+              icon: Icon(
                 LucideIcons.circleX,
-                size: 38,
-                color: AppColor.white,
+                color: Get.theme.colorScheme.onPrimary,
+                size: 40,
+                weight: 1.5,
               ),
             ),
-            16.h,
-          ],
-          SafeArea(
-            top: false,
-            child: SizedBox(
-              height: heightFactor != null
-                  ? Get.height * heightFactor
-                  : null,
-              child: Container(
-                width: Get.width,
-                decoration: BoxDecoration(
-                  color: context?.colorScheme.surface,
-                  borderRadius: const BorderRadius.vertical(
-                    top: Radius.circular(32),
-                  ),
-                ),
-                child: Column(
-                  children: [
-                    20.h,
-                    CricketHeadlineWithFixedOutline(
-                      headlineText: headlineText,
-                    ),
+          20.h,
 
-                    Expanded(child: child),
-                  ],
-                ).paddingAll(20),
+          SizedBox(
+            height: heightFactor != null
+                ? Get.height * heightFactor
+                : null,
+            child: Container(
+              width: Get.width,
+              padding: 20.p,
+              decoration: BoxDecoration(
+                color: context?.colorScheme.surface,
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(32),
+                ),
               ),
+
+              child: Column(
+                children: [
+                  20.h,
+                  CricketHeadlineWithFixedOutline(
+                    headlineText: headlineText,
+                  ),
+
+                  Expanded(child: child),
+                ],
+              ).paddingAll(20),
             ),
           ),
+          20.h,
         ],
       ),
     );
@@ -168,90 +173,79 @@ class CustomBottomSheet {
   }
 
   static Future<T?> wrapBottomSheet<T>({
-    required Widget widget,
+    required Widget child,
     required String headlineText,
-    void Function()? onBackPressed,
-    bool isXButtonRequired = false,
+    bool isXButtonRequired = true,
     bool isHeadlineVisible = true,
     bool isDismissible = false,
+    VoidCallback? onBackPressed,
   }) {
     return Get.bottomSheet<T>(
       isDismissible: isDismissible,
       isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      Wrap(
+      enableDrag: false,
+      Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          SafeArea(
-            top: false,
-            bottom: false,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.end,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Close button
-                if (isXButtonRequired)
-                  IconButton(
-                    onPressed: () {
-                      if (onBackPressed != null) {
-                        onBackPressed();
-                      } else {
-                        Get.back(result: null);
-                      }
-                    },
-                    style: IconButton.styleFrom(
-                      side: BorderSide.none,
-                    ),
-                    icon: Icon(
-                      LucideIcons.circleX,
-                      color: Get.theme.colorScheme.onPrimary,
-                      size: 40,
-                      weight: 1.5,
-                    ),
-                  ),
+          if (isXButtonRequired)
+            IconButton(
+              onPressed: () {
+                if (onBackPressed != null) {
+                  onBackPressed();
+                } else {
+                  Get.back(result: null);
+                }
+              },
+              style: IconButton.styleFrom(
+                side: BorderSide.none,
+              ),
+              icon: Icon(
+                LucideIcons.circleX,
+                color: Get.theme.colorScheme.onPrimary,
+                size: 40,
+                weight: 1.5,
+              ),
+            ),
 
-                20.h,
+          20.h,
 
-                Flexible(
-                  child: Container(
-                    width: Get.width,
-                    padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(
-                      color: Get.theme.colorScheme.surface,
-                      borderRadius: const BorderRadius.vertical(
-                        top: Radius.circular(32),
+          Flexible(
+            child: Container(
+              width: Get.width,
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Get.theme.colorScheme.surface,
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(32),
+                ),
+              ),
+
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  20.h,
+                  if (isHeadlineVisible) ...[
+                    CricketHeadlineWithFixedOutline(
+                      headlineText: headlineText,
+                    ),
+                  ] else ...[
+                    Container(
+                      height: 4,
+                      width: 65,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(20),
+                        color: Get.theme.colorScheme.outline.withValues(
+                          alpha: 0.35,
+                        ),
                       ),
                     ),
+                  ],
 
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        if (isHeadlineVisible) ...[
-                          CricketHeadlineWithFixedOutline(
-                            headlineText: headlineText,
-                          ),
-                        ] else ...[
-                          Container(
-                            height: 4,
-                            width: 65,
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(20),
-                              color: Get.theme.colorScheme.outline.withValues(
-                                alpha: 0.35,
-                              ),
-                            ),
-                          ),
-                        ],
-
-                        const SizedBox(height: 12),
-
-                        Flexible(
-                          child: widget,
-                        ),
-                      ],
-                    ),
+                  Flexible(
+                    child: child,
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ],

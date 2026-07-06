@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:get/get_utils/src/extensions/context_extensions.dart';
 
 class CricketTextField extends StatelessWidget {
   final TextEditingController? controller;
@@ -13,6 +14,7 @@ class CricketTextField extends StatelessWidget {
   final TextCapitalization textCapitalization;
   final String? Function(String?)? validator;
   final void Function(String)? onChanged;
+  final bool isRequired;
 
   const CricketTextField({
     super.key,
@@ -28,6 +30,7 @@ class CricketTextField extends StatelessWidget {
     this.textCapitalization = TextCapitalization.none,
     this.validator,
     this.onChanged,
+    this.isRequired = false
   });
 
   @override
@@ -43,7 +46,20 @@ class CricketTextField extends StatelessWidget {
       maxLines: maxLines,
       decoration: InputDecoration(
         hintText: hintText,
-        labelText: labelText,
+        label: RichText(
+          text: TextSpan(
+            text: labelText,
+            style: context.textTheme.bodyMedium,
+            children: isRequired
+                ? [
+              TextSpan(
+                text: ' *',
+                style: context.textTheme.bodyMedium?.copyWith(color: Colors.red),
+              ),
+            ]
+                : [],
+          ),
+        ),
         prefixIcon: prefixIcon,
         suffixIcon: suffixIcon,
         border: OutlineInputBorder(

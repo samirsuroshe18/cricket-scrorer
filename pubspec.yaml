@@ -32,6 +32,9 @@ dependencies:
   firebase_messaging: ^16.4.1
   flutter_local_notifications: ^22.0.1
   cached_network_image: ^3.4.1
+  ffmpeg_kit_flutter_new: ^4.3.2
+  path_provider: ^2.1.6
+  permission_handler: ^12.0.3
 
 dev_dependencies:
   flutter_test:
