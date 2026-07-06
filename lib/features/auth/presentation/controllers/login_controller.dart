@@ -132,9 +132,10 @@ class LoginController extends GetxController {
                       as Map<String, dynamic>,
             ),
           );
-        } else if (!(response.result.data?.loggedInUser!.profileCompleted ??
-            false)) {
+          return;
+        } else if (!(response.result.data?.loggedInUser?.profileCompleted ?? false)) {
           unawaited(Get.offAllNamed(AppRoutes.updateProfile));
+          return;
         } else {
           unawaited(Get.offAllNamed(AppRoutes.home));
         }
@@ -146,7 +147,6 @@ class LoginController extends GetxController {
             updateLanguageUseCase: Get.find<UpdateLanguageUseCase>(),
           ),
         );
-        unawaited(Get.offAllNamed<dynamic>(AppRoutes.home));
       } catch (e) {
         CricketSnackbar.showErrorMessage(
           'Failed to save login session. Please try again.',
@@ -164,7 +164,7 @@ class LoginController extends GetxController {
           ),
         );
       }
-      CricketSnackbar.showErrorMessage(response.fallback.message);
+      CricketSnackbar.showAlertMessage(response.fallback.message);
     }
   }
 

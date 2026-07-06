@@ -69,7 +69,7 @@ class LanguageService extends GetxService {
     }
   }
 
-  Future<bool> fetchTranslationKeys({
+  Future<void> fetchTranslationKeys({
     required GetVersionUseCase getVersionUseCase,
     required GetLanguageUseCase getLanguageUseCase,
   }) async {
@@ -95,7 +95,8 @@ class LanguageService extends GetxService {
           .toString();
 
       if (savedVersion != null && savedVersion == remoteVersion) {
-        return false;
+        unawaited(loadSavedTranslations());
+        return;
       }
 
       Either<CricketResponse<List<TranslationModel>>, CricketFailure> language =
@@ -109,20 +110,23 @@ class LanguageService extends GetxService {
         };
 
         Get.addTranslations(translations);
+
+        await SharedPreferenceService.sharedPrefService.set(
+          SharedPrefKey.translations,
+          jsonEncode(translations),
+        );
+
         await SharedPreferenceService.sharedPrefService.set(
           SharedPrefKey.savedLangVersion,
           remoteVersion ?? '1',
         );
-        return true;
       } else {
         CricketSnackbar.showErrorMessage(language.fallback.message);
       }
-      return false;
     } catch (e) {
       if (kDebugMode) {
         print(e);
       }
-      return false;
     }
   }
 
@@ -189,16 +193,14 @@ class LanguageService extends GetxService {
     try {
       Either<CricketResponse<Map<String, dynamic>>, CricketFailure> result =
           await updateLanguageUseCase(params: languageCode);
-      if (!result.isResult) {
+      if (result.isResult) {
         if (kDebugMode) {
-          print(
-            '[LanguageService] Server language update failed: ${result.fallback.message}',
-          );
+          print('[LanguageService] Server language updated successfully');
         }
       } else {
         if (kDebugMode) {
           print(
-            '[LanguageService] _syncLanguageToServer error: ${result.fallback.message}',
+            '[LanguageService] Server language update failed: ${result.fallback.message}',
           );
         }
       }
@@ -255,5 +257,22 @@ class LanguageService extends GetxService {
         print('[LanguageService] syncLanguageFromServer error: $e');
       }
     }
+  }
+
+  Future<void> loadSavedTranslations() async {
+    final String? json = await SharedPreferenceService.sharedPrefService.get(
+      SharedPrefKey.translations,
+    ) as String?;
+
+    if (json == null) return;
+
+    final Map<String, dynamic> decoded = jsonDecode(json) as Map<String, dynamic>;
+
+    final translations = decoded.map((language, value) => MapEntry(
+      language,
+      Map<String, String>.from(value as Map),
+    ));
+
+    Get.addTranslations(translations);
   }
 }

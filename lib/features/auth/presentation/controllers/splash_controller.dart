@@ -49,12 +49,6 @@ class SplashController extends GetxController
     _navigate();
   }
 
-  @override
-  void onClose() {
-    animationController.dispose();
-    super.onClose();
-  }
-
   /// Called from the view once Lottie composition loads
   void onLottieLoaded(Duration compositionDuration) {
     animationController
@@ -120,5 +114,11 @@ class SplashController extends GetxController
     } else {
       unawaited(Get.offAllNamed(AppRoutes.login));
     }
+  }
+
+  @override
+  void onClose() {
+    animationController.dispose();
+    super.onClose();
   }
 }

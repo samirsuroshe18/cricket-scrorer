@@ -50,7 +50,8 @@ class SetPasswordScreen extends StatelessWidget {
                   Obx(
                     () => CricketTextField(
                       controller: controller.passwordController,
-                      hintText: 'New Password'.translation(),
+                      labelText: 'New password'.translation(),
+                      hintText: 'Enter new Password'.translation(),
                       obscureText: !controller.isPasswordVisible.value,
                       prefixIcon: const Icon(Icons.lock_outline),
                       suffixIcon: IconButton(
@@ -62,6 +63,7 @@ class SetPasswordScreen extends StatelessWidget {
                         ),
                       ),
                       validator: controller.validatePassword,
+                      isRequired: true,
                     ),
                   ),
 
@@ -70,7 +72,8 @@ class SetPasswordScreen extends StatelessWidget {
                   Obx(
                     () => CricketTextField(
                       controller: controller.confirmPasswordController,
-                      hintText: 'Confirm New Password'.translation(),
+                      labelText: 'Confirm new password'.translation(),
+                      hintText: 'Enter confirm new password'.translation(),
                       obscureText: !controller.isConfirmPasswordVisible.value,
                       prefixIcon: const Icon(Icons.lock_outline),
                       suffixIcon: IconButton(
@@ -82,6 +85,7 @@ class SetPasswordScreen extends StatelessWidget {
                         ),
                       ),
                       validator: controller.validateConfirmPassword,
+                      isRequired: true,
                     ),
                   ),
 

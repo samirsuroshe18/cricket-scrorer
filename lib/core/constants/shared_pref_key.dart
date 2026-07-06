@@ -3,12 +3,10 @@ class SharedPrefKey {
 
   static const String accessToken = 'accessToken';
   static const String refreshToken = 'refreshToken';
-  static const String isRegistrationCompleted = 'isRegistrationCompleted';
   static const String userDetails = 'userDetails';
-  static const String isChartered = 'isChartered';
-  static const String userType = 'userType';
   static const String onboardingCompleted = 'onboardingCompleted';
   static const String themeMode = 'themeMode';
   static const String language = 'language';
   static const String savedLangVersion = 'savedLangVersion';
+  static const String translations = 'translations';
 }

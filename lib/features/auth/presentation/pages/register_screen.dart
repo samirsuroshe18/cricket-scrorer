@@ -54,18 +54,21 @@ class RegisterScreen extends StatelessWidget {
 
                   CricketTextField(
                     controller: controller.fullNameController,
-                    hintText: 'Full Name'.translation(),
+                    labelText: 'Full Name'.translation(),
+                    hintText: 'Enter Full Name'.translation(),
                     prefixIcon: const Icon(Icons.person_outline),
                     validator: controller.validateFullName,
                     keyboardType: TextInputType.name,
                     textCapitalization: TextCapitalization.words,
+                    isRequired: true,
                   ),
 
                   16.h,
 
                   CricketTextField(
                     controller: controller.emailController,
-                    hintText: 'Email'.translation(),
+                    labelText: 'Email'.translation(),
+                    hintText: 'Enter email'.translation(),
                     prefixIcon: const Icon(Icons.email_outlined),
                     validator: controller.validateEmail,
                     keyboardType: TextInputType.emailAddress,
@@ -76,7 +79,8 @@ class RegisterScreen extends StatelessWidget {
                   Obx(
                     () => CricketTextField(
                       controller: controller.passwordController,
-                      hintText: 'Password'.translation(),
+                      labelText: 'Password'.translation(),
+                      hintText: 'Enter Password'.translation(),
                       obscureText: !controller.isPasswordVisible.value,
                       prefixIcon: const Icon(Icons.lock_outline),
                       suffixIcon: IconButton(
@@ -88,6 +92,7 @@ class RegisterScreen extends StatelessWidget {
                         ),
                       ),
                       validator: controller.validatePassword,
+                      isRequired: true,
                     ),
                   ),
 
@@ -96,7 +101,8 @@ class RegisterScreen extends StatelessWidget {
                   Obx(
                     () => CricketTextField(
                       controller: controller.confirmPasswordController,
-                      hintText: 'Confirm Password'.translation(),
+                      labelText: 'Confirm Password'.translation(),
+                      hintText: 'Enter Confirm Password'.translation(),
                       obscureText: !controller.isConfirmPasswordVisible.value,
                       prefixIcon: const Icon(Icons.lock_outline),
                       suffixIcon: IconButton(

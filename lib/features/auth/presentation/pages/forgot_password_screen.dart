@@ -50,10 +50,12 @@ class ForgotPasswordScreen extends StatelessWidget {
 
                   CricketTextField(
                     controller: controller.emailController,
-                    hintText: 'Email'.translation(),
+                    labelText: 'Email'.translation(),
+                    hintText: 'Enter email'.translation(),
                     prefixIcon: const Icon(Icons.email_outlined),
                     validator: controller.validateEmail,
                     keyboardType: TextInputType.emailAddress,
+                    isRequired: true,
                   ),
 
                   24.h,

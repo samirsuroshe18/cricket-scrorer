@@ -117,11 +117,6 @@ class SharedPreferenceService extends GetxService {
     _instanceChecker();
     await _sharedPreferences?.remove(SharedPrefKey.accessToken);
     await _sharedPreferences?.remove(SharedPrefKey.refreshToken);
-    await _sharedPreferences?.remove(SharedPrefKey.isRegistrationCompleted);
     await _sharedPreferences?.remove(SharedPrefKey.userDetails);
-    await _sharedPreferences?.remove(SharedPrefKey.isChartered);
-    await _sharedPreferences?.remove(SharedPrefKey.userType);
-    await _sharedPreferences?.remove(SharedPrefKey.onboardingCompleted);
-    await _sharedPreferences?.remove(SharedPrefKey.savedLangVersion);
   }
 }

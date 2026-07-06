@@ -10,7 +10,6 @@ import 'package:cricket_scorer/core/global/widgets/images/cricket_image.dart';
 import 'package:cricket_scorer/core/global/widgets/images/cricket_image_source.dart';
 import 'package:cricket_scorer/core/global/widgets/language_picker_button.dart';
 import 'package:cricket_scorer/core/global/widgets/theme_picker_button.dart';
-import 'package:cricket_scorer/core/translations/translation_keys.dart';
 import 'package:cricket_scorer/features/auth/presentation/controllers/login_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -64,10 +63,12 @@ class LoginScreen extends StatelessWidget {
 
                   CricketTextField(
                     controller: controller.emailController,
-                    hintText: 'Email'.translation(),
+                    hintText: 'Enter email'.translation(),
+                    labelText: 'Email'.translation(),
                     prefixIcon: const Icon(Icons.email_outlined),
                     validator: controller.validateEmail,
                     keyboardType: TextInputType.emailAddress,
+                    isRequired: true,
                   ),
 
                   16.h,
@@ -75,7 +76,8 @@ class LoginScreen extends StatelessWidget {
                   Obx(
                     () => CricketTextField(
                       controller: controller.passwordController,
-                      hintText: 'Password'.translation(),
+                      hintText: 'Enter password'.translation(),
+                      labelText: 'Password'.translation(),
                       obscureText: !controller.isPasswordVisible.value,
                       prefixIcon: const Icon(Icons.lock_outline),
                       suffixIcon: IconButton(
@@ -89,6 +91,7 @@ class LoginScreen extends StatelessWidget {
                         ),
                       ),
                       validator: controller.validatePassword,
+                      isRequired: true,
                     ),
                   ),
                   12.h,
@@ -111,7 +114,7 @@ class LoginScreen extends StatelessWidget {
                   20.h,
 
                   CricketButton(
-                    buttonText: TranslationKeys.login.tr,
+                    buttonText: 'welcome_message'.tr,
                     onPressed: controller.login,
                   ),
 
