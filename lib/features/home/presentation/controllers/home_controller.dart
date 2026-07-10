@@ -9,6 +9,7 @@ import 'package:cricket_scorer/core/network/api_client_service.dart';
 import 'package:cricket_scorer/core/network/models/cricket_response.dart';
 import 'package:cricket_scorer/core/services/secure_storages_service.dart';
 import 'package:cricket_scorer/core/services/shared_preference_service.dart';
+import 'package:cricket_scorer/core/translations/translation_keys.dart';
 import 'package:cricket_scorer/core/utils/either_util.dart';
 import 'package:cricket_scorer/features/auth/data/models/request/logout_req.dart';
 import 'package:cricket_scorer/features/auth/domain/usecases/logout.dart';
@@ -52,7 +53,7 @@ class HomeController extends GetxController {
       }
     } catch (_) {
       CricketSnackbar.showErrorMessage(
-        'Failed to logged out. Please try again.',
+        TranslationKeys.failedToLogout.tr,
       );
     }
   }

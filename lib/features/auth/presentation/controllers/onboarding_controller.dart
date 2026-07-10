@@ -3,8 +3,8 @@ import 'dart:async';
 import 'package:cricket_scorer/config/routes/app_routes.dart';
 import 'package:cricket_scorer/core/constants/assets_util.dart';
 import 'package:cricket_scorer/core/constants/shared_pref_key.dart';
-import 'package:cricket_scorer/core/extensions/string_extension.dart';
 import 'package:cricket_scorer/core/services/shared_preference_service.dart';
+import 'package:cricket_scorer/core/translations/translation_keys.dart';
 import 'package:cricket_scorer/features/auth/data/models/onboarding_item.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -61,19 +61,18 @@ class OnboardingController extends GetxController {
   final onboardingPages = [
     OnboardingItem(
       image: AssetsUtil.onboarding1,
-      title: 'Live Scoring'.translation(),
-      description:
-          'Record every run, wicket, current over with intuitive controls.'.translation(),
+      title: TranslationKeys.liveScoring.tr,
+      description: TranslationKeys.liveScoringDesc.tr,
     ),
     OnboardingItem(
       image: AssetsUtil.onboarding2,
-      title: 'deep Match stats'.translation(),
-      description: 'Track your match progress and key stats in real-time.'.translation(),
+      title: TranslationKeys.deepMatchStats.tr,
+      description: TranslationKeys.deepMatchStatsDesc.tr,
     ),
     OnboardingItem(
       image: AssetsUtil.onboarding3,
-      title: 'Share The victory'.translation(),
-      description: 'Instantly share match summaries and team stats.'.translation(),
+      title: TranslationKeys.shareTheVictory.tr,
+      description: TranslationKeys.shareTheVictoryDesc.tr,
     ),
   ];
 }

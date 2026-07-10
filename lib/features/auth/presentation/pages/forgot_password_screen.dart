@@ -1,10 +1,10 @@
 import 'package:cricket_scorer/core/extensions/space_extension.dart';
-import 'package:cricket_scorer/core/extensions/string_extension.dart';
 import 'package:cricket_scorer/core/extensions/theme_x.dart';
 import 'package:cricket_scorer/core/global/widgets/cricket_button.dart';
 import 'package:cricket_scorer/core/global/widgets/cricket_text.dart';
 import 'package:cricket_scorer/core/global/widgets/cricket_text_field.dart';
 import 'package:cricket_scorer/core/global/widgets/custom_app_bar.dart';
+import 'package:cricket_scorer/core/translations/translation_keys.dart';
 import 'package:cricket_scorer/features/auth/presentation/controllers/forgot_password_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -33,16 +33,14 @@ class ForgotPasswordScreen extends StatelessWidget {
                   24.h,
 
                   CricketText(
-                    text: 'Forgot Password?'.translation(),
+                    text: TranslationKeys.forgotPassword.tr,
                     style: Get.textTheme.headlineLarge,
                   ),
 
                   12.h,
 
                   CricketText(
-                    text:
-                        'Enter your registered email and we\'ll send\nyou a reset code.'
-                            .translation(),
+                    text: TranslationKeys.forgotPasswordDesc.tr,
                     style: Get.textTheme.bodyMedium,
                   ),
 
@@ -50,8 +48,8 @@ class ForgotPasswordScreen extends StatelessWidget {
 
                   CricketTextField(
                     controller: controller.emailController,
-                    labelText: 'Email'.translation(),
-                    hintText: 'Enter email'.translation(),
+                    labelText: TranslationKeys.email.tr,
+                    hintText: TranslationKeys.enterEmail.tr,
                     prefixIcon: const Icon(Icons.email_outlined),
                     validator: controller.validateEmail,
                     keyboardType: TextInputType.emailAddress,
@@ -61,7 +59,7 @@ class ForgotPasswordScreen extends StatelessWidget {
                   24.h,
 
                   CricketButton(
-                    buttonText: 'Send Reset Code'.translation(),
+                    buttonText: TranslationKeys.sendResetCode.tr,
                     onPressed: controller.sendResetCode,
                   ),
 
@@ -70,7 +68,7 @@ class ForgotPasswordScreen extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       CricketText(
-                        text: 'Remembered your password? '.translation(),
+                        text: TranslationKeys.rememberedPassword.tr,
                       ),
                       TextButton(
                         onPressed: () => Get.back<dynamic>(),
@@ -80,7 +78,7 @@ class ForgotPasswordScreen extends StatelessWidget {
                           tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                         ),
                         child: CricketText(
-                          text: 'Login'.translation(),
+                          text: TranslationKeys.login.tr,
                           style: context.textTheme.bodyMedium?.copyWith(
                             color: context.colorScheme.primary,
                           ),

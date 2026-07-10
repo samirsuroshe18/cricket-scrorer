@@ -5,6 +5,7 @@ import 'package:cricket_scorer/core/error/cricket_failure.dart';
 import 'package:cricket_scorer/core/global/widgets/dialogue/custom_dialog.dart';
 import 'package:cricket_scorer/core/global/widgets/snackbars/cricket_snackbar.dart';
 import 'package:cricket_scorer/core/network/models/cricket_response.dart';
+import 'package:cricket_scorer/core/translations/translation_keys.dart';
 import 'package:cricket_scorer/core/utils/either_util.dart';
 import 'package:cricket_scorer/features/auth/data/models/request/verify_otp_req.dart';
 import 'package:cricket_scorer/features/auth/data/models/response/verify_otp_res.dart';
@@ -99,7 +100,7 @@ class OtpVerificationController extends GetxController {
   Future<void> verifyOtp() async {
     if (!formKey.currentState!.validate()) {
       CricketSnackbar.showErrorMessage(
-        'Please enter the complete 6-digit code',
+        TranslationKeys.enterCompleteCode.tr,
       );
       return;
     }
@@ -107,7 +108,7 @@ class OtpVerificationController extends GetxController {
     final otp = _otpCode;
     if (otp.length < 6) {
       CricketSnackbar.showErrorMessage(
-        'Please enter the complete 6-digit code',
+        TranslationKeys.enterCompleteCode.tr,
       );
       return;
     }

@@ -1,9 +1,9 @@
 import 'package:cricket_scorer/core/extensions/space_extension.dart';
-import 'package:cricket_scorer/core/extensions/string_extension.dart';
 import 'package:cricket_scorer/core/global/widgets/cricket_button.dart';
 import 'package:cricket_scorer/core/global/widgets/cricket_text.dart';
 import 'package:cricket_scorer/core/global/widgets/cricket_text_field.dart';
 import 'package:cricket_scorer/core/global/widgets/custom_app_bar.dart';
+import 'package:cricket_scorer/core/translations/translation_keys.dart';
 import 'package:cricket_scorer/features/auth/presentation/controllers/set_password_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -33,14 +33,13 @@ class SetPasswordScreen extends StatelessWidget {
                   24.h,
 
                   CricketText(
-                    text: 'Set New Password'.translation(),
+                    text: TranslationKeys.setNewPassword.tr,
                     style: Get.textTheme.headlineLarge,
                   ),
                   12.h,
 
                   CricketText(
-                    text:
-                        'Your new password must be different\nfrom your previous password.'.translation(),
+                    text: TranslationKeys.setNewPasswordDesc.tr,
                     style: Get.textTheme.bodyMedium,
                     textAlign: TextAlign.center,
                   ),
@@ -50,8 +49,8 @@ class SetPasswordScreen extends StatelessWidget {
                   Obx(
                     () => CricketTextField(
                       controller: controller.passwordController,
-                      labelText: 'New password'.translation(),
-                      hintText: 'Enter new Password'.translation(),
+                      labelText: TranslationKeys.newPassword.tr,
+                      hintText: TranslationKeys.enterNewPassword.tr,
                       obscureText: !controller.isPasswordVisible.value,
                       prefixIcon: const Icon(Icons.lock_outline),
                       suffixIcon: IconButton(
@@ -72,8 +71,8 @@ class SetPasswordScreen extends StatelessWidget {
                   Obx(
                     () => CricketTextField(
                       controller: controller.confirmPasswordController,
-                      labelText: 'Confirm new password'.translation(),
-                      hintText: 'Enter confirm new password'.translation(),
+                      labelText: TranslationKeys.confirmNewPassword.tr,
+                      hintText: TranslationKeys.enterConfirmNewPassword.tr,
                       obscureText: !controller.isConfirmPasswordVisible.value,
                       prefixIcon: const Icon(Icons.lock_outline),
                       suffixIcon: IconButton(
@@ -137,7 +136,7 @@ class SetPasswordScreen extends StatelessWidget {
 
                   32.h,
                   CricketButton(
-                    buttonText: 'Reset Password'.translation(),
+                    buttonText: TranslationKeys.resetPassword.tr,
                     onPressed: controller.resetPassword,
                   )
                 ],

@@ -6,6 +6,7 @@ import 'package:cricket_scorer/core/global/widgets/snackbars/cricket_snackbar.da
 import 'package:cricket_scorer/core/network/api_client_service.dart';
 import 'package:cricket_scorer/core/services/secure_storages_service.dart';
 import 'package:cricket_scorer/core/services/shared_preference_service.dart';
+import 'package:cricket_scorer/core/translations/translation_keys.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:get/get.dart' hide Response;
@@ -188,7 +189,7 @@ class AuthInterceptor extends Interceptor {
     unawaited(Get.offAllNamed<dynamic>(AppRoutes.login));
 
     CricketSnackbar.showAlertMessage(
-      'Your session has expired. Please log in again.',
+      TranslationKeys.sessionExpired.tr,
     );
   }
 

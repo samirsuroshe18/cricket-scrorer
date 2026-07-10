@@ -1,7 +1,7 @@
-import 'package:cricket_scorer/core/extensions/string_extension.dart';
 import 'package:cricket_scorer/core/global/domain/usecases/get_language.dart';
 import 'package:cricket_scorer/core/global/domain/usecases/get_version.dart';
 import 'package:cricket_scorer/core/services/language_service.dart';
+import 'package:cricket_scorer/core/translations/translation_keys.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -16,7 +16,7 @@ class LanguagePickerButton extends StatelessWidget {
 
     return IconButton(
       icon: const Icon(Icons.language),
-      tooltip: 'Language'.translation(),
+      tooltip: TranslationKeys.language.tr,
       onPressed: () {
         languageService.selectLanguage(
           getVersionUseCase: versionUseCase,

@@ -1,7 +1,7 @@
 import 'dart:async';
 
-import 'package:cricket_scorer/core/extensions/string_extension.dart';
 import 'package:cricket_scorer/core/services/theme_service.dart';
+import 'package:cricket_scorer/core/translations/translation_keys.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -21,7 +21,7 @@ class ThemePickerButton extends StatelessWidget {
 
       return IconButton(
         icon: Icon(icon),
-        tooltip: 'Theme'.translation(),
+        tooltip: TranslationKeys.theme.tr,
         onPressed: () => unawaited(themeService.selectTheme()),
       );
     });

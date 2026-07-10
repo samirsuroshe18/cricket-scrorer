@@ -14,6 +14,7 @@ import 'package:cricket_scorer/core/network/models/cricket_response.dart';
 import 'package:cricket_scorer/core/services/language_service.dart';
 import 'package:cricket_scorer/core/services/secure_storages_service.dart';
 import 'package:cricket_scorer/core/services/shared_preference_service.dart';
+import 'package:cricket_scorer/core/translations/translation_keys.dart';
 import 'package:cricket_scorer/core/utils/either_util.dart';
 import 'package:cricket_scorer/features/auth/data/models/login_request_model.dart';
 import 'package:cricket_scorer/features/auth/data/models/login_response.dart';
@@ -58,11 +59,11 @@ class LoginController extends GetxController {
 
   String? validateEmail(String? value) {
     if (value == null || value.trim().isEmpty) {
-      return 'Email is required';
+      return TranslationKeys.emailRequired.tr;
     }
 
     if (!GetUtils.isEmail(value.trim())) {
-      return 'Enter a valid email';
+      return TranslationKeys.enterValidEmail.tr;
     }
 
     return null;
@@ -70,11 +71,11 @@ class LoginController extends GetxController {
 
   String? validatePassword(String? value) {
     if (value == null || value.trim().isEmpty) {
-      return 'Password is required';
+      return TranslationKeys.passwordRequired.tr;
     }
 
     if (value.length < 6) {
-      return 'Password must be at least 6 characters';
+      return TranslationKeys.passwordTooShort.tr;
     }
 
     return null;
@@ -149,7 +150,7 @@ class LoginController extends GetxController {
         );
       } catch (e) {
         CricketSnackbar.showErrorMessage(
-          'Failed to save login session. Please try again.',
+          TranslationKeys.failedToSaveSession.tr,
         );
       }
     } else {

@@ -2,8 +2,8 @@ import 'package:json_annotation/json_annotation.dart';
 
 @JsonEnum(valueField: 'type')
 enum UserType {
-  standardUser('standardUser'),
-  institutionUser('institutionUser');
+  player('player'),
+  organization('organization');
 
   final String type;
 

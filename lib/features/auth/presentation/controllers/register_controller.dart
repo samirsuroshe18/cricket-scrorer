@@ -5,6 +5,7 @@ import 'package:cricket_scorer/core/error/cricket_failure.dart';
 import 'package:cricket_scorer/core/global/widgets/dialogue/custom_dialog.dart';
 import 'package:cricket_scorer/core/global/widgets/snackbars/cricket_snackbar.dart';
 import 'package:cricket_scorer/core/network/models/cricket_response.dart';
+import 'package:cricket_scorer/core/translations/translation_keys.dart';
 import 'package:cricket_scorer/core/utils/either_util.dart';
 import 'package:cricket_scorer/features/auth/data/models/request/register_req.dart';
 import 'package:cricket_scorer/features/auth/domain/usecases/register.dart';
@@ -40,40 +41,40 @@ class RegisterController extends GetxController {
 
   String? validateFullName(String? value) {
     if (value == null || value.trim().isEmpty) {
-      return 'Full name is required';
+      return TranslationKeys.fullNameRequired.tr;
     }
     if (value.trim().length < 2) {
-      return 'Name must be at least 2 characters';
+      return TranslationKeys.nameTooShort.tr;
     }
     return null;
   }
 
   String? validateEmail(String? value) {
     if (value == null || value.trim().isEmpty) {
-      return 'Email is required';
+      return TranslationKeys.emailRequired.tr;
     }
     if (!GetUtils.isEmail(value.trim())) {
-      return 'Enter a valid email';
+      return TranslationKeys.enterValidEmail.tr;
     }
     return null;
   }
 
   String? validatePassword(String? value) {
     if (value == null || value.trim().isEmpty) {
-      return 'Password is required';
+      return TranslationKeys.passwordRequired.tr;
     }
     if (value.length < 6) {
-      return 'Password must be at least 6 characters';
+      return TranslationKeys.passwordTooShort.tr;
     }
     return null;
   }
 
   String? validateConfirmPassword(String? value) {
     if (value == null || value.trim().isEmpty) {
-      return 'Please confirm your password';
+      return TranslationKeys.confirmPasswordRequired.tr;
     }
     if (value != passwordController.text) {
-      return 'Passwords do not match';
+      return TranslationKeys.passwordsDoNotMatch.tr;
     }
     return null;
   }

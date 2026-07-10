@@ -5,4 +5,5 @@ class GlobalEndpoint {
   final String getLanguage = '/v1/translations/all';
   final String getUserLanguage = '/v1/user/language';
   final String updateLanguage = '/v1/user/language';
+  static const String refreshToken = '/api/v1/user/refresh-token';
 }

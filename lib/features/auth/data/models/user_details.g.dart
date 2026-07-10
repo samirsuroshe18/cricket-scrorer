@@ -22,6 +22,6 @@ Map<String, dynamic> _$UserDetailsToJson(UserDetails instance) =>
     };
 
 const _$UserTypeEnumMap = {
-  UserType.standardUser: 'standardUser',
-  UserType.institutionUser: 'institutionUser',
+  UserType.player: 'player',
+  UserType.organization: 'organization',
 };

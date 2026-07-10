@@ -4,13 +4,13 @@ import 'dart:io';
 import 'package:cricket_scorer/config/routes/app_routes.dart';
 import 'package:cricket_scorer/core/constants/error_string_constants.dart';
 import 'package:cricket_scorer/core/error/cricket_failure.dart';
-import 'package:cricket_scorer/core/extensions/string_extension.dart';
 import 'package:cricket_scorer/core/global/widgets/bootom_sheets/custom_bottomsheet.dart';
 import 'package:cricket_scorer/core/global/widgets/bootom_sheets/wigets/choose_photo_option.dart';
 import 'package:cricket_scorer/core/global/widgets/dialogue/custom_dialog.dart';
 import 'package:cricket_scorer/core/global/widgets/snackbars/cricket_snackbar.dart';
 import 'package:cricket_scorer/core/network/models/cricket_response.dart';
 import 'package:cricket_scorer/core/services/compression_service.dart';
+import 'package:cricket_scorer/core/translations/translation_keys.dart';
 import 'package:cricket_scorer/core/utils/either_util.dart';
 import 'package:cricket_scorer/features/auth/data/models/request/update_profile_req.dart';
 import 'package:cricket_scorer/features/auth/domain/usecases/update_profile.dart';
@@ -65,7 +65,7 @@ class UpdateProfileController extends GetxController {
 
   void pickImageBottomSheet() async {
     await CustomBottomSheet.wrapBottomSheet<dynamic>(
-      headlineText: 'Add Profile Photo'.translation(),
+      headlineText: TranslationKeys.addProfilePhoto.tr,
       child: ChoosePhotoOption(
         onCameraCallback: () async {
           Get.back<dynamic>();
@@ -113,11 +113,11 @@ class UpdateProfileController extends GetxController {
 
   String? validateUsername(String? value) {
     if (value == null || value.trim().isEmpty) {
-      return 'Username is required';
+      return TranslationKeys.usernameRequired.tr;
     }
 
     if (value.trim().length < 3) {
-      return 'Username must be at least 3 characters';
+      return TranslationKeys.usernameTooShort.tr;
     }
 
     return null;

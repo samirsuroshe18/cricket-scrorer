@@ -1,10 +1,10 @@
 import 'package:cricket_scorer/core/extensions/space_extension.dart';
-import 'package:cricket_scorer/core/extensions/string_extension.dart';
 import 'package:cricket_scorer/core/extensions/theme_x.dart';
 import 'package:cricket_scorer/core/global/widgets/cricket_button.dart';
 import 'package:cricket_scorer/core/global/widgets/cricket_text.dart';
 import 'package:cricket_scorer/core/global/widgets/images/cricket_image.dart';
 import 'package:cricket_scorer/core/global/widgets/images/cricket_image_source.dart';
+import 'package:cricket_scorer/core/translations/translation_keys.dart';
 import 'package:cricket_scorer/features/auth/presentation/controllers/onboarding_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -86,7 +86,7 @@ class OnboardingScreen extends StatelessWidget {
                     TextButton(
                       onPressed: controller.skip,
                       child: CricketText(
-                        text: 'Skip'.translation(),
+                        text: TranslationKeys.skip.tr,
                         style: context.textTheme.bodyLarge,
                       ),
                     ),
@@ -96,8 +96,8 @@ class OnboardingScreen extends StatelessWidget {
                         width: 80,
                         onPressed: controller.nextPage,
                         buttonText: controller.currentPage.value == 2
-                            ? 'Get Started'.translation()
-                            : 'Next'.translation(),
+                            ? TranslationKeys.getStarted.tr
+                            : TranslationKeys.next.tr,
                       ),
                     ),
                   ],

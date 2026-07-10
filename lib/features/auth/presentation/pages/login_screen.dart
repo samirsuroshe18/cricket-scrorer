@@ -1,6 +1,5 @@
 import 'package:cricket_scorer/core/constants/assets_util.dart';
 import 'package:cricket_scorer/core/extensions/space_extension.dart';
-import 'package:cricket_scorer/core/extensions/string_extension.dart';
 import 'package:cricket_scorer/core/extensions/theme_x.dart';
 import 'package:cricket_scorer/core/global/widgets/cricket_button.dart';
 import 'package:cricket_scorer/core/global/widgets/cricket_text.dart';
@@ -10,6 +9,7 @@ import 'package:cricket_scorer/core/global/widgets/images/cricket_image.dart';
 import 'package:cricket_scorer/core/global/widgets/images/cricket_image_source.dart';
 import 'package:cricket_scorer/core/global/widgets/language_picker_button.dart';
 import 'package:cricket_scorer/core/global/widgets/theme_picker_button.dart';
+import 'package:cricket_scorer/core/translations/translation_keys.dart';
 import 'package:cricket_scorer/features/auth/presentation/controllers/login_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -46,7 +46,7 @@ class LoginScreen extends StatelessWidget {
                   24.h,
 
                   CricketText(
-                    text: 'Cricket Scorer'.translation(),
+                    text: TranslationKeys.cricketScorer.tr,
                     textAlign: TextAlign.center,
                     style: context.textTheme.headlineLarge,
                   ),
@@ -54,7 +54,7 @@ class LoginScreen extends StatelessWidget {
                   8.h,
 
                   CricketText(
-                    text: 'Track every ball, every run'.translation(),
+                    text: TranslationKeys.trackEveryBall.tr,
                     style: Get.textTheme.bodyMedium,
                     textAlign: TextAlign.center,
                   ),
@@ -63,8 +63,8 @@ class LoginScreen extends StatelessWidget {
 
                   CricketTextField(
                     controller: controller.emailController,
-                    hintText: 'Enter email'.translation(),
-                    labelText: 'Email'.translation(),
+                    hintText: TranslationKeys.enterEmail.tr,
+                    labelText: TranslationKeys.email.tr,
                     prefixIcon: const Icon(Icons.email_outlined),
                     validator: controller.validateEmail,
                     keyboardType: TextInputType.emailAddress,
@@ -76,8 +76,8 @@ class LoginScreen extends StatelessWidget {
                   Obx(
                     () => CricketTextField(
                       controller: controller.passwordController,
-                      hintText: 'Enter password'.translation(),
-                      labelText: 'Password'.translation(),
+                      hintText: TranslationKeys.enterPassword.tr,
+                      labelText: TranslationKeys.password.tr,
                       obscureText: !controller.isPasswordVisible.value,
                       prefixIcon: const Icon(Icons.lock_outline),
                       suffixIcon: IconButton(
@@ -106,7 +106,7 @@ class LoginScreen extends StatelessWidget {
                         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                       ),
                       child: CricketText(
-                        text: 'Forgot Password?'.translation(),
+                        text: TranslationKeys.forgotPassword.tr,
                       ),
                     ),
                   ),
@@ -114,7 +114,7 @@ class LoginScreen extends StatelessWidget {
                   20.h,
 
                   CricketButton(
-                    buttonText: 'welcome_message'.tr,
+                    buttonText: TranslationKeys.login.tr,
                     onPressed: controller.login,
                   ),
 
@@ -123,7 +123,7 @@ class LoginScreen extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       CricketText(
-                        text: "Don't have an account? ".translation(),
+                        text: TranslationKeys.dontHaveAccount.tr,
                       ),
                       TextButton(
                         onPressed: controller.goToRegister,
@@ -133,7 +133,7 @@ class LoginScreen extends StatelessWidget {
                           tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                         ),
                         child: CricketText(
-                          text: 'Register'.translation(),
+                          text: TranslationKeys.register.tr,
                           style: context.textTheme.bodyMedium?.copyWith(
                             color: context.colorScheme.primary,
                           ),

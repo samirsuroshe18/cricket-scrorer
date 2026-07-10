@@ -1,4 +1,6 @@
 
+import 'package:cricket_scorer/core/constants/app_constants.dart';
+
 enum Flavor {
   /// DEV enviornemnt
   dev,
@@ -22,8 +24,8 @@ class AppFlavor {
 
   /// returns app Title based on Flavor environment
   static String get title => switch (appFlavor) {
-    Flavor.dev  => 'Cricket Scorer Dev',
-    Flavor.uat  => 'Cricket Scorer Uat',
-    Flavor.prod => 'Cricket Scorer',
+    Flavor.dev  => AppConstants.appNameDev,
+    Flavor.uat  => AppConstants.appNameUat,
+    Flavor.prod => AppConstants.appName,
   };
 }

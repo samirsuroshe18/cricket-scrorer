@@ -1,5 +1,6 @@
 import 'dart:math';
 
+import 'package:cricket_scorer/core/constants/app_constants.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:get/get.dart';
@@ -23,9 +24,9 @@ class NotificationService extends GetxService{
   
   //Notification channel details (Android)
   final AndroidNotificationDetails _androidDetails = AndroidNotificationDetails(
-    'high_importance_channel',
-    'High Importance Notifications',
-    channelDescription: 'This channel is used for important notifications.',
+    AppConstants.channelId,
+    AppConstants.channelName,
+    channelDescription: AppConstants.channelDescription,
     importance: Importance.max,
     priority: Priority.high,
     // ticker: 'ticker',

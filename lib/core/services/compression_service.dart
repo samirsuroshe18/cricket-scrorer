@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:cricket_scorer/core/error/cricket_failure.dart';
+import 'package:cricket_scorer/core/translations/translation_keys.dart';
 import 'package:cricket_scorer/core/utils/either_util.dart';
 import 'package:ffmpeg_kit_flutter_new/ffmpeg_kit.dart';
 import 'package:ffmpeg_kit_flutter_new/ffprobe_kit.dart';
@@ -37,7 +38,7 @@ class CompressionService extends GetxService {
       if (!await inputFile.exists()) {
         return Either.fallback(
           CricketFailure(
-            message: '❌ Input file does not exist: $inputPath',
+            message: '❌  ${TranslationKeys.inputFileNotExists.tr}: $inputPath',
             statusCode: null,
           ),
         );
@@ -67,7 +68,7 @@ class CompressionService extends GetxService {
         if (!await file.exists()) {
           return Either.fallback(
             CricketFailure(
-              message: '❌ Compression reported success but output file is missing',
+              message: '❌ ${TranslationKeys.compressionMissingOutput.tr}',
               statusCode: returnCode?.getValue(),
             ),
           );
@@ -97,7 +98,7 @@ class CompressionService extends GetxService {
 
       return Either.fallback(
         CricketFailure(
-          message: '❌ Compression failed',
+          message: '❌ ${TranslationKeys.compressionFailed.tr}',
           statusCode: returnCode?.getValue(),
         ),
       );

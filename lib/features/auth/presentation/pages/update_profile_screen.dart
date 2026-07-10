@@ -1,11 +1,11 @@
 import 'package:cricket_scorer/core/extensions/space_extension.dart';
-import 'package:cricket_scorer/core/extensions/string_extension.dart';
 import 'package:cricket_scorer/core/global/widgets/cricket_button.dart';
 import 'package:cricket_scorer/core/global/widgets/cricket_text.dart';
 import 'package:cricket_scorer/core/global/widgets/cricket_text_field.dart';
 import 'package:cricket_scorer/core/global/widgets/custom_app_bar.dart';
 import 'package:cricket_scorer/core/global/widgets/images/cricket_image.dart';
 import 'package:cricket_scorer/core/global/widgets/images/cricket_image_source.dart';
+import 'package:cricket_scorer/core/translations/translation_keys.dart';
 import 'package:cricket_scorer/features/auth/presentation/controllers/update_profile_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -19,7 +19,7 @@ class UpdateProfileScreen extends StatelessWidget {
       builder: (UpdateProfileController controller) {
         return Scaffold(
           appBar: CustomAppBar(
-            title: 'Complete Profile'.translation(),
+            title: TranslationKeys.completeProfile.tr,
             centerTitle: true,
           ),
           body: Form(
@@ -45,7 +45,7 @@ class UpdateProfileScreen extends StatelessWidget {
                       padding: EdgeInsets.zero,
                       minimumSize: Size.zero,
                     ),
-                    child: CricketText(text: 'Add Profile Photo'.translation()),
+                    child: CricketText(text: TranslationKeys.addProfilePhoto.tr),
                   ),
 
                   30.h,
@@ -53,8 +53,8 @@ class UpdateProfileScreen extends StatelessWidget {
                   /// Username
                   CricketTextField(
                     controller: controller.usernameController,
-                    hintText: 'Enter username'.translation(),
-                    labelText: 'Username'.translation(),
+                    hintText: TranslationKeys.enterUsername.tr,
+                    labelText: TranslationKeys.username.tr,
                     prefixIcon: const Icon(Icons.person_outline),
                     validator: controller.validateUsername,
                     keyboardType: TextInputType.name,
@@ -67,8 +67,8 @@ class UpdateProfileScreen extends StatelessWidget {
                   /// Bio
                   CricketTextField(
                     controller: controller.bioController,
-                    hintText: 'Tell us about yourself'.translation(),
-                    labelText: 'Bio'.translation(),
+                    hintText: TranslationKeys.tellUsAboutYourself.tr,
+                    labelText: TranslationKeys.bio.tr,
                     prefixIcon: const Icon(Icons.person_outline),
                     maxLines: 4,
                     maxLength: 150,
@@ -80,7 +80,7 @@ class UpdateProfileScreen extends StatelessWidget {
 
                   CricketButton(
                     onPressed: controller.updateProfile,
-                    buttonText: 'Continue'.translation(),
+                    buttonText: TranslationKeys.continueText.tr,
                   ),
                 ],
               ),

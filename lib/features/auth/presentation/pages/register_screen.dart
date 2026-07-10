@@ -1,6 +1,5 @@
 import 'package:cricket_scorer/core/constants/assets_util.dart';
 import 'package:cricket_scorer/core/extensions/space_extension.dart';
-import 'package:cricket_scorer/core/extensions/string_extension.dart';
 import 'package:cricket_scorer/core/extensions/theme_x.dart';
 import 'package:cricket_scorer/core/global/widgets/cricket_button.dart';
 import 'package:cricket_scorer/core/global/widgets/cricket_text.dart';
@@ -8,6 +7,7 @@ import 'package:cricket_scorer/core/global/widgets/cricket_text_field.dart';
 import 'package:cricket_scorer/core/global/widgets/custom_app_bar.dart';
 import 'package:cricket_scorer/core/global/widgets/images/cricket_image.dart';
 import 'package:cricket_scorer/core/global/widgets/images/cricket_image_source.dart';
+import 'package:cricket_scorer/core/translations/translation_keys.dart';
 import 'package:cricket_scorer/features/auth/presentation/controllers/register_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -39,14 +39,14 @@ class RegisterScreen extends StatelessWidget {
                   24.h,
 
                   CricketText(
-                    text: 'Create Account'.translation(),
+                    text: TranslationKeys.createAccount.tr,
                     style: Get.textTheme.headlineLarge,
                   ),
 
                   8.h,
 
                   CricketText(
-                    text: 'Join and start scoring matches'.translation(),
+                    text: TranslationKeys.joinAndStartScoring.tr,
                     style: Get.textTheme.bodyMedium,
                   ),
 
@@ -54,8 +54,8 @@ class RegisterScreen extends StatelessWidget {
 
                   CricketTextField(
                     controller: controller.fullNameController,
-                    labelText: 'Full Name'.translation(),
-                    hintText: 'Enter Full Name'.translation(),
+                    labelText: TranslationKeys.fullName.tr,
+                    hintText: TranslationKeys.enterFullName.tr,
                     prefixIcon: const Icon(Icons.person_outline),
                     validator: controller.validateFullName,
                     keyboardType: TextInputType.name,
@@ -67,11 +67,12 @@ class RegisterScreen extends StatelessWidget {
 
                   CricketTextField(
                     controller: controller.emailController,
-                    labelText: 'Email'.translation(),
-                    hintText: 'Enter email'.translation(),
+                    labelText: TranslationKeys.email.tr,
+                    hintText: TranslationKeys.enterEmail.tr,
                     prefixIcon: const Icon(Icons.email_outlined),
                     validator: controller.validateEmail,
                     keyboardType: TextInputType.emailAddress,
+                    isRequired: true,
                   ),
 
                   16.h,
@@ -79,8 +80,8 @@ class RegisterScreen extends StatelessWidget {
                   Obx(
                     () => CricketTextField(
                       controller: controller.passwordController,
-                      labelText: 'Password'.translation(),
-                      hintText: 'Enter Password'.translation(),
+                      labelText: TranslationKeys.password.tr,
+                      hintText: TranslationKeys.enterPassword.tr,
                       obscureText: !controller.isPasswordVisible.value,
                       prefixIcon: const Icon(Icons.lock_outline),
                       suffixIcon: IconButton(
@@ -101,8 +102,8 @@ class RegisterScreen extends StatelessWidget {
                   Obx(
                     () => CricketTextField(
                       controller: controller.confirmPasswordController,
-                      labelText: 'Confirm Password'.translation(),
-                      hintText: 'Enter Confirm Password'.translation(),
+                      labelText: TranslationKeys.confirmPassword.tr,
+                      hintText: TranslationKeys.enterConfirmPassword.tr,
                       obscureText: !controller.isConfirmPasswordVisible.value,
                       prefixIcon: const Icon(Icons.lock_outline),
                       suffixIcon: IconButton(
@@ -114,13 +115,14 @@ class RegisterScreen extends StatelessWidget {
                         ),
                       ),
                       validator: controller.validateConfirmPassword,
+                      isRequired: true,
                     ),
                   ),
 
                   24.h,
 
                   CricketButton(
-                    buttonText: 'Register'.translation(),
+                    buttonText: TranslationKeys.register.tr,
                     onPressed: controller.register,
                   ),
 
@@ -129,7 +131,7 @@ class RegisterScreen extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       CricketText(
-                        text: 'Already have an account? '.translation(),
+                        text: TranslationKeys.alreadyHaveAccount.tr,
                       ),
                       TextButton(
                         onPressed: controller.goToLogin,
@@ -139,7 +141,7 @@ class RegisterScreen extends StatelessWidget {
                           tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                         ),
                         child: CricketText(
-                          text: 'Login'.translation(),
+                          text: TranslationKeys.login.tr,
                           style: context.textTheme.bodyMedium?.copyWith(
                             color: context.colorScheme.primary,
                           ),

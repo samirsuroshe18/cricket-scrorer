@@ -1,9 +1,9 @@
 import 'package:cricket_scorer/core/extensions/space_extension.dart';
-import 'package:cricket_scorer/core/extensions/string_extension.dart';
 import 'package:cricket_scorer/core/extensions/theme_x.dart';
 import 'package:cricket_scorer/core/global/widgets/cricket_button.dart';
 import 'package:cricket_scorer/core/global/widgets/cricket_text.dart';
 import 'package:cricket_scorer/core/global/widgets/custom_app_bar.dart';
+import 'package:cricket_scorer/core/translations/translation_keys.dart';
 import 'package:cricket_scorer/features/auth/presentation/controllers/otp_verification_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -34,7 +34,7 @@ class OtpVerificationScreen extends StatelessWidget {
                   24.h,
 
                   CricketText(
-                    text: 'Verify Your Account'.translation(),
+                    text: TranslationKeys.verifyYourAccount.tr,
                     style: Get.textTheme.headlineLarge,
                   ),
 
@@ -42,9 +42,9 @@ class OtpVerificationScreen extends StatelessWidget {
 
                   Obx(
                     () => CricketText(
-                      text:
-                          'We sent a 6-digit code to\n${controller.maskedTarget.value}'
-                              .translation(),
+                      text: TranslationKeys.otpVerificationDesc.trParams({
+                        'target': controller.maskedTarget.value,
+                      }),
                       style: Get.textTheme.bodyMedium,
                     ),
                   ),
@@ -68,7 +68,7 @@ class OtpVerificationScreen extends StatelessWidget {
                   32.h,
 
                   CricketButton(
-                    buttonText: 'Verify'.translation(),
+                    buttonText: TranslationKeys.verify.tr,
                     onPressed: controller.verifyOtp,
                   ),
 
@@ -79,8 +79,7 @@ class OtpVerificationScreen extends StatelessWidget {
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               CricketText(
-                                text: "Didn't receive the code?  "
-                                    .translation(),
+                                text: TranslationKeys.didNotReceiveCode.tr,
                               ),
                               TextButton(
                                 onPressed: controller.resendOtp,
@@ -91,7 +90,7 @@ class OtpVerificationScreen extends StatelessWidget {
                                       MaterialTapTargetSize.shrinkWrap,
                                 ),
                                 child: CricketText(
-                                  text: 'Resend'.translation(),
+                                  text: TranslationKeys.resend.tr,
                                   style: context.textTheme.bodyMedium
                                       ?.copyWith(
                                         color: context.colorScheme.primary,
@@ -104,12 +103,11 @@ class OtpVerificationScreen extends StatelessWidget {
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               CricketText(
-                                text: 'Resend code in  '.translation(),
+                                text: TranslationKeys.resendCodeIn.tr,
                               ),
                               Obx(
                                 () => CricketText(
-                                  text: '${controller.resendCountdown.value}s'
-                                      .translation(),
+                                  text: '${controller.resendCountdown.value}s',
                                   style: context.textTheme.bodyMedium
                                       ?.copyWith(
                                         color: context.colorScheme.primary,

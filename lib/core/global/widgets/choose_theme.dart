@@ -1,4 +1,3 @@
-import 'package:cricket_scorer/core/extensions/string_extension.dart';
 import 'package:cricket_scorer/core/global/data/models/cricket_theme_options.dart';
 import 'package:cricket_scorer/core/services/theme_service.dart';
 import 'package:cricket_scorer/core/translations/translation_keys.dart';
@@ -20,17 +19,17 @@ class _ChooseThemeState extends State<ChooseTheme> {
   final List<CricketThemeOption> themeList = [
     CricketThemeOption(
       mode: ThemeMode.light,
-      label: 'Light'.translation(),
+      label: TranslationKeys.light.tr,
       icon: Icons.light_mode,
     ),
     CricketThemeOption(
       mode: ThemeMode.dark,
-      label: 'Dark'.translation(),
+      label: TranslationKeys.dark.tr,
       icon: Icons.dark_mode,
     ),
     CricketThemeOption(
       mode: ThemeMode.system,
-      label: 'System'.translation(),
+      label: TranslationKeys.system.tr,
       icon: Icons.settings_suggest,
     ),
   ];
