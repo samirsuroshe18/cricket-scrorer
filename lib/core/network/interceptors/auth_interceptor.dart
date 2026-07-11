@@ -4,6 +4,7 @@ import 'package:cricket_scorer/config/routes/app_routes.dart';
 import 'package:cricket_scorer/core/constants/shared_pref_key.dart';
 import 'package:cricket_scorer/core/global/widgets/snackbars/cricket_snackbar.dart';
 import 'package:cricket_scorer/core/network/api_client_service.dart';
+import 'package:cricket_scorer/core/services/language_service.dart';
 import 'package:cricket_scorer/core/services/secure_storages_service.dart';
 import 'package:cricket_scorer/core/services/shared_preference_service.dart';
 import 'package:cricket_scorer/core/translations/translation_keys.dart';
@@ -29,6 +30,7 @@ class AuthInterceptor extends Interceptor {
       SharedPrefKey.accessToken,
     );
 
+    options.headers['accept-language'] = Get.find<LanguageService>().currentLanguage;
     if (accessToken != null && accessToken.isNotEmpty) {
       options.headers['Authorization'] = 'Bearer $accessToken';
       if (kDebugMode) {
@@ -41,13 +43,13 @@ class AuthInterceptor extends Interceptor {
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) async {
     final statusCode = err.response?.statusCode;
-    final errorMessage = err.response?.data?['message']?.toString() ?? '';
+    final errorCode = err.response?.data?['code']?.toString() ?? '';
 
     if (statusCode != 401 && statusCode != 403) {
       return super.onError(err, handler);
     }
 
-    if (!_isRefreshTokenError(errorMessage)) {
+    if (!_isRefreshTokenError(errorCode)) {
       return super.onError(err, handler);
     }
 
@@ -68,7 +70,7 @@ class AuthInterceptor extends Interceptor {
     }
 
     // Refresh token is expired/invalid → force logout immediately
-    if (_isRefreshTokenError(errorMessage)) {
+    if (_isRefreshTokenError(errorCode)) {
       await _forceLogout();
       return handler.reject(err);
     }
@@ -195,9 +197,9 @@ class AuthInterceptor extends Interceptor {
 
   // Detect refresh token errors from backend message
   bool _isRefreshTokenError(String message) {
-    return message.contains('Refresh token is expired') ||
-        message.contains('Unauthorized request') ||
-        message.contains('Invalid refresh token') ||
-        message.contains('Refresh token is expired or used');
+    return message.contains('REFRESH_TOKEN_EXPIRED') ||
+        message.contains('UNAUTHORIZED_REQUEST') ||
+        message.contains('INVALID_ACCESS_TOKEN') ||
+        message.contains('REFRESH_TOKEN_EXPIRED_OR_USED');
   }
 }
