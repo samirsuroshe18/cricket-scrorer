@@ -52,7 +52,7 @@ flutter_native_splash:
   branding: assets/images/brand_image.png
 
   # --- Dark Mode Configuration ---
-  color_dark: "#F7F7FA"
+  color_dark: "#121729"
   image_dark: assets/images/splash_logo.png
   branding_dark: assets/images/brand_image.png
 
@@ -62,7 +62,7 @@ flutter_native_splash:
     image: assets/images/splash_logo.png
     branding: assets/images/brand_image.png
 
-    color_dark: "#F7F7FA"
+    color_dark: "#121729"
     image_dark: assets/images/splash_logo.png
     branding_dark: assets/images/brand_image.png
 

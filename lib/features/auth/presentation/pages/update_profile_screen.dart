@@ -58,7 +58,6 @@ class UpdateProfileScreen extends StatelessWidget {
                     prefixIcon: const Icon(Icons.person_outline),
                     validator: controller.validateUsername,
                     keyboardType: TextInputType.name,
-                    textCapitalization: TextCapitalization.words,
                     isRequired: true,
                   ),
 
@@ -73,7 +72,7 @@ class UpdateProfileScreen extends StatelessWidget {
                     maxLines: 4,
                     maxLength: 150,
                     keyboardType: TextInputType.name,
-                    textCapitalization: TextCapitalization.words,
+                    textCapitalization: TextCapitalization.sentences,
                   ),
 
                   30.h,
