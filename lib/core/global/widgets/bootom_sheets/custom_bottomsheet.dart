@@ -5,6 +5,8 @@ import 'package:cricket_scorer/core/global/widgets/cricket_error_widget.dart';
 import 'package:cricket_scorer/core/global/widgets/cricket_headline.dart';
 import 'package:cricket_scorer/core/global/widgets/cricket_outlined_button.dart';
 import 'package:cricket_scorer/core/global/widgets/cricket_text.dart';
+import 'package:cricket_scorer/core/global/widgets/images/cricket_image.dart';
+import 'package:cricket_scorer/core/global/widgets/images/cricket_image_source.dart';
 import 'package:cricket_scorer/core/translations/translation_keys.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -53,9 +55,7 @@ class CustomBottomSheet {
           20.h,
 
           SizedBox(
-            height: heightFactor != null
-                ? Get.height * heightFactor
-                : null,
+            height: heightFactor != null ? Get.height * heightFactor : null,
             child: Container(
               width: Get.width,
               decoration: BoxDecoration(
@@ -352,10 +352,11 @@ class CustomBottomSheet {
                           height: 100,
                           width: 100,
                         )
-                      : Image.asset(
-                          assetName,
+                      : CricketImage(
+                          source: CricketImageSource.asset(assetName),
                           height: 100,
                           width: 100,
+                          fit: BoxFit.scaleDown,
                           color: Get.theme.colorScheme.onSurface,
                         ),
                   const SizedBox(height: 24),

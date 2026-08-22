@@ -1,10 +1,10 @@
 import 'package:cricket_scorer/core/global/widgets/cricket_button.dart';
+import 'package:cricket_scorer/core/global/widgets/cricket_text.dart';
+import 'package:cricket_scorer/core/global/widgets/images/cricket_image.dart';
+import 'package:cricket_scorer/core/global/widgets/images/cricket_image_source.dart';
 import 'package:cricket_scorer/core/translations/translation_keys.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
-
-import 'cricket_text.dart';
 
 class CricketErrorWidget extends StatelessWidget {
   final String title;
@@ -33,10 +33,11 @@ class CricketErrorWidget extends StatelessWidget {
           Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              SvgPicture.asset(
-                path,
+              CricketImage(
+                source: CricketImageSource.svg(path),
                 height: 200,
                 width: 200,
+                fit: BoxFit.contain,
               ),
 
               const SizedBox(height: 20),

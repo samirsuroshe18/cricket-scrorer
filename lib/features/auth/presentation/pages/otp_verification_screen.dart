@@ -9,120 +9,112 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 
-class OtpVerificationScreen extends StatelessWidget {
+class OtpVerificationScreen extends GetView<OtpVerificationController> {
   const OtpVerificationScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return GetBuilder<OtpVerificationController>(
-      builder: (controller) {
-        return Scaffold(
-          appBar: const CustomAppBar(),
-          body: SingleChildScrollView(
-            padding: 24.p,
-            child: Form(
-              key: controller.formKey,
-              child: Column(
-                children: [
-                  24.h,
+    return Scaffold(
+      appBar: const CustomAppBar(),
+      body: SingleChildScrollView(
+        padding: 24.p,
+        child: Form(
+          key: controller.formKey,
+          child: Column(
+            children: [
+              24.h,
 
-                  const Icon(
-                    Icons.mark_email_read_outlined,
-                    size: 80,
-                  ),
-
-                  24.h,
-
-                  CricketText(
-                    text: TranslationKeys.verifyYourAccount.tr,
-                    style: Get.textTheme.headlineLarge,
-                  ),
-
-                  12.h,
-
-                  Obx(
-                    () => CricketText(
-                      text: TranslationKeys.otpVerificationDesc.trParams({
-                        'target': controller.maskedTarget.value,
-                      }),
-                      style: Get.textTheme.bodyMedium,
-                    ),
-                  ),
-
-                  40.h,
-
-                  // OTP input boxes
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: List.generate(
-                      6,
-                      (index) => _OtpBox(
-                        controller: controller.otpControllers[index],
-                        focusNode: controller.focusNodes[index],
-                        onChanged: (value) =>
-                            controller.onOtpChanged(value, index),
-                      ),
-                    ),
-                  ),
-
-                  32.h,
-
-                  CricketButton(
-                    buttonText: TranslationKeys.verify.tr,
-                    onPressed: controller.verifyOtp,
-                  ),
-
-                  24.h,
-                  Obx(
-                    () => controller.isResendEnabled.value
-                        ? Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              CricketText(
-                                text: TranslationKeys.didNotReceiveCode.tr,
-                              ),
-                              TextButton(
-                                onPressed: controller.resendOtp,
-                                style: TextButton.styleFrom(
-                                  padding: EdgeInsets.zero,
-                                  minimumSize: Size.zero,
-                                  tapTargetSize:
-                                      MaterialTapTargetSize.shrinkWrap,
-                                ),
-                                child: CricketText(
-                                  text: TranslationKeys.resend.tr,
-                                  style: context.textTheme.bodyMedium
-                                      ?.copyWith(
-                                        color: context.colorScheme.primary,
-                                      ),
-                                ),
-                              ),
-                            ],
-                          )
-                        : Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              CricketText(
-                                text: TranslationKeys.resendCodeIn.tr,
-                              ),
-                              Obx(
-                                () => CricketText(
-                                  text: '${controller.resendCountdown.value}s',
-                                  style: context.textTheme.bodyMedium
-                                      ?.copyWith(
-                                        color: context.colorScheme.primary,
-                                      ),
-                                ),
-                              ),
-                            ],
-                          ),
-                  ),
-                ],
+              const Icon(
+                Icons.mark_email_read_outlined,
+                size: 80,
               ),
-            ),
+
+              24.h,
+
+              CricketText(
+                text: TranslationKeys.verifyYourAccount.tr,
+                style: Get.textTheme.headlineLarge,
+              ),
+
+              12.h,
+
+              Obx(
+                () => CricketText(
+                  text: TranslationKeys.otpVerificationDesc.trParams({
+                    'target': controller.maskedTarget.value,
+                  }),
+                  style: Get.textTheme.bodyMedium,
+                ),
+              ),
+
+              40.h,
+
+              // OTP input boxes
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: List.generate(
+                  6,
+                  (index) => _OtpBox(
+                    controller: controller.otpControllers[index],
+                    focusNode: controller.focusNodes[index],
+                    onChanged: (value) => controller.onOtpChanged(value, index),
+                  ),
+                ),
+              ),
+
+              32.h,
+
+              CricketButton(
+                buttonText: TranslationKeys.verify.tr,
+                onPressed: controller.verifyOtp,
+              ),
+
+              24.h,
+              Obx(
+                () => controller.isResendEnabled.value
+                    ? Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          CricketText(
+                            text: TranslationKeys.didNotReceiveCode.tr,
+                          ),
+                          TextButton(
+                            onPressed: controller.resendOtp,
+                            style: TextButton.styleFrom(
+                              padding: EdgeInsets.zero,
+                              minimumSize: Size.zero,
+                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                            ),
+                            child: CricketText(
+                              text: TranslationKeys.resend.tr,
+                              style: context.textTheme.bodyMedium?.copyWith(
+                                color: context.colorScheme.primary,
+                              ),
+                            ),
+                          ),
+                        ],
+                      )
+                    : Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          CricketText(
+                            text: TranslationKeys.resendCodeIn.tr,
+                          ),
+                          Obx(
+                            () => CricketText(
+                              text: '${controller.resendCountdown.value}s',
+                              style: context.textTheme.bodyMedium?.copyWith(
+                                color: context.colorScheme.primary,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+              ),
+            ],
           ),
-        );
-      },
+        ),
+      ),
     );
   }
 }

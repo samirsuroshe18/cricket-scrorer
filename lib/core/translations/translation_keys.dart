@@ -81,4 +81,21 @@ class TranslationKeys {
   static const String bio = 'bio';
   static const String continueText = 'continue_text';
   static const String failedToLogout = 'failed_to_logout';
+
+  static const String cricketMatch = 'cricket_match';
+  static const String passwordWeak = 'password_weak';
+  static const String passwordFair = 'password_fair';
+  static const String passwordGood = 'password_good';
+  static const String passwordStrong = 'password_strong';
+
+  /// Failure messages — defaults for the [CricketFailure] hierarchy.
+  static const String connectionError = 'connection_error';
+  static const String serverError = 'server_error';
+  static const String badRequestError = 'bad_request_error';
+  static const String unAuthorizedError = 'unauthorized_error';
+  static const String forbiddenError = 'forbidden_error';
+  static const String notFoundError = 'not_found_error';
+  static const String somethingWentWrong = 'something_went_wrong';
+  static const String genericErrorMessage = 'generic_error_message';
+  static const String genericAlertMessage = 'generic_alert_message';
 }

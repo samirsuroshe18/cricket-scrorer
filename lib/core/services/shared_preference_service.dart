@@ -115,8 +115,6 @@ class SharedPreferenceService extends GetxService {
 
   Future<void> clearForLogout() async {
     _instanceChecker();
-    await _sharedPreferences?.remove(SharedPrefKey.accessToken);
-    await _sharedPreferences?.remove(SharedPrefKey.refreshToken);
     await _sharedPreferences?.remove(SharedPrefKey.userDetails);
   }
 }

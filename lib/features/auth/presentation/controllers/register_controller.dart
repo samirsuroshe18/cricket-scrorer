@@ -7,6 +7,7 @@ import 'package:cricket_scorer/core/global/widgets/snackbars/cricket_snackbar.da
 import 'package:cricket_scorer/core/network/models/cricket_response.dart';
 import 'package:cricket_scorer/core/translations/translation_keys.dart';
 import 'package:cricket_scorer/core/utils/either_util.dart';
+import 'package:cricket_scorer/core/utils/validators.dart';
 import 'package:cricket_scorer/features/auth/data/models/request/register_req.dart';
 import 'package:cricket_scorer/features/auth/domain/usecases/register.dart';
 import 'package:flutter/material.dart';
@@ -49,25 +50,9 @@ class RegisterController extends GetxController {
     return null;
   }
 
-  String? validateEmail(String? value) {
-    if (value == null || value.trim().isEmpty) {
-      return TranslationKeys.emailRequired.tr;
-    }
-    if (!GetUtils.isEmail(value.trim())) {
-      return TranslationKeys.enterValidEmail.tr;
-    }
-    return null;
-  }
+  String? validateEmail(String? value) => Validators.email(value);
 
-  String? validatePassword(String? value) {
-    if (value == null || value.trim().isEmpty) {
-      return TranslationKeys.passwordRequired.tr;
-    }
-    if (value.length < 6) {
-      return TranslationKeys.passwordTooShort.tr;
-    }
-    return null;
-  }
+  String? validatePassword(String? value) => Validators.password(value);
 
   String? validateConfirmPassword(String? value) {
     if (value == null || value.trim().isEmpty) {

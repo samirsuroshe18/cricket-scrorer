@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:cricket_scorer/config/routes/app_routes.dart';
-import 'package:cricket_scorer/core/constants/error_string_constants.dart';
 import 'package:cricket_scorer/core/error/cricket_failure.dart';
 import 'package:cricket_scorer/core/global/widgets/bootom_sheets/custom_bottomsheet.dart';
 import 'package:cricket_scorer/core/global/widgets/bootom_sheets/wigets/choose_photo_option.dart';
@@ -28,7 +27,6 @@ class UpdateProfileController extends GetxController {
   final bioController = TextEditingController();
 
   final selectedImage = Rx<File?>(null);
-  final isLoading = false.obs;
 
   final ImagePicker _picker = ImagePicker();
 
@@ -45,16 +43,17 @@ class UpdateProfileController extends GetxController {
     } catch (e, stackTrace) {
       debugPrint('Unexpected error: $e');
       debugPrintStack(stackTrace: stackTrace);
-      CricketSnackbar.showErrorMessage(ErrorStringConstants.somethingWentWrong.tr);
+      CricketSnackbar.showErrorMessage(TranslationKeys.somethingWentWrong.tr);
       return null;
     }
   }
 
   Future<void> compressImage(XFile image) async {
     CricketLoaderDialog.show();
-    Either<File, CricketFailure> response = await Get.find<CompressionService>().imageCompression(
-      inputPath: image.path,
-    );
+    Either<File, CricketFailure> response = await Get.find<CompressionService>()
+        .imageCompression(
+          inputPath: image.path,
+        );
     CricketLoaderDialog.hide();
     if (response.isResult) {
       selectedImage.value = response.result;

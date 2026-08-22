@@ -10,83 +10,82 @@ import 'package:cricket_scorer/features/auth/presentation/controllers/update_pro
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-class UpdateProfileScreen extends StatelessWidget {
+class UpdateProfileScreen extends GetView<UpdateProfileController> {
   const UpdateProfileScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return GetBuilder<UpdateProfileController>(
-      builder: (UpdateProfileController controller) {
-        return Scaffold(
-          appBar: CustomAppBar(
-            title: TranslationKeys.completeProfile.tr,
-            centerTitle: true,
-          ),
-          body: Form(
-            key: controller.formKey,
-            child: SingleChildScrollView(
-              padding: 20.p,
-              child: Column(
-                children: [
-                  20.h,
-                  /// Profile Image
-                  Obx(()=>CricketImage(
-                    source: CricketImageSource.file(
-                      controller.selectedImage.value?.path ?? '',
-                    ),
-                    height: 120,
-                    width: 120,
-                    borderRadius: const BorderRadius.all(Radius.circular(180)),
-                  )),
+    return Scaffold(
+      appBar: CustomAppBar(
+        title: TranslationKeys.completeProfile.tr,
+        centerTitle: true,
+      ),
+      body: Form(
+        key: controller.formKey,
+        child: SingleChildScrollView(
+          padding: 20.p,
+          child: Column(
+            children: [
+              20.h,
 
-                  TextButton(
-                    onPressed: controller.pickImageBottomSheet,
-                    style: TextButton.styleFrom(
-                      padding: EdgeInsets.zero,
-                      minimumSize: Size.zero,
-                    ),
-                    child: CricketText(text: TranslationKeys.addProfilePhoto.tr),
+              /// Profile Image
+              Obx(
+                () => CricketImage(
+                  source: CricketImageSource.file(
+                    controller.selectedImage.value?.path ?? '',
                   ),
-
-                  30.h,
-
-                  /// Username
-                  CricketTextField(
-                    controller: controller.usernameController,
-                    hintText: TranslationKeys.enterUsername.tr,
-                    labelText: TranslationKeys.username.tr,
-                    prefixIcon: const Icon(Icons.person_outline),
-                    validator: controller.validateUsername,
-                    keyboardType: TextInputType.name,
-                    isRequired: true,
-                  ),
-
-                  20.h,
-
-                  /// Bio
-                  CricketTextField(
-                    controller: controller.bioController,
-                    hintText: TranslationKeys.tellUsAboutYourself.tr,
-                    labelText: TranslationKeys.bio.tr,
-                    prefixIcon: const Icon(Icons.person_outline),
-                    maxLines: 4,
-                    maxLength: 150,
-                    keyboardType: TextInputType.name,
-                    textCapitalization: TextCapitalization.sentences,
-                  ),
-
-                  30.h,
-
-                  CricketButton(
-                    onPressed: controller.updateProfile,
-                    buttonText: TranslationKeys.continueText.tr,
-                  ),
-                ],
+                  height: 120,
+                  width: 120,
+                  borderRadius: const BorderRadius.all(Radius.circular(180)),
+                ),
               ),
-            ),
+
+              TextButton(
+                onPressed: controller.pickImageBottomSheet,
+                style: TextButton.styleFrom(
+                  padding: EdgeInsets.zero,
+                  minimumSize: Size.zero,
+                ),
+                child: CricketText(text: TranslationKeys.addProfilePhoto.tr),
+              ),
+
+              30.h,
+
+              /// Username
+              CricketTextField(
+                controller: controller.usernameController,
+                hintText: TranslationKeys.enterUsername.tr,
+                labelText: TranslationKeys.username.tr,
+                prefixIcon: const Icon(Icons.person_outline),
+                validator: controller.validateUsername,
+                keyboardType: TextInputType.name,
+                isRequired: true,
+              ),
+
+              20.h,
+
+              /// Bio
+              CricketTextField(
+                controller: controller.bioController,
+                hintText: TranslationKeys.tellUsAboutYourself.tr,
+                labelText: TranslationKeys.bio.tr,
+                prefixIcon: const Icon(Icons.person_outline),
+                maxLines: 4,
+                maxLength: 150,
+                keyboardType: TextInputType.name,
+                textCapitalization: TextCapitalization.sentences,
+              ),
+
+              30.h,
+
+              CricketButton(
+                onPressed: controller.updateProfile,
+                buttonText: TranslationKeys.continueText.tr,
+              ),
+            ],
           ),
-        );
-      },
+        ),
+      ),
     );
   }
 }

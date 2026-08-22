@@ -16,6 +16,7 @@ import 'package:cricket_scorer/core/services/secure_storages_service.dart';
 import 'package:cricket_scorer/core/services/shared_preference_service.dart';
 import 'package:cricket_scorer/core/translations/translation_keys.dart';
 import 'package:cricket_scorer/core/utils/either_util.dart';
+import 'package:cricket_scorer/core/utils/validators.dart';
 import 'package:cricket_scorer/features/auth/data/models/login_request_model.dart';
 import 'package:cricket_scorer/features/auth/data/models/login_response.dart';
 import 'package:cricket_scorer/features/auth/domain/usecases/login.dart';
@@ -57,29 +58,9 @@ class LoginController extends GetxController {
     unawaited(Get.toNamed(AppRoutes.forgotPassword));
   }
 
-  String? validateEmail(String? value) {
-    if (value == null || value.trim().isEmpty) {
-      return TranslationKeys.emailRequired.tr;
-    }
+  String? validateEmail(String? value) => Validators.email(value);
 
-    if (!GetUtils.isEmail(value.trim())) {
-      return TranslationKeys.enterValidEmail.tr;
-    }
-
-    return null;
-  }
-
-  String? validatePassword(String? value) {
-    if (value == null || value.trim().isEmpty) {
-      return TranslationKeys.passwordRequired.tr;
-    }
-
-    if (value.length < 6) {
-      return TranslationKeys.passwordTooShort.tr;
-    }
-
-    return null;
-  }
+  String? validatePassword(String? value) => Validators.password(value);
 
   Future<void> login() async {
     if (!formKey.currentState!.validate()) {
@@ -104,6 +85,11 @@ class LoginController extends GetxController {
         await SecureStorageService.secure.set(
           SharedPrefKey.accessToken,
           response.result.data?.accessToken ?? '',
+        );
+
+        await SecureStorageService.secure.set(
+          SharedPrefKey.refreshToken,
+          response.result.data?.refreshToken ?? '',
         );
 
         await SharedPreferenceService.sharedPrefService.set(
@@ -134,7 +120,8 @@ class LoginController extends GetxController {
             ),
           );
           return;
-        } else if (!(response.result.data?.loggedInUser?.profileCompleted ?? false)) {
+        } else if (!(response.result.data?.loggedInUser?.profileCompleted ??
+            false)) {
           unawaited(Get.offAllNamed(AppRoutes.updateProfile));
           return;
         } else {

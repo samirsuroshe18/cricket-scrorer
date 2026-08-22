@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:cricket_scorer/config/routes/app_routes.dart';
 import 'package:cricket_scorer/core/constants/shared_pref_key.dart';
+import 'package:cricket_scorer/core/global/data/global_endpoint.dart';
 import 'package:cricket_scorer/core/global/widgets/snackbars/cricket_snackbar.dart';
 import 'package:cricket_scorer/core/network/api_client_service.dart';
 import 'package:cricket_scorer/core/services/language_service.dart';
@@ -49,7 +50,10 @@ class AuthInterceptor extends Interceptor {
       return super.onError(err, handler);
     }
 
-    if (!_isRefreshTokenError(errorCode)) {
+    final isAccessTokenError = _accessTokenErrors.contains(errorCode);
+    final isRefreshTokenError = _refreshTokenErrors.contains(errorCode);
+
+    if (!isAccessTokenError && !isRefreshTokenError) {
       return super.onError(err, handler);
     }
 
@@ -69,8 +73,8 @@ class AuthInterceptor extends Interceptor {
       return handler.reject(err);
     }
 
-    // Refresh token is expired/invalid → force logout immediately
-    if (_isRefreshTokenError(errorCode)) {
+    // Refresh token itself is expired/invalid → nothing to refresh with
+    if (isRefreshTokenError) {
       await _forceLogout();
       return handler.reject(err);
     }
@@ -132,8 +136,8 @@ class AuthInterceptor extends Interceptor {
         ),
       );
 
-      final response = await freshDio.post<Map<String, dynamic>>(
-        '/api/v1/user/refresh-token',
+      final response = await freshDio.get<Map<String, dynamic>>(
+        GlobalEndpoint.refreshToken,
         options: Options(
           headers: {'x-refresh-token': refreshToken},
           extra: {'skipAuth': true},
@@ -195,11 +199,21 @@ class AuthInterceptor extends Interceptor {
     );
   }
 
-  // Detect refresh token errors from backend message
-  bool _isRefreshTokenError(String message) {
-    return message.contains('REFRESH_TOKEN_EXPIRED') ||
-        message.contains('UNAUTHORIZED_REQUEST') ||
-        message.contains('INVALID_ACCESS_TOKEN') ||
-        message.contains('REFRESH_TOKEN_EXPIRED_OR_USED');
-  }
+  // Backend error codes are bare SCREAMING_SNAKE_CASE i18n keys — match exactly,
+  // not by substring (REFRESH_TOKEN_EXPIRED is a prefix of
+  // REFRESH_TOKEN_EXPIRED_OR_USED).
+
+  // The access token is stale but the refresh token may still be good → refresh.
+  static const Set<String> _accessTokenErrors = {
+    'UNAUTHORIZED_REQUEST',
+    'ACCESS_TOKEN_EXPIRED',
+    'INVALID_ACCESS_TOKEN',
+  };
+
+  // The refresh token itself is rejected → nothing to recover with, log out.
+  static const Set<String> _refreshTokenErrors = {
+    'REFRESH_TOKEN_EXPIRED',
+    'REFRESH_TOKEN_EXPIRED_OR_USED',
+    'INVALID_REFRESH_TOKEN',
+  };
 }

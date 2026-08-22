@@ -14,139 +14,135 @@ import 'package:cricket_scorer/features/auth/presentation/controllers/login_cont
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-class LoginScreen extends StatelessWidget {
+class LoginScreen extends GetView<LoginController> {
   const LoginScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return GetBuilder<LoginController>(
-      builder: (controller) {
-        return Scaffold(
-          appBar: CustomAppBar(
-            actions: [
-              const ThemePickerButton(),
-              const LanguagePickerButton(),
-              12.w,
-            ],
-          ),
-          body: SingleChildScrollView(
-            padding: 24.p,
-            child: Form(
-              key: controller.formKey,
-              child: Column(
+    return Scaffold(
+      appBar: CustomAppBar(
+        actions: [
+          const ThemePickerButton(),
+          const LanguagePickerButton(),
+          12.w,
+        ],
+      ),
+      body: SingleChildScrollView(
+        padding: 24.p,
+        child: Form(
+          key: controller.formKey,
+          child: Column(
+            children: [
+              4.rh,
+
+              const CricketImage(
+                source: CricketImageSource.asset(AssetsUtil.appLogo),
+                height: 120,
+                width: 120,
+                borderRadius: BorderRadius.all(Radius.circular(180)),
+              ),
+              24.h,
+
+              CricketText(
+                text: TranslationKeys.cricketScorer.tr,
+                textAlign: TextAlign.center,
+                style: context.textTheme.headlineLarge,
+              ),
+
+              8.h,
+
+              CricketText(
+                text: TranslationKeys.trackEveryBall.tr,
+                style: Get.textTheme.bodyMedium,
+                textAlign: TextAlign.center,
+              ),
+
+              40.h,
+
+              CricketTextField(
+                controller: controller.emailController,
+                hintText: TranslationKeys.enterEmail.tr,
+                labelText: TranslationKeys.email.tr,
+                prefixIcon: const Icon(Icons.email_outlined),
+                validator: controller.validateEmail,
+                keyboardType: TextInputType.emailAddress,
+                isRequired: true,
+              ),
+
+              16.h,
+
+              Obx(
+                () => CricketTextField(
+                  controller: controller.passwordController,
+                  hintText: TranslationKeys.enterPassword.tr,
+                  labelText: TranslationKeys.password.tr,
+                  obscureText: !controller.isPasswordVisible.value,
+                  prefixIcon: const Icon(Icons.lock_outline),
+                  suffixIcon: IconButton(
+                    onPressed: () {
+                      controller.isPasswordVisible.toggle();
+                    },
+                    icon: Icon(
+                      controller.isPasswordVisible.value
+                          ? Icons.visibility
+                          : Icons.visibility_off,
+                    ),
+                  ),
+                  validator: controller.validatePassword,
+                  isRequired: true,
+                ),
+              ),
+              12.h,
+
+              Align(
+                alignment: Alignment.centerRight,
+                child: TextButton(
+                  onPressed: controller.onForgotPassword,
+                  style: TextButton.styleFrom(
+                    padding: EdgeInsets.zero,
+                    minimumSize: Size.zero,
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
+                  child: CricketText(
+                    text: TranslationKeys.forgotPassword.tr,
+                  ),
+                ),
+              ),
+
+              20.h,
+
+              CricketButton(
+                buttonText: TranslationKeys.login.tr,
+                onPressed: controller.login,
+              ),
+
+              12.h,
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  4.rh,
-
-                  const CricketImage(
-                    source: CricketImageSource.asset(AssetsUtil.appLogo),
-                    height: 120,
-                    width: 120,
-                    borderRadius: BorderRadius.all(Radius.circular(180)),
-                  ),
-                  24.h,
-
                   CricketText(
-                    text: TranslationKeys.cricketScorer.tr,
-                    textAlign: TextAlign.center,
-                    style: context.textTheme.headlineLarge,
+                    text: TranslationKeys.dontHaveAccount.tr,
                   ),
-
-                  8.h,
-
-                  CricketText(
-                    text: TranslationKeys.trackEveryBall.tr,
-                    style: Get.textTheme.bodyMedium,
-                    textAlign: TextAlign.center,
-                  ),
-
-                  40.h,
-
-                  CricketTextField(
-                    controller: controller.emailController,
-                    hintText: TranslationKeys.enterEmail.tr,
-                    labelText: TranslationKeys.email.tr,
-                    prefixIcon: const Icon(Icons.email_outlined),
-                    validator: controller.validateEmail,
-                    keyboardType: TextInputType.emailAddress,
-                    isRequired: true,
-                  ),
-
-                  16.h,
-
-                  Obx(
-                    () => CricketTextField(
-                      controller: controller.passwordController,
-                      hintText: TranslationKeys.enterPassword.tr,
-                      labelText: TranslationKeys.password.tr,
-                      obscureText: !controller.isPasswordVisible.value,
-                      prefixIcon: const Icon(Icons.lock_outline),
-                      suffixIcon: IconButton(
-                        onPressed: () {
-                          controller.isPasswordVisible.toggle();
-                        },
-                        icon: Icon(
-                          controller.isPasswordVisible.value
-                              ? Icons.visibility
-                              : Icons.visibility_off,
-                        ),
-                      ),
-                      validator: controller.validatePassword,
-                      isRequired: true,
+                  TextButton(
+                    onPressed: controller.goToRegister,
+                    style: TextButton.styleFrom(
+                      padding: EdgeInsets.zero,
+                      minimumSize: Size.zero,
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                     ),
-                  ),
-                  12.h,
-
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: TextButton(
-                      onPressed: controller.onForgotPassword,
-                      style: TextButton.styleFrom(
-                        padding: EdgeInsets.zero,
-                        minimumSize: Size.zero,
-                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                      ),
-                      child: CricketText(
-                        text: TranslationKeys.forgotPassword.tr,
+                    child: CricketText(
+                      text: TranslationKeys.register.tr,
+                      style: context.textTheme.bodyMedium?.copyWith(
+                        color: context.colorScheme.primary,
                       ),
                     ),
-                  ),
-
-                  20.h,
-
-                  CricketButton(
-                    buttonText: TranslationKeys.login.tr,
-                    onPressed: controller.login,
-                  ),
-
-                  12.h,
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      CricketText(
-                        text: TranslationKeys.dontHaveAccount.tr,
-                      ),
-                      TextButton(
-                        onPressed: controller.goToRegister,
-                        style: TextButton.styleFrom(
-                          padding: EdgeInsets.zero,
-                          minimumSize: Size.zero,
-                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                        ),
-                        child: CricketText(
-                          text: TranslationKeys.register.tr,
-                          style: context.textTheme.bodyMedium?.copyWith(
-                            color: context.colorScheme.primary,
-                          ),
-                        ),
-                      ),
-                    ],
                   ),
                 ],
               ),
-            ),
+            ],
           ),
-        );
-      },
+        ),
+      ),
     );
   }
 }

@@ -22,6 +22,11 @@ class AppCustomColorsPalette {
 
     sliderOverlay: Color(0x1F1F78E6),
     valueIndicator: Color(0xff141F38),
+
+    statusDanger: Color(0xffDA1414),
+    statusWarning: Color(0xffB26A00),
+    statusInfo: Color(0xff1F78E6),
+    statusSuccess: Color(0xff2EB86B),
   );
 
   static const dark = AppCustomColors(
@@ -41,5 +46,10 @@ class AppCustomColorsPalette {
 
     sliderOverlay: Color(0x1F4D99FF),
     valueIndicator: Color(0xff1F2B4A),
+
+    statusDanger: Color(0xffFF5959),
+    statusWarning: Color(0xffFFB84D),
+    statusInfo: Color(0xff4D99FF),
+    statusSuccess: Color(0xff38D980),
   );
 }

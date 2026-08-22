@@ -7,6 +7,7 @@ import 'package:cricket_scorer/core/global/widgets/snackbars/cricket_snackbar.da
 import 'package:cricket_scorer/core/network/models/cricket_response.dart';
 import 'package:cricket_scorer/core/translations/translation_keys.dart';
 import 'package:cricket_scorer/core/utils/either_util.dart';
+import 'package:cricket_scorer/core/utils/validators.dart';
 import 'package:cricket_scorer/features/auth/data/models/request/set_pass_req.dart';
 import 'package:cricket_scorer/features/auth/domain/usecases/set_password.dart';
 import 'package:flutter/material.dart';
@@ -25,9 +26,12 @@ class SetPasswordController extends GetxController {
   final isPasswordVisible = false.obs;
   final isConfirmPasswordVisible = false.obs;
 
+  /// 0 = empty/none, 1 = weak … 4 = strong. The page maps this score to a
+  /// themed color; the controller stays free of presentation concerns.
   final passwordStrength = 0.obs;
+
+  /// Holds a [TranslationKeys] key — the page applies `.tr`.
   final strengthLabel = ''.obs;
-  final strengthColor = Colors.transparent.obs;
 
   String _resetToken = '';
   String _email = '';
@@ -56,7 +60,6 @@ class SetPasswordController extends GetxController {
     if (password.isEmpty) {
       passwordStrength.value = 0;
       strengthLabel.value = '';
-      strengthColor.value = Colors.transparent;
       return;
     }
 
@@ -69,38 +72,16 @@ class SetPasswordController extends GetxController {
 
     passwordStrength.value = score;
 
-    switch (score) {
-      case 1:
-        strengthLabel.value = 'Weak';
-        strengthColor.value = Colors.red;
-        break;
-      case 2:
-        strengthLabel.value = 'Fair';
-        strengthColor.value = Colors.orange;
-        break;
-      case 3:
-        strengthLabel.value = 'Good';
-        strengthColor.value = Colors.blue;
-        break;
-      case 4:
-        strengthLabel.value = 'Strong';
-        strengthColor.value = Colors.green;
-        break;
-      default:
-        strengthLabel.value = '';
-        strengthColor.value = Colors.transparent;
-    }
+    strengthLabel.value = switch (score) {
+      1 => TranslationKeys.passwordWeak,
+      2 => TranslationKeys.passwordFair,
+      3 => TranslationKeys.passwordGood,
+      4 => TranslationKeys.passwordStrong,
+      _ => '',
+    };
   }
 
-  String? validatePassword(String? value) {
-    if (value == null || value.trim().isEmpty) {
-      return TranslationKeys.passwordRequired.tr;
-    }
-    if (value.length < 6) {
-      return TranslationKeys.passwordTooShort.tr;
-    }
-    return null;
-  }
+  String? validatePassword(String? value) => Validators.password(value);
 
   String? validateConfirmPassword(String? value) {
     if (value == null || value.trim().isEmpty) {

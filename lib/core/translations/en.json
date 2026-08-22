@@ -78,5 +78,19 @@
   "tell_us_about_yourself": "Tell us about yourself",
   "bio": "Bio",
   "continue_text": "Continue",
-  "failed_to_logout": "Failed to logged out. Please try again."
+  "failed_to_logout": "Failed to logged out. Please try again.",
+  "connection_error": "You are not connected to the internet. Please try again",
+  "server_error": "Server Error unable to process. Please try in sometime.",
+  "bad_request_error": "Bad Request, please contact Developer Team or try again after some time...",
+  "unauthorized_error": "You are not Authorized to make this Request",
+  "forbidden_error": "You are forbid to make request",
+  "not_found_error": "Server not found, unable to make request",
+  "something_went_wrong": "Something Went wrong...",
+  "generic_error_message": "Something went wrong. Please try again.",
+  "generic_alert_message": "No data available.",
+  "cricket_match": "Cricket Match",
+  "password_weak": "Weak",
+  "password_fair": "Fair",
+  "password_good": "Good",
+  "password_strong": "Strong"
 }

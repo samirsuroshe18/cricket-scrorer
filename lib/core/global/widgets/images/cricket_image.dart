@@ -1,13 +1,12 @@
 import 'dart:io';
 import 'package:cricket_scorer/config/routes/app_routes.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cricket_scorer/core/constants/assets_util.dart';
 import 'package:cricket_scorer/core/enums/cricket_image_type.dart';
+import 'package:cricket_scorer/core/global/widgets/images/cricket_image_source.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:get/get.dart';
-
-import 'cricket_image_source.dart';
 
 class CricketImage extends StatelessWidget {
   const CricketImage({
@@ -55,7 +54,7 @@ class CricketImage extends StatelessWidget {
           fit: fit,
           color: color,
           placeholder: (_, _) =>
-          const Center(child: CircularProgressIndicator()),
+              const Center(child: CircularProgressIndicator()),
           errorWidget: (_, _, _) => errorPlaceholder(),
         );
         break;
@@ -90,12 +89,12 @@ class CricketImage extends StatelessWidget {
       borderRadius: borderRadius ?? BorderRadius.zero,
       child: enablePreview
           ? GestureDetector(
-        onTap: () => Get.toNamed<dynamic>(
-          AppRoutes.imagePreview,
-          arguments: source,
-        ),
-        child: image,
-      )
+              onTap: () => Get.toNamed<dynamic>(
+                AppRoutes.imagePreview,
+                arguments: source,
+              ),
+              child: image,
+            )
           : image,
     );
   }

@@ -24,11 +24,9 @@ class HomeController extends GetxController {
     try {
       CricketLoaderDialog.show();
 
-      String? refreshToken =
-          await SharedPreferenceService.sharedPrefService.get(
-                SharedPrefKey.refreshToken,
-              )
-              as String?;
+      String? refreshToken = await SecureStorageService.secure.get(
+        SharedPrefKey.refreshToken,
+      );
 
       Either<CricketResponse<Map<String, dynamic>>, CricketFailure> response =
           await logoutUseCase(

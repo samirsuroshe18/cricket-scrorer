@@ -5,8 +5,8 @@ import 'package:cricket_scorer/core/error/cricket_failure.dart';
 import 'package:cricket_scorer/core/global/widgets/dialogue/custom_dialog.dart';
 import 'package:cricket_scorer/core/global/widgets/snackbars/cricket_snackbar.dart';
 import 'package:cricket_scorer/core/network/models/cricket_response.dart';
-import 'package:cricket_scorer/core/translations/translation_keys.dart';
 import 'package:cricket_scorer/core/utils/either_util.dart';
+import 'package:cricket_scorer/core/utils/validators.dart';
 import 'package:cricket_scorer/features/auth/data/models/request/forgot_pass_req.dart';
 import 'package:cricket_scorer/features/auth/domain/usecases/forgot_password.dart';
 import 'package:flutter/material.dart';
@@ -20,15 +20,7 @@ class ForgotPasswordController extends GetxController {
   final emailController = TextEditingController();
   final formKey = GlobalKey<FormState>();
 
-  String? validateEmail(String? value) {
-    if (value == null || value.trim().isEmpty) {
-      return TranslationKeys.emailRequired.tr;
-    }
-    if (!GetUtils.isEmail(value.trim())) {
-      return TranslationKeys.enterValidEmail.tr;
-    }
-    return null;
-  }
+  String? validateEmail(String? value) => Validators.email(value);
 
   Future<void> sendResetCode() async {
     if (!formKey.currentState!.validate()) return;

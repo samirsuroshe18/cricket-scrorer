@@ -78,5 +78,19 @@
   "failed_to_logout": "लॉगआउट करने में विफल। कृपया पुनः प्रयास करें।",
   "forgot_password_desc": "अपना पंजीकृत ईमेल दर्ज करें और हम आपको\nएक रीसेट कोड भेजेंगे।",
   "otp_verification_desc": "हमने @target पर 6-अंकीय कोड भेजा है",
-  "did_not_receive_code": "कोड प्राप्त नहीं हुआ?  "
+  "did_not_receive_code": "कोड प्राप्त नहीं हुआ?  ",
+  "connection_error": "आप इंटरनेट से कनेक्ट नहीं हैं। कृपया पुनः प्रयास करें।",
+  "server_error": "सर्वर त्रुटि, अनुरोध संसाधित नहीं हो सका। कृपया कुछ समय बाद प्रयास करें।",
+  "bad_request_error": "अनुचित अनुरोध, कृपया डेवलपर टीम से संपर्क करें या कुछ समय बाद पुनः प्रयास करें।",
+  "unauthorized_error": "आप यह अनुरोध करने के लिए अधिकृत नहीं हैं।",
+  "forbidden_error": "आपको यह अनुरोध करने की अनुमति नहीं है।",
+  "not_found_error": "सर्वर नहीं मिला, अनुरोध पूरा नहीं हो सका।",
+  "something_went_wrong": "कुछ गलत हो गया...",
+  "generic_error_message": "कुछ गलत हो गया। कृपया पुनः प्रयास करें।",
+  "generic_alert_message": "कोई डेटा उपलब्ध नहीं है।",
+  "cricket_match": "क्रिकेट मैच",
+  "password_weak": "कमज़ोर",
+  "password_fair": "ठीक",
+  "password_good": "अच्छा",
+  "password_strong": "मज़बूत"
 }

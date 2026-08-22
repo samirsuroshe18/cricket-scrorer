@@ -19,6 +19,13 @@ class AppCustomColors extends ThemeExtension<AppCustomColors> {
   final Color sliderOverlay;
   final Color valueIndicator;
 
+  /// Foreground severity colors — for meters, badges and status labels
+  /// (the `*Card` colors above are backgrounds, these are drawn on top).
+  final Color statusDanger;
+  final Color statusWarning;
+  final Color statusInfo;
+  final Color statusSuccess;
+
   const AppCustomColors({
     required this.liveCard,
     required this.premiumCard,
@@ -32,6 +39,10 @@ class AppCustomColors extends ThemeExtension<AppCustomColors> {
     required this.chipSelected,
     required this.sliderOverlay,
     required this.valueIndicator,
+    required this.statusDanger,
+    required this.statusWarning,
+    required this.statusInfo,
+    required this.statusSuccess,
   });
 
   @override
@@ -48,6 +59,10 @@ class AppCustomColors extends ThemeExtension<AppCustomColors> {
     Color? chipSelected,
     Color? sliderOverlay,
     Color? valueIndicator,
+    Color? statusDanger,
+    Color? statusWarning,
+    Color? statusInfo,
+    Color? statusSuccess,
   }) {
     return AppCustomColors(
       liveCard: liveCard ?? this.liveCard,
@@ -62,6 +77,10 @@ class AppCustomColors extends ThemeExtension<AppCustomColors> {
       chipSelected: chipSelected ?? this.chipSelected,
       sliderOverlay: sliderOverlay ?? this.sliderOverlay,
       valueIndicator: valueIndicator ?? this.valueIndicator,
+      statusDanger: statusDanger ?? this.statusDanger,
+      statusWarning: statusWarning ?? this.statusWarning,
+      statusInfo: statusInfo ?? this.statusInfo,
+      statusSuccess: statusSuccess ?? this.statusSuccess,
     );
   }
 
@@ -85,6 +104,10 @@ class AppCustomColors extends ThemeExtension<AppCustomColors> {
       chipSelected: Color.lerp(chipSelected, other.chipSelected, t)!,
       sliderOverlay: Color.lerp(sliderOverlay, other.sliderOverlay, t)!,
       valueIndicator: Color.lerp(valueIndicator, other.valueIndicator, t)!,
+      statusDanger: Color.lerp(statusDanger, other.statusDanger, t)!,
+      statusWarning: Color.lerp(statusWarning, other.statusWarning, t)!,
+      statusInfo: Color.lerp(statusInfo, other.statusInfo, t)!,
+      statusSuccess: Color.lerp(statusSuccess, other.statusSuccess, t)!,
     );
   }
 }

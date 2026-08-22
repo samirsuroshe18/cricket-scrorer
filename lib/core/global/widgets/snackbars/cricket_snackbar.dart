@@ -1,5 +1,5 @@
 import 'package:cricket_scorer/core/constants/app_color.dart';
-import 'package:cricket_scorer/core/constants/error_string_constants.dart';
+import 'package:cricket_scorer/core/translations/translation_keys.dart';
 import 'package:cricket_scorer/core/extensions/theme_x.dart';
 import 'package:cricket_scorer/core/global/widgets/cricket_text.dart';
 import 'package:flutter/material.dart';
@@ -201,9 +201,7 @@ class CricketSnackbar {
                       ),
                       const SizedBox(height: 4),
                       CricketText(
-                        text:
-                            message ??
-                            ErrorStringConstants.genericErrorMessage.tr,
+                        text: message ?? TranslationKeys.genericErrorMessage.tr,
                         style: context.textTheme.labelSmall?.copyWith(
                           color: textColor,
                         ),
@@ -307,9 +305,7 @@ class CricketSnackbar {
                       ),
                       const SizedBox(height: 4),
                       CricketText(
-                        text:
-                            message ??
-                            ErrorStringConstants.genericAlertMessage.tr,
+                        text: message ?? TranslationKeys.genericAlertMessage.tr,
                         style: context.textTheme.labelSmall?.copyWith(
                           color: textColor,
                         ),

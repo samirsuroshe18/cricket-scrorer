@@ -8,53 +8,55 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 
-class CricketImagePreview extends StatelessWidget {
+class CricketImagePreview extends GetView<ImagePreviewController> {
   const CricketImagePreview({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: const CustomAppBar(),
-      body: GetBuilder<ImagePreviewController>(
-        builder: (controller) {
-          switch (controller.source.type) {
-            case CricketImageType.network:
-              return imagePreview(
-                child: CachedNetworkImage(
-                  imageUrl: controller.source.path,
-                  fit: BoxFit.contain,
-                  placeholder: (context, url) => loader(),
-                  errorWidget: (context, url, error) => errorPlaceholder(),
-                ),
-              );
-            case CricketImageType.asset:
-              return imagePreview(
-                child: Image.asset(
-                  controller.source.path,
-                  fit: BoxFit.contain,
-                  errorBuilder: (context, error, stackTrace) => errorPlaceholder(),
-                ),
-              );
-            case CricketImageType.svg:
-              return imagePreview(child: SvgPicture.asset(
-                controller.source.path,
-                fit: BoxFit.contain,
-                placeholderBuilder: (context) => loader(),
-              ));
-            case CricketImageType.file:
-              final file = File(controller.source.path);
-              if (!file.existsSync()) return errorPlaceholder();
-              return imagePreview(
-                child: Image.file(
-                  File(controller.source.path),
-                  fit: BoxFit.contain,
-                  errorBuilder: (context, error, stackTrace) => errorPlaceholder(),
-                ),
-              );
-          }
-        },
-      ),
+      body: preview(),
     );
+  }
+
+  Widget preview() {
+    switch (controller.source.type) {
+      case CricketImageType.network:
+        return imagePreview(
+          child: CachedNetworkImage(
+            imageUrl: controller.source.path,
+            fit: BoxFit.contain,
+            placeholder: (context, url) => loader(),
+            errorWidget: (context, url, error) => errorPlaceholder(),
+          ),
+        );
+      case CricketImageType.asset:
+        return imagePreview(
+          child: Image.asset(
+            controller.source.path,
+            fit: BoxFit.contain,
+            errorBuilder: (context, error, stackTrace) => errorPlaceholder(),
+          ),
+        );
+      case CricketImageType.svg:
+        return imagePreview(
+          child: SvgPicture.asset(
+            controller.source.path,
+            fit: BoxFit.contain,
+            placeholderBuilder: (context) => loader(),
+          ),
+        );
+      case CricketImageType.file:
+        final file = File(controller.source.path);
+        if (!file.existsSync()) return errorPlaceholder();
+        return imagePreview(
+          child: Image.file(
+            File(controller.source.path),
+            fit: BoxFit.contain,
+            errorBuilder: (context, error, stackTrace) => errorPlaceholder(),
+          ),
+        );
+    }
   }
 
   Widget imagePreview({required Widget child}) {

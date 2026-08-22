@@ -1,5 +1,6 @@
+import 'package:cricket_scorer/core/extensions/theme_x.dart';
 import 'package:flutter/material.dart';
-import 'package:get/get_utils/src/extensions/context_extensions.dart';
+import 'package:get/get.dart';
 
 class CricketTextField extends StatelessWidget {
   final TextEditingController? controller;
@@ -30,7 +31,7 @@ class CricketTextField extends StatelessWidget {
     this.textCapitalization = TextCapitalization.none,
     this.validator,
     this.onChanged,
-    this.isRequired = false
+    this.isRequired = false,
   });
 
   @override
@@ -52,11 +53,13 @@ class CricketTextField extends StatelessWidget {
             style: context.textTheme.bodyMedium,
             children: isRequired
                 ? [
-              TextSpan(
-                text: ' *',
-                style: context.textTheme.bodyMedium?.copyWith(color: Colors.red),
-              ),
-            ]
+                    TextSpan(
+                      text: ' *',
+                      style: context.textTheme.bodyMedium?.copyWith(
+                        color: context.colorScheme.error,
+                      ),
+                    ),
+                  ]
                 : [],
           ),
         ),

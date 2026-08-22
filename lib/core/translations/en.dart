@@ -6,7 +6,8 @@ Map<String, String> en = {
   TranslationKeys.email: 'Email',
   TranslationKeys.password: 'Password',
   TranslationKeys.forgotPassword: 'Forgot Password?',
-  TranslationKeys.forgotPasswordDesc: 'Enter your registered email and we\'ll send\nyou a reset code.',
+  TranslationKeys.forgotPasswordDesc:
+      'Enter your registered email and we\'ll send\nyou a reset code.',
   TranslationKeys.cancel: 'Cancel',
   TranslationKeys.retry: 'Retry',
   TranslationKeys.confirm: 'Confirm',
@@ -19,27 +20,34 @@ Map<String, String> en = {
   TranslationKeys.system: 'System',
   TranslationKeys.language: 'Language',
   TranslationKeys.theme: 'Theme',
-  TranslationKeys.sessionExpired: 'Your session has expired. Please log in again.',
+  TranslationKeys.sessionExpired:
+      'Your session has expired. Please log in again.',
   TranslationKeys.inputFileNotExists: 'Input file does not exist',
-  TranslationKeys.compressionMissingOutput: 'Compression reported success but output file is missing',
+  TranslationKeys.compressionMissingOutput:
+      'Compression reported success but output file is missing',
   TranslationKeys.compressionFailed: 'Compression failed',
   TranslationKeys.emailRequired: 'Email is required',
   TranslationKeys.enterValidEmail: 'Enter a valid email',
   TranslationKeys.passwordRequired: 'Password is required',
   TranslationKeys.passwordTooShort: 'Password must be at least 6 characters',
-  TranslationKeys.failedToSaveSession: 'Failed to save login session. Please try again.',
+  TranslationKeys.failedToSaveSession:
+      'Failed to save login session. Please try again.',
   TranslationKeys.liveScoring: 'Live Scoring',
-  TranslationKeys.liveScoringDesc: 'Record every run, wicket, current over with intuitive controls.',
+  TranslationKeys.liveScoringDesc:
+      'Record every run, wicket, current over with intuitive controls.',
   TranslationKeys.deepMatchStats: 'Deep Match Stats',
-  TranslationKeys.deepMatchStatsDesc: 'Track your match progress and key stats in real-time.',
+  TranslationKeys.deepMatchStatsDesc:
+      'Track your match progress and key stats in real-time.',
   TranslationKeys.shareTheVictory: 'Share The Victory',
-  TranslationKeys.shareTheVictoryDesc: 'Instantly share match summaries and team stats.',
+  TranslationKeys.shareTheVictoryDesc:
+      'Instantly share match summaries and team stats.',
   TranslationKeys.enterCompleteCode: 'Please enter the complete 6-digit code',
   TranslationKeys.fullNameRequired: 'Full name is required',
   TranslationKeys.nameTooShort: 'Name must be at least 2 characters',
   TranslationKeys.confirmPasswordRequired: 'Please confirm your password',
   TranslationKeys.passwordsDoNotMatch: 'Passwords do not match',
-  TranslationKeys.resetTokenMissing: 'Reset token is missing. Please restart the process.',
+  TranslationKeys.resetTokenMissing:
+      'Reset token is missing. Please restart the process.',
   TranslationKeys.addProfilePhoto: 'Add Profile Photo',
   TranslationKeys.usernameRequired: 'Username is required',
   TranslationKeys.usernameTooShort: 'Username must be at least 3 characters',
@@ -68,7 +76,8 @@ Map<String, String> en = {
   TranslationKeys.enterConfirmPassword: 'Enter Confirm Password',
   TranslationKeys.alreadyHaveAccount: 'Already have an account? ',
   TranslationKeys.setNewPassword: 'Set New Password',
-  TranslationKeys.setNewPasswordDesc: 'Your new password must be different\nfrom your previous password.',
+  TranslationKeys.setNewPasswordDesc:
+      'Your new password must be different\nfrom your previous password.',
   TranslationKeys.newPassword: 'New password',
   TranslationKeys.enterNewPassword: 'Enter new Password',
   TranslationKeys.confirmNewPassword: 'Confirm new password',
@@ -81,4 +90,23 @@ Map<String, String> en = {
   TranslationKeys.bio: 'Bio',
   TranslationKeys.continueText: 'Continue',
   TranslationKeys.failedToLogout: 'Failed to logged out. Please try again.',
+  TranslationKeys.cricketMatch: 'Cricket Match',
+  TranslationKeys.passwordWeak: 'Weak',
+  TranslationKeys.passwordFair: 'Fair',
+  TranslationKeys.passwordGood: 'Good',
+  TranslationKeys.passwordStrong: 'Strong',
+  TranslationKeys.connectionError:
+      'You are not connected to the internet. Please try again',
+  TranslationKeys.serverError:
+      'Server Error unable to process. Please try in sometime.',
+  TranslationKeys.badRequestError:
+      'Bad Request, please contact Developer Team or try again after some time...',
+  TranslationKeys.unAuthorizedError:
+      'You are not Authorized to make this Request',
+  TranslationKeys.forbiddenError: 'You are forbid to make request',
+  TranslationKeys.notFoundError: 'Server not found, unable to make request',
+  TranslationKeys.somethingWentWrong: 'Something Went wrong...',
+  TranslationKeys.genericErrorMessage:
+      'Something went wrong. Please try again.',
+  TranslationKeys.genericAlertMessage: 'No data available.',
 };

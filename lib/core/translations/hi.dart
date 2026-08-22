@@ -6,7 +6,8 @@ Map<String, String> hi = {
   TranslationKeys.email: 'ईमेल',
   TranslationKeys.password: 'पासवर्ड',
   TranslationKeys.forgotPassword: 'पासवर्ड भूल गए?',
-  TranslationKeys.forgotPasswordDesc: 'अपना पंजीकृत ईमेल दर्ज करें और हम आपको\nएक रीसेट कोड भेजेंगे।',
+  TranslationKeys.forgotPasswordDesc:
+      'अपना पंजीकृत ईमेल दर्ज करें और हम आपको\nएक रीसेट कोड भेजेंगे।',
   TranslationKeys.cancel: 'रद्द करें',
   TranslationKeys.retry: 'पुनः प्रयास करें',
   TranslationKeys.confirm: 'पुष्टि करें',
@@ -19,27 +20,34 @@ Map<String, String> hi = {
   TranslationKeys.system: 'सिस्टम',
   TranslationKeys.language: 'भाषा',
   TranslationKeys.theme: 'थीम',
-  TranslationKeys.sessionExpired: 'आपका सेशन समाप्त हो गया है। कृपया फिर से लॉगिन करें।',
+  TranslationKeys.sessionExpired:
+      'आपका सेशन समाप्त हो गया है। कृपया फिर से लॉगिन करें।',
   TranslationKeys.inputFileNotExists: 'इनपुट फ़ाइल मौजूद नहीं है',
-  TranslationKeys.compressionMissingOutput: 'कंप्रेशन सफल रहा लेकिन आउटपुट फ़ाइल गायब है',
+  TranslationKeys.compressionMissingOutput:
+      'कंप्रेशन सफल रहा लेकिन आउटपुट फ़ाइल गायब है',
   TranslationKeys.compressionFailed: 'कंप्रेशन विफल रहा',
   TranslationKeys.emailRequired: 'ईमेल आवश्यक है',
   TranslationKeys.enterValidEmail: 'एक वैध ईमेल दर्ज करें',
   TranslationKeys.passwordRequired: 'पासवर्ड आवश्यक है',
   TranslationKeys.passwordTooShort: 'पासवर्ड कम से कम 6 अक्षरों का होना चाहिए',
-  TranslationKeys.failedToSaveSession: 'लॉगिन सेशन सहेजने में विफल। कृपया पुनः प्रयास करें।',
+  TranslationKeys.failedToSaveSession:
+      'लॉगिन सेशन सहेजने में विफल। कृपया पुनः प्रयास करें।',
   TranslationKeys.liveScoring: 'लाइव स्कोरिंग',
-  TranslationKeys.liveScoringDesc: 'सहज नियंत्रण के साथ हर रन, विकेट और वर्तमान ओवर रिकॉर्ड करें।',
+  TranslationKeys.liveScoringDesc:
+      'सहज नियंत्रण के साथ हर रन, विकेट और वर्तमान ओवर रिकॉर्ड करें।',
   TranslationKeys.deepMatchStats: 'गहन मैच आँकड़े',
-  TranslationKeys.deepMatchStatsDesc: 'रीयल-टाइम में अपने मैच की प्रगति और प्रमुख आँकड़ों को ट्रैक करें।',
+  TranslationKeys.deepMatchStatsDesc:
+      'रीयल-टाइम में अपने मैच की प्रगति और प्रमुख आँकड़ों को ट्रैक करें।',
   TranslationKeys.shareTheVictory: 'जीत साझा करें',
-  TranslationKeys.shareTheVictoryDesc: 'मैच सारांश और टीम आँकड़े तुरंत साझा करें।',
+  TranslationKeys.shareTheVictoryDesc:
+      'मैच सारांश और टीम आँकड़े तुरंत साझा करें।',
   TranslationKeys.enterCompleteCode: 'कृपया पूरा 6-अंकीय कोड दर्ज करें',
   TranslationKeys.fullNameRequired: 'पूरा नाम आवश्यक है',
   TranslationKeys.nameTooShort: 'नाम कम से कम 2 अक्षरों का होना चाहिए',
   TranslationKeys.confirmPasswordRequired: 'कृपया अपने पासवर्ड की पुष्टि करें',
   TranslationKeys.passwordsDoNotMatch: 'पासवर्ड मेल नहीं खाते',
-  TranslationKeys.resetTokenMissing: 'रीसेट टोकन गायब है। कृपया प्रक्रिया को पुनरारंभ करें।',
+  TranslationKeys.resetTokenMissing:
+      'रीसेट टोकन गायब है। कृपया प्रक्रिया को पुनरारंभ करें।',
   TranslationKeys.addProfilePhoto: 'प्रोफ़ाइल फोटो जोड़ें',
   TranslationKeys.usernameRequired: 'यूजरनेम आवश्यक है',
   TranslationKeys.usernameTooShort: 'यूजरनेम कम से कम 3 अक्षरों का होना चाहिए',
@@ -68,7 +76,8 @@ Map<String, String> hi = {
   TranslationKeys.enterConfirmPassword: 'पासवर्ड की पुष्टि करें',
   TranslationKeys.alreadyHaveAccount: 'पहले से ही एक खाता है? ',
   TranslationKeys.setNewPassword: 'नया पासवर्ड सेट करें',
-  TranslationKeys.setNewPasswordDesc: 'आपका नया पासवर्ड आपके पिछले पासवर्ड से अलग होना चाहिए।',
+  TranslationKeys.setNewPasswordDesc:
+      'आपका नया पासवर्ड आपके पिछले पासवर्ड से अलग होना चाहिए।',
   TranslationKeys.newPassword: 'नया पासवर्ड',
   TranslationKeys.enterNewPassword: 'नया पासवर्ड दर्ज करें',
   TranslationKeys.confirmNewPassword: 'नए पासवर्ड की पुष्टि करें',
@@ -80,5 +89,25 @@ Map<String, String> hi = {
   TranslationKeys.tellUsAboutYourself: 'हमें अपने बारे में बताएं',
   TranslationKeys.bio: 'बायो',
   TranslationKeys.continueText: 'जारी रखें',
-  TranslationKeys.failedToLogout: 'लॉगआउट करने में विफल। कृपया पुनः प्रयास करें।',
+  TranslationKeys.failedToLogout:
+      'लॉगआउट करने में विफल। कृपया पुनः प्रयास करें।',
+  TranslationKeys.cricketMatch: 'क्रिकेट मैच',
+  TranslationKeys.passwordWeak: 'कमज़ोर',
+  TranslationKeys.passwordFair: 'ठीक',
+  TranslationKeys.passwordGood: 'अच्छा',
+  TranslationKeys.passwordStrong: 'मज़बूत',
+  TranslationKeys.connectionError:
+      'आप इंटरनेट से कनेक्ट नहीं हैं। कृपया पुनः प्रयास करें।',
+  TranslationKeys.serverError:
+      'सर्वर त्रुटि, अनुरोध संसाधित नहीं हो सका। कृपया कुछ समय बाद प्रयास करें।',
+  TranslationKeys.badRequestError:
+      'अनुचित अनुरोध, कृपया डेवलपर टीम से संपर्क करें या कुछ समय बाद पुनः प्रयास करें।',
+  TranslationKeys.unAuthorizedError:
+      'आप यह अनुरोध करने के लिए अधिकृत नहीं हैं।',
+  TranslationKeys.forbiddenError: 'आपको यह अनुरोध करने की अनुमति नहीं है।',
+  TranslationKeys.notFoundError: 'सर्वर नहीं मिला, अनुरोध पूरा नहीं हो सका।',
+  TranslationKeys.somethingWentWrong: 'कुछ गलत हो गया...',
+  TranslationKeys.genericErrorMessage:
+      'कुछ गलत हो गया। कृपया पुनः प्रयास करें।',
+  TranslationKeys.genericAlertMessage: 'कोई डेटा उपलब्ध नहीं है।',
 };

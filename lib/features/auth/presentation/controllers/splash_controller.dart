@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:cricket_scorer/config/routes/app_routes.dart';
-import 'package:cricket_scorer/core/constants/error_string_constants.dart';
+import 'package:cricket_scorer/core/translations/translation_keys.dart';
 import 'package:cricket_scorer/core/constants/shared_pref_key.dart';
 import 'package:cricket_scorer/core/error/cricket_failure.dart';
 import 'package:cricket_scorer/core/global/domain/usecases/get_language.dart';
@@ -108,7 +108,7 @@ class SplashController extends GetxController
         }
       } catch (e) {
         CricketSnackbar.showErrorMessage(
-          ErrorStringConstants.somethingWentWrong,
+          TranslationKeys.somethingWentWrong,
         );
       }
     } else {
