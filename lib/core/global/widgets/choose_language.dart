@@ -97,7 +97,7 @@ class ChooseLanguageState extends State<ChooseLanguage> {
                           source: CricketImageSource.svg(item.imageAsset),
                           width: 20,
                           height: 20,
-                        )
+                        ),
                       ),
                       8.w,
                       CricketText(

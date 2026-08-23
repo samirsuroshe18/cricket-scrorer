@@ -90,13 +90,18 @@ class _$AppDatabase extends AppDatabase {
       },
       onUpgrade: (database, startVersion, endVersion) async {
         await MigrationAdapter.runMigrations(
-            database, startVersion, endVersion, migrations);
+          database,
+          startVersion,
+          endVersion,
+          migrations,
+        );
 
         await callback?.onUpgrade?.call(database, startVersion, endVersion);
       },
       onCreate: (database, version) async {
         await database.execute(
-            'CREATE TABLE IF NOT EXISTS `userDetails` (`id` TEXT, `name` TEXT, `profilePhotoUrl` TEXT, `type` INTEGER, PRIMARY KEY (`id`))');
+          'CREATE TABLE IF NOT EXISTS `userDetails` (`id` TEXT, `name` TEXT, `profilePhotoUrl` TEXT, `type` INTEGER, PRIMARY KEY (`id`))',
+        );
 
         await callback?.onCreate?.call(database, version);
       },
@@ -114,16 +119,17 @@ class _$UserDao extends UserDao {
   _$UserDao(
     this.database,
     this.changeListener,
-  )   : _queryAdapter = QueryAdapter(database),
-        _userDetailsInsertionAdapter = InsertionAdapter(
-            database,
-            'userDetails',
-            (UserDetails item) => <String, Object?>{
-                  'id': item.id,
-                  'name': item.name,
-                  'profilePhotoUrl': item.profilePhotoUrl,
-                  'type': item.type?.index
-                });
+  ) : _queryAdapter = QueryAdapter(database),
+      _userDetailsInsertionAdapter = InsertionAdapter(
+        database,
+        'userDetails',
+        (UserDetails item) => <String, Object?>{
+          'id': item.id,
+          'name': item.name,
+          'profilePhotoUrl': item.profilePhotoUrl,
+          'type': item.type?.index,
+        },
+      );
 
   final sqflite.DatabaseExecutor database;
 
@@ -135,20 +141,23 @@ class _$UserDao extends UserDao {
 
   @override
   Future<UserDetails?> getUserDetails() async {
-    return _queryAdapter.query('SELECT * FROM userDetails LIMIT 1',
-        mapper: (Map<String, Object?> row) => UserDetails(
-            id: row['id'] as String?,
-            name: row['name'] as String?,
-            profilePhotoUrl: row['profilePhotoUrl'] as String?,
-            type: row['type'] == null
-                ? null
-                : UserType.values[row['type'] as int]));
+    return _queryAdapter.query(
+      'SELECT * FROM userDetails LIMIT 1',
+      mapper: (Map<String, Object?> row) => UserDetails(
+        id: row['id'] as String?,
+        name: row['name'] as String?,
+        profilePhotoUrl: row['profilePhotoUrl'] as String?,
+        type: row['type'] == null ? null : UserType.values[row['type'] as int],
+      ),
+    );
   }
 
   @override
   Future<void> insertUserDetails(UserDetails userDetails) async {
     await _userDetailsInsertionAdapter.insert(
-        userDetails, OnConflictStrategy.abort);
+      userDetails,
+      OnConflictStrategy.abort,
+    );
   }
 }
 

@@ -7,14 +7,14 @@ class CricketImageSource {
   const CricketImageSource._(this.type, this.path);
 
   const CricketImageSource.asset(String path)
-      : this._(CricketImageType.asset, path);
+    : this._(CricketImageType.asset, path);
 
   const CricketImageSource.network(String url)
-      : this._(CricketImageType.network, url);
+    : this._(CricketImageType.network, url);
 
   const CricketImageSource.svg(String path)
-      : this._(CricketImageType.svg, path);
+    : this._(CricketImageType.svg, path);
 
   const CricketImageSource.file(String path)
-      : this._(CricketImageType.file, path);
+    : this._(CricketImageType.file, path);
 }

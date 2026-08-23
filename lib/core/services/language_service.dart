@@ -260,18 +260,23 @@ class LanguageService extends GetxService {
   }
 
   Future<void> loadSavedTranslations() async {
-    final String? json = await SharedPreferenceService.sharedPrefService.get(
-      SharedPrefKey.translations,
-    ) as String?;
+    final String? json =
+        await SharedPreferenceService.sharedPrefService.get(
+              SharedPrefKey.translations,
+            )
+            as String?;
 
     if (json == null) return;
 
-    final Map<String, dynamic> decoded = jsonDecode(json) as Map<String, dynamic>;
+    final Map<String, dynamic> decoded =
+        jsonDecode(json) as Map<String, dynamic>;
 
-    final translations = decoded.map((language, value) => MapEntry(
-      language,
-      Map<String, String>.from(value as Map),
-    ));
+    final translations = decoded.map(
+      (language, value) => MapEntry(
+        language,
+        Map<String, String>.from(value as Map),
+      ),
+    );
 
     Get.addTranslations(translations);
   }

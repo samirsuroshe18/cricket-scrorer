@@ -7,11 +7,11 @@ part of 'user_details.dart';
 // **************************************************************************
 
 UserDetails _$UserDetailsFromJson(Map<String, dynamic> json) => UserDetails(
-      id: json['_id'] as String?,
-      name: json['name'] as String?,
-      profilePhotoUrl: json['profilePhotoUrl'] as String?,
-      type: $enumDecodeNullable(_$UserTypeEnumMap, json['type']),
-    );
+  id: json['_id'] as String?,
+  name: json['name'] as String?,
+  profilePhotoUrl: json['profilePhotoUrl'] as String?,
+  type: $enumDecodeNullable(_$UserTypeEnumMap, json['type']),
+);
 
 Map<String, dynamic> _$UserDetailsToJson(UserDetails instance) =>
     <String, dynamic>{

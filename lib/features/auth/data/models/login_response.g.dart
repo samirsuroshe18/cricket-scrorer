@@ -23,30 +23,30 @@ Map<String, dynamic> _$LoginResponseToJson(LoginResponse instance) =>
     };
 
 LoggedInUser _$LoggedInUserFromJson(Map<String, dynamic> json) => LoggedInUser(
-      id: json['_id'] as String?,
-      email: json['email'] as String?,
-      isEmailVerified: json['isEmailVerified'] as bool?,
-      userName: json['userName'] as String?,
-      profileCompleted: json['profileCompleted'] as bool?,
-      accountStatus: json['accountStatus'] as String?,
-      isDeleted: json['isDeleted'] as bool?,
-      createdAt: json['createdAt'] == null
-          ? null
-          : DateTime.parse(json['createdAt'] as String),
-      updatedAt: json['updatedAt'] == null
-          ? null
-          : DateTime.parse(json['updatedAt'] as String),
-      v: (json['__v'] as num?)?.toInt(),
-      lastLoginAt: json['lastLoginAt'] == null
-          ? null
-          : DateTime.parse(json['lastLoginAt'] as String),
-      passwordChangedAt: json['passwordChangedAt'] == null
-          ? null
-          : DateTime.parse(json['passwordChangedAt'] as String),
-      bio: json['bio'] as String?,
-      fullName: json['fullName'] as String?,
-      photoUrl: json['photoUrl'] as String?,
-    );
+  id: json['_id'] as String?,
+  email: json['email'] as String?,
+  isEmailVerified: json['isEmailVerified'] as bool?,
+  userName: json['userName'] as String?,
+  profileCompleted: json['profileCompleted'] as bool?,
+  accountStatus: json['accountStatus'] as String?,
+  isDeleted: json['isDeleted'] as bool?,
+  createdAt: json['createdAt'] == null
+      ? null
+      : DateTime.parse(json['createdAt'] as String),
+  updatedAt: json['updatedAt'] == null
+      ? null
+      : DateTime.parse(json['updatedAt'] as String),
+  v: (json['__v'] as num?)?.toInt(),
+  lastLoginAt: json['lastLoginAt'] == null
+      ? null
+      : DateTime.parse(json['lastLoginAt'] as String),
+  passwordChangedAt: json['passwordChangedAt'] == null
+      ? null
+      : DateTime.parse(json['passwordChangedAt'] as String),
+  bio: json['bio'] as String?,
+  fullName: json['fullName'] as String?,
+  photoUrl: json['photoUrl'] as String?,
+);
 
 Map<String, dynamic> _$LoggedInUserToJson(LoggedInUser instance) =>
     <String, dynamic>{

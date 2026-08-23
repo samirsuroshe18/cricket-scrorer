@@ -61,16 +61,16 @@ class ThemeService extends GetxService {
   }
 
   Future<void> selectTheme() async {
-    try{
+    try {
       final mode = await CustomBottomSheet.cricketCustomBottomSheet<dynamic>(
         child: const ChooseTheme(),
         heightFactor: 0.5,
         headlineText: TranslationKeys.selectYourTheme.tr,
       );
-      if(mode is CricketThemeOption){
+      if (mode is CricketThemeOption) {
         unawaited(setTheme(mode.mode));
       }
-    }catch(e){
+    } catch (e) {
       if (kDebugMode) {
         print('Error setting language: $e');
       }

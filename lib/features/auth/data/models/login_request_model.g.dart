@@ -7,11 +7,11 @@ part of 'login_request_model.dart';
 // **************************************************************************
 
 LoginModel _$LoginModelFromJson(Map<String, dynamic> json) => LoginModel(
-      email: json['email'] as String,
-      password: json['password'] as String,
-      rememberMe: json['rememberMe'] as bool? ?? false,
-      fcmToken: json['fcmToken'] as String?,
-    );
+  email: json['email'] as String,
+  password: json['password'] as String,
+  rememberMe: json['rememberMe'] as bool? ?? false,
+  fcmToken: json['fcmToken'] as String?,
+);
 
 Map<String, dynamic> _$LoginModelToJson(LoginModel instance) =>
     <String, dynamic>{

@@ -31,7 +31,8 @@ class AuthInterceptor extends Interceptor {
       SharedPrefKey.accessToken,
     );
 
-    options.headers['accept-language'] = Get.find<LanguageService>().currentLanguage;
+    options.headers['accept-language'] =
+        Get.find<LanguageService>().currentLanguage;
     if (accessToken != null && accessToken.isNotEmpty) {
       options.headers['Authorization'] = 'Bearer $accessToken';
       if (kDebugMode) {

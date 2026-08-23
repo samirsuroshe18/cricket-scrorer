@@ -1,8 +1,7 @@
 enum AppLanguage {
   english('en', 'English'),
   marathi('mr', 'Marathi'),
-  hindi('hi', 'Hindi')
-  ;
+  hindi('hi', 'Hindi');
 
   final String code;
   final String label;

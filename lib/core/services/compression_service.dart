@@ -46,11 +46,14 @@ class CompressionService extends GetxService {
 
       final originalSize = await inputFile.length();
       if (kDebugMode) {
-        print('📥 Original size: ${(originalSize / (1024 * 1024)).toStringAsFixed(2)} MB');
+        print(
+          '📥 Original size: ${(originalSize / (1024 * 1024)).toStringAsFixed(2)} MB',
+        );
       }
 
       final dir = await getTemporaryDirectory();
-      final op = outputPath ??
+      final op =
+          outputPath ??
           '${dir.path}/womaty_${DateTime.now().microsecondsSinceEpoch}.jpeg';
 
       // Scale the image to `scale` resolution (never upscale) and set
@@ -77,7 +80,9 @@ class CompressionService extends GetxService {
         if (kDebugMode) {
           final stat = await file.stat();
           print('✅ Compression successful');
-          print('💿 Compressed size: ${(stat.size / (1024 * 1024)).toStringAsFixed(2)} MB');
+          print(
+            '💿 Compressed size: ${(stat.size / (1024 * 1024)).toStringAsFixed(2)} MB',
+          );
         }
 
         return Either.result(file);
@@ -162,7 +167,7 @@ class CompressionService extends GetxService {
 
     videoSession = await FFmpegKit.executeAsync(
       command,
-          (session) async {
+      (session) async {
         final rc = await session.getReturnCode();
 
         if (ReturnCode.isSuccess(rc)) {
@@ -171,7 +176,10 @@ class CompressionService extends GetxService {
         } else if (ReturnCode.isCancel(rc)) {
           completer.complete(
             Either.fallback(
-              CricketFailure(message: 'Video compression cancelled', statusCode: null),
+              CricketFailure(
+                message: 'Video compression cancelled',
+                statusCode: null,
+              ),
             ),
           );
         } else {
@@ -185,8 +193,8 @@ class CompressionService extends GetxService {
           );
         }
       },
-          (log) {},
-          (statistics) {
+      (log) {},
+      (statistics) {
         final processedMs = statistics.getTime();
         final progress = (processedMs / totalDurationMs).clamp(0.0, 1.0);
         progressNotifier.value = progress;

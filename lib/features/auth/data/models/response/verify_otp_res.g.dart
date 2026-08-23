@@ -7,8 +7,8 @@ part of 'verify_otp_res.dart';
 // **************************************************************************
 
 VerifyOtpRes _$VerifyOtpResFromJson(Map<String, dynamic> json) => VerifyOtpRes(
-      resetToken: json['resetToken'] as String?,
-    );
+  resetToken: json['resetToken'] as String?,
+);
 
 Map<String, dynamic> _$VerifyOtpResToJson(VerifyOtpRes instance) =>
     <String, dynamic>{

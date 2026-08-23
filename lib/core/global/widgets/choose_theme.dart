@@ -117,10 +117,12 @@ class _ChooseThemeState extends State<ChooseTheme> {
 
         CricketButton(
           buttonText: TranslationKeys.confirm.tr,
-          onPressed: selectedTheme != null && selectedTheme?.mode != Get.find<ThemeService>().themeMode
+          onPressed:
+              selectedTheme != null &&
+                  selectedTheme?.mode != Get.find<ThemeService>().themeMode
               ? () {
-            Get.back(result: selectedTheme);
-          }
+                  Get.back(result: selectedTheme);
+                }
               : null,
         ),
       ],
