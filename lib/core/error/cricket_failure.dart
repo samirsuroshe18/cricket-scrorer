@@ -57,3 +57,9 @@ class CricketSomethingWentWrongFailure extends CricketFailure {
   CricketSomethingWentWrongFailure({String? message, super.statusCode})
     : super(message: message ?? TranslationKeys.somethingWentWrong.tr);
 }
+
+// Socket Disconnected Failure
+class CricketSocketDisconnectedFailure extends CricketFailure {
+  CricketSocketDisconnectedFailure({String? message, super.statusCode})
+    : super(message: message ?? TranslationKeys.connectionLost.tr);
+}

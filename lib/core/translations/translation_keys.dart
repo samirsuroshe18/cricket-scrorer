@@ -98,4 +98,28 @@ class TranslationKeys {
   static const String somethingWentWrong = 'something_went_wrong';
   static const String genericErrorMessage = 'generic_error_message';
   static const String genericAlertMessage = 'generic_alert_message';
+
+  /// Scoring feature
+  static const String startMatch = 'start_match';
+  static const String createMatch = 'create_match';
+  static const String teamAName = 'team_a_name';
+  static const String teamBName = 'team_b_name';
+  static const String overs = 'overs';
+  static const String enterTeamAName = 'enter_team_a_name';
+  static const String enterTeamBName = 'enter_team_b_name';
+  static const String enterOvers = 'enter_overs';
+  static const String teamNameRequired = 'team_name_required';
+  static const String invalidOvers = 'invalid_overs';
+  static const String teamNamesMustDiffer = 'team_names_must_differ';
+  static const String liveScore = 'live_score';
+  static const String selectRuns = 'select_runs';
+  static const String wickets = 'wickets';
+  static const String connectionLost = 'connection_lost';
+  static const String extras = 'extras';
+  static const String wideOrNoBall = 'wide_or_no_ball';
+  static const String wide = 'wide';
+  static const String noBall = 'no_ball';
+  static const String byeOrLegBye = 'bye_or_leg_bye';
+  static const String bye = 'bye';
+  static const String legBye = 'leg_bye';
 }

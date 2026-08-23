@@ -19,6 +19,10 @@ import 'package:cricket_scorer/features/auth/presentation/pages/splash_screen.da
 import 'package:cricket_scorer/features/auth/presentation/pages/update_profile_screen.dart';
 import 'package:cricket_scorer/features/home/presentation/bindings/home_binding.dart';
 import 'package:cricket_scorer/features/home/presentation/pages/home_page.dart';
+import 'package:cricket_scorer/features/scoring/presentation/bindings/create_match_binding.dart';
+import 'package:cricket_scorer/features/scoring/presentation/bindings/score_ball_binding.dart';
+import 'package:cricket_scorer/features/scoring/presentation/pages/create_match_screen.dart';
+import 'package:cricket_scorer/features/scoring/presentation/pages/score_ball_screen.dart';
 import 'package:get/get.dart';
 
 abstract class AppPages {
@@ -72,6 +76,16 @@ abstract class AppPages {
       name: AppRoutes.imagePreview,
       page: () => const CricketImagePreview(),
       binding: ImagePreviewBinding(),
+    ),
+    GetPage(
+      name: AppRoutes.createMatch,
+      page: () => const CreateMatchScreen(),
+      binding: CreateMatchBinding(),
+    ),
+    GetPage(
+      name: AppRoutes.scoreBall,
+      page: () => const ScoreBallScreen(),
+      binding: ScoreBallBinding(),
     ),
   ];
 }

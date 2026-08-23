@@ -9,4 +9,6 @@ class AppRoutes {
   static const String onBoarding = '/on-boarding';
   static const String updateProfile = '/update-profile';
   static const String imagePreview = '/image_preview';
+  static const String createMatch = '/create-match';
+  static const String scoreBall = '/score-ball';
 }

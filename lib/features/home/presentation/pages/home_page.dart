@@ -1,7 +1,8 @@
+import 'package:cricket_scorer/config/routes/app_routes.dart';
 import 'package:cricket_scorer/core/global/domain/usecases/get_language.dart';
 import 'package:cricket_scorer/core/global/domain/usecases/get_version.dart';
 import 'package:cricket_scorer/core/global/domain/usecases/update_language.dart';
-import 'package:cricket_scorer/core/global/widgets/cricket_text.dart';
+import 'package:cricket_scorer/core/global/widgets/cricket_button.dart';
 import 'package:cricket_scorer/core/global/widgets/custom_app_bar.dart';
 import 'package:cricket_scorer/core/services/language_service.dart';
 import 'package:cricket_scorer/core/translations/translation_keys.dart';
@@ -33,7 +34,13 @@ class HomePage extends GetView<HomeController> {
         ],
       ),
       body: Center(
-        child: CricketText(text: TranslationKeys.login.tr),
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: CricketButton(
+            buttonText: TranslationKeys.startMatch.tr,
+            onPressed: () => Get.toNamed<dynamic>(AppRoutes.createMatch),
+          ),
+        ),
       ),
     );
   }

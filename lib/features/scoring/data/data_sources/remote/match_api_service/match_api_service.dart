@@ -1,0 +1,33 @@
+import 'package:cricket_scorer/core/error/cricket_failure.dart';
+import 'package:cricket_scorer/core/network/api_client_service.dart';
+import 'package:cricket_scorer/core/network/models/api_response_model.dart';
+import 'package:cricket_scorer/core/utils/either_util.dart';
+import 'package:cricket_scorer/features/scoring/data/match_endpoint.dart';
+import 'package:cricket_scorer/features/scoring/data/models/request/create_match_req.dart';
+import 'package:cricket_scorer/features/scoring/data/models/request/score_ball_req.dart';
+
+class MatchApiService {
+  final ApiClient apiClient;
+  final MatchEndpoint matchEndpoint;
+
+  MatchApiService({required this.apiClient, required this.matchEndpoint});
+
+  Future<Either<ApiResponseModel, CricketFailure>> createMatch({
+    required CreateMatchReq? params,
+  }) async {
+    return await apiClient.post(
+      endpoint: matchEndpoint.createMatch,
+      data: params?.toJson(),
+    );
+  }
+
+  Future<Either<ApiResponseModel, CricketFailure>> scoreBall({
+    required String matchId,
+    required ScoreBallReq? params,
+  }) async {
+    return await apiClient.post(
+      endpoint: matchEndpoint.scoreBall(matchId),
+      data: params?.toJson(),
+    );
+  }
+}

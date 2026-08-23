@@ -1,0 +1,64 @@
+import 'package:cricket_scorer/core/extensions/space_extension.dart';
+import 'package:cricket_scorer/core/global/widgets/cricket_button.dart';
+import 'package:cricket_scorer/core/global/widgets/cricket_text_field.dart';
+import 'package:cricket_scorer/core/global/widgets/custom_app_bar.dart';
+import 'package:cricket_scorer/core/translations/translation_keys.dart';
+import 'package:cricket_scorer/features/scoring/presentation/controllers/create_match_controller.dart';
+import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+
+class CreateMatchScreen extends GetView<CreateMatchController> {
+  const CreateMatchScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: CustomAppBar(title: TranslationKeys.createMatch.tr),
+      body: SingleChildScrollView(
+        padding: 24.p,
+        child: Form(
+          key: controller.formKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              CricketTextField(
+                controller: controller.teamAController,
+                hintText: TranslationKeys.enterTeamAName.tr,
+                labelText: TranslationKeys.teamAName.tr,
+                prefixIcon: const Icon(Icons.sports_cricket),
+                validator: controller.validateTeamName,
+                textCapitalization: TextCapitalization.words,
+                isRequired: true,
+              ),
+              16.h,
+              CricketTextField(
+                controller: controller.teamBController,
+                hintText: TranslationKeys.enterTeamBName.tr,
+                labelText: TranslationKeys.teamBName.tr,
+                prefixIcon: const Icon(Icons.sports_cricket),
+                validator: controller.validateTeamName,
+                textCapitalization: TextCapitalization.words,
+                isRequired: true,
+              ),
+              16.h,
+              CricketTextField(
+                controller: controller.oversController,
+                hintText: TranslationKeys.enterOvers.tr,
+                labelText: TranslationKeys.overs.tr,
+                prefixIcon: const Icon(Icons.timer_outlined),
+                validator: controller.validateOvers,
+                keyboardType: TextInputType.number,
+                isRequired: true,
+              ),
+              24.h,
+              CricketButton(
+                buttonText: TranslationKeys.createMatch.tr,
+                onPressed: controller.createMatch,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}

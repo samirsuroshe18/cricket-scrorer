@@ -35,6 +35,8 @@ dependencies:
   ffmpeg_kit_flutter_new: ^4.3.2
   path_provider: ^2.1.6
   permission_handler: ^12.0.3
+  socket_io_client: ^3.1.6
+  uuid: ^4.6.0
 
 dev_dependencies:
   flutter_test:
