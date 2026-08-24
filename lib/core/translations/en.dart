@@ -151,6 +151,7 @@ Map<String, String> en = {
   TranslationKeys.bowlerNameRequired: 'Bowler name is required',
   TranslationKeys.cannotBowlConsecutiveOvers:
       'The last over\'s bowler cannot bowl again straight away',
+  TranslationKeys.undoLastBall: 'Undo last ball',
   TranslationKeys.out: 'OUT',
   TranslationKeys.howOut: 'How out?',
   TranslationKeys.bowled: 'Bowled',

@@ -11,6 +11,8 @@ import 'package:cricket_scorer/features/scoring/data/models/response/over_comple
 import 'package:cricket_scorer/features/scoring/data/models/response/score_ball_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/select_bowler_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/start_innings_res.dart';
+import 'package:cricket_scorer/features/scoring/data/models/request/undo_ball_req.dart';
+import 'package:cricket_scorer/features/scoring/data/models/response/undo_ball_res.dart';
 
 abstract class MatchRepository {
   Future<Either<CricketResponse<CreateMatchRes>, CricketFailure>> createMatch({
@@ -42,6 +44,21 @@ abstract class MatchRepository {
   Future<Either<CricketResponse<ScoreBallRes>, CricketFailure>> scoreBall({
     required String matchId,
     required ScoreBallReq? scoreBallReq,
+  });
+
+  /// Removes the most recent delivery and returns the innings as it stood
+  /// before it, restored server-side from the snapshot that ball carried.
+  ///
+  /// Only the latest ball is undoable — an older one is refused with
+  /// `BALL_NOT_LATEST`. The named ball being already gone is **not** an error:
+  /// it answers `200` with `alreadyUndone` and the current state, which is what
+  /// makes a double tap on patchy signal safe.
+  ///
+  /// The response is a complete state snapshot. Nothing about the reversal is
+  /// computed on this side.
+  Future<Either<CricketResponse<UndoBallRes>, CricketFailure>> undoBall({
+    required String matchId,
+    required UndoBallReq? undoBallReq,
   });
 
   /// Live score updates for [matchId], driven by the `match:state`/`score:update`

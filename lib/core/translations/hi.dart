@@ -153,6 +153,7 @@ Map<String, String> hi = {
   TranslationKeys.bowlerNameRequired: 'गेंदबाज का नाम आवश्यक है',
   TranslationKeys.cannotBowlConsecutiveOvers:
       'पिछले ओवर का गेंदबाज लगातार दूसरा ओवर नहीं डाल सकता',
+  TranslationKeys.undoLastBall: 'पिछली गेंद वापस लें',
   TranslationKeys.out: 'आउट',
   TranslationKeys.howOut: 'कैसे आउट?',
   TranslationKeys.bowled: 'बोल्ड',

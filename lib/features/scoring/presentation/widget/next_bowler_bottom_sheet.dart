@@ -34,6 +34,9 @@ class NextBowlerBottomSheet extends StatefulWidget {
     required this.knownBowlers,
     required this.isSubmitting,
     required this.onSubmit,
+    required this.canUndo,
+    required this.isUndoing,
+    required this.onUndo,
     super.key,
   });
 
@@ -52,11 +55,26 @@ class NextBowlerBottomSheet extends StatefulWidget {
   /// corrected rather than retyped.
   final Future<bool> Function(String bowlerName) onSubmit;
 
+  /// Whether there is a delivery to take back. False on a resumed match, where
+  /// the console never saw an ack for the ball that ended the over.
+  final bool Function() canUndo;
+
+  /// In-flight flag for [onUndo], owned by the controller.
+  final RxBool isUndoing;
+
+  /// Takes back the delivery that ended the over. Returns true once the server
+  /// has accepted it, at which point the sheet closes itself — the over is
+  /// unfinished again and nobody is owed.
+  final Future<bool> Function() onUndo;
+
   static Future<void> show({
     required String? excludedBowlerName,
     required List<String> knownBowlers,
     required RxBool isSubmitting,
     required Future<bool> Function(String) onSubmit,
+    required bool Function() canUndo,
+    required RxBool isUndoing,
+    required Future<bool> Function() onUndo,
   }) {
     return CustomBottomSheet.cricketCustomBottomSheet<void>(
       headlineText: TranslationKeys.selectBowler.tr,
@@ -68,6 +86,9 @@ class NextBowlerBottomSheet extends StatefulWidget {
         knownBowlers: knownBowlers,
         isSubmitting: isSubmitting,
         onSubmit: onSubmit,
+        canUndo: canUndo,
+        isUndoing: isUndoing,
+        onUndo: onUndo,
       ),
     );
   }
@@ -119,6 +140,24 @@ class _NextBowlerBottomSheetState extends State<NextBowlerBottomSheet> {
     }
 
     if (await widget.onSubmit(name)) {
+      Get.back<void>();
+    }
+  }
+
+  /// The way out of a mis-tapped last ball.
+  ///
+  /// This sheet is deliberately undismissable — the server refuses every
+  /// delivery until a bowler is named, so there is nothing useful behind it.
+  /// But that also means a scorer who ended the over by accident cannot reach
+  /// the console's undo control, which sits in the app bar behind this. Without
+  /// this button the only way out would be to name a bowler you did not want,
+  /// bowl a ball you did not want, and then undo twice.
+  ///
+  /// Closing on success rather than waiting for the controller: undo restores
+  /// the bowler the over already had, so nobody is owed and this sheet has
+  /// nothing left to ask.
+  Future<void> _undo() async {
+    if (await widget.onUndo()) {
       Get.back<void>();
     }
   }
@@ -193,6 +232,25 @@ class _NextBowlerBottomSheetState extends State<NextBowlerBottomSheet> {
                 onPressed: () => unawaited(_submit()),
               ),
             ),
+
+            if (widget.canUndo()) ...[
+              8.h,
+              Center(
+                child: Obx(
+                  () => TextButton(
+                    onPressed: widget.isUndoing.value
+                        ? null
+                        : () => unawaited(_undo()),
+                    child: CricketText(
+                      text: TranslationKeys.undoLastBall.tr,
+                      style: context.textTheme.bodyMedium?.copyWith(
+                        color: context.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
             16.h,
           ],
         ),

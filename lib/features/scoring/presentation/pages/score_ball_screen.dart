@@ -10,6 +10,7 @@ import 'package:cricket_scorer/features/scoring/presentation/controllers/score_b
 import 'package:cricket_scorer/features/scoring/presentation/widget/strike_banner.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// The bowler strip under the strike banner. A plain `StatelessWidget` with no
 /// controller of its own, per the private-presentational-sub-widget convention.
@@ -62,7 +63,30 @@ class ScoreBallScreen extends GetView<ScoreBallController> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: CustomAppBar(title: TranslationKeys.liveScore.tr),
+      appBar: CustomAppBar(
+        title: TranslationKeys.liveScore.tr,
+        // In the app bar rather than beside the run grid on purpose: undo
+        // destroys a delivery, and a control that sits a thumb's width from
+        // the 6 button is a control that gets tapped by accident during fast
+        // scoring. Reaching for it should take a moment.
+        actions: [
+          Obx(
+            () => IconButton(
+              tooltip: TranslationKeys.undoLastBall.tr,
+              onPressed: controller.canUndo
+                  ? () => unawaited(controller.undoLastBall())
+                  : null,
+              icon: controller.isUndoing.value
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(LucideIcons.undo2),
+            ),
+          ),
+        ],
+      ),
       body: Padding(
         padding: 24.p,
         child: Column(

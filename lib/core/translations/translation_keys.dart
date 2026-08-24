@@ -147,6 +147,9 @@ class TranslationKeys {
   static const String cannotBowlConsecutiveOvers =
       'cannot_bowl_consecutive_overs';
 
+  /// Undo
+  static const String undoLastBall = 'undo_last_ball';
+
   /// Wickets
   static const String out = 'out';
   static const String howOut = 'how_out';

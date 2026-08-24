@@ -153,6 +153,7 @@ Map<String, String> mr = {
   TranslationKeys.bowlerNameRequired: 'गोलंदाजाचे नाव आवश्यक आहे',
   TranslationKeys.cannotBowlConsecutiveOvers:
       'मागील षटकाचा गोलंदाज लगेच पुन्हा गोलंदाजी करू शकत नाही',
+  TranslationKeys.undoLastBall: 'मागचा चेंडू मागे घ्या',
   TranslationKeys.out: 'बाद',
   TranslationKeys.howOut: 'कसा बाद?',
   TranslationKeys.bowled: 'बोल्ड',

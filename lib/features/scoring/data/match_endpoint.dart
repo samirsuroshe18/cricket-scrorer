@@ -8,4 +8,6 @@ class MatchEndpoint {
   String selectBowler(String matchId) => '/v1/match/$matchId/select-bowler';
 
   String scoreBall(String matchId) => '/v1/match/$matchId/score-ball';
+
+  String undoBall(String matchId) => '/v1/match/$matchId/undo-ball';
 }

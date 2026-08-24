@@ -7,16 +7,19 @@ import 'package:cricket_scorer/core/utils/either_util.dart';
 import 'package:cricket_scorer/features/scoring/data/models/request/score_ball_req.dart';
 import 'package:cricket_scorer/features/scoring/data/models/request/select_bowler_req.dart';
 import 'package:cricket_scorer/features/scoring/data/models/request/start_innings_req.dart';
+import 'package:cricket_scorer/features/scoring/data/models/request/undo_ball_req.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/create_match_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/live_score_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/over_complete_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/strike.dart';
+import 'package:cricket_scorer/features/scoring/data/models/response/undo_ball_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/wicket.dart';
 import 'package:cricket_scorer/features/scoring/data/scoring_constants.dart';
 import 'package:cricket_scorer/features/scoring/domain/repositories/match_repository.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/score_ball.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/select_bowler.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/start_innings.dart';
+import 'package:cricket_scorer/features/scoring/domain/usecases/undo_ball.dart';
 import 'package:cricket_scorer/features/scoring/presentation/widget/next_bowler_bottom_sheet.dart';
 import 'package:cricket_scorer/features/scoring/presentation/widget/openers_bottom_sheet.dart';
 import 'package:cricket_scorer/features/scoring/presentation/widget/wicket_bottom_sheet.dart';
@@ -28,12 +31,14 @@ class ScoreBallController extends GetxController {
   final ScoreBallUseCase scoreBallUseCase;
   final StartInningsUseCase startInningsUseCase;
   final SelectBowlerUseCase selectBowlerUseCase;
+  final UndoBallUseCase undoBallUseCase;
   final MatchRepository matchRepository;
 
   ScoreBallController({
     required this.scoreBallUseCase,
     required this.startInningsUseCase,
     required this.selectBowlerUseCase,
+    required this.undoBallUseCase,
     required this.matchRepository,
   });
 
@@ -60,6 +65,23 @@ class ScoreBallController extends GetxController {
 
   /// Button-level loading for the next-bowler sheet, same reasoning again.
   final isSelectingBowler = false.obs;
+
+  /// In flight for [undoLastBall]. Separate from [isScoring] so the two can
+  /// disable each other without either claiming to be the other.
+  final isUndoing = false.obs;
+
+  /// Ball ids scored on this console, oldest first. [undoLastBall] takes the
+  /// last one and pops it on success.
+  ///
+  /// A stack rather than one remembered id because undo is repeatable
+  /// server-side, and the client can only chain if it knows the *previous*
+  /// ball's id — `score:update` carries none, only the REST ack does. Keeping
+  /// them all is what lets a scorer walk back three mis-taps instead of one.
+  ///
+  /// Session-local is enough today: nothing can resume a match, so no delivery
+  /// on screen predates this console. The day a match list exists, the server's
+  /// `canUndo` becomes the better source and this becomes a cache.
+  final _scoredBallIds = <String>[].obs;
 
   /// The most recent dismissal, for the console to acknowledge. Server-reported
   /// like everything else here.
@@ -132,6 +154,13 @@ class ScoreBallController extends GetxController {
       hasOpeners &&
       !isInningsComplete.value &&
       !needsBowler.value;
+
+  /// Deliberately **not** gated on [isInningsComplete] or [needsBowler], unlike
+  /// [canScore]. Undoing a mis-tapped tenth wicket, or the ball that ended an
+  /// over you did not mean to end, is exactly what undo is for — those are the
+  /// states a scorer most needs a way out of.
+  bool get canUndo =>
+      !isScoring.value && !isUndoing.value && _scoredBallIds.isNotEmpty;
 
   /// Set once the socket layer has reported *anything* — the join ack, a score
   /// update, or a connection failure. The openers prompt waits on this so a
@@ -303,6 +332,14 @@ class ScoreBallController extends GetxController {
             knownBowlers: bowlersSeen.toList(),
             isSubmitting: isSelectingBowler,
             onSubmit: selectBowler,
+            // The sheet is undismissable, so the console's own undo control is
+            // unreachable behind it — a scorer who ended the over by accident
+            // needs a way out from in here. Passed as a callback rather than a
+            // bool because the sheet is built once and the stack can empty
+            // while it is open.
+            canUndo: () => canUndo,
+            isUndoing: isUndoing,
+            onUndo: undoLastBall,
           );
         } else {
           break;
@@ -531,6 +568,144 @@ class ScoreBallController extends GetxController {
     await _promptIfNeeded();
   }
 
+  /// Removes the most recent delivery and re-renders from what the server
+  /// sends back.
+  ///
+  /// **Nothing about the reversal is computed here.** The response is a
+  /// complete state snapshot, and this method's whole job is to copy it over
+  /// console state. Working out "a four was undone, so subtract four" would be
+  /// wrong the first time a dismissal was involved — the pair at the crease
+  /// after an undo is not derivable from the ball that was removed.
+  ///
+  /// Returns true once the server has accepted it, so the next-bowler sheet can
+  /// close itself only on success.
+  Future<bool> undoLastBall() async {
+    if (isUndoing.value || isScoring.value) return false;
+    if (_scoredBallIds.isEmpty) return false;
+
+    final targetId = _scoredBallIds.last;
+    isUndoing.value = true;
+
+    final response = await undoBallUseCase(
+      params: UndoBallParams(
+        matchId: match.matchId,
+        undoBallReq: UndoBallReq(ballEventId: targetId),
+      ),
+    );
+
+    isUndoing.value = false;
+
+    if (!response.isResult) {
+      // A 400 means the server rejected *this id* — almost always
+      // `BALL_NOT_LATEST`, which says a delivery landed that this console never
+      // saw the ack for. The stack is fiction from that point on, so drop it
+      // rather than leave a button that keeps failing on the same stale id.
+      // Anything else (no connection, a 5xx) says nothing about the id, so the
+      // stack survives and the scorer can simply try again.
+      //
+      // Branching on the status rather than on `BALL_NOT_LATEST` itself because
+      // `CricketFailure` carries no error `code` — see the note in the repo's
+      // CLAUDE.md about `code` being the machine-readable half. Widening that
+      // model is worth doing, but not inside this slice.
+      if (response.fallback.statusCode == 400) {
+        _scoredBallIds.clear();
+      }
+      CricketSnackbar.showAlertMessage(response.fallback.message);
+      return false;
+    }
+
+    final data = response.result.data;
+    if (data == null) return false;
+
+    if (kDebugMode) {
+      debugPrint(
+        'undoBall REST ack: alreadyUndone=${data.alreadyUndone} '
+        'undone=${data.undone?.ballEventId} '
+        'seq=${data.undone?.absoluteBallSeq} '
+        'over=${data.undone?.overNumber} '
+        'wicket=${data.undone?.wicket?.type} '
+        'overReopened=${data.overReopened} '
+        'overRemoved=${data.overRemoved} '
+        'inningsReopened=${data.inningsReopened} '
+        '-> ${data.inningsTotals.totalRuns}/${data.inningsTotals.wickets} '
+        '(${data.overs}) striker=${data.strike?.strikerName} '
+        'bowler=${data.bowler?.currentBowlerName}',
+      );
+    }
+
+    // Popped whether or not the server actually removed anything: an
+    // `alreadyUndone` answer means this id was gone before we asked, so it has
+    // no business staying on the stack either.
+    _scoredBallIds.remove(targetId);
+
+    _applyUndo(data);
+    return true;
+  }
+
+  /// Folds an undo response into console state.
+  ///
+  /// The two guard rewinds at the top are not bookkeeping — without them the
+  /// console breaks in ways the score alone would not reveal.
+  void _applyUndo(UndoBallRes state) {
+    final undone = state.undone;
+
+    if (undone != null) {
+      // [_lastAppliedSeq] drops any strike payload not newer than the last one
+      // applied. The restored pair belongs to the ball *before* the one just
+      // removed — a lower sequence — so without this rewind the score would
+      // roll back while the striker stayed exactly as the undone ball left it.
+      _lastAppliedSeq = undone.absoluteBallSeq - 1;
+
+      // [_lastOverPrompted] is the worse of the two. Undo the ball that ended
+      // an over, score it again, and [_applyOverEnd] would treat that over as
+      // already prompted and return early — leaving [needsBowler] false. The
+      // console would stay *unlocked*, so the scorer taps a run and the server
+      // refuses it with `BOWLER_NOT_SELECTED`, with no picker on screen and no
+      // way to summon one. A refusal loop with no exit.
+      _lastOverPrompted = undone.overNumber - 1;
+    }
+
+    totalRuns.value = state.inningsTotals.totalRuns;
+    wickets.value = state.inningsTotals.wickets;
+    extrasTotal.value = state.inningsTotals.extras.total;
+    overs.value = state.overs;
+    isInningsComplete.value = state.inningsComplete;
+
+    // No sequence: this is a state rather than a delivery, so it always applies
+    // — and the rewind above is what makes the next real ball apply too.
+    _applyStrike(state.strike);
+
+    // Only meaningful if the ball removed was itself the dismissal being
+    // acknowledged. An ordinary delivery leaves whatever wicket came before it
+    // untouched, and this console has no way to recover that one.
+    if (undone?.wicket != null) lastWicket.value = null;
+
+    final bowler = state.bowler;
+    if (bowler != null) {
+      _rememberBowler(bowler.currentBowlerName);
+      _rememberBowler(bowler.previousBowlerName);
+      currentBowler.value = bowler.currentBowlerName;
+
+      // Read from the payload rather than hardcoded to false, even though a
+      // successful undo can never leave a bowler owed — the server refuses a
+      // delivery without one, so the snapshot it restored from always had one.
+      // Deriving it here would be the client deciding, which is the thing this
+      // endpoint exists to avoid.
+      //
+      // `excludedBowler` first: see [_applyBowlerState] for the ordering.
+      excludedBowler.value = bowler.awaitingBowler
+          ? bowler.previousBowlerName
+          : null;
+      needsBowler.value = bowler.awaitingBowler;
+      overComplete.value = bowler.awaitingBowler;
+    }
+
+    // The undone ball's modifiers are long gone; make sure the next tap starts
+    // from a plain legal ball off the bat rather than from whatever was armed.
+    selectedFault.value = null;
+    selectedRunsFrom.value = null;
+  }
+
   /// The single path to the server for any delivery. Wickets and ordinary balls
   /// share one idempotency key, one strike apply and one modifier clear, so the
   /// two cannot drift apart.
@@ -598,6 +773,10 @@ class ScoreBallController extends GetxController {
     // when the socket lags or drops — the patchy-signal case this product
     // exists for. The sequence guard is what keeps the two sources ordered.
     if (ball != null) {
+      // Pushed before anything is applied, so a ball that lands is undoable
+      // even if something below throws.
+      _scoredBallIds.add(ball.ballEventId);
+
       _applyStrike(ball.strike, seq: ball.absoluteBallSeq);
       overComplete.value = ball.overComplete;
       isInningsComplete.value = ball.inningsComplete;

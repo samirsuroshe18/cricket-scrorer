@@ -14,6 +14,8 @@ import 'package:cricket_scorer/features/scoring/data/models/response/over_comple
 import 'package:cricket_scorer/features/scoring/data/models/response/score_ball_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/select_bowler_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/start_innings_res.dart';
+import 'package:cricket_scorer/features/scoring/data/models/request/undo_ball_req.dart';
+import 'package:cricket_scorer/features/scoring/data/models/response/undo_ball_res.dart';
 import 'package:cricket_scorer/features/scoring/domain/repositories/match_repository.dart';
 
 class MatchRepositoryImpl extends MatchRepository {
@@ -100,6 +102,27 @@ class MatchRepositoryImpl extends MatchRepository {
       return Either.result(
         CricketResponse(
           data: ScoreBallRes.fromJson(
+            response.result.data as Map<String, dynamic>,
+          ),
+          message: response.result.message,
+        ),
+      );
+    } else {
+      return Either.fallback(response.fallback);
+    }
+  }
+
+  @override
+  Future<Either<CricketResponse<UndoBallRes>, CricketFailure>> undoBall({
+    required String matchId,
+    required UndoBallReq? undoBallReq,
+  }) async {
+    Either<ApiResponseModel, CricketFailure> response = await matchApiService
+        .undoBall(matchId: matchId, params: undoBallReq);
+    if (response.isResult) {
+      return Either.result(
+        CricketResponse(
+          data: UndoBallRes.fromJson(
             response.result.data as Map<String, dynamic>,
           ),
           message: response.result.message,
