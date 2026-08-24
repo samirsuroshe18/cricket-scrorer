@@ -15,12 +15,26 @@ class ScoreBallReq {
   /// Independent of [extraType] — a no-ball can also go for byes.
   final String? runsFrom;
 
+  /// The dismissal: one of [WicketType]'s six values, or null for an ordinary
+  /// delivery. Its presence is what makes this ball a wicket.
+  final String? wicketType;
+
+  /// Which batsman is out, as of before the delivery: `striker` (default) |
+  /// `non_striker`. Only a run out may take the non-striker.
+  final String? dismissedBatsman;
+
+  /// Who replaces them. Omitted on the final wicket — nobody is left.
+  final String? incomingBatsmanName;
+
   final String idempotencyKey;
 
   ScoreBallReq({
     required this.runs,
     this.extraType,
     this.runsFrom,
+    this.wicketType,
+    this.dismissedBatsman,
+    this.incomingBatsmanName,
     required this.idempotencyKey,
   });
 

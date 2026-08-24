@@ -1,9 +1,12 @@
+import 'package:cricket_scorer/features/scoring/data/models/response/bowler_state.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/score_ball_res.dart';
+import 'package:cricket_scorer/features/scoring/data/models/response/strike.dart';
+import 'package:cricket_scorer/features/scoring/data/models/response/wicket.dart';
 import 'package:json_annotation/json_annotation.dart';
 
 part 'live_score_res.g.dart';
 
-@JsonSerializable()
+@JsonSerializable(explicitToJson: true)
 class LastBall {
   final int runs;
   final int extras;
@@ -14,6 +17,11 @@ class LastBall {
   final int ballNumber;
   final int absoluteBallSeq;
 
+  /// The dismissal this delivery produced, or null. It sits on the ball rather
+  /// than beside `strike` because a wicket *is* a property of the delivery,
+  /// where strike is innings state after it.
+  final Wicket? wicket;
+
   LastBall({
     required this.runs,
     this.extras = 0,
@@ -23,6 +31,7 @@ class LastBall {
     required this.overNumber,
     required this.ballNumber,
     required this.absoluteBallSeq,
+    this.wicket,
   });
 
   factory LastBall.fromJson(Map<String, dynamic> json) =>
@@ -45,6 +54,20 @@ class LiveScoreRes {
 
   /// Innings running extras totals — drives the scorecard's Extras line.
   final ExtrasBreakdown? extras;
+
+  /// Who is on strike. Null on `match:state` when no innings has been started —
+  /// no openers have been chosen yet.
+  final Strike? strike;
+
+  /// Who is bowling and who bowled the over before. Sent on `match:state` only
+  /// — `score:update` does not carry it — and null when no innings exists yet,
+  /// alongside a null [strike].
+  ///
+  /// This is what makes resuming mid-over-break work: the join ack alone tells
+  /// the console a bowler is owed, with no local state remembered across a
+  /// restart.
+  final BowlerState? bowler;
+
   final LastBall? lastBall;
 
   LiveScoreRes({
@@ -55,6 +78,8 @@ class LiveScoreRes {
     required this.wickets,
     required this.overs,
     this.extras,
+    this.strike,
+    this.bowler,
     this.lastBall,
   });
 

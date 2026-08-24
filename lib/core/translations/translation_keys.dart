@@ -122,4 +122,46 @@ class TranslationKeys {
   static const String byeOrLegBye = 'bye_or_leg_bye';
   static const String bye = 'bye';
   static const String legBye = 'leg_bye';
+
+  /// Batsmen & strike
+  static const String striker = 'striker';
+  static const String nonStriker = 'non_striker';
+  static const String openingBatsmen = 'opening_batsmen';
+  static const String chooseOpeners = 'choose_openers';
+  static const String enterStrikerName = 'enter_striker_name';
+  static const String enterNonStrikerName = 'enter_non_striker_name';
+  static const String startInnings = 'start_innings';
+  static const String batsmanNameRequired = 'batsman_name_required';
+  static const String batsmenMustDiffer = 'batsmen_must_differ';
+  static const String endOfOver = 'end_of_over';
+
+  /// Bowlers
+  static const String openingPlayers = 'opening_players';
+  static const String openingBowler = 'opening_bowler';
+  static const String currentBowler = 'current_bowler';
+  static const String selectBowler = 'select_bowler';
+  static const String chooseBowler = 'choose_bowler';
+  static const String bowlerName = 'bowler_name';
+  static const String enterBowlerName = 'enter_bowler_name';
+  static const String bowlerNameRequired = 'bowler_name_required';
+  static const String cannotBowlConsecutiveOvers =
+      'cannot_bowl_consecutive_overs';
+
+  /// Wickets
+  static const String out = 'out';
+  static const String howOut = 'how_out';
+  static const String bowled = 'bowled';
+  static const String caught = 'caught';
+  static const String lbw = 'lbw';
+  static const String runOut = 'run_out';
+  static const String stumped = 'stumped';
+  static const String hitWicket = 'hit_wicket';
+  static const String whoIsOut = 'who_is_out';
+  static const String runsCompleted = 'runs_completed';
+  static const String newBatsman = 'new_batsman';
+  static const String enterNewBatsmanName = 'enter_new_batsman_name';
+  static const String confirmWicket = 'confirm_wicket';
+  static const String notPossibleOffNoBall = 'not_possible_off_no_ball';
+  static const String notPossibleOffWide = 'not_possible_off_wide';
+  static const String allOut = 'all_out';
 }

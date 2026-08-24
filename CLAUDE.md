@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 `cricket_scorer` — a Flutter cricket scoring app (live scores, teams, ball-by-ball actions, match stats). GetX provides state management, DI, and routing. Dio for networking, Floor (SQLite) for local persistence, Firebase for push notifications, FFmpeg for media compression. Supports English/Hindi/Marathi with remote translation sync, plus light/dark theming.
 
-Only `auth` is a fully-built feature; `home` is a stub. Treat `features/auth/` as the reference implementation for the patterns below.
+`auth` and `scoring` are the built features; `home` is a stub. Treat `features/auth/` as the reference implementation for the patterns below, and `features/scoring/` as the newer example — it follows the same layering and is the better template for DTO naming (`*_req.dart` / `*_res.dart`) and for socket-backed state.
 
 ### Commands
 
@@ -40,6 +40,8 @@ flutter analyze 2>&1 | grep -E "• lib/" || echo "lib/ CLEAN"
 **Formatting**: `lib/` is *not* globally `dart format`-clean (36 of 161 files would be reformatted — only 9 are `*.g.dart`; the rest are mostly `core/services/`, plus assorted older widgets and enums). Never run `dart format lib` — it buries a real change in hundreds of unrelated lines. Format only the files you touched: `dart format <paths…>`.
 
 Android flavors live in `android/app/build.gradle.kts` and must stay in sync with `lib/config/flavors.dart` and the `lib/main_*.dart` entrypoints.
+
+**Device selection for running/testing the app.** Testing on an emulator is completely acceptable. Run `flutter devices` first, then pick in this order: (1) a connected, running physical device wins; (2) otherwise an already-running emulator; (3) if neither is available, **stop and ask the user to start or connect one** — do not proceed without a device. **Never launch, boot, or enable an emulator or simulator yourself** (`flutter emulators --launch`, `xcrun simctl boot`, etc.) — only detect and use one that is already running. The user starts devices on their own schedule.
 
 ## Architecture
 
@@ -138,7 +140,7 @@ A screen with no API of its own can be presentation-only (see `features/home/`) 
 
 ## Offline scoring
 
-**None of this is built yet** — there is no scoring feature, no queue, and no sync code in the client. This section records the constraints and the open design so the first person to build it doesn't invent a fourth pattern. Offline tolerance is the highest-risk part of the product and is Phase 1 acceptance criteria, not a later pass; see the workspace [CLAUDE.md](../CLAUDE.md) for the backend side of the contract.
+**The scoring feature exists; the offline half does not.** `features/scoring/` scores runs, extras and wickets against the live backend, renders server-computed strike, and prompts for the next bowler at over completion — but there is still **no queue and no sync code**, and Floor still holds only `UserDetails`. Everything below therefore still applies to the work that remains. This section records the constraints and the open design so the first person to build it doesn't invent a fourth pattern. Offline tolerance is the highest-risk part of the product and is Phase 1 acceptance criteria, not a later pass; see the workspace [CLAUDE.md](../CLAUDE.md) for the backend side of the contract.
 
 **Where a pending ball queues.** Floor is already the local database (`core/database/app_database.dart`) and is the right home — don't add Hive, Isar, or a raw sqflite table alongside it. Two things follow from the current state: the schema is `@Database(version: 1)` with a single entity (`UserDetails`), so adding a pending-event entity means bumping the version and writing a Floor migration; and the existing DAO lives under a feature (`features/auth/data/data_sources/local/DAO/`), so a scoring queue belongs under the scoring feature's `data/data_sources/local/`, not in `core/`. The backend's `BallEvent` is append-only and ordered by `absoluteBallSeq`, so the local queue is an append-only log replayed in order — not a mutable "current match state" row.
 
@@ -148,7 +150,9 @@ A screen with no API of its own can be presentation-only (see `features/home/`) 
 
 **Conflict handling is decided: reject-and-alert.** A conflicting write is refused server-side and must be surfaced to the scorer — never resolved client-side by retrying over it or by last-write-wins. This is the concrete reason the indicator above needs to be visible: a rejection with nowhere to appear is indistinguishable from data loss.
 
-Still unresolved, and not to be decided in client code: `BallEvent` has no idempotency key, so a queued ball whose request succeeded but whose response was lost will duplicate on replay. Fixing that is a two-repo change — see the workspace CLAUDE.md.
+Idempotency is **solved** and already used: `ScoreBallReq.idempotencyKey` carries a client-generated UUID v4 per delivery, and replaying a key returns the original result instead of appending a duplicate. A queued ball whose response was lost is therefore safe to retry.
+
+Still unresolved, and not to be decided in client code: **`select-bowler` is a second kind of queued event.** It is order-dependent against the balls around it — a queue holding only deliveries cannot replay an over boundary, because the first ball of the new over is refused with `BOWLER_NOT_SELECTED` until a bowler is chosen. Whatever the queue turns out to be, it has to carry both kinds in order.
 
 ## Naming Conventions
 
@@ -201,7 +205,8 @@ New usecases, controllers, and repositories should get unit tests going forward;
 - **No `StatefulWidget` + `setState` for business state** — all mutable state belongs in a `GetxController` as `Rx` values.
 - **No direct `Dio` or `package:http` usage** in features — everything goes through the shared `ApiClient`.
 - **No `Navigator.push` / `MaterialPageRoute`** — GetX named routes only.
-- **No hardcoded user-facing strings** — add a key to `TranslationKeys` and to every locale map (`en.dart`/`hi.dart`/`mr.dart`, mirrored in the `.json` files), then use `TranslationKeys.someKey.tr`. Don't call `.translation()`. `TranslationKeys` is the *only* string source — the old `ErrorStringConstants` class has been deleted; don't recreate a parallel constants class. Note that where a controller stores a label for the view to render (e.g. `SetPasswordController.strengthLabel`), it stores the **key** and the page applies `.tr`.
+- **No hardcoded user-facing strings** — add a key to `TranslationKeys`, to every locale map (`en.dart`/`hi.dart`/`mr.dart`), **and to the translation CMS** (see below), then use `TranslationKeys.someKey.tr`. The sibling `en.json`/`hi.json`/`mr.json` files are **dead** — nothing in `lib/` reads them and they sit 48 keys behind the `.dart` maps; don't mirror into them, and consider deleting them.
+  - **The CMS step is not optional.** `Get.addTranslations` merges per *language*, so the CMS map replaces the local one entirely rather than filling its gaps — a key missing from the CMS renders as the raw key once `LanguageService` syncs, however complete `en.dart` is. Upload via `POST /v1/translations/bulk-update` with `[{key, translations:{en,hi,mr}}, …]` and a bearer token; it `$set`s per key, so it will not disturb existing entries. Don't call `.translation()`. `TranslationKeys` is the *only* string source — the old `ErrorStringConstants` class has been deleted; don't recreate a parallel constants class. Note that where a controller stores a label for the view to render (e.g. `SetPasswordController.strengthLabel`), it stores the **key** and the page applies `.tr`.
 - **No raw colors or magic numbers** in widgets — use `context.colorScheme` / `context.colors` (via `theme_x`) and the spacing extensions. Cricket-specific and severity colors are `ThemeExtension` tokens on `AppCustomColors` (`core/extensions/app_custom_colors.dart`, valued per-theme in `config/theme/palettes/app_custom_colors_palette.dart`) — reach them with `context.colors.*`. For severity/meters use `statusDanger` / `statusWarning` / `statusInfo` / `statusSuccess`; add a token to **both** `light` and `dark` rather than hardcoding a `Colors.*` value.
   - `Colors.transparent` and shadow blacks (`Colors.black.withValues(alpha: …)`) are fine — sentinels and scrims, not theme decisions.
   - **Known gap**: `custom_bottomsheet.dart` (10 occurrences) and `dialogue/custom_dialog.dart` (1) still hold literal `Colors.white` for icons/text drawn over colored surfaces and scrims. Some are deliberate, some likely break dark mode — they need a look at the rendered screens, so don't bulk-replace them blind.

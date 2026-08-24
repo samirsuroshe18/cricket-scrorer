@@ -15,6 +15,9 @@ LastBall _$LastBallFromJson(Map<String, dynamic> json) => LastBall(
   overNumber: (json['overNumber'] as num).toInt(),
   ballNumber: (json['ballNumber'] as num).toInt(),
   absoluteBallSeq: (json['absoluteBallSeq'] as num).toInt(),
+  wicket: json['wicket'] == null
+      ? null
+      : Wicket.fromJson(json['wicket'] as Map<String, dynamic>),
 );
 
 Map<String, dynamic> _$LastBallToJson(LastBall instance) => <String, dynamic>{
@@ -26,6 +29,7 @@ Map<String, dynamic> _$LastBallToJson(LastBall instance) => <String, dynamic>{
   'overNumber': instance.overNumber,
   'ballNumber': instance.ballNumber,
   'absoluteBallSeq': instance.absoluteBallSeq,
+  'wicket': instance.wicket?.toJson(),
 };
 
 LiveScoreRes _$LiveScoreResFromJson(Map<String, dynamic> json) => LiveScoreRes(
@@ -38,6 +42,12 @@ LiveScoreRes _$LiveScoreResFromJson(Map<String, dynamic> json) => LiveScoreRes(
   extras: json['extras'] == null
       ? null
       : ExtrasBreakdown.fromJson(json['extras'] as Map<String, dynamic>),
+  strike: json['strike'] == null
+      ? null
+      : Strike.fromJson(json['strike'] as Map<String, dynamic>),
+  bowler: json['bowler'] == null
+      ? null
+      : BowlerState.fromJson(json['bowler'] as Map<String, dynamic>),
   lastBall: json['lastBall'] == null
       ? null
       : LastBall.fromJson(json['lastBall'] as Map<String, dynamic>),
@@ -52,5 +62,7 @@ Map<String, dynamic> _$LiveScoreResToJson(LiveScoreRes instance) =>
       'wickets': instance.wickets,
       'overs': instance.overs,
       'extras': instance.extras?.toJson(),
+      'strike': instance.strike?.toJson(),
+      'bowler': instance.bowler?.toJson(),
       'lastBall': instance.lastBall?.toJson(),
     };

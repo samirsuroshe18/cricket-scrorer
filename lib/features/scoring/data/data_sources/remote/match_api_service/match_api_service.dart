@@ -5,6 +5,8 @@ import 'package:cricket_scorer/core/utils/either_util.dart';
 import 'package:cricket_scorer/features/scoring/data/match_endpoint.dart';
 import 'package:cricket_scorer/features/scoring/data/models/request/create_match_req.dart';
 import 'package:cricket_scorer/features/scoring/data/models/request/score_ball_req.dart';
+import 'package:cricket_scorer/features/scoring/data/models/request/select_bowler_req.dart';
+import 'package:cricket_scorer/features/scoring/data/models/request/start_innings_req.dart';
 
 class MatchApiService {
   final ApiClient apiClient;
@@ -17,6 +19,26 @@ class MatchApiService {
   }) async {
     return await apiClient.post(
       endpoint: matchEndpoint.createMatch,
+      data: params?.toJson(),
+    );
+  }
+
+  Future<Either<ApiResponseModel, CricketFailure>> startInnings({
+    required String matchId,
+    required StartInningsReq? params,
+  }) async {
+    return await apiClient.post(
+      endpoint: matchEndpoint.startInnings(matchId),
+      data: params?.toJson(),
+    );
+  }
+
+  Future<Either<ApiResponseModel, CricketFailure>> selectBowler({
+    required String matchId,
+    required SelectBowlerReq? params,
+  }) async {
+    return await apiClient.post(
+      endpoint: matchEndpoint.selectBowler(matchId),
       data: params?.toJson(),
     );
   }

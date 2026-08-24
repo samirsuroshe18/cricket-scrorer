@@ -6,9 +6,14 @@ import 'package:cricket_scorer/features/scoring/data/data_sources/remote/match_a
 import 'package:cricket_scorer/features/scoring/data/data_sources/remote/match_socket_service/match_socket_service.dart';
 import 'package:cricket_scorer/features/scoring/data/models/request/create_match_req.dart';
 import 'package:cricket_scorer/features/scoring/data/models/request/score_ball_req.dart';
+import 'package:cricket_scorer/features/scoring/data/models/request/select_bowler_req.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/create_match_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/live_score_res.dart';
+import 'package:cricket_scorer/features/scoring/data/models/request/start_innings_req.dart';
+import 'package:cricket_scorer/features/scoring/data/models/response/over_complete_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/score_ball_res.dart';
+import 'package:cricket_scorer/features/scoring/data/models/response/select_bowler_res.dart';
+import 'package:cricket_scorer/features/scoring/data/models/response/start_innings_res.dart';
 import 'package:cricket_scorer/features/scoring/domain/repositories/match_repository.dart';
 
 class MatchRepositoryImpl extends MatchRepository {
@@ -30,6 +35,50 @@ class MatchRepositoryImpl extends MatchRepository {
       return Either.result(
         CricketResponse(
           data: CreateMatchRes.fromJson(
+            response.result.data as Map<String, dynamic>,
+          ),
+          message: response.result.message,
+        ),
+      );
+    } else {
+      return Either.fallback(response.fallback);
+    }
+  }
+
+  @override
+  Future<Either<CricketResponse<StartInningsRes>, CricketFailure>>
+  startInnings({
+    required String matchId,
+    required StartInningsReq? startInningsReq,
+  }) async {
+    Either<ApiResponseModel, CricketFailure> response = await matchApiService
+        .startInnings(matchId: matchId, params: startInningsReq);
+    if (response.isResult) {
+      return Either.result(
+        CricketResponse(
+          data: StartInningsRes.fromJson(
+            response.result.data as Map<String, dynamic>,
+          ),
+          message: response.result.message,
+        ),
+      );
+    } else {
+      return Either.fallback(response.fallback);
+    }
+  }
+
+  @override
+  Future<Either<CricketResponse<SelectBowlerRes>, CricketFailure>>
+  selectBowler({
+    required String matchId,
+    required SelectBowlerReq? selectBowlerReq,
+  }) async {
+    Either<ApiResponseModel, CricketFailure> response = await matchApiService
+        .selectBowler(matchId: matchId, params: selectBowlerReq);
+    if (response.isResult) {
+      return Either.result(
+        CricketResponse(
+          data: SelectBowlerRes.fromJson(
             response.result.data as Map<String, dynamic>,
           ),
           message: response.result.message,
@@ -66,5 +115,12 @@ class MatchRepositoryImpl extends MatchRepository {
     required String matchId,
   }) {
     return matchSocketService.watchScore(matchId);
+  }
+
+  @override
+  Stream<Either<OverCompleteRes, CricketFailure>> watchOverComplete({
+    required String matchId,
+  }) {
+    return matchSocketService.watchOverComplete(matchId);
   }
 }

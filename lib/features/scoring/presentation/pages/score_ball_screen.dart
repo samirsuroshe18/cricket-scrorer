@@ -1,11 +1,60 @@
+import 'dart:async';
+
 import 'package:cricket_scorer/core/extensions/space_extension.dart';
+import 'package:cricket_scorer/core/extensions/theme_x.dart';
 import 'package:cricket_scorer/core/global/widgets/cricket_text.dart';
 import 'package:cricket_scorer/core/global/widgets/custom_app_bar.dart';
 import 'package:cricket_scorer/core/translations/translation_keys.dart';
 import 'package:cricket_scorer/features/scoring/data/scoring_constants.dart';
 import 'package:cricket_scorer/features/scoring/presentation/controllers/score_ball_controller.dart';
+import 'package:cricket_scorer/features/scoring/presentation/widget/strike_banner.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+
+/// The bowler strip under the strike banner. A plain `StatelessWidget` with no
+/// controller of its own, per the private-presentational-sub-widget convention.
+class _BowlerLine extends StatelessWidget {
+  const _BowlerLine({
+    required this.bowlerName,
+    required this.needsBowler,
+    required this.isInningsComplete,
+  });
+
+  final String? bowlerName;
+  final bool needsBowler;
+
+  // The innings-complete ball also clears `bowlerName` (the over that just
+  // ended has no successor), which the `name == null` branch below would
+  // otherwise read as "still need to choose one" — contradicting the
+  // all-out text shown beneath it. Checked first so a finished innings never
+  // asks who bowls next.
+  final bool isInningsComplete;
+
+  @override
+  Widget build(BuildContext context) {
+    final name = bowlerName;
+
+    if (!isInningsComplete && (needsBowler || name == null || name.isEmpty)) {
+      return CricketText(
+        text: TranslationKeys.chooseBowler.tr,
+        style: context.textTheme.bodySmall?.copyWith(
+          color: context.colors.statusWarning,
+        ),
+        textAlign: TextAlign.center,
+      );
+    }
+
+    if (name == null || name.isEmpty) return const SizedBox.shrink();
+
+    return CricketText(
+      text: '${TranslationKeys.currentBowler.tr}: $name',
+      style: context.textTheme.bodySmall?.copyWith(
+        color: context.colorScheme.onSurfaceVariant,
+      ),
+      textAlign: TextAlign.center,
+    );
+  }
+}
 
 class ScoreBallScreen extends GetView<ScoreBallController> {
   const ScoreBallScreen({super.key});
@@ -49,6 +98,19 @@ class ScoreBallScreen extends GetView<ScoreBallController> {
               ),
             ),
             24.h,
+            Obx(() => StrikeBanner(strike: controller.strike.value)),
+            8.h,
+            // Who is bowling, and — between overs — that somebody has to be
+            // chosen. The run buttons below are disabled in that state via
+            // `canScore`; this line is what explains why.
+            Obx(
+              () => _BowlerLine(
+                bowlerName: controller.currentBowler.value,
+                needsBowler: controller.needsBowler.value,
+                isInningsComplete: controller.isInningsComplete.value,
+              ),
+            ),
+            16.h,
             CricketText(
               text: TranslationKeys.wideOrNoBall.tr,
               style: Theme.of(context).textTheme.titleSmall,
@@ -113,22 +175,64 @@ class ScoreBallScreen extends GetView<ScoreBallController> {
                 alignment: WrapAlignment.center,
                 spacing: 12,
                 runSpacing: 12,
-                children: [0, 1, 2, 3, 4, 6]
-                    .map(
-                      (runs) => SizedBox(
-                        width: 64,
-                        height: 64,
-                        child: ElevatedButton(
-                          onPressed: controller.isScoring.value
-                              ? null
-                              : () => controller.scoreRuns(runs),
-                          child: CricketText(text: '$runs'),
-                        ),
+                children: [
+                  ...[0, 1, 2, 3, 4, 6].map(
+                    (runs) => SizedBox(
+                      width: 64,
+                      height: 64,
+                      child: ElevatedButton(
+                        onPressed: controller.canScore
+                            ? () => controller.scoreRuns(runs)
+                            : null,
+                        child: CricketText(text: '$runs'),
                       ),
-                    )
-                    .toList(),
+                    ),
+                  ),
+                  SizedBox(
+                    // Wider than the run buttons: "OUT" wraps to two letters in
+                    // a 64pt box, and the extra width doubles as a signal that
+                    // this is a different kind of action.
+                    width: 96,
+                    height: 64,
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: context.colors.statusDanger,
+                      ),
+                      onPressed: controller.canScore
+                          ? () => unawaited(controller.promptForWicket())
+                          : null,
+                      child: CricketText(text: TranslationKeys.out.tr),
+                    ),
+                  ),
+                ],
               ),
             ),
+            16.h,
+            Obx(() {
+              if (controller.isInningsComplete.value) {
+                return CricketText(
+                  text: TranslationKeys.allOut.tr,
+                  style: context.textTheme.titleMedium?.copyWith(
+                    color: context.colors.statusDanger,
+                  ),
+                );
+              }
+              // The bowler sheet is blocking, so this is normally behind it.
+              // It matters when the sheet has been dismissed by a system back
+              // gesture: the console stays locked, and this says why.
+              if (controller.needsBowler.value) {
+                return CricketText(
+                  text:
+                      '${TranslationKeys.endOfOver.tr} — '
+                      '${TranslationKeys.chooseBowler.tr}',
+                  style: context.textTheme.titleMedium?.copyWith(
+                    color: context.colors.statusWarning,
+                  ),
+                  textAlign: TextAlign.center,
+                );
+              }
+              return const SizedBox.shrink();
+            }),
           ],
         ),
       ),

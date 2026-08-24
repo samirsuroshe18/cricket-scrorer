@@ -1,3 +1,5 @@
+import 'package:cricket_scorer/features/scoring/data/models/response/strike.dart';
+import 'package:cricket_scorer/features/scoring/data/models/response/wicket.dart';
 import 'package:json_annotation/json_annotation.dart';
 
 part 'score_ball_res.g.dart';
@@ -48,6 +50,59 @@ class InningsTotals {
   Map<String, dynamic> toJson() => _$InningsTotalsToJson(this);
 }
 
+/// The over just finished, or null on any delivery that did not end one.
+///
+/// [overNumber] is nullable because this object serves two payloads: the REST
+/// `score-ball` response nests it here, while the `over:complete` socket event
+/// carries the over number at its own top level and omits it from this block.
+@JsonSerializable(explicitToJson: true)
+class OverSummary {
+  final int? overNumber;
+  final int legalDeliveries;
+  final int totalRuns;
+  final int wickets;
+  final ExtrasBreakdown? extras;
+  final String? bowlerId;
+  final String? bowlerName;
+
+  OverSummary({
+    this.overNumber,
+    this.legalDeliveries = 0,
+    this.totalRuns = 0,
+    this.wickets = 0,
+    this.extras,
+    this.bowlerId,
+    this.bowlerName,
+  });
+
+  factory OverSummary.fromJson(Map<String, dynamic> json) =>
+      _$OverSummaryFromJson(json);
+
+  Map<String, dynamic> toJson() => _$OverSummaryToJson(this);
+}
+
+/// Present **iff** a bowler is owed for the over about to start. Null when the
+/// over didn't end, and null when the innings ended on that ball — so the
+/// console branches on presence and never has to recombine `overComplete` with
+/// `inningsComplete` to decide whether to prompt.
+///
+/// The excluded bowler is a *rule handed down by the server*, deliberately
+/// separate from [OverSummary.bowlerId], which is a fact about the over just
+/// bowled. The picker greys whoever this names; it does not work out for itself
+/// who bowled last.
+@JsonSerializable()
+class NextBowler {
+  final String? excludedBowlerId;
+  final String? excludedBowlerName;
+
+  NextBowler({this.excludedBowlerId, this.excludedBowlerName});
+
+  factory NextBowler.fromJson(Map<String, dynamic> json) =>
+      _$NextBowlerFromJson(json);
+
+  Map<String, dynamic> toJson() => _$NextBowlerToJson(this);
+}
+
 @JsonSerializable(explicitToJson: true)
 class ScoreBallRes {
   final String ballEventId;
@@ -67,6 +122,31 @@ class ScoreBallRes {
   final String? runsFrom;
   final bool isLegal;
 
+  /// True when this delivery completed the over. Reported separately from
+  /// [Strike.rotated] because it stays true in the case where odd runs and the
+  /// over end cancel each other out — a new-bowler prompt needs to fire even
+  /// though the strike did not change.
+  final bool overComplete;
+
+  /// The over this delivery completed, or null. Non-null exactly when
+  /// [overComplete] is true.
+  final OverSummary? over;
+
+  /// Non-null exactly when a bowler must be chosen before the next delivery.
+  /// See [NextBowler].
+  final NextBowler? nextBowler;
+
+  /// True once the innings is over — the 10th wicket, or the last ball of the
+  /// last over. The server rejects further deliveries either way.
+  final bool inningsComplete;
+
+  /// The dismissal, or null on an ordinary delivery.
+  final Wicket? wicket;
+
+  /// Who is on strike *after* this delivery. Server-computed; never derived
+  /// client-side.
+  final Strike? strike;
+
   final InningsTotals inningsTotals;
 
   ScoreBallRes({
@@ -81,6 +161,12 @@ class ScoreBallRes {
     this.extraType,
     this.runsFrom,
     this.isLegal = true,
+    this.overComplete = false,
+    this.over,
+    this.nextBowler,
+    this.inningsComplete = false,
+    this.wicket,
+    this.strike,
     required this.inningsTotals,
   });
 

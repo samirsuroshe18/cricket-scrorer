@@ -2,23 +2,38 @@ import 'dart:async';
 
 import 'package:cricket_scorer/core/error/cricket_failure.dart';
 import 'package:cricket_scorer/core/global/widgets/snackbars/cricket_snackbar.dart';
+import 'package:cricket_scorer/core/translations/translation_keys.dart';
 import 'package:cricket_scorer/core/utils/either_util.dart';
 import 'package:cricket_scorer/features/scoring/data/models/request/score_ball_req.dart';
+import 'package:cricket_scorer/features/scoring/data/models/request/select_bowler_req.dart';
+import 'package:cricket_scorer/features/scoring/data/models/request/start_innings_req.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/create_match_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/live_score_res.dart';
+import 'package:cricket_scorer/features/scoring/data/models/response/over_complete_res.dart';
+import 'package:cricket_scorer/features/scoring/data/models/response/strike.dart';
+import 'package:cricket_scorer/features/scoring/data/models/response/wicket.dart';
 import 'package:cricket_scorer/features/scoring/data/scoring_constants.dart';
 import 'package:cricket_scorer/features/scoring/domain/repositories/match_repository.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/score_ball.dart';
+import 'package:cricket_scorer/features/scoring/domain/usecases/select_bowler.dart';
+import 'package:cricket_scorer/features/scoring/domain/usecases/start_innings.dart';
+import 'package:cricket_scorer/features/scoring/presentation/widget/next_bowler_bottom_sheet.dart';
+import 'package:cricket_scorer/features/scoring/presentation/widget/openers_bottom_sheet.dart';
+import 'package:cricket_scorer/features/scoring/presentation/widget/wicket_bottom_sheet.dart';
 import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:uuid/uuid.dart';
 
 class ScoreBallController extends GetxController {
   final ScoreBallUseCase scoreBallUseCase;
+  final StartInningsUseCase startInningsUseCase;
+  final SelectBowlerUseCase selectBowlerUseCase;
   final MatchRepository matchRepository;
 
   ScoreBallController({
     required this.scoreBallUseCase,
+    required this.startInningsUseCase,
+    required this.selectBowlerUseCase,
     required this.matchRepository,
   });
 
@@ -29,6 +44,101 @@ class ScoreBallController extends GetxController {
   final overs = '0.0'.obs;
   final extrasTotal = 0.obs;
   final isScoring = false.obs;
+
+  /// True once the 10th wicket falls. The console locks: the server rejects
+  /// further deliveries, and there is nothing left to score.
+  final isInningsComplete = false.obs;
+
+  /// Inline, button-level loading for the openers sheet. Deliberately not
+  /// `CricketLoaderDialog`: that pushes a route over the sheet, and popping the
+  /// dialog and the sheet back-to-back leaves the second pop with nothing to
+  /// land on — the sheet stays up over a started innings.
+  final isStartingInnings = false.obs;
+
+  /// Button-level loading for the wicket sheet, same reasoning.
+  final isScoringWicket = false.obs;
+
+  /// Button-level loading for the next-bowler sheet, same reasoning again.
+  final isSelectingBowler = false.obs;
+
+  /// The most recent dismissal, for the console to acknowledge. Server-reported
+  /// like everything else here.
+  final lastWicket = Rxn<Wicket>();
+
+  /// Who is on strike, **only ever assigned from a server payload**. Rotation
+  /// is computed server-side — odd runs run rotate strike, the end of an over
+  /// rotates strike, and a single off the last ball does both and cancels out.
+  /// None of that arithmetic belongs here: if the app ever disagreed with the
+  /// server about who faced a ball, every downstream stat would be wrong and
+  /// nothing on screen would reveal it.
+  final strike = Rxn<Strike>();
+
+  /// True once the last delivery completed an over. Kept distinct from
+  /// [Strike.rotated] because it stays true when odd runs and the over end
+  /// cancel — a new-bowler prompt needs it independently of the strike.
+  final overComplete = false.obs;
+
+  /// True while the server is owed a bowler for the over about to start. The
+  /// console locks on this exactly as it locks on missing openers: without it
+  /// the scorer taps a run and gets `BOWLER_NOT_SELECTED` for a reason the
+  /// screen never showed them.
+  ///
+  /// Set only from server payloads — the score-ball ack, the `over:complete`
+  /// event, or the `match:state` join ack. Never inferred from a local ball
+  /// count.
+  final needsBowler = false.obs;
+
+  /// Whom the server will refuse for the next over, under Law 17.6. Read
+  /// straight from `nextBowler.excludedBowlerName`; the picker greys this name
+  /// rather than working out for itself who bowled last. Two sources of truth
+  /// that can disagree would be worse than one that can be stale.
+  final excludedBowler = Rxn<String>();
+
+  /// Who is bowling right now, for the console to display. Null between overs.
+  final currentBowler = Rxn<String>();
+
+  /// Bowlers seen this innings, for the picker's chips. A **convenience list,
+  /// not authority**: nothing but `start-innings` and `select-bowler` creates a
+  /// Player on the bowling side, so there is no roster to fetch, and on a fresh
+  /// app launch mid-match this holds at most the two names `match:state`
+  /// supplies. That is exactly why the sheet always offers a name field.
+  final bowlersSeen = <String>[].obs;
+
+  /// Highest over number whose end has been acted on. The ack and the socket
+  /// both report an over ending, and a replayed idempotency key can report an
+  /// older one — the same ordering problem [_lastAppliedSeq] solves for strike,
+  /// solved the same way rather than by trusting whichever arrived last.
+  int _lastOverPrompted = 0;
+
+  /// Guards against two blocking sheets racing to open. See [_promptIfNeeded].
+  bool _prompting = false;
+
+  /// Highest `absoluteBallSeq` whose strike has been applied. Strike arrives
+  /// from two places — the REST ack and the socket — so a payload for an older
+  /// delivery must not overwrite a newer one. An idempotent replay returns the
+  /// strike as of *that* ball, which would otherwise visibly rewind the striker
+  /// on screen. Ordering by a server-sent sequence is not local guessing.
+  int _lastAppliedSeq = 0;
+
+  bool get hasOpeners => strike.value?.strikerName != null;
+
+  /// Everything the console can act on is gated on the same four facts, so a
+  /// run button and the OUT button can never disagree about whether the match
+  /// is scoreable. [needsBowler] belongs here for the same reason [hasOpeners]
+  /// does: the server refuses the delivery either way, and a disabled button is
+  /// a better explanation than a snackbar after the tap.
+  bool get canScore =>
+      !isScoring.value &&
+      hasOpeners &&
+      !isInningsComplete.value &&
+      !needsBowler.value;
+
+  /// Set once the socket layer has reported *anything* — the join ack, a score
+  /// update, or a connection failure. The openers prompt waits on this so a
+  /// resumed match whose openers are already set doesn't flash the sheet before
+  /// its `match:state` lands. A failure counts: the socket being down must not
+  /// strand the scorer, since `start-innings` goes over REST regardless.
+  final _serverStateArrived = false.obs;
 
   /// Armed delivery fault — [ExtraType.wide] / [ExtraType.noBall], or null for
   /// a legal delivery. Applied to the next run button tapped, then cleared.
@@ -57,6 +167,8 @@ class ScoreBallController extends GetxController {
   bool get isRunsFromDisabled => selectedFault.value == ExtraType.wide;
 
   StreamSubscription<Either<LiveScoreRes, CricketFailure>>? _subscription;
+  StreamSubscription<Either<OverCompleteRes, CricketFailure>>?
+  _overCompleteSubscription;
 
   static const _uuid = Uuid();
 
@@ -73,21 +185,370 @@ class ScoreBallController extends GetxController {
               debugPrint(
                 '[socket] received live score update: '
                 '${event.result.totalRuns}/${event.result.wickets} '
-                '(${event.result.overs} overs)',
+                '(${event.result.overs} overs) '
+                'striker=${event.result.strike?.strikerName}',
               );
             }
             totalRuns.value = event.result.totalRuns;
             wickets.value = event.result.wickets;
             overs.value = event.result.overs;
             extrasTotal.value = event.result.extras?.total ?? extrasTotal.value;
+
+            // `match:state` (the join ack) carries no `lastBall`: it is the
+            // server's current state rather than a delivery, so it always
+            // applies and never moves the guard. That is also what makes a
+            // mid-match socket reconnect land correctly.
+            _applyStrike(
+              event.result.strike,
+              seq: event.result.lastBall?.absoluteBallSeq,
+            );
+
+            // Also `match:state`-only. This is what makes resuming mid
+            // over-break work: kill the app between overs, reopen it, and the
+            // prompt is still there — recovered from server state, with nothing
+            // remembered locally across the restart.
+            _applyBowlerState(event.result);
           } else {
             CricketSnackbar.showErrorMessage(event.fallback.message);
           }
+          _serverStateArrived.value = true;
+        });
+
+    // A recovery path, not the primary trigger — the REST ack already carries
+    // `nextBowler`. This matters when that ack is lost on patchy signal, which
+    // is the case the product exists for. `_lastOverPrompted` makes the two
+    // sources idempotent with respect to each other.
+    _overCompleteSubscription = matchRepository
+        .watchOverComplete(matchId: match.matchId)
+        .listen((event) {
+          if (!event.isResult) return;
+          final over = event.result;
+
+          if (kDebugMode) {
+            debugPrint(
+              '[socket] over:complete over=${over.overNumber} '
+              'bowler=${over.over.bowlerName} '
+              'newBowlerRequired=${over.newBowlerRequired} '
+              'inningsComplete=${over.inningsComplete}',
+            );
+          }
+
+          overComplete.value = true;
+          if (over.inningsComplete) isInningsComplete.value = true;
+
+          _applyOverEnd(
+            overNumber: over.overNumber,
+            bowlerJustBowled: over.over.bowlerName,
+            // The event carries no excluded bowler: the spectator room is
+            // unauthenticated and has no picker to feed. The bowler who just
+            // bowled *is* the one Law 17.6 excludes, so fall back to him.
+            excludedName: over.over.bowlerName,
+            newBowlerRequired: over.newBowlerRequired,
+          );
         });
   }
 
-  Future<void> scoreRuns(int runs) async {
-    if (isScoring.value) return;
+  @override
+  void onReady() {
+    super.onReady();
+    ever<bool>(_serverStateArrived, (_) => unawaited(_promptIfNeeded()));
+    ever<bool>(needsBowler, (_) => unawaited(_promptIfNeeded()));
+    unawaited(_promptIfNeeded());
+  }
+
+  /// The single place any blocking prompt is opened, and the single place they
+  /// are ordered.
+  ///
+  /// Openers come first: an innings with nobody at the crease cannot also be
+  /// owed a bowler, and only one sheet can be up at a time anyway. Because
+  /// `start-innings` now names the opening bowler too, the two can never
+  /// compete at the start of an innings — the bowler sheet only ever appears
+  /// *between* overs.
+  ///
+  /// The loop is the point. A sheet closing can leave a *different* prompt
+  /// outstanding — a wicket off the last ball of an over closes the batsman
+  /// sheet with a bowler still owed — and a plain `Get.isBottomSheetOpen` guard
+  /// would skip that second prompt and never retry, leaving the console locked
+  /// with nothing on screen to unlock it. That is a hang, not a cosmetic bug.
+  ///
+  /// Everything here is driven by server state rather than by which screen the
+  /// scorer arrived from, so resuming a half-set-up match prompts correctly.
+  Future<void> _promptIfNeeded() async {
+    if (_prompting) return;
+    _prompting = true;
+
+    try {
+      while (true) {
+        if (!_serverStateArrived.value) break;
+        // All out nulls the striker server-side, so hasOpeners goes false.
+        // Without this the console would ask for opening batsmen — or a
+        // bowler — for an innings that just ended.
+        if (isInningsComplete.value) break;
+        // Something else owns the screen (the wicket sheet). Whoever opened it
+        // calls back here when it closes.
+        if (Get.isBottomSheetOpen ?? false) break;
+
+        if (!hasOpeners) {
+          await OpenersBottomSheet.show(
+            isSubmitting: isStartingInnings,
+            onSubmit: (strikerName, nonStrikerName, bowlerName) => startInnings(
+              strikerName: strikerName,
+              nonStrikerName: nonStrikerName,
+              bowlerName: bowlerName,
+            ),
+          );
+        } else if (needsBowler.value) {
+          await NextBowlerBottomSheet.show(
+            excludedBowlerName: excludedBowler.value,
+            knownBowlers: bowlersSeen.toList(),
+            isSubmitting: isSelectingBowler,
+            onSubmit: selectBowler,
+          );
+        } else {
+          break;
+        }
+      }
+    } finally {
+      _prompting = false;
+    }
+  }
+
+  /// Folds the bowler half of a `match:state` ack into console state.
+  ///
+  /// `score:update` does not carry this block, so a null here means "this
+  /// payload has nothing to say about the bowler", not "there is no bowler".
+  void _applyBowlerState(LiveScoreRes state) {
+    final bowler = state.bowler;
+    if (bowler == null) return;
+
+    _rememberBowler(bowler.currentBowlerName);
+    _rememberBowler(bowler.previousBowlerName);
+
+    currentBowler.value = bowler.currentBowlerName;
+
+    // An innings that has not started yet is the openers' problem, not the
+    // bowler's — `start-innings` names the opening bowler in the same call.
+    if (state.strike?.strikerName == null) return;
+
+    // `excludedBowler` first: setting `needsBowler` fires the `ever` listener
+    // that opens the picker synchronously (GetStream notifies listeners
+    // inline, not on a microtask), so the picker would otherwise read the
+    // exclusion before it was written and open unrestricted.
+    excludedBowler.value = bowler.awaitingBowler
+        ? bowler.previousBowlerName
+        : null;
+    needsBowler.value = bowler.awaitingBowler;
+  }
+
+  /// One place to record an over ending, shared by the REST ack and the socket
+  /// event so the two cannot disagree.
+  ///
+  /// [overNumber] orders them: a duplicate event, or an idempotent replay
+  /// reporting an older over, must not re-open a prompt the scorer has already
+  /// answered.
+  void _applyOverEnd({
+    required int? overNumber,
+    required String? bowlerJustBowled,
+    required String? excludedName,
+    required bool newBowlerRequired,
+  }) {
+    // Recorded before the ordering guard: a name is worth keeping for the
+    // picker even from a payload that is otherwise stale.
+    _rememberBowler(bowlerJustBowled);
+
+    if (overNumber == null || overNumber <= _lastOverPrompted) return;
+    _lastOverPrompted = overNumber;
+
+    // The server cleared its pointer when the over ended; mirror that rather
+    // than leaving the finished over's bowler on screen as if he were still on.
+    currentBowler.value = null;
+
+    if (!newBowlerRequired) return;
+
+    // `excludedBowler` first — see the comment in `_applyBowlerState`, same
+    // ordering hazard, same fix.
+    excludedBowler.value = excludedName ?? bowlerJustBowled;
+    needsBowler.value = true;
+  }
+
+  /// Case-insensitive, order-preserving. The picker shows these as chips; the
+  /// scorer types anyone else.
+  void _rememberBowler(String? name) {
+    final trimmed = name?.trim();
+    if (trimmed == null || trimmed.isEmpty) return;
+    final lower = trimmed.toLowerCase();
+    if (bowlersSeen.any((String n) => n.toLowerCase() == lower)) return;
+    bowlersSeen.add(trimmed);
+  }
+
+  /// The single place [strike] is written. Drops any payload older than the
+  /// last one applied; see [_lastAppliedSeq].
+  void _applyStrike(Strike? incoming, {int? seq}) {
+    if (seq != null) {
+      if (seq <= _lastAppliedSeq) return;
+      _lastAppliedSeq = seq;
+    }
+    strike.value = incoming;
+  }
+
+  /// Opens the innings with two named openers. Until this succeeds the server
+  /// rejects every delivery with `INNINGS_NOT_STARTED`, so the console blocks
+  /// scoring while [hasOpeners] is false.
+  Future<bool> startInnings({
+    required String strikerName,
+    required String nonStrikerName,
+    required String bowlerName,
+  }) async {
+    isStartingInnings.value = true;
+
+    final response = await startInningsUseCase(
+      params: StartInningsParams(
+        matchId: match.matchId,
+        startInningsReq: StartInningsReq(
+          strikerName: strikerName,
+          nonStrikerName: nonStrikerName,
+          bowlerName: bowlerName,
+        ),
+      ),
+    );
+
+    isStartingInnings.value = false;
+
+    if (!response.isResult) {
+      CricketSnackbar.showAlertMessage(response.fallback.message);
+      return false;
+    }
+
+    // No delivery behind this payload, so no sequence — it is the current
+    // state and always applies.
+    _applyStrike(response.result.data?.strike);
+
+    // Over 1's bowler comes from here, which is why the console never prompts
+    // for a bowler at the start of an innings.
+    final openingBowler = response.result.data?.bowler?.bowlerName;
+    currentBowler.value = openingBowler;
+    _rememberBowler(openingBowler);
+    needsBowler.value = false;
+    excludedBowler.value = null;
+
+    // Deliberately no success snackbar: `Get.showSnackbar` pushes a route, so
+    // one here would sit on top of the sheet and swallow its `Get.back()`,
+    // leaving the sheet up over an innings that had already started. The banner
+    // filling in behind is the confirmation, and a better one.
+    return true;
+  }
+
+  /// An ordinary delivery. Runs come from the grid; the armed fault and
+  /// attribution ride along.
+  Future<void> scoreRuns(int runs) => _score(runs: runs);
+
+  /// A dismissal. The sheet supplies everything, including runs — for the five
+  /// striker-only types that is always 0, which is why no path exists to send
+  /// anything else. Returns true once the ball is accepted, so the sheet can
+  /// close only on success.
+  Future<bool> scoreWicket({
+    required String wicketType,
+    required String dismissedBatsman,
+    required int runs,
+    String? incomingBatsmanName,
+  }) async {
+    isScoringWicket.value = true;
+    final scored = await _score(
+      runs: runs,
+      wicketType: wicketType,
+      dismissedBatsman: dismissedBatsman,
+      incomingBatsmanName: incomingBatsmanName,
+    );
+    isScoringWicket.value = false;
+    return scored;
+  }
+
+  /// Names the bowler for the over about to start.
+  ///
+  /// The consecutive-over rule is the server's: this sends whatever the scorer
+  /// picked and surfaces `BOWLER_CANNOT_BOWL_CONSECUTIVE_OVERS` verbatim if it
+  /// comes back. The sheet greys the excluded name so that normally never
+  /// happens — but the greying is an explanation, not the enforcement.
+  Future<bool> selectBowler(String bowlerName) async {
+    isSelectingBowler.value = true;
+
+    final response = await selectBowlerUseCase(
+      params: SelectBowlerParams(
+        matchId: match.matchId,
+        selectBowlerReq: SelectBowlerReq(bowlerName: bowlerName),
+      ),
+    );
+
+    isSelectingBowler.value = false;
+
+    if (!response.isResult) {
+      CricketSnackbar.showAlertMessage(response.fallback.message);
+      return false;
+    }
+
+    final data = response.result.data;
+    currentBowler.value = data?.bowler.bowlerName;
+    _rememberBowler(data?.bowler.bowlerName);
+    _rememberBowler(data?.previousBowler?.bowlerName);
+
+    needsBowler.value = false;
+    excludedBowler.value = null;
+    overComplete.value = false;
+
+    // No success snackbar, for the same reason start-innings has none:
+    // `Get.showSnackbar` pushes a route that would sit over the sheet and
+    // swallow its `Get.back()`. The console unlocking behind is the better
+    // confirmation.
+    return true;
+  }
+
+  /// Opens the dismissal sheet. The console never builds a wicket request
+  /// itself — the sheet collects every field and hands back a complete one.
+  ///
+  /// Awaited rather than fire-and-forget: a wicket off the last ball of an over
+  /// leaves a bowler owed, and [_promptIfNeeded] skips while any sheet is open.
+  /// Without this callback the console would sit locked behind a closed sheet.
+  Future<void> promptForWicket() async {
+    if (!hasOpeners) {
+      CricketSnackbar.showAlertMessage(TranslationKeys.chooseOpeners.tr);
+      return;
+    }
+    if (isInningsComplete.value) return;
+    if (Get.isBottomSheetOpen ?? false) return;
+
+    await WicketBottomSheet.show(
+      strike: strike.value,
+      extraType: selectedFault.value,
+      // The next wicket is the last one, so nobody comes in. `wickets` lags
+      // behind rather than ahead, so this can under-report but never
+      // over-report — and under-reporting only means the sheet asks for a
+      // name the server harmlessly ignores.
+      isFinalWicket: wickets.value >= 9,
+      isSubmitting: isScoringWicket,
+      onSubmit: scoreWicket,
+    );
+
+    await _promptIfNeeded();
+  }
+
+  /// The single path to the server for any delivery. Wickets and ordinary balls
+  /// share one idempotency key, one strike apply and one modifier clear, so the
+  /// two cannot drift apart.
+  Future<bool> _score({
+    required int runs,
+    String? wicketType,
+    String? dismissedBatsman,
+    String? incomingBatsmanName,
+  }) async {
+    if (isScoring.value) return false;
+    if (!hasOpeners) {
+      CricketSnackbar.showAlertMessage(TranslationKeys.chooseOpeners.tr);
+      return false;
+    }
+    if (isInningsComplete.value) {
+      CricketSnackbar.showAlertMessage(TranslationKeys.allOut.tr);
+      return false;
+    }
     isScoring.value = true;
 
     final fault = selectedFault.value;
@@ -100,6 +561,9 @@ class ScoreBallController extends GetxController {
           runs: runs,
           extraType: fault,
           runsFrom: runsFrom,
+          wicketType: wicketType,
+          dismissedBatsman: wicketType == null ? null : dismissedBatsman,
+          incomingBatsmanName: incomingBatsmanName,
           idempotencyKey: _uuid.v4(),
         ),
       ),
@@ -107,27 +571,62 @@ class ScoreBallController extends GetxController {
 
     isScoring.value = false;
 
-    if (kDebugMode && response.isResult) {
+    if (!response.isResult) {
+      CricketSnackbar.showAlertMessage(response.fallback.message);
+      return false;
+    }
+
+    final ball = response.result.data;
+
+    if (kDebugMode) {
       debugPrint(
-        'scoreBall REST ack: ${response.result.data?.inningsTotals.totalRuns} runs '
-        '(live totals update arrives separately via score:update)',
+        'scoreBall REST ack: ${ball?.inningsTotals.totalRuns} runs, '
+        'wkts=${ball?.inningsTotals.wickets} '
+        'striker=${ball?.strike?.strikerName} '
+        'rotated=${ball?.strike?.rotated} (${ball?.strike?.rotationReason}) '
+        'overComplete=${ball?.overComplete} '
+        'overBowler=${ball?.over?.bowlerName} '
+        'excluded=${ball?.nextBowler?.excludedBowlerName} '
+        'wicket=${ball?.wicket?.type} '
+        'out=${ball?.wicket?.dismissedPlayerName} '
+        'in=${ball?.wicket?.incomingBatsmanName} '
+        'inningsComplete=${ball?.inningsComplete}',
       );
     }
 
-    if (!response.isResult) {
-      CricketSnackbar.showAlertMessage(response.fallback.message);
-      return;
+    // Applied from the ack as well as the socket so the striker stays correct
+    // when the socket lags or drops — the patchy-signal case this product
+    // exists for. The sequence guard is what keeps the two sources ordered.
+    if (ball != null) {
+      _applyStrike(ball.strike, seq: ball.absoluteBallSeq);
+      overComplete.value = ball.overComplete;
+      isInningsComplete.value = ball.inningsComplete;
+      lastWicket.value = ball.wicket;
+
+      // `nextBowler` non-null IS the instruction to prompt — the server has
+      // already folded in whether the innings ended on this ball, so there is
+      // nothing to recombine here.
+      if (ball.overComplete) {
+        _applyOverEnd(
+          overNumber: ball.over?.overNumber ?? ball.overNumber,
+          bowlerJustBowled: ball.over?.bowlerName,
+          excludedName: ball.nextBowler?.excludedBowlerName,
+          newBowlerRequired: ball.nextBowler != null,
+        );
+      }
     }
 
     // Modifiers apply to a single delivery — clear them so the next tap
     // defaults back to a plain legal ball off the bat.
     selectedFault.value = null;
     selectedRunsFrom.value = null;
+    return true;
   }
 
   @override
   void onClose() {
     unawaited(_subscription?.cancel());
+    unawaited(_overCompleteSubscription?.cancel());
     super.onClose();
   }
 }

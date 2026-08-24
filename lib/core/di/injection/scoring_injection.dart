@@ -7,6 +7,8 @@ import 'package:cricket_scorer/features/scoring/data/repositories/match_reposito
 import 'package:cricket_scorer/features/scoring/domain/repositories/match_repository.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/create_match.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/score_ball.dart';
+import 'package:cricket_scorer/features/scoring/domain/usecases/select_bowler.dart';
+import 'package:cricket_scorer/features/scoring/domain/usecases/start_innings.dart';
 import 'package:get/get.dart';
 
 class ScoringInjection {
@@ -40,6 +42,16 @@ class ScoringInjection {
 
     Get.lazyPut<CreateMatchUseCase>(
       () => CreateMatchUseCase(matchRepository: Get.find<MatchRepository>()),
+      fenix: true,
+    );
+
+    Get.lazyPut<StartInningsUseCase>(
+      () => StartInningsUseCase(matchRepository: Get.find<MatchRepository>()),
+      fenix: true,
+    );
+
+    Get.lazyPut<SelectBowlerUseCase>(
+      () => SelectBowlerUseCase(matchRepository: Get.find<MatchRepository>()),
       fenix: true,
     );
 
