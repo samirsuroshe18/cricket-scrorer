@@ -10,4 +10,6 @@ class MatchEndpoint {
   String scoreBall(String matchId) => '/v1/match/$matchId/score-ball';
 
   String undoBall(String matchId) => '/v1/match/$matchId/undo-ball';
+
+  String publicMatch(String code) => '/v1/match/public/$code';
 }

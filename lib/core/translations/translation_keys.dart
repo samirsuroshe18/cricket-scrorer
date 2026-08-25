@@ -150,6 +150,19 @@ class TranslationKeys {
   /// Undo
   static const String undoLastBall = 'undo_last_ball';
 
+  /// Spectator
+  static const String watchLiveMatch = 'watch_live_match';
+  static const String enterMatchCodeDescription =
+      'enter_match_code_description';
+  static const String matchCode = 'match_code';
+  static const String enterMatchCode = 'enter_match_code';
+  static const String matchCodeRequired = 'match_code_required';
+  static const String invalidShareLink = 'invalid_share_link';
+  static const String waitingForPlayToBegin = 'waiting_for_play_to_begin';
+  static const String matchCompleted = 'match_completed';
+  static const String copyShareCode = 'copy_share_code';
+  static const String codeCopied = 'code_copied';
+
   /// Wickets
   static const String out = 'out';
   static const String howOut = 'how_out';

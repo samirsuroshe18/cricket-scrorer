@@ -21,8 +21,10 @@ import 'package:cricket_scorer/features/home/presentation/bindings/home_binding.
 import 'package:cricket_scorer/features/home/presentation/pages/home_page.dart';
 import 'package:cricket_scorer/features/scoring/presentation/bindings/create_match_binding.dart';
 import 'package:cricket_scorer/features/scoring/presentation/bindings/score_ball_binding.dart';
+import 'package:cricket_scorer/features/scoring/presentation/bindings/spectator_binding.dart';
 import 'package:cricket_scorer/features/scoring/presentation/pages/create_match_screen.dart';
 import 'package:cricket_scorer/features/scoring/presentation/pages/score_ball_screen.dart';
+import 'package:cricket_scorer/features/scoring/presentation/pages/spectator_screen.dart';
 import 'package:get/get.dart';
 
 abstract class AppPages {
@@ -86,6 +88,11 @@ abstract class AppPages {
       name: AppRoutes.scoreBall,
       page: () => const ScoreBallScreen(),
       binding: ScoreBallBinding(),
+    ),
+    GetPage(
+      name: AppRoutes.spectator,
+      page: () => const SpectatorScreen(),
+      binding: SpectatorBinding(),
     ),
   ];
 }

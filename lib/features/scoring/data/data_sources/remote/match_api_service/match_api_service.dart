@@ -63,4 +63,16 @@ class MatchApiService {
       data: params?.toJson(),
     );
   }
+
+  /// No token is attached deliberately — not because one is stripped, but
+  /// because [ApiClient] only adds an `Authorization` header when
+  /// [SecureStorageService] actually holds one, and a spectator session
+  /// never signs in. Calling this from an authenticated session (e.g. the
+  /// scorer previewing their own share link) works identically; the server
+  /// route carries no `verifyJwt` either way.
+  Future<Either<ApiResponseModel, CricketFailure>> getPublicMatch({
+    required String code,
+  }) async {
+    return await apiClient.get(endpoint: matchEndpoint.publicMatch(code));
+  }
 }

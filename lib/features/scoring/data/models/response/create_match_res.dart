@@ -18,6 +18,13 @@ class TeamRef {
 @JsonSerializable(explicitToJson: true)
 class CreateMatchRes {
   final String matchId;
+
+  /// The six-character share code. Reported here because this is the only
+  /// moment the client learns it — nothing else \`create\` returns carries
+  /// one. Kept past this response so the scorer's console can offer a "copy
+  /// code" action.
+  final String? joinCode;
+
   final TeamRef teamA;
   final TeamRef teamB;
   final int totalOvers;
@@ -27,6 +34,7 @@ class CreateMatchRes {
 
   CreateMatchRes({
     required this.matchId,
+    this.joinCode,
     required this.teamA,
     required this.teamB,
     required this.totalOvers,

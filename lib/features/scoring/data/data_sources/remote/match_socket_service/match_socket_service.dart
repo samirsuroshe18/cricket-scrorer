@@ -5,6 +5,7 @@ import 'package:cricket_scorer/core/network/socket_client_service.dart';
 import 'package:cricket_scorer/core/utils/either_util.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/live_score_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/over_complete_res.dart';
+import 'package:cricket_scorer/features/scoring/data/models/response/score_undo_res.dart';
 
 class MatchSocketService {
   final SocketClientService socketClientService;
@@ -82,6 +83,36 @@ class MatchSocketService {
 
     controller.onCancel = () async {
       socket.off('over:complete', onOverComplete);
+      await controller.close();
+    };
+
+    return controller.stream;
+  }
+
+  /// The `score:undo` event. Never emitted for an `alreadyUndone` no-op — see
+  /// docs/api.md — so this stream simply stays quiet on a retried undo, the
+  /// same as the room does.
+  ///
+  /// The scorer's own console does not need this: it already gets a complete
+  /// state snapshot back from the `undo-ball` REST call. A spectator has no
+  /// such ack — the socket is the only channel it has — which is why this
+  /// exists at all.
+  Stream<Either<ScoreUndoRes, CricketFailure>> watchScoreUndo(String matchId) {
+    final socket = socketClientService.socket;
+    final controller = StreamController<Either<ScoreUndoRes, CricketFailure>>();
+
+    void onScoreUndo(dynamic data) {
+      controller.add(
+        Either.result(
+          ScoreUndoRes.fromJson(Map<String, dynamic>.from(data as Map)),
+        ),
+      );
+    }
+
+    socket.on('score:undo', onScoreUndo);
+
+    controller.onCancel = () async {
+      socket.off('score:undo', onScoreUndo);
       await controller.close();
     };
 

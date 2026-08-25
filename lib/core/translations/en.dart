@@ -152,6 +152,17 @@ Map<String, String> en = {
   TranslationKeys.cannotBowlConsecutiveOvers:
       'The last over\'s bowler cannot bowl again straight away',
   TranslationKeys.undoLastBall: 'Undo last ball',
+  TranslationKeys.watchLiveMatch: 'Watch a live match',
+  TranslationKeys.enterMatchCodeDescription:
+      'Enter the six-character code your scorer shared with you.',
+  TranslationKeys.matchCode: 'Match code',
+  TranslationKeys.enterMatchCode: 'e.g. H7K2QP',
+  TranslationKeys.matchCodeRequired: 'Enter a match code',
+  TranslationKeys.invalidShareLink: 'That link is not valid',
+  TranslationKeys.waitingForPlayToBegin: 'Waiting for play to begin',
+  TranslationKeys.matchCompleted: 'Match completed',
+  TranslationKeys.copyShareCode: 'Copy share code',
+  TranslationKeys.codeCopied: 'Code copied',
   TranslationKeys.out: 'OUT',
   TranslationKeys.howOut: 'How out?',
   TranslationKeys.bowled: 'Bowled',

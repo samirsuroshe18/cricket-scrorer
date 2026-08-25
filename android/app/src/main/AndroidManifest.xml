@@ -20,9 +20,44 @@
               android:name="io.flutter.embedding.android.NormalTheme"
               android:resource="@style/NormalTheme"
               />
+            <!-- MUST be explicitly false, and omitting it is NOT equivalent.
+                 As of Flutter 3.27+ this flag DEFAULTS TO TRUE, which hands
+                 the cold-launch VIEW intent to Flutter's own Router. That
+                 collides with GetX's routing here (plain Navigator via
+                 getPages, not go_router/Router 2.0). Observed on-device: with
+                 it set true the app crashes on launch with a GlobalKey/Element
+                 assertion ('_elements.contains(element)' is not true); with it
+                 simply ABSENT — i.e. defaulting to true — the app instead
+                 hangs on a black screen and never renders a first frame, while
+                 an ordinary (non-deep-link) launch of the very same build
+                 reaches the login screen normally.
+                 Setting it false opts out of Flutter's handler entirely, which
+                 is what the app_links package requires: it reads the intent's
+                 data URI over its own platform channel, never touching
+                 defaultRouteName or the Router, so GetMaterialApp always
+                 starts cleanly at Splash and SplashController resolves the
+                 link via PendingDeepLink.readSpectatorCode(). -->
+            <meta-data
+                android:name="flutter_deeplinking_enabled"
+                android:value="false" />
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+            <!-- Spectator share links: cricketscorer:///spectate/<CODE>.
+                 Deliberately no android:host — the triple slash after the
+                 scheme leaves the authority empty, so the whole
+                 "/spectate/<CODE>" lands in the URI's path rather than being
+                 split into a host Android would otherwise strip before
+                 Flutter ever sees it. See PendingDeepLink for the client side
+                 of this. Not an App Link (no https, no autoVerify): a custom
+                 scheme can't be domain-verified, and a scoreboard link is not
+                 worth the assetlinks.json hosting that would require. -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
+                <data android:scheme="cricketscorer"/>
             </intent-filter>
         </activity>
         <!-- Don't delete the meta-data below.

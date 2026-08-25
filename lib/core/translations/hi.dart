@@ -154,6 +154,17 @@ Map<String, String> hi = {
   TranslationKeys.cannotBowlConsecutiveOvers:
       'पिछले ओवर का गेंदबाज लगातार दूसरा ओवर नहीं डाल सकता',
   TranslationKeys.undoLastBall: 'पिछली गेंद वापस लें',
+  TranslationKeys.watchLiveMatch: 'लाइव मैच देखें',
+  TranslationKeys.enterMatchCodeDescription:
+      'आपके स्कोरर द्वारा साझा किया गया छह अक्षरों का कोड डालें।',
+  TranslationKeys.matchCode: 'मैच कोड',
+  TranslationKeys.enterMatchCode: 'जैसे H7K2QP',
+  TranslationKeys.matchCodeRequired: 'मैच कोड दर्ज करें',
+  TranslationKeys.invalidShareLink: 'यह लिंक मान्य नहीं है',
+  TranslationKeys.waitingForPlayToBegin: 'खेल शुरू होने की प्रतीक्षा है',
+  TranslationKeys.matchCompleted: 'मैच समाप्त हुआ',
+  TranslationKeys.copyShareCode: 'शेयर कोड कॉपी करें',
+  TranslationKeys.codeCopied: 'कोड कॉपी किया गया',
   TranslationKeys.out: 'आउट',
   TranslationKeys.howOut: 'कैसे आउट?',
   TranslationKeys.bowled: 'बोल्ड',

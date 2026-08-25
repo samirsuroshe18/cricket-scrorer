@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:cricket_scorer/core/extensions/space_extension.dart';
 import 'package:cricket_scorer/core/extensions/theme_x.dart';
+import 'package:cricket_scorer/core/global/widgets/snackbars/cricket_snackbar.dart';
 import 'package:cricket_scorer/core/global/widgets/cricket_text.dart';
 import 'package:cricket_scorer/core/global/widgets/custom_app_bar.dart';
 import 'package:cricket_scorer/core/translations/translation_keys.dart';
@@ -9,6 +10,7 @@ import 'package:cricket_scorer/features/scoring/data/scoring_constants.dart';
 import 'package:cricket_scorer/features/scoring/presentation/controllers/score_ball_controller.dart';
 import 'package:cricket_scorer/features/scoring/presentation/widget/strike_banner.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
@@ -70,6 +72,21 @@ class ScoreBallScreen extends GetView<ScoreBallController> {
         // the 6 button is a control that gets tapped by accident during fast
         // scoring. Reaching for it should take a moment.
         actions: [
+          // Older matches (created before share codes existed) have no
+          // joinCode — hide the action rather than offer to copy null.
+          if (controller.match.joinCode != null)
+            IconButton(
+              tooltip: TranslationKeys.copyShareCode.tr,
+              onPressed: () {
+                Clipboard.setData(
+                  ClipboardData(text: controller.match.joinCode!),
+                );
+                CricketSnackbar.showSuccessMessage(
+                  TranslationKeys.codeCopied.tr,
+                );
+              },
+              icon: const Icon(Icons.share_outlined),
+            ),
           Obx(
             () => IconButton(
               tooltip: TranslationKeys.undoLastBall.tr,

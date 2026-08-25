@@ -13,6 +13,8 @@ import 'package:cricket_scorer/features/scoring/data/models/response/select_bowl
 import 'package:cricket_scorer/features/scoring/data/models/response/start_innings_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/request/undo_ball_req.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/undo_ball_res.dart';
+import 'package:cricket_scorer/features/scoring/data/models/response/public_match_res.dart';
+import 'package:cricket_scorer/features/scoring/data/models/response/score_undo_res.dart';
 
 abstract class MatchRepository {
   Future<Either<CricketResponse<CreateMatchRes>, CricketFailure>> createMatch({
@@ -80,4 +82,18 @@ abstract class MatchRepository {
   Stream<Either<OverCompleteRes, CricketFailure>> watchOverComplete({
     required String matchId,
   });
+
+  /// The `score:undo` event. For the spectator view this is not a recovery
+  /// path — it is the ONLY way an undo reaches a spectator, since there is no
+  /// REST ack to fall back on the way the scorer's console has.
+  Stream<Either<ScoreUndoRes, CricketFailure>> watchScoreUndo({
+    required String matchId,
+  });
+
+  /// `GET /v1/match/public/:code` — the entire unauthenticated read surface.
+  /// Takes either half of a share link, told apart server-side by shape; see
+  /// docs/api.md. No ownership check exists for this call because none is
+  /// meant to: it is public by contract, not by omission.
+  Future<Either<CricketResponse<PublicMatchRes>, CricketFailure>>
+  getPublicMatch({required String code});
 }

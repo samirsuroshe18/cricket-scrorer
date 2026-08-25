@@ -154,6 +154,17 @@ Map<String, String> mr = {
   TranslationKeys.cannotBowlConsecutiveOvers:
       'मागील षटकाचा गोलंदाज लगेच पुन्हा गोलंदाजी करू शकत नाही',
   TranslationKeys.undoLastBall: 'मागचा चेंडू मागे घ्या',
+  TranslationKeys.watchLiveMatch: 'लाइव्ह सामना पहा',
+  TranslationKeys.enterMatchCodeDescription:
+      'तुमच्या स्कोररने शेअर केलेला सहा अक्षरी कोड टाका.',
+  TranslationKeys.matchCode: 'सामना कोड',
+  TranslationKeys.enterMatchCode: 'उदा. H7K2QP',
+  TranslationKeys.matchCodeRequired: 'सामना कोड टाका',
+  TranslationKeys.invalidShareLink: 'ही लिंक वैध नाही',
+  TranslationKeys.waitingForPlayToBegin: 'खेळ सुरू होण्याची वाट पाहत आहे',
+  TranslationKeys.matchCompleted: 'सामना संपला',
+  TranslationKeys.copyShareCode: 'शेअर कोड कॉपी करा',
+  TranslationKeys.codeCopied: 'कोड कॉपी झाला',
   TranslationKeys.out: 'बाद',
   TranslationKeys.howOut: 'कसा बाद?',
   TranslationKeys.bowled: 'बोल्ड',
