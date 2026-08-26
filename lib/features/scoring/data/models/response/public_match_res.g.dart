@@ -28,6 +28,9 @@ PublicMatchInfo _$PublicMatchInfoFromJson(Map<String, dynamic> json) =>
       matchType: json['matchType'] as String?,
       venue: json['venue'] as String?,
       currentInnings: (json['currentInnings'] as num).toInt(),
+      result: json['result'] == null
+          ? null
+          : MatchResultInfo.fromJson(json['result'] as Map<String, dynamic>),
     );
 
 Map<String, dynamic> _$PublicMatchInfoToJson(PublicMatchInfo instance) =>
@@ -42,6 +45,7 @@ Map<String, dynamic> _$PublicMatchInfoToJson(PublicMatchInfo instance) =>
       'matchType': instance.matchType,
       'venue': instance.venue,
       'currentInnings': instance.currentInnings,
+      'result': instance.result?.toJson(),
     };
 
 PublicInningsState _$PublicInningsStateFromJson(Map<String, dynamic> json) =>
@@ -78,8 +82,7 @@ PublicMatchRes _$PublicMatchResFromJson(Map<String, dynamic> json) =>
       innings: json['innings'] == null
           ? null
           : PublicInningsState.fromJson(
-              json['innings'] as Map<String, dynamic>,
-            ),
+              json['innings'] as Map<String, dynamic>),
     );
 
 Map<String, dynamic> _$PublicMatchResToJson(PublicMatchRes instance) =>

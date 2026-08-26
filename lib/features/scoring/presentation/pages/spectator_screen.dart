@@ -5,6 +5,7 @@ import 'package:cricket_scorer/core/global/widgets/cricket_text.dart';
 import 'package:cricket_scorer/core/global/widgets/custom_app_bar.dart';
 import 'package:cricket_scorer/core/translations/translation_keys.dart';
 import 'package:cricket_scorer/features/scoring/presentation/controllers/spectator_controller.dart';
+import 'package:cricket_scorer/features/scoring/presentation/widget/match_result_banner.dart';
 import 'package:cricket_scorer/features/scoring/presentation/widget/strike_banner.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -110,7 +111,36 @@ class _MatchView extends StatelessWidget {
             ),
             24.h,
 
-            if (!controller.hasInningsStarted)
+            if (controller.matchResult.value != null) ...[
+              // Not gated on hasInningsStarted, unlike the live block below:
+              // an overs-complete or target-achieved ending dismisses
+              // nobody, so the striker is still non-null and that flag would
+              // wrongly route here through the live branch instead. See
+              // matchResult's own doc comment.
+              MatchResultBanner(
+                result: controller.matchResult.value!,
+                nameFor: (sideLabel) => sideLabel == 'teamA'
+                    ? (match?.teamA.name ?? sideLabel)
+                    : (match?.teamB.name ?? sideLabel),
+              ),
+              16.h,
+              CricketText(
+                text:
+                    '${controller.totalRuns.value}/${controller.wickets.value}',
+                style: context.textTheme.displayMedium,
+              ),
+              8.h,
+              CricketText(
+                text: '${TranslationKeys.overs.tr}: ${controller.overs.value}',
+                style: context.textTheme.bodyMedium,
+              ),
+              4.h,
+              CricketText(
+                text:
+                    '${TranslationKeys.extras.tr}: ${controller.extrasTotal.value}',
+                style: context.textTheme.bodySmall,
+              ),
+            ] else if (!controller.hasInningsStarted)
               _WaitingForPlay(status: match?.status)
             else ...[
               CricketText(

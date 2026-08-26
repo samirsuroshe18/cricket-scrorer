@@ -1,29 +1,11 @@
+import 'package:cricket_scorer/features/scoring/data/models/response/match_result_info.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/public_match_res.dart';
 import 'package:json_annotation/json_annotation.dart';
 
+export 'package:cricket_scorer/features/scoring/data/models/response/match_result_info.dart'
+    show MatchResultInfo;
+
 part 'scorecard_res.g.dart';
-
-/// `winner` is the side label (`teamA`/`teamB`) or `tie` — never a resolved
-/// team name. The server deliberately sends no description sentence; see
-/// [MatchResultInfo.marginType]'s doc. The client composes the display string
-/// from this plus the team names it already holds, through `TranslationKeys`.
-@JsonSerializable()
-class MatchResultInfo {
-  final String winner;
-
-  /// `wickets`, `runs`, or null exactly when [winner] is `tie`.
-  final String? marginType;
-  final int? margin;
-
-  MatchResultInfo({required this.winner, this.marginType, this.margin});
-
-  bool get isTie => winner == 'tie';
-
-  factory MatchResultInfo.fromJson(Map<String, dynamic> json) =>
-      _$MatchResultInfoFromJson(json);
-
-  Map<String, dynamic> toJson() => _$MatchResultInfoToJson(this);
-}
 
 @JsonSerializable()
 class BattingLine {

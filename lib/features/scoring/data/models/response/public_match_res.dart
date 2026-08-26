@@ -1,4 +1,5 @@
 import 'package:cricket_scorer/features/scoring/data/models/response/bowler_state.dart';
+import 'package:cricket_scorer/features/scoring/data/models/response/match_result_info.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/score_ball_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/strike.dart';
 import 'package:json_annotation/json_annotation.dart';
@@ -37,6 +38,12 @@ class PublicMatchInfo {
   final String? venue;
   final int currentInnings;
 
+  /// Null until `status` is `completed`. The backend has sent this since the
+  /// spectator contract shipped — `getPublicMatch` picks it unconditionally —
+  /// it just had nothing to set it until match completion existed, and
+  /// nothing here parsed it until now.
+  final MatchResultInfo? result;
+
   PublicMatchInfo({
     required this.matchId,
     this.joinCode,
@@ -48,6 +55,7 @@ class PublicMatchInfo {
     this.matchType,
     this.venue,
     required this.currentInnings,
+    this.result,
   });
 
   factory PublicMatchInfo.fromJson(Map<String, dynamic> json) =>

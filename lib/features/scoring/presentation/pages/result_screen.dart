@@ -6,6 +6,7 @@ import 'package:cricket_scorer/core/global/widgets/custom_app_bar.dart';
 import 'package:cricket_scorer/core/translations/translation_keys.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/scorecard_res.dart';
 import 'package:cricket_scorer/features/scoring/presentation/controllers/result_controller.dart';
+import 'package:cricket_scorer/features/scoring/presentation/widget/match_result_banner.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -96,7 +97,7 @@ class _ResultView extends StatelessWidget {
             textAlign: TextAlign.center,
           ),
           16.h,
-          _ResultBanner(data: data),
+          MatchResultBanner(result: data.result, nameFor: data.nameFor),
           24.h,
           for (final innings in data.innings) ...[
             _InningsSummary(data: data, innings: innings),
@@ -105,43 +106,6 @@ class _ResultView extends StatelessWidget {
             24.h,
           ],
         ],
-      ),
-    );
-  }
-}
-
-/// Composed client-side from [MatchResultInfo.winner]/`marginType`/`margin` —
-/// the server sends no description sentence on purpose, see
-/// docs/api.md's note on why. `winner`/`marginType` are the only
-/// server-decided facts here; everything else is display.
-class _ResultBanner extends StatelessWidget {
-  const _ResultBanner({required this.data});
-
-  final ScorecardRes data;
-
-  @override
-  Widget build(BuildContext context) {
-    final result = data.result;
-
-    final text = result.isTie
-        ? TranslationKeys.matchTied.tr
-        : '${data.nameFor(result.winner)} ${TranslationKeys.wonBy.tr} '
-              '${result.margin} '
-              '${result.marginType == 'wickets' ? TranslationKeys.wickets.tr.toLowerCase() : TranslationKeys.runsWord.tr}';
-
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
-      decoration: BoxDecoration(
-        color: context.colors.statusSuccess.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: CricketText(
-        text: text,
-        style: context.textTheme.titleMedium?.copyWith(
-          color: context.colors.statusSuccess,
-          fontWeight: FontWeight.bold,
-        ),
-        textAlign: TextAlign.center,
       ),
     );
   }

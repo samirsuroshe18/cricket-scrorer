@@ -5,6 +5,8 @@ import 'package:cricket_scorer/core/global/widgets/snackbars/cricket_snackbar.da
 import 'package:cricket_scorer/core/translations/translation_keys.dart';
 import 'package:cricket_scorer/core/utils/either_util.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/live_score_res.dart';
+import 'package:cricket_scorer/features/scoring/data/models/response/match_complete_res.dart';
+import 'package:cricket_scorer/features/scoring/data/models/response/match_result_info.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/public_match_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/score_undo_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/strike.dart';
@@ -59,8 +61,25 @@ class SpectatorController extends GetxController {
 
   bool get hasInningsStarted => strike.value?.strikerName != null;
 
+  /// Null until the match has ended. Set two ways: from `match.result` on the
+  /// initial fetch (a spectator opening the link after the match is already
+  /// over), and from `match:complete` while connected live. The two never
+  /// race in a way that matters — the live event only ever fires after the
+  /// state it describes is already true, so whichever sets this first is
+  /// already correct.
+  ///
+  /// Deliberately not gated on [hasInningsStarted]: that flag reads the
+  /// striker, which the server only nulls on the wicket-ending case — an
+  /// overs-complete or target-achieved ending dismisses nobody, so the pair
+  /// from the finished innings is still sitting there non-null. Checking
+  /// this instead is what makes the completed state show for all three
+  /// endings instead of just one.
+  final matchResult = Rxn<MatchResultInfo>();
+
   StreamSubscription<Either<LiveScoreRes, CricketFailure>>? _scoreSub;
   StreamSubscription<Either<ScoreUndoRes, CricketFailure>>? _undoSub;
+  StreamSubscription<Either<MatchCompleteRes, CricketFailure>>?
+  _matchCompleteSub;
 
   /// Same guard, same reason, as `ScoreBallController._lastAppliedSeq`: strike
   /// arrives from more than one source — the join ack, `score:update`,
@@ -110,6 +129,7 @@ class SpectatorController extends GetxController {
     }
 
     matchInfo.value = data.match;
+    matchResult.value = data.match.result;
     _applyInnings(data.innings);
     isLoading.value = false;
 
@@ -184,6 +204,18 @@ class SpectatorController extends GetxController {
         currentBowler.value = undo.bowler!.currentBowlerName;
       }
     });
+
+    // The only way a spectator connected continuously through match
+    // completion learns about it — there is no REST ack to fall back on the
+    // way the scorer's console has. A spectator who opens the link after the
+    // match already ended never needs this: [matchResult] is already set
+    // from the initial fetch by the time this subscription even starts.
+    _matchCompleteSub = matchRepository
+        .watchMatchComplete(matchId: matchId)
+        .listen((event) {
+          if (!event.isResult) return;
+          matchResult.value = event.result.result;
+        });
   }
 
   void _applyStrike(Strike? incoming, {int? seq}) {
@@ -198,6 +230,7 @@ class SpectatorController extends GetxController {
   void onClose() {
     unawaited(_scoreSub?.cancel());
     unawaited(_undoSub?.cancel());
+    unawaited(_matchCompleteSub?.cancel());
     super.onClose();
   }
 }

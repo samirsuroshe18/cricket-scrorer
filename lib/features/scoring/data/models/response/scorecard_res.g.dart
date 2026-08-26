@@ -6,20 +6,6 @@ part of 'scorecard_res.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
-MatchResultInfo _$MatchResultInfoFromJson(Map<String, dynamic> json) =>
-    MatchResultInfo(
-      winner: json['winner'] as String,
-      marginType: json['marginType'] as String?,
-      margin: (json['margin'] as num?)?.toInt(),
-    );
-
-Map<String, dynamic> _$MatchResultInfoToJson(MatchResultInfo instance) =>
-    <String, dynamic>{
-      'winner': instance.winner,
-      'marginType': instance.marginType,
-      'margin': instance.margin,
-    };
-
 BattingLine _$BattingLineFromJson(Map<String, dynamic> json) => BattingLine(
       playerId: json['playerId'] as String,
       playerName: json['playerName'] as String,
