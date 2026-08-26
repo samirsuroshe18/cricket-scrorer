@@ -8,6 +8,7 @@ import 'package:cricket_scorer/features/scoring/presentation/controllers/spectat
 import 'package:cricket_scorer/features/scoring/presentation/widget/match_result_banner.dart';
 import 'package:cricket_scorer/features/scoring/presentation/widget/rate_stats_line.dart';
 import 'package:cricket_scorer/features/scoring/presentation/widget/strike_banner.dart';
+import 'package:cricket_scorer/features/scoring/presentation/widget/toss_line.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -109,6 +110,14 @@ class _MatchView extends StatelessWidget {
               style: context.textTheme.bodySmall?.copyWith(
                 color: context.colorScheme.onSurfaceVariant,
               ),
+            ),
+            4.h,
+            TossLine(
+              tossWinner: match?.tossWinner,
+              tossDecision: match?.tossDecision,
+              nameFor: (sideLabel) => sideLabel == 'teamA'
+                  ? (match?.teamA.name ?? sideLabel)
+                  : (match?.teamB.name ?? sideLabel),
             ),
             24.h,
 

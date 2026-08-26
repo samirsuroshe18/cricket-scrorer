@@ -22,6 +22,22 @@ class CreateMatchController extends GetxController {
   final teamBController = TextEditingController();
   final oversController = TextEditingController();
 
+  /// `teamA` / `teamB` / null (no toss recorded). Toggled, not radio-selected
+  /// — tapping the already-selected chip clears it, same interaction as
+  /// [ScoreBallController.toggleFault].
+  final tossWinner = Rxn<String>();
+
+  /// `bat` / `bowl` / null.
+  final tossDecision = Rxn<String>();
+
+  void toggleTossWinner(String value) {
+    tossWinner.value = tossWinner.value == value ? null : value;
+  }
+
+  void toggleTossDecision(String value) {
+    tossDecision.value = tossDecision.value == value ? null : value;
+  }
+
   final formKey = GlobalKey<FormState>();
 
   String? validateTeamName(String? value) {
@@ -52,6 +68,14 @@ class CreateMatchController extends GetxController {
       return;
     }
 
+    // Both or neither, mirroring the server's own rule — caught here so a
+    // half-filled toss never reaches the request only to bounce off
+    // INVALID_TOSS_RESULT.
+    if ((tossWinner.value == null) != (tossDecision.value == null)) {
+      CricketSnackbar.showAlertMessage(TranslationKeys.tossIncomplete.tr);
+      return;
+    }
+
     CricketLoaderDialog.show();
 
     Either<CricketResponse<CreateMatchRes>, CricketFailure> response =
@@ -60,6 +84,8 @@ class CreateMatchController extends GetxController {
             teamAName: teamAName,
             teamBName: teamBName,
             totalOvers: int.parse(oversController.text.trim()),
+            tossWinner: tossWinner.value,
+            tossDecision: tossDecision.value,
           ),
         );
 

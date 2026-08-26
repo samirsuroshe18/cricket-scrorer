@@ -10,6 +10,7 @@ import 'package:cricket_scorer/features/scoring/data/scoring_constants.dart';
 import 'package:cricket_scorer/features/scoring/presentation/controllers/score_ball_controller.dart';
 import 'package:cricket_scorer/features/scoring/presentation/widget/rate_stats_line.dart';
 import 'package:cricket_scorer/features/scoring/presentation/widget/strike_banner.dart';
+import 'package:cricket_scorer/features/scoring/presentation/widget/toss_line.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
@@ -114,6 +115,14 @@ class ScoreBallScreen extends GetView<ScoreBallController> {
                   '${controller.match.teamA.name} vs ${controller.match.teamB.name}',
               style: Theme.of(context).textTheme.titleMedium,
               textAlign: TextAlign.center,
+            ),
+            4.h,
+            TossLine(
+              tossWinner: controller.match.tossWinner,
+              tossDecision: controller.match.tossDecision,
+              nameFor: (sideLabel) => sideLabel == 'teamA'
+                  ? controller.match.teamA.name
+                  : controller.match.teamB.name,
             ),
             24.h,
             Obx(

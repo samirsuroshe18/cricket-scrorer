@@ -33,6 +33,13 @@ class PublicMatchInfo {
   final PublicTeamRef teamA;
   final PublicTeamRef teamB;
   final int totalOvers;
+
+  /// Both null when the toss was skipped. `teamA` / `teamB`.
+  final String? tossWinner;
+
+  /// `bat` / `bowl`.
+  final String? tossDecision;
+
   final String status;
   final String? matchType;
   final String? venue;
@@ -51,6 +58,8 @@ class PublicMatchInfo {
     required this.teamA,
     required this.teamB,
     required this.totalOvers,
+    this.tossWinner,
+    this.tossDecision,
     required this.status,
     this.matchType,
     this.venue,

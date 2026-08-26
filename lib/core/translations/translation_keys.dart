@@ -111,6 +111,19 @@ class TranslationKeys {
   static const String teamNameRequired = 'team_name_required';
   static const String invalidOvers = 'invalid_overs';
   static const String teamNamesMustDiffer = 'team_names_must_differ';
+
+  /// Toss (optional at match creation)
+  static const String tossOptional = 'toss_optional';
+  static const String teamA = 'team_a';
+  static const String teamB = 'team_b';
+  static const String tossWinner = 'toss_winner';
+  static const String tossDecision = 'toss_decision';
+  static const String bat = 'bat';
+  static const String bowl = 'bowl';
+  static const String tossIncomplete = 'toss_incomplete';
+  static const String wonTheToss = 'won_the_toss';
+  static const String electedTo = 'elected_to';
+
   static const String liveScore = 'live_score';
   static const String selectRuns = 'select_runs';
   static const String wickets = 'wickets';

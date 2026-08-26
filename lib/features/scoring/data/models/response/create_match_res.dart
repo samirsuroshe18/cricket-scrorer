@@ -28,6 +28,13 @@ class CreateMatchRes {
   final TeamRef teamA;
   final TeamRef teamB;
   final int totalOvers;
+
+  /// Both null when the toss was skipped. `teamA` / `teamB`.
+  final String? tossWinner;
+
+  /// `bat` / `bowl`.
+  final String? tossDecision;
+
   final String status;
   final String syncStatus;
   final String createdAt;
@@ -38,6 +45,8 @@ class CreateMatchRes {
     required this.teamA,
     required this.teamB,
     required this.totalOvers,
+    this.tossWinner,
+    this.tossDecision,
     required this.status,
     required this.syncStatus,
     required this.createdAt,
