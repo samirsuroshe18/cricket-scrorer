@@ -66,6 +66,14 @@ class SpectatorController extends GetxController {
   bool _partnershipInitialized = false;
   int _legalBalls = 0;
 
+  /// The innings [_scoreSub] last saw. Unlike the scorer's console, this
+  /// controller has no explicit "innings started" action to hook a reset
+  /// into — a new innings is only ever noticed by its number changing on a
+  /// live payload. Null until the first one arrives, which is deliberately
+  /// not a change: nothing needs resetting before this controller has seen
+  /// any innings at all.
+  int? _observedInningsNumber;
+
   void _recomputeRates() {
     currentRunRate.value = computeCurrentRunRate(
       totalRuns: totalRuns.value,
@@ -206,6 +214,22 @@ class SpectatorController extends GetxController {
       }
 
       final live = event.result;
+
+      // `absoluteBallSeq` is innings-scoped (resets to 1 each innings). A
+      // controller that lived through the innings-1-to-2 transition still
+      // has innings 1's high watermark, so every innings-2 ball would read
+      // as older and [_applyStrike] would silently drop it — freezing the
+      // striker/non-striker display on whoever was at the crease when
+      // innings 1 ended. Detected here, since there is no explicit
+      // "innings started" event to hook a reset into, unlike
+      // [ScoreBallController.startInnings].
+      if (_observedInningsNumber != null &&
+          live.inningsNumber != _observedInningsNumber) {
+        _lastAppliedSeq = 0;
+        _partnershipInitialized = false;
+      }
+      _observedInningsNumber = live.inningsNumber;
+
       totalRuns.value = live.totalRuns;
       wickets.value = live.wickets;
       overs.value = live.overs;

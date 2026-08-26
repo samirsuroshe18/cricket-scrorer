@@ -626,6 +626,13 @@ class ScoreBallController extends GetxController {
     // same fresh totals — does not re-run its own first-payload branch.
     _partnership.start(runs: totalRuns.value, legalBalls: _legalBalls);
     _partnershipInitialized = true;
+
+    // `absoluteBallSeq` is innings-scoped (resets to 1 each innings), but
+    // this watermark is not — left unreset here, innings 2's ball 1 (seq 1)
+    // would read as older than whatever innings 1 last reached and the
+    // strike guard in [_applyStrike] would silently drop every update for
+    // the rest of the match, on both the REST ack and the socket.
+    _lastAppliedSeq = 0;
     _recomputeRates();
 
     // Deliberately no success snackbar: `Get.showSnackbar` pushes a route, so
