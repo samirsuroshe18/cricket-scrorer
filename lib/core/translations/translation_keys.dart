@@ -123,6 +123,8 @@ class TranslationKeys {
   static const String tossIncomplete = 'toss_incomplete';
   static const String wonTheToss = 'won_the_toss';
   static const String electedTo = 'elected_to';
+  static const String tapToFlip = 'tap_to_flip';
+  static const String tapToReflip = 'tap_to_reflip';
 
   static const String liveScore = 'live_score';
   static const String selectRuns = 'select_runs';

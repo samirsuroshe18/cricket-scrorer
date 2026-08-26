@@ -22,16 +22,20 @@ class CreateMatchController extends GetxController {
   final teamBController = TextEditingController();
   final oversController = TextEditingController();
 
-  /// `teamA` / `teamB` / null (no toss recorded). Toggled, not radio-selected
-  /// — tapping the already-selected chip clears it, same interaction as
-  /// [ScoreBallController.toggleFault].
+  /// `teamA` / `teamB` / null (toss skipped — [CoinFlip] never tapped).
+  /// Set only from [CoinFlip.onResult]; never tapped directly, unlike
+  /// [tossDecision].
   final tossWinner = Rxn<String>();
 
   /// `bat` / `bowl` / null.
   final tossDecision = Rxn<String>();
 
-  void toggleTossWinner(String value) {
-    tossWinner.value = tossWinner.value == value ? null : value;
+  /// Called back from [CoinFlip] once a flip lands. A re-flip clears
+  /// [tossDecision] too — a decision picked for the previous winner has
+  /// nothing to do with whoever the coin names this time.
+  void recordTossWinner(String value) {
+    tossWinner.value = value;
+    tossDecision.value = null;
   }
 
   void toggleTossDecision(String value) {

@@ -128,9 +128,11 @@ Map<String, String> en = {
   TranslationKeys.bat: 'Bat',
   TranslationKeys.bowl: 'Bowl',
   TranslationKeys.tossIncomplete:
-      'Select both toss winner and decision, or leave both blank',
+      'Choose bat or bowl for the toss winner, or skip the toss entirely',
   TranslationKeys.wonTheToss: 'won the toss',
   TranslationKeys.electedTo: 'elected to',
+  TranslationKeys.tapToFlip: 'Tap to flip',
+  TranslationKeys.tapToReflip: 'Tap to flip again',
   TranslationKeys.liveScore: 'Live Score',
   TranslationKeys.selectRuns: 'Select Runs',
   TranslationKeys.wickets: 'Wickets',

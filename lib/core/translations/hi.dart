@@ -129,9 +129,11 @@ Map<String, String> hi = {
   TranslationKeys.bat: 'बल्लेबाजी',
   TranslationKeys.bowl: 'गेंदबाजी',
   TranslationKeys.tossIncomplete:
-      'टॉस जीतने वाली टीम और निर्णय दोनों चुनें, या दोनों खाली छोड़ दें',
+      'टॉस जीतने वाली टीम के लिए बल्लेबाजी या गेंदबाजी चुनें, या टॉस पूरी तरह छोड़ दें',
   TranslationKeys.wonTheToss: 'ने टॉस जीता',
   TranslationKeys.electedTo: 'और चुनी',
+  TranslationKeys.tapToFlip: 'फ्लिप करने के लिए टैप करें',
+  TranslationKeys.tapToReflip: 'फिर से फ्लिप करने के लिए टैप करें',
   TranslationKeys.liveScore: 'लाइव स्कोर',
   TranslationKeys.selectRuns: 'रन चुनें',
   TranslationKeys.wickets: 'विकेट',

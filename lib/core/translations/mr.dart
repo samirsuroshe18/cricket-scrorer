@@ -130,9 +130,11 @@ Map<String, String> mr = {
   TranslationKeys.bat: 'फलंदाजी',
   TranslationKeys.bowl: 'गोलंदाजी',
   TranslationKeys.tossIncomplete:
-      'नाणेफेक जिंकणारा संघ आणि निर्णय दोन्ही निवडा, किंवा दोन्ही रिकामे ठेवा',
+      'नाणेफेक जिंकणाऱ्या संघासाठी फलंदाजी किंवा गोलंदाजी निवडा, किंवा नाणेफेक पूर्णपणे वगळा',
   TranslationKeys.wonTheToss: 'ने नाणेफेक जिंकली',
   TranslationKeys.electedTo: 'आणि निवडली',
+  TranslationKeys.tapToFlip: 'फ्लिप करण्यासाठी टॅप करा',
+  TranslationKeys.tapToReflip: 'पुन्हा फ्लिप करण्यासाठी टॅप करा',
   TranslationKeys.liveScore: 'लाइव्ह स्कोअर',
   TranslationKeys.selectRuns: 'धावा निवडा',
   TranslationKeys.wickets: 'बाद',
