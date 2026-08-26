@@ -19,8 +19,14 @@ dependencies:
   shared_preferences: ^2.5.5
   lucide_icons_flutter: ^3.1.13
   pretty_dio_logger: ^1.4.0
-  floor: ^1.5.0
-  sqflite: ^2.4.2
+  # No database consumes these yet — the only thing that did (a local user
+  # cache) was unused dead code, removed. Kept rather than pulled because
+  # the offline-scoring queue (Phase 1's still-open item) will need a local
+  # database and was the reason Floor was replaced with Drift in the first
+  # place.
+  drift: ^2.34.0
+  sqlite3_flutter_libs: ^0.5.24
+  path: ^1.9.0
   flutter_native_splash: ^2.4.7
   json_annotation: ^4.9.0 # Do not change version ^4.9.0
   google_fonts: ^8.1.0
@@ -44,7 +50,7 @@ dev_dependencies:
     sdk: flutter
 
   flutter_lints: ^6.0.0
-  floor_generator: ^1.5.0
+  drift_dev: ^2.34.0
   build_runner: ^2.4.13    # Do not change version ^2.4.13
   json_serializable: ^6.8.0  # Do not change version ^6.8.0
 

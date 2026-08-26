@@ -1,6 +1,4 @@
 import 'package:cricket_scorer/config/flavor_config.dart';
-import 'package:cricket_scorer/core/constants/app_constants.dart';
-import 'package:cricket_scorer/core/database/app_database.dart';
 import 'package:cricket_scorer/core/network/api_client_service.dart';
 import 'package:cricket_scorer/core/network/socket_client_service.dart';
 import 'package:cricket_scorer/core/services/compression_service.dart';
@@ -43,11 +41,6 @@ class CoreInjection {
     );
     await Get.putAsync<SocketClientService>(
       () async => SocketClientService().init(),
-      permanent: true,
-    );
-    await Get.putAsync<AppDatabase>(
-      () async =>
-          $FloorAppDatabase.databaseBuilder(AppConstants.appDatabase).build(),
       permanent: true,
     );
     await Get.putAsync<ThemeService>(
