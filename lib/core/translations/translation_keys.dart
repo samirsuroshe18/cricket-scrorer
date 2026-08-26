@@ -180,4 +180,29 @@ class TranslationKeys {
   static const String notPossibleOffNoBall = 'not_possible_off_no_ball';
   static const String notPossibleOffWide = 'not_possible_off_wide';
   static const String allOut = 'all_out';
+
+  /// Result screen
+  static const String matchResult = 'match_result';
+  static const String wonBy = 'won_by';
+  static const String matchTied = 'match_tied';
+
+  /// The natural-language word, for the result sentence — distinct from
+  /// [runsShort], the table-column abbreviation.
+  static const String runsWord = 'runs_word';
+  static const String battingFigures = 'batting_figures';
+  static const String bowlingFigures = 'bowling_figures';
+  static const String batter = 'batter';
+  static const String bowler = 'bowler';
+  static const String notOut = 'not_out';
+  static const String runsShort = 'runs_short';
+  static const String ballsShort = 'balls_short';
+  static const String foursShort = 'fours_short';
+  static const String sixesShort = 'sixes_short';
+  static const String strikeRateShort = 'strike_rate_short';
+  static const String oversShort = 'overs_short';
+  static const String maidensShort = 'maidens_short';
+  static const String wicketsShort = 'wickets_short';
+  static const String economyShort = 'economy_short';
+  static const String widesShort = 'wides_short';
+  static const String noBallsShort = 'no_balls_short';
 }

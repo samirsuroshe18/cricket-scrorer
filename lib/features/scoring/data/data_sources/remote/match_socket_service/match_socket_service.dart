@@ -4,6 +4,7 @@ import 'package:cricket_scorer/core/error/cricket_failure.dart';
 import 'package:cricket_scorer/core/network/socket_client_service.dart';
 import 'package:cricket_scorer/core/utils/either_util.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/live_score_res.dart';
+import 'package:cricket_scorer/features/scoring/data/models/response/match_complete_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/over_complete_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/score_undo_res.dart';
 
@@ -113,6 +114,39 @@ class MatchSocketService {
 
     controller.onCancel = () async {
       socket.off('score:undo', onScoreUndo);
+      await controller.close();
+    };
+
+    return controller.stream;
+  }
+
+  /// The `match:complete` event. Deliberately thin — see [MatchCompleteRes] —
+  /// so this exists to trigger navigation to the result screen, not to feed
+  /// it; the result screen itself always loads from `GET .../scorecard`.
+  ///
+  /// For the scorer's own console this is a recovery path, not the primary
+  /// trigger: [ScoreBallRes.matchComplete] on the score-ball ack already
+  /// carries the same fact. It matters when that ack is lost on patchy
+  /// signal — the same reasoning as [watchOverComplete].
+  Stream<Either<MatchCompleteRes, CricketFailure>> watchMatchComplete(
+    String matchId,
+  ) {
+    final socket = socketClientService.socket;
+    final controller =
+        StreamController<Either<MatchCompleteRes, CricketFailure>>();
+
+    void onMatchComplete(dynamic data) {
+      controller.add(
+        Either.result(
+          MatchCompleteRes.fromJson(Map<String, dynamic>.from(data as Map)),
+        ),
+      );
+    }
+
+    socket.on('match:complete', onMatchComplete);
+
+    controller.onCancel = () async {
+      socket.off('match:complete', onMatchComplete);
       await controller.close();
     };
 

@@ -64,6 +64,15 @@ class MatchApiService {
     );
   }
 
+  /// verifyJwt, plus a createdBy ownership check server-side — this is the
+  /// scorer's own screen, not the spectator's, so unlike [getPublicMatch] the
+  /// token is expected to be attached.
+  Future<Either<ApiResponseModel, CricketFailure>> getScorecard({
+    required String matchId,
+  }) async {
+    return await apiClient.get(endpoint: matchEndpoint.scorecard(matchId));
+  }
+
   /// No token is attached deliberately — not because one is stripped, but
   /// because [ApiClient] only adds an `Authorization` header when
   /// [SecureStorageService] actually holds one, and a spectator session

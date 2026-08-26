@@ -11,6 +11,7 @@ import 'package:cricket_scorer/features/scoring/domain/usecases/select_bowler.da
 import 'package:cricket_scorer/features/scoring/domain/usecases/start_innings.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/undo_ball.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/get_public_match.dart';
+import 'package:cricket_scorer/features/scoring/domain/usecases/get_scorecard.dart';
 import 'package:get/get.dart';
 
 class ScoringInjection {
@@ -69,6 +70,11 @@ class ScoringInjection {
 
     Get.lazyPut<GetPublicMatchUseCase>(
       () => GetPublicMatchUseCase(matchRepository: Get.find<MatchRepository>()),
+      fenix: true,
+    );
+
+    Get.lazyPut<GetScorecardUseCase>(
+      () => GetScorecardUseCase(matchRepository: Get.find<MatchRepository>()),
       fenix: true,
     );
   }

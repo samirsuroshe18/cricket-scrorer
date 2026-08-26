@@ -13,8 +13,10 @@ import 'package:cricket_scorer/features/scoring/data/models/response/select_bowl
 import 'package:cricket_scorer/features/scoring/data/models/response/start_innings_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/request/undo_ball_req.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/undo_ball_res.dart';
+import 'package:cricket_scorer/features/scoring/data/models/response/match_complete_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/public_match_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/score_undo_res.dart';
+import 'package:cricket_scorer/features/scoring/data/models/response/scorecard_res.dart';
 
 abstract class MatchRepository {
   Future<Either<CricketResponse<CreateMatchRes>, CricketFailure>> createMatch({
@@ -96,4 +98,18 @@ abstract class MatchRepository {
   /// meant to: it is public by contract, not by omission.
   Future<Either<CricketResponse<PublicMatchRes>, CricketFailure>>
   getPublicMatch({required String code});
+
+  /// `GET /v1/match/:matchId/scorecard` — both innings' finalized batting and
+  /// bowling figures plus the match result. Reachable only once the match has
+  /// actually completed; the server answers `SCORECARD_NOT_READY` otherwise.
+  /// The single data source for the result screen, whether it was opened
+  /// automatically on `match:complete` or by direct navigation later.
+  Future<Either<CricketResponse<ScorecardRes>, CricketFailure>> getScorecard({
+    required String matchId,
+  });
+
+  /// The `match:complete` event — see [MatchSocketService.watchMatchComplete].
+  Stream<Either<MatchCompleteRes, CricketFailure>> watchMatchComplete({
+    required String matchId,
+  });
 }

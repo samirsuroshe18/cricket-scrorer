@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:cricket_scorer/config/routes/app_routes.dart';
 import 'package:cricket_scorer/core/error/cricket_failure.dart';
 import 'package:cricket_scorer/core/global/widgets/snackbars/cricket_snackbar.dart';
 import 'package:cricket_scorer/core/translations/translation_keys.dart';
@@ -10,6 +11,7 @@ import 'package:cricket_scorer/features/scoring/data/models/request/start_inning
 import 'package:cricket_scorer/features/scoring/data/models/request/undo_ball_req.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/create_match_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/live_score_res.dart';
+import 'package:cricket_scorer/features/scoring/data/models/response/match_complete_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/over_complete_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/strike.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/undo_ball_res.dart';
@@ -50,9 +52,19 @@ class ScoreBallController extends GetxController {
   final extrasTotal = 0.obs;
   final isScoring = false.obs;
 
-  /// True once the 10th wicket falls. The console locks: the server rejects
-  /// further deliveries, and there is nothing left to score.
+  /// True once the current innings has ended — the 10th wicket, the overs
+  /// running out, or (innings 2) the target being chased down. The console
+  /// locks: the server rejects further deliveries. Reset to `false` by
+  /// [startInnings] on success, which is what lets the SAME openers sheet
+  /// this flag currently blocks reopen for innings 2 — see [_promptIfNeeded].
   final isInningsComplete = false.obs;
+
+  /// [isInningsComplete] narrowed to "and it was innings 2" — the match is
+  /// over, not just the innings. Unlike [isInningsComplete] this is never
+  /// reset; nothing on this screen continues past it. Set from either
+  /// [ScoreBallRes.matchComplete] (primary) or the `match:complete` socket
+  /// event (recovery), both of which trigger [_navigateToResult].
+  final isMatchComplete = false.obs;
 
   /// Inline, button-level loading for the openers sheet. Deliberately not
   /// `CricketLoaderDialog`: that pushes a route over the sheet, and popping the
@@ -198,6 +210,12 @@ class ScoreBallController extends GetxController {
   StreamSubscription<Either<LiveScoreRes, CricketFailure>>? _subscription;
   StreamSubscription<Either<OverCompleteRes, CricketFailure>>?
   _overCompleteSubscription;
+  StreamSubscription<Either<MatchCompleteRes, CricketFailure>>?
+  _matchCompleteSubscription;
+
+  /// Guards [_navigateToResult] against firing twice — the REST ack and the
+  /// socket event both report the same fact, and nothing stops both arriving.
+  bool _navigatedToResult = false;
 
   static const _uuid = Uuid();
 
@@ -275,6 +293,33 @@ class ScoreBallController extends GetxController {
             newBowlerRequired: over.newBowlerRequired,
           );
         });
+
+    // A recovery path, same reasoning as [_overCompleteSubscription]: the
+    // REST ack already carries `matchComplete`, and this only matters when
+    // that ack is lost on patchy signal.
+    _matchCompleteSubscription = matchRepository
+        .watchMatchComplete(matchId: match.matchId)
+        .listen((event) {
+          if (!event.isResult) return;
+          if (kDebugMode) {
+            debugPrint(
+              '[socket] match:complete result=${event.result.result.winner}',
+            );
+          }
+          _navigateToResult();
+        });
+  }
+
+  /// The single place the console leaves this screen. Idempotent against
+  /// [_navigateToResult] firing twice — from the REST ack and the socket both
+  /// reporting the same completion — via [_navigatedToResult].
+  void _navigateToResult() {
+    if (_navigatedToResult) return;
+    _navigatedToResult = true;
+    isMatchComplete.value = true;
+    unawaited(
+      Get.offNamed<dynamic>(AppRoutes.matchResultPath(match.matchId)),
+    );
   }
 
   @override
@@ -282,6 +327,13 @@ class ScoreBallController extends GetxController {
     super.onReady();
     ever<bool>(_serverStateArrived, (_) => unawaited(_promptIfNeeded()));
     ever<bool>(needsBowler, (_) => unawaited(_promptIfNeeded()));
+    // Without this, nothing re-enters the loop when an innings ends via
+    // overs_complete or a mid-over wicket — neither of those changes
+    // `needsBowler` (no over boundary) or `_serverStateArrived` (already
+    // true). `_score` sets [isInningsComplete] directly rather than through a
+    // usecase call, so this listener is the only thing that turns that flag
+    // flipping into the openers sheet reopening for innings 2.
+    ever<bool>(isInningsComplete, (_) => unawaited(_promptIfNeeded()));
     unawaited(_promptIfNeeded());
   }
 
@@ -309,15 +361,24 @@ class ScoreBallController extends GetxController {
     try {
       while (true) {
         if (!_serverStateArrived.value) break;
-        // All out nulls the striker server-side, so hasOpeners goes false.
-        // Without this the console would ask for opening batsmen — or a
-        // bowler — for an innings that just ended.
-        if (isInningsComplete.value) break;
+        // Stop only once the MATCH has ended — not merely the current
+        // innings. Blocking on [isInningsComplete] instead, as this used to,
+        // is what left the console permanently locked after innings 1 with
+        // no path to innings 2 at all.
+        if (isMatchComplete.value) break;
         // Something else owns the screen (the wicket sheet). Whoever opened it
         // calls back here when it closes.
         if (Get.isBottomSheetOpen ?? false) break;
 
-        if (!hasOpeners) {
+        // [isInningsComplete] is checked here too, not just [hasOpeners]: a
+        // wicket-ending innings nulls the striker server-side (nobody is left
+        // to replace the dismissed batsman), so `hasOpeners` alone happens to
+        // catch that case — but an overs-complete or target-achieved ending
+        // dismisses nobody, and the pair from the finished innings is still
+        // sitting there non-null. Without this, the console stayed locked
+        // forever on exactly those two endings, having correctly unlocked on
+        // the third.
+        if (!hasOpeners || isInningsComplete.value) {
           await OpenersBottomSheet.show(
             isSubmitting: isStartingInnings,
             onSubmit: (strikerName, nonStrikerName, bowlerName) => startInnings(
@@ -467,6 +528,24 @@ class ScoreBallController extends GetxController {
     _rememberBowler(openingBowler);
     needsBowler.value = false;
     excludedBowler.value = null;
+
+    // Unlocks the console for innings 2: this call is re-reachable exactly
+    // when the previous innings just ended, which is the one case
+    // [isInningsComplete] is still true going in.
+    isInningsComplete.value = false;
+
+    // Resets the score display for innings 2. Without this, the totals stay
+    // exactly what the previous innings ended on — score:update is the only
+    // thing that ever writes them, and nothing re-emits one just because
+    // start-innings was called, so the console would show the finished
+    // innings' final score under a "Striker: ..." banner for a brand new one
+    // until the first ball landed. "All zero" is not an assumption about this
+    // response — it is the one thing InningsTotals is guaranteed to be here.
+    final totals = response.result.data?.inningsTotals;
+    totalRuns.value = totals?.totalRuns ?? 0;
+    wickets.value = totals?.wickets ?? 0;
+    overs.value = '0.0';
+    extrasTotal.value = totals?.extras.total ?? 0;
 
     // Deliberately no success snackbar: `Get.showSnackbar` pushes a route, so
     // one here would sit on top of the sheet and swallow its `Get.back()`,
@@ -782,6 +861,12 @@ class ScoreBallController extends GetxController {
       isInningsComplete.value = ball.inningsComplete;
       lastWicket.value = ball.wicket;
 
+      // Primary trigger — see [_navigateToResult]. The over-completion
+      // handling below still runs when a ball both ends an over and ends the
+      // match; it is inert in that case, since the server never asks for a
+      // bowler on the ball that ends the innings.
+      if (ball.matchComplete) _navigateToResult();
+
       // `nextBowler` non-null IS the instruction to prompt — the server has
       // already folded in whether the innings ended on this ball, so there is
       // nothing to recombine here.
@@ -806,6 +891,7 @@ class ScoreBallController extends GetxController {
   void onClose() {
     unawaited(_subscription?.cancel());
     unawaited(_overCompleteSubscription?.cancel());
+    unawaited(_matchCompleteSubscription?.cancel());
     super.onClose();
   }
 }

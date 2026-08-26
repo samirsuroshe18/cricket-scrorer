@@ -16,8 +16,10 @@ import 'package:cricket_scorer/features/scoring/data/models/response/select_bowl
 import 'package:cricket_scorer/features/scoring/data/models/response/start_innings_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/request/undo_ball_req.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/undo_ball_res.dart';
+import 'package:cricket_scorer/features/scoring/data/models/response/match_complete_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/public_match_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/score_undo_res.dart';
+import 'package:cricket_scorer/features/scoring/data/models/response/scorecard_res.dart';
 import 'package:cricket_scorer/features/scoring/domain/repositories/match_repository.dart';
 
 class MatchRepositoryImpl extends MatchRepository {
@@ -173,5 +175,32 @@ class MatchRepositoryImpl extends MatchRepository {
     } else {
       return Either.fallback(response.fallback);
     }
+  }
+
+  @override
+  Future<Either<CricketResponse<ScorecardRes>, CricketFailure>> getScorecard({
+    required String matchId,
+  }) async {
+    Either<ApiResponseModel, CricketFailure> response = await matchApiService
+        .getScorecard(matchId: matchId);
+    if (response.isResult) {
+      return Either.result(
+        CricketResponse(
+          data: ScorecardRes.fromJson(
+            response.result.data as Map<String, dynamic>,
+          ),
+          message: response.result.message,
+        ),
+      );
+    } else {
+      return Either.fallback(response.fallback);
+    }
+  }
+
+  @override
+  Stream<Either<MatchCompleteRes, CricketFailure>> watchMatchComplete({
+    required String matchId,
+  }) {
+    return matchSocketService.watchMatchComplete(matchId);
   }
 }
