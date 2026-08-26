@@ -33,6 +33,8 @@ class StrikeBanner extends StatelessWidget {
                 Expanded(
                   child: _BatsmanTile(
                     name: current!.strikerName!,
+                    runs: current.strikerRuns,
+                    balls: current.strikerBalls,
                     label: TranslationKeys.striker.tr,
                     isOnStrike: true,
                   ),
@@ -40,6 +42,8 @@ class StrikeBanner extends StatelessWidget {
                 Expanded(
                   child: _BatsmanTile(
                     name: current.nonStrikerName ?? '-',
+                    runs: current.nonStrikerRuns,
+                    balls: current.nonStrikerBalls,
                     label: TranslationKeys.nonStriker.tr,
                     isOnStrike: false,
                   ),
@@ -68,11 +72,15 @@ class _EmptyPrompt extends StatelessWidget {
 class _BatsmanTile extends StatelessWidget {
   const _BatsmanTile({
     required this.name,
+    required this.runs,
+    required this.balls,
     required this.label,
     required this.isOnStrike,
   });
 
   final String name;
+  final int runs;
+  final int balls;
   final String label;
   final bool isOnStrike;
 
@@ -111,6 +119,10 @@ class _BatsmanTile extends StatelessWidget {
                   fontWeight: FontWeight.w700,
                 )
               : context.textTheme.bodyMedium?.copyWith(color: muted),
+        ),
+        CricketText(
+          text: '$runs ($balls)',
+          style: context.textTheme.bodySmall?.copyWith(color: muted),
         ),
       ],
     );

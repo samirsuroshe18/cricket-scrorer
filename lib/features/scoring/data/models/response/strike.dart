@@ -15,8 +15,18 @@ part 'strike.g.dart';
 class Strike {
   final String? strikerId;
   final String? strikerName;
+
+  /// This batsman's own runs and legal balls faced so far this innings —
+  /// aggregated server-side from the ball history, not tracked incrementally.
+  /// Zero for a batsman who has not yet faced a delivery, including one who
+  /// has just walked in after a wicket.
+  final int strikerRuns;
+  final int strikerBalls;
+
   final String? nonStrikerId;
   final String? nonStrikerName;
+  final int nonStrikerRuns;
+  final int nonStrikerBalls;
 
   /// True when the striker after the last ball is the non-striker from before
   /// it. Null when this state did not come from a delivery.
@@ -30,8 +40,12 @@ class Strike {
   Strike({
     this.strikerId,
     this.strikerName,
+    this.strikerRuns = 0,
+    this.strikerBalls = 0,
     this.nonStrikerId,
     this.nonStrikerName,
+    this.nonStrikerRuns = 0,
+    this.nonStrikerBalls = 0,
     this.rotated,
     this.rotationReason,
   });
