@@ -47,6 +47,9 @@ class ScoreUndoRes {
   final int totalRuns;
   final int wickets;
   final String overs;
+
+  /// Null in innings 1. See [ScoreBallRes.target].
+  final int? target;
   final ExtrasBreakdown extras;
   final Strike? strike;
   final BowlerState? bowler;
@@ -66,6 +69,7 @@ class ScoreUndoRes {
     required this.totalRuns,
     required this.wickets,
     required this.overs,
+    this.target,
     required this.extras,
     this.strike,
     this.bowler,

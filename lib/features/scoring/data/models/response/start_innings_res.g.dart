@@ -17,6 +17,7 @@ StartInningsRes _$StartInningsResFromJson(Map<String, dynamic> json) =>
       bowler: json['bowler'] == null
           ? null
           : Bowler.fromJson(json['bowler'] as Map<String, dynamic>),
+      target: (json['target'] as num?)?.toInt(),
       inningsTotals: InningsTotals.fromJson(
         json['inningsTotals'] as Map<String, dynamic>,
       ),
@@ -31,5 +32,6 @@ Map<String, dynamic> _$StartInningsResToJson(StartInningsRes instance) =>
       'bowlingTeam': instance.bowlingTeam,
       'strike': instance.strike.toJson(),
       'bowler': instance.bowler?.toJson(),
+      'target': instance.target,
       'inningsTotals': instance.inningsTotals.toJson(),
     };

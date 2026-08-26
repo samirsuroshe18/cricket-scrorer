@@ -1,5 +1,5 @@
 class AppEnvironment {
-  static const devBaseUrl = 'http://10.74.161.153:9000/api';
+  static const devBaseUrl = 'http://10.162.227.67:9000/api';
 
   static const uatBaseUrl = 'https://uat-api.yourapp.com/api';
 

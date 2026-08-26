@@ -8,6 +8,7 @@ import 'package:cricket_scorer/core/global/widgets/custom_app_bar.dart';
 import 'package:cricket_scorer/core/translations/translation_keys.dart';
 import 'package:cricket_scorer/features/scoring/data/scoring_constants.dart';
 import 'package:cricket_scorer/features/scoring/presentation/controllers/score_ball_controller.dart';
+import 'package:cricket_scorer/features/scoring/presentation/widget/rate_stats_line.dart';
 import 'package:cricket_scorer/features/scoring/presentation/widget/strike_banner.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -134,6 +135,13 @@ class ScoreBallScreen extends GetView<ScoreBallController> {
                     text:
                         '${TranslationKeys.extras.tr}: ${controller.extrasTotal.value}',
                     style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                  8.h,
+                  RateStatsLine(
+                    currentRunRate: controller.currentRunRate.value,
+                    requiredRunRate: controller.requiredRunRate.value,
+                    partnershipRuns: controller.partnershipRuns.value,
+                    partnershipBalls: controller.partnershipBalls.value,
                   ),
                 ],
               ),

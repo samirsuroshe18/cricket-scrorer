@@ -52,6 +52,7 @@ UndoBallRes _$UndoBallResFromJson(Map<String, dynamic> json) => UndoBallRes(
   bowler: json['bowler'] == null
       ? null
       : BowlerState.fromJson(json['bowler'] as Map<String, dynamic>),
+  target: (json['target'] as num?)?.toInt(),
   inningsTotals: InningsTotals.fromJson(
     json['inningsTotals'] as Map<String, dynamic>,
   ),
@@ -72,6 +73,7 @@ Map<String, dynamic> _$UndoBallResToJson(UndoBallRes instance) =>
       'inningsReopened': instance.inningsReopened,
       'strike': instance.strike?.toJson(),
       'bowler': instance.bowler?.toJson(),
+      'target': instance.target,
       'inningsTotals': instance.inningsTotals.toJson(),
       'overs': instance.overs,
       'inningsComplete': instance.inningsComplete,

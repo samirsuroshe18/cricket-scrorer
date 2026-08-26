@@ -18,6 +18,7 @@ import 'package:cricket_scorer/features/scoring/data/models/response/undo_ball_r
 import 'package:cricket_scorer/features/scoring/data/models/response/wicket.dart';
 import 'package:cricket_scorer/features/scoring/data/scoring_constants.dart';
 import 'package:cricket_scorer/features/scoring/domain/repositories/match_repository.dart';
+import 'package:cricket_scorer/features/scoring/domain/run_rate.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/score_ball.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/select_bowler.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/start_innings.dart';
@@ -51,6 +52,50 @@ class ScoreBallController extends GetxController {
   final overs = '0.0'.obs;
   final extrasTotal = 0.obs;
   final isScoring = false.obs;
+
+  /// Null in innings 1 — nothing to chase yet. See [ScoreBallRes.target] on
+  /// the backend for why this is repeated on every payload rather than cached
+  /// from `start-innings` alone.
+  final target = Rxn<int>();
+
+  /// Runs per over so far this innings. Recomputed on every totals update;
+  /// never itself a source of truth.
+  final currentRunRate = 0.0.obs;
+
+  /// Runs per over needed the rest of the way. Null in innings 1, or once
+  /// there are no legal deliveries left to bowl.
+  final requiredRunRate = Rxn<double>();
+
+  /// The not-out pair's runs and legal balls faced together, since the last
+  /// wicket. See [PartnershipCheckpoint] for the resume-time limitation.
+  final partnershipRuns = 0.obs;
+  final partnershipBalls = 0.obs;
+
+  final _partnership = PartnershipCheckpoint();
+  bool _partnershipInitialized = false;
+
+  /// Legal deliveries bowled this innings. Mirrors [overs] as an integer for
+  /// rate math — kept alongside rather than parsed from [overs] every time a
+  /// payload already supplies it directly (`InningsTotals.legalBalls`).
+  int _legalBalls = 0;
+
+  /// Recomputes every rate/partnership observable from current state. Called
+  /// after anything that can move [totalRuns], [_legalBalls] or [target] —
+  /// cheap pure math, safe to call more often than strictly necessary.
+  void _recomputeRates() {
+    currentRunRate.value = computeCurrentRunRate(
+      totalRuns: totalRuns.value,
+      legalBalls: _legalBalls,
+    );
+    requiredRunRate.value = computeRequiredRunRate(
+      target: target.value,
+      totalRuns: totalRuns.value,
+      legalBallsBowled: _legalBalls,
+      totalOvers: match.totalOvers,
+    );
+    partnershipRuns.value = totalRuns.value - _partnership.runs;
+    partnershipBalls.value = _legalBalls - _partnership.legalBalls;
+  }
 
   /// True once the current innings has ended — the 10th wicket, the overs
   /// running out, or (innings 2) the target being chased down. The console
@@ -240,6 +285,33 @@ class ScoreBallController extends GetxController {
             wickets.value = event.result.wickets;
             overs.value = event.result.overs;
             extrasTotal.value = event.result.extras?.total ?? extrasTotal.value;
+            target.value = event.result.target;
+            _legalBalls = legalBallsFromOvers(event.result.overs);
+
+            // Gate on the same sequence [_applyStrike] uses, captured before
+            // it advances that watermark below: a wicket in a duplicate or
+            // stale broadcast must not push a second checkpoint for a
+            // dismissal already accounted for.
+            final incomingSeq = event.result.lastBall?.absoluteBallSeq;
+            final isNewBall = incomingSeq != null && incomingSeq > _lastAppliedSeq;
+
+            if (!_partnershipInitialized) {
+              // First payload this session — join ack or a fresh socket
+              // connect. Nothing before this point is recoverable, so the
+              // partnership starts counting from here. See
+              // [PartnershipCheckpoint]'s doc comment.
+              _partnership.start(
+                runs: event.result.totalRuns,
+                legalBalls: _legalBalls,
+              );
+              _partnershipInitialized = true;
+            } else if (isNewBall && event.result.lastBall?.wicket != null) {
+              _partnership.onWicket(
+                totalRunsAfter: event.result.totalRuns,
+                legalBallsAfter: _legalBalls,
+              );
+            }
+            _recomputeRates();
 
             // `match:state` (the join ack) carries no `lastBall`: it is the
             // server's current state rather than a delivery, so it always
@@ -546,6 +618,15 @@ class ScoreBallController extends GetxController {
     wickets.value = totals?.wickets ?? 0;
     overs.value = '0.0';
     extrasTotal.value = totals?.extras.total ?? 0;
+    target.value = response.result.data?.target;
+    _legalBalls = totals?.legalBalls ?? 0;
+
+    // A fresh partnership for the new pair. Also marks the checkpoint
+    // initialized so the socket listener's next arrival — which reports the
+    // same fresh totals — does not re-run its own first-payload branch.
+    _partnership.start(runs: totalRuns.value, legalBalls: _legalBalls);
+    _partnershipInitialized = true;
+    _recomputeRates();
 
     // Deliberately no success snackbar: `Get.showSnackbar` pushes a route, so
     // one here would sit on top of the sheet and swallow its `Get.back()`,
@@ -748,7 +829,14 @@ class ScoreBallController extends GetxController {
     wickets.value = state.inningsTotals.wickets;
     extrasTotal.value = state.inningsTotals.extras.total;
     overs.value = state.overs;
+    target.value = state.target;
+    _legalBalls = state.inningsTotals.legalBalls;
     isInningsComplete.value = state.inningsComplete;
+
+    // Exact, unlike the wickets-delta the spectator has to fall back on: this
+    // response carries the undone ball's own wicket field directly.
+    if (undone?.wicket != null) _partnership.onUndoneWicket();
+    _recomputeRates();
 
     // No sequence: this is a state rather than a delivery, so it always applies
     // — and the rewind above is what makes the next real ball apply too.

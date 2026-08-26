@@ -52,6 +52,11 @@ class LiveScoreRes {
   final int wickets;
   final String overs;
 
+  /// Null in innings 1. Carried on every payload this model parses, not just
+  /// once at start-innings, so required run rate stays computable across a
+  /// reconnect — see docs/api.md's note on `target`.
+  final int? target;
+
   /// Innings running extras totals — drives the scorecard's Extras line.
   final ExtrasBreakdown? extras;
 
@@ -77,6 +82,7 @@ class LiveScoreRes {
     required this.totalRuns,
     required this.wickets,
     required this.overs,
+    this.target,
     this.extras,
     this.strike,
     this.bowler,

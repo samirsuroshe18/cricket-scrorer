@@ -75,6 +75,10 @@ class PublicInningsState {
   final int totalRuns;
   final int wickets;
   final String overs;
+
+  /// Null in innings 1 — see [ScoreBallRes.target] for why this rides on the
+  /// live state rather than a one-off fetch.
+  final int? target;
   final ExtrasBreakdown extras;
   final Strike? strike;
   final BowlerState? bowler;
@@ -85,6 +89,7 @@ class PublicInningsState {
     required this.totalRuns,
     required this.wickets,
     required this.overs,
+    this.target,
     required this.extras,
     this.strike,
     this.bowler,

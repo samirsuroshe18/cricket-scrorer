@@ -103,6 +103,7 @@ ScoreBallRes _$ScoreBallResFromJson(Map<String, dynamic> json) => ScoreBallRes(
       strike: json['strike'] == null
           ? null
           : Strike.fromJson(json['strike'] as Map<String, dynamic>),
+      target: (json['target'] as num?)?.toInt(),
       inningsTotals:
           InningsTotals.fromJson(json['inningsTotals'] as Map<String, dynamic>),
     );
@@ -127,5 +128,6 @@ Map<String, dynamic> _$ScoreBallResToJson(ScoreBallRes instance) =>
       'matchComplete': instance.matchComplete,
       'wicket': instance.wicket?.toJson(),
       'strike': instance.strike?.toJson(),
+      'target': instance.target,
       'inningsTotals': instance.inningsTotals.toJson(),
     };

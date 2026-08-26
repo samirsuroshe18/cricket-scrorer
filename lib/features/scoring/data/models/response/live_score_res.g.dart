@@ -39,6 +39,7 @@ LiveScoreRes _$LiveScoreResFromJson(Map<String, dynamic> json) => LiveScoreRes(
   totalRuns: (json['totalRuns'] as num).toInt(),
   wickets: (json['wickets'] as num).toInt(),
   overs: json['overs'] as String,
+  target: (json['target'] as num?)?.toInt(),
   extras: json['extras'] == null
       ? null
       : ExtrasBreakdown.fromJson(json['extras'] as Map<String, dynamic>),
@@ -61,6 +62,7 @@ Map<String, dynamic> _$LiveScoreResToJson(LiveScoreRes instance) =>
       'totalRuns': instance.totalRuns,
       'wickets': instance.wickets,
       'overs': instance.overs,
+      'target': instance.target,
       'extras': instance.extras?.toJson(),
       'strike': instance.strike?.toJson(),
       'bowler': instance.bowler?.toJson(),

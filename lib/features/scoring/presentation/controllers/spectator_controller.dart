@@ -11,6 +11,7 @@ import 'package:cricket_scorer/features/scoring/data/models/response/public_matc
 import 'package:cricket_scorer/features/scoring/data/models/response/score_undo_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/strike.dart';
 import 'package:cricket_scorer/features/scoring/domain/repositories/match_repository.dart';
+import 'package:cricket_scorer/features/scoring/domain/run_rate.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/get_public_match.dart';
 import 'package:get/get.dart';
 
@@ -45,6 +46,40 @@ class SpectatorController extends GetxController {
   final wickets = 0.obs;
   final overs = '0.0'.obs;
   final extrasTotal = 0.obs;
+
+  /// Null in innings 1. See [ScoreBallRes.target] on the backend.
+  final target = Rxn<int>();
+
+  final currentRunRate = 0.0.obs;
+
+  /// Null in innings 1, or once no legal deliveries remain.
+  final requiredRunRate = Rxn<double>();
+
+  /// The not-out pair's runs and legal balls faced together since the last
+  /// wicket. See [PartnershipCheckpoint] for the resume/join-time limitation
+  /// — a spectator opening the link mid-partnership has the same "since I
+  /// connected" caveat a reconnecting scorer does.
+  final partnershipRuns = 0.obs;
+  final partnershipBalls = 0.obs;
+
+  final _partnership = PartnershipCheckpoint();
+  bool _partnershipInitialized = false;
+  int _legalBalls = 0;
+
+  void _recomputeRates() {
+    currentRunRate.value = computeCurrentRunRate(
+      totalRuns: totalRuns.value,
+      legalBalls: _legalBalls,
+    );
+    requiredRunRate.value = computeRequiredRunRate(
+      target: target.value,
+      totalRuns: totalRuns.value,
+      legalBallsBowled: _legalBalls,
+      totalOvers: matchInfo.value?.totalOvers ?? 0,
+    );
+    partnershipRuns.value = totalRuns.value - _partnership.runs;
+    partnershipBalls.value = _legalBalls - _partnership.legalBalls;
+  }
 
   /// Who is on strike. Server-computed and server-reported only, exactly as
   /// on the scorer's console — see [Strike]'s own doc comment.
@@ -144,6 +179,16 @@ class SpectatorController extends GetxController {
     extrasTotal.value = innings.extras.total;
     strike.value = innings.strike;
     currentBowler.value = innings.bowler?.currentBowlerName;
+
+    target.value = innings.target;
+    _legalBalls = legalBallsFromOvers(innings.overs);
+    // A partnership already in progress at fetch time starts counting from
+    // here — see [PartnershipCheckpoint]. The live socket join ack below
+    // reports the same totals moments later and leaves this alone, since
+    // [_partnershipInitialized] is now true.
+    _partnership.start(runs: innings.totalRuns, legalBalls: _legalBalls);
+    _partnershipInitialized = true;
+    _recomputeRates();
   }
 
   /// Joins the room by `matchId`, not by [_code]. The REST fetch above is
@@ -165,6 +210,26 @@ class SpectatorController extends GetxController {
       wickets.value = live.wickets;
       overs.value = live.overs;
       extrasTotal.value = live.extras?.total ?? extrasTotal.value;
+      target.value = live.target;
+      _legalBalls = legalBallsFromOvers(live.overs);
+
+      final incomingSeq = live.lastBall?.absoluteBallSeq;
+      final isNewBall = incomingSeq != null && incomingSeq > _lastAppliedSeq;
+
+      if (!_partnershipInitialized) {
+        // The initial REST fetch had no innings yet (a spectator who opened
+        // the link before start-innings) — this join ack is the first state
+        // this controller has ever seen.
+        _partnership.start(runs: live.totalRuns, legalBalls: _legalBalls);
+        _partnershipInitialized = true;
+      } else if (isNewBall && live.lastBall?.wicket != null) {
+        _partnership.onWicket(
+          totalRunsAfter: live.totalRuns,
+          legalBallsAfter: _legalBalls,
+        );
+      }
+      _recomputeRates();
+
       _applyStrike(live.strike, seq: live.lastBall?.absoluteBallSeq);
 
       // Only present on `match:state`, never on `score:update` — see the
@@ -184,10 +249,22 @@ class SpectatorController extends GetxController {
       if (!event.isResult) return;
 
       final undo = event.result;
+      // Captured before [wickets] is overwritten below — the only way to
+      // tell whether the undone ball was a dismissal, since `undoneBall`
+      // carries no `wicket` field on this event (see docs/api.md's note on
+      // `score:undo`). The scorer's own console doesn't need this: its REST
+      // ack has the exact field.
+      final wicketsBeforeUndo = wickets.value;
+
       totalRuns.value = undo.totalRuns;
       wickets.value = undo.wickets;
       overs.value = undo.overs;
       extrasTotal.value = undo.extras.total;
+      target.value = undo.target;
+      _legalBalls = legalBallsFromOvers(undo.overs);
+
+      if (undo.wickets < wicketsBeforeUndo) _partnership.onUndoneWicket();
+      _recomputeRates();
 
       final undoneSeq = undo.undoneBall?.absoluteBallSeq;
       if (undoneSeq != null) {

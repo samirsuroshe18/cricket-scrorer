@@ -92,6 +92,9 @@ class UndoBallRes {
   /// bowler, so the snapshot it restored from always had one.
   final BowlerState? bowler;
 
+  /// Null in innings 1. See [ScoreBallRes.target].
+  final int? target;
+
   final InningsTotals inningsTotals;
 
   /// Formatted `<completedOvers>.<legalBallsInCurrentOver>`.
@@ -115,6 +118,7 @@ class UndoBallRes {
     this.inningsReopened = false,
     this.strike,
     this.bowler,
+    this.target,
     required this.inningsTotals,
     required this.overs,
     this.inningsComplete = false,

@@ -154,6 +154,11 @@ class ScoreBallRes {
   /// client-side.
   final Strike? strike;
 
+  /// Null in innings 1. Repeated on every delivery, not just `start-innings`'s
+  /// one response, so a console that never cached that first call still has
+  /// what it needs for required run rate.
+  final int? target;
+
   final InningsTotals inningsTotals;
 
   ScoreBallRes({
@@ -175,6 +180,7 @@ class ScoreBallRes {
     this.matchComplete = false,
     this.wicket,
     this.strike,
+    this.target,
     required this.inningsTotals,
   });
 

@@ -29,6 +29,7 @@ ScoreUndoRes _$ScoreUndoResFromJson(Map<String, dynamic> json) => ScoreUndoRes(
   totalRuns: (json['totalRuns'] as num).toInt(),
   wickets: (json['wickets'] as num).toInt(),
   overs: json['overs'] as String,
+  target: (json['target'] as num?)?.toInt(),
   extras: ExtrasBreakdown.fromJson(json['extras'] as Map<String, dynamic>),
   strike: json['strike'] == null
       ? null
@@ -51,6 +52,7 @@ Map<String, dynamic> _$ScoreUndoResToJson(ScoreUndoRes instance) =>
       'totalRuns': instance.totalRuns,
       'wickets': instance.wickets,
       'overs': instance.overs,
+      'target': instance.target,
       'extras': instance.extras.toJson(),
       'strike': instance.strike?.toJson(),
       'bowler': instance.bowler?.toJson(),

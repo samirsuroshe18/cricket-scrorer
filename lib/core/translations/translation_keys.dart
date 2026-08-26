@@ -123,6 +123,11 @@ class TranslationKeys {
   static const String bye = 'bye';
   static const String legBye = 'leg_bye';
 
+  /// Rate tracking
+  static const String currentRunRateShort = 'current_run_rate_short';
+  static const String requiredRunRateShort = 'required_run_rate_short';
+  static const String partnership = 'partnership';
+
   /// Batsmen & strike
   static const String striker = 'striker';
   static const String nonStriker = 'non_striker';
