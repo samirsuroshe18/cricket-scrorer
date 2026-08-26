@@ -19,9 +19,12 @@ Map<String, dynamic> _$TeamRefToJson(TeamRef instance) => <String, dynamic>{
 CreateMatchRes _$CreateMatchResFromJson(Map<String, dynamic> json) =>
     CreateMatchRes(
       matchId: json['matchId'] as String,
+      joinCode: json['joinCode'] as String?,
       teamA: TeamRef.fromJson(json['teamA'] as Map<String, dynamic>),
       teamB: TeamRef.fromJson(json['teamB'] as Map<String, dynamic>),
       totalOvers: (json['totalOvers'] as num).toInt(),
+      tossWinner: json['tossWinner'] as String?,
+      tossDecision: json['tossDecision'] as String?,
       status: json['status'] as String,
       syncStatus: json['syncStatus'] as String,
       createdAt: json['createdAt'] as String,
@@ -30,9 +33,12 @@ CreateMatchRes _$CreateMatchResFromJson(Map<String, dynamic> json) =>
 Map<String, dynamic> _$CreateMatchResToJson(CreateMatchRes instance) =>
     <String, dynamic>{
       'matchId': instance.matchId,
+      'joinCode': instance.joinCode,
       'teamA': instance.teamA.toJson(),
       'teamB': instance.teamB.toJson(),
       'totalOvers': instance.totalOvers,
+      'tossWinner': instance.tossWinner,
+      'tossDecision': instance.tossDecision,
       'status': instance.status,
       'syncStatus': instance.syncStatus,
       'createdAt': instance.createdAt,

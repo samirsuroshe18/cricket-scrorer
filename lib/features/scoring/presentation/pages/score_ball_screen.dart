@@ -2,14 +2,19 @@ import 'dart:async';
 
 import 'package:cricket_scorer/core/extensions/space_extension.dart';
 import 'package:cricket_scorer/core/extensions/theme_x.dart';
+import 'package:cricket_scorer/core/global/widgets/snackbars/cricket_snackbar.dart';
 import 'package:cricket_scorer/core/global/widgets/cricket_text.dart';
 import 'package:cricket_scorer/core/global/widgets/custom_app_bar.dart';
 import 'package:cricket_scorer/core/translations/translation_keys.dart';
 import 'package:cricket_scorer/features/scoring/data/scoring_constants.dart';
 import 'package:cricket_scorer/features/scoring/presentation/controllers/score_ball_controller.dart';
+import 'package:cricket_scorer/features/scoring/presentation/widget/rate_stats_line.dart';
 import 'package:cricket_scorer/features/scoring/presentation/widget/strike_banner.dart';
+import 'package:cricket_scorer/features/scoring/presentation/widget/toss_line.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// The bowler strip under the strike banner. A plain `StatelessWidget` with no
 /// controller of its own, per the private-presentational-sub-widget convention.
@@ -62,7 +67,45 @@ class ScoreBallScreen extends GetView<ScoreBallController> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: CustomAppBar(title: TranslationKeys.liveScore.tr),
+      appBar: CustomAppBar(
+        title: TranslationKeys.liveScore.tr,
+        // In the app bar rather than beside the run grid on purpose: undo
+        // destroys a delivery, and a control that sits a thumb's width from
+        // the 6 button is a control that gets tapped by accident during fast
+        // scoring. Reaching for it should take a moment.
+        actions: [
+          // Older matches (created before share codes existed) have no
+          // joinCode — hide the action rather than offer to copy null.
+          if (controller.match.joinCode != null)
+            IconButton(
+              tooltip: TranslationKeys.copyShareCode.tr,
+              onPressed: () {
+                Clipboard.setData(
+                  ClipboardData(text: controller.match.joinCode!),
+                );
+                CricketSnackbar.showSuccessMessage(
+                  TranslationKeys.codeCopied.tr,
+                );
+              },
+              icon: const Icon(Icons.share_outlined),
+            ),
+          Obx(
+            () => IconButton(
+              tooltip: TranslationKeys.undoLastBall.tr,
+              onPressed: controller.canUndo
+                  ? () => unawaited(controller.undoLastBall())
+                  : null,
+              icon: controller.isUndoing.value
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(LucideIcons.undo2),
+            ),
+          ),
+        ],
+      ),
       body: Padding(
         padding: 24.p,
         child: Column(
@@ -72,6 +115,14 @@ class ScoreBallScreen extends GetView<ScoreBallController> {
                   '${controller.match.teamA.name} vs ${controller.match.teamB.name}',
               style: Theme.of(context).textTheme.titleMedium,
               textAlign: TextAlign.center,
+            ),
+            4.h,
+            TossLine(
+              tossWinner: controller.match.tossWinner,
+              tossDecision: controller.match.tossDecision,
+              nameFor: (sideLabel) => sideLabel == 'teamA'
+                  ? controller.match.teamA.name
+                  : controller.match.teamB.name,
             ),
             24.h,
             Obx(
@@ -93,6 +144,13 @@ class ScoreBallScreen extends GetView<ScoreBallController> {
                     text:
                         '${TranslationKeys.extras.tr}: ${controller.extrasTotal.value}',
                     style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                  8.h,
+                  RateStatsLine(
+                    currentRunRate: controller.currentRunRate.value,
+                    requiredRunRate: controller.requiredRunRate.value,
+                    partnershipRuns: controller.partnershipRuns.value,
+                    partnershipBalls: controller.partnershipBalls.value,
                   ),
                 ],
               ),

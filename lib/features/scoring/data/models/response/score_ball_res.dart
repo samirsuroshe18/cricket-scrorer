@@ -140,12 +140,24 @@ class ScoreBallRes {
   /// last over. The server rejects further deliveries either way.
   final bool inningsComplete;
 
+  /// [inningsComplete] narrowed to "and it was innings 2" — the match ending
+  /// has no separate detector. The primary trigger for navigating to the
+  /// result screen; `match:complete` on the socket is the recovery path for
+  /// when this ack is lost on patchy signal, same relationship as
+  /// [overComplete]/`over:complete`.
+  final bool matchComplete;
+
   /// The dismissal, or null on an ordinary delivery.
   final Wicket? wicket;
 
   /// Who is on strike *after* this delivery. Server-computed; never derived
   /// client-side.
   final Strike? strike;
+
+  /// Null in innings 1. Repeated on every delivery, not just `start-innings`'s
+  /// one response, so a console that never cached that first call still has
+  /// what it needs for required run rate.
+  final int? target;
 
   final InningsTotals inningsTotals;
 
@@ -165,8 +177,10 @@ class ScoreBallRes {
     this.over,
     this.nextBowler,
     this.inningsComplete = false,
+    this.matchComplete = false,
     this.wicket,
     this.strike,
+    this.target,
     required this.inningsTotals,
   });
 

@@ -22,6 +22,11 @@ class StartInningsRes {
   /// Who bowls over 1.
   final Bowler? bowler;
 
+  /// Null for innings 1 — nothing to chase yet. One more than innings 1's
+  /// total for innings 2. See [ScoreBallRes.target] for why this is not the
+  /// only place it arrives.
+  final int? target;
+
   /// All zero on a fresh innings; echoed so a replaced-openers call returns the
   /// same shape as the first call.
   final InningsTotals inningsTotals;
@@ -34,6 +39,7 @@ class StartInningsRes {
     required this.bowlingTeam,
     required this.strike,
     this.bowler,
+    this.target,
     required this.inningsTotals,
   });
 

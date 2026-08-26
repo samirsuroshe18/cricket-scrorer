@@ -10,6 +10,7 @@ import 'package:cricket_scorer/core/global/widgets/snackbars/cricket_snackbar.da
 import 'package:cricket_scorer/core/network/models/cricket_response.dart';
 import 'package:cricket_scorer/core/services/language_service.dart';
 import 'package:cricket_scorer/core/services/shared_preference_service.dart';
+import 'package:cricket_scorer/core/utils/pending_deep_link.dart';
 import 'package:cricket_scorer/core/utils/either_util.dart';
 import 'package:cricket_scorer/features/auth/data/models/user.dart';
 import 'package:cricket_scorer/features/auth/domain/usecases/get_user.dart';
@@ -42,11 +43,24 @@ class SplashController extends GetxController
     });
   }
 
+  /// The share code from a `/spectate/<code>` cold launch, or null for an
+  /// ordinary launch. Resolved once, in [onReady], before [_apiResponseFuture]
+  /// is even assigned — a spectator link must not fire `get-current-user` at
+  /// all, not merely skip acting on its result.
+  String? _spectatorCode;
+
   @override
   void onReady() {
     super.onReady();
-    _apiResponseFuture = getUserUseCase();
-    _navigate();
+    unawaited(_resolveAndNavigate());
+  }
+
+  Future<void> _resolveAndNavigate() async {
+    _spectatorCode = await PendingDeepLink.readSpectatorCode();
+    if (_spectatorCode == null) {
+      _apiResponseFuture = getUserUseCase();
+    }
+    unawaited(_navigate());
   }
 
   /// Called from the view once Lottie composition loads
@@ -73,6 +87,17 @@ class SplashController extends GetxController
       getVersionUseCase: getVersionUseCase,
       getLanguageUseCase: getLanguageUseCase,
     );
+
+    final code = _spectatorCode;
+    if (code != null) {
+      // No user check, no onboarding check, no profile check — a spectator
+      // link bypasses every branch below and every branch is auth-shaped.
+      await _animationCompleter.future;
+      unawaited(
+        Get.offAllNamed(AppRoutes.spectatorPath(code)),
+      );
+      return;
+    }
 
     final results = await Future.wait([
       _animationCompleter.future,

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cricket_scorer/core/constants/assets_util.dart';
 import 'package:cricket_scorer/core/extensions/space_extension.dart';
 import 'package:cricket_scorer/core/extensions/theme_x.dart';
@@ -11,6 +13,7 @@ import 'package:cricket_scorer/core/global/widgets/language_picker_button.dart';
 import 'package:cricket_scorer/core/global/widgets/theme_picker_button.dart';
 import 'package:cricket_scorer/core/translations/translation_keys.dart';
 import 'package:cricket_scorer/features/auth/presentation/controllers/login_controller.dart';
+import 'package:cricket_scorer/features/scoring/presentation/widget/watch_match_bottom_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -138,6 +141,13 @@ class LoginScreen extends GetView<LoginController> {
                     ),
                   ),
                 ],
+              ),
+
+              20.h,
+              TextButton.icon(
+                onPressed: () => unawaited(WatchMatchBottomSheet.show()),
+                icon: const Icon(Icons.sports_cricket_outlined),
+                label: CricketText(text: TranslationKeys.watchLiveMatch.tr),
               ),
             ],
           ),

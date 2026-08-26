@@ -22,6 +22,26 @@ class CreateMatchController extends GetxController {
   final teamBController = TextEditingController();
   final oversController = TextEditingController();
 
+  /// `teamA` / `teamB` / null (toss skipped — [CoinFlip] never tapped).
+  /// Set only from [CoinFlip.onResult]; never tapped directly, unlike
+  /// [tossDecision].
+  final tossWinner = Rxn<String>();
+
+  /// `bat` / `bowl` / null.
+  final tossDecision = Rxn<String>();
+
+  /// Called back from [CoinFlip] once a flip lands. A re-flip clears
+  /// [tossDecision] too — a decision picked for the previous winner has
+  /// nothing to do with whoever the coin names this time.
+  void recordTossWinner(String value) {
+    tossWinner.value = value;
+    tossDecision.value = null;
+  }
+
+  void toggleTossDecision(String value) {
+    tossDecision.value = tossDecision.value == value ? null : value;
+  }
+
   final formKey = GlobalKey<FormState>();
 
   String? validateTeamName(String? value) {
@@ -52,6 +72,14 @@ class CreateMatchController extends GetxController {
       return;
     }
 
+    // Both or neither, mirroring the server's own rule — caught here so a
+    // half-filled toss never reaches the request only to bounce off
+    // INVALID_TOSS_RESULT.
+    if ((tossWinner.value == null) != (tossDecision.value == null)) {
+      CricketSnackbar.showAlertMessage(TranslationKeys.tossIncomplete.tr);
+      return;
+    }
+
     CricketLoaderDialog.show();
 
     Either<CricketResponse<CreateMatchRes>, CricketFailure> response =
@@ -60,6 +88,8 @@ class CreateMatchController extends GetxController {
             teamAName: teamAName,
             teamBName: teamBName,
             totalOvers: int.parse(oversController.text.trim()),
+            tossWinner: tossWinner.value,
+            tossDecision: tossDecision.value,
           ),
         );
 

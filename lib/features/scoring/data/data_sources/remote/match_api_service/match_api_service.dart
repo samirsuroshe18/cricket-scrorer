@@ -7,6 +7,7 @@ import 'package:cricket_scorer/features/scoring/data/models/request/create_match
 import 'package:cricket_scorer/features/scoring/data/models/request/score_ball_req.dart';
 import 'package:cricket_scorer/features/scoring/data/models/request/select_bowler_req.dart';
 import 'package:cricket_scorer/features/scoring/data/models/request/start_innings_req.dart';
+import 'package:cricket_scorer/features/scoring/data/models/request/undo_ball_req.dart';
 
 class MatchApiService {
   final ApiClient apiClient;
@@ -51,5 +52,36 @@ class MatchApiService {
       endpoint: matchEndpoint.scoreBall(matchId),
       data: params?.toJson(),
     );
+  }
+
+  Future<Either<ApiResponseModel, CricketFailure>> undoBall({
+    required String matchId,
+    required UndoBallReq? params,
+  }) async {
+    return await apiClient.post(
+      endpoint: matchEndpoint.undoBall(matchId),
+      data: params?.toJson(),
+    );
+  }
+
+  /// verifyJwt, plus a createdBy ownership check server-side — this is the
+  /// scorer's own screen, not the spectator's, so unlike [getPublicMatch] the
+  /// token is expected to be attached.
+  Future<Either<ApiResponseModel, CricketFailure>> getScorecard({
+    required String matchId,
+  }) async {
+    return await apiClient.get(endpoint: matchEndpoint.scorecard(matchId));
+  }
+
+  /// No token is attached deliberately — not because one is stripped, but
+  /// because [ApiClient] only adds an `Authorization` header when
+  /// [SecureStorageService] actually holds one, and a spectator session
+  /// never signs in. Calling this from an authenticated session (e.g. the
+  /// scorer previewing their own share link) works identically; the server
+  /// route carries no `verifyJwt` either way.
+  Future<Either<ApiResponseModel, CricketFailure>> getPublicMatch({
+    required String code,
+  }) async {
+    return await apiClient.get(endpoint: matchEndpoint.publicMatch(code));
   }
 }

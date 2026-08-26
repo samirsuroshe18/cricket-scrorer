@@ -111,6 +111,21 @@ class TranslationKeys {
   static const String teamNameRequired = 'team_name_required';
   static const String invalidOvers = 'invalid_overs';
   static const String teamNamesMustDiffer = 'team_names_must_differ';
+
+  /// Toss (optional at match creation)
+  static const String tossOptional = 'toss_optional';
+  static const String teamA = 'team_a';
+  static const String teamB = 'team_b';
+  static const String tossWinner = 'toss_winner';
+  static const String tossDecision = 'toss_decision';
+  static const String bat = 'bat';
+  static const String bowl = 'bowl';
+  static const String tossIncomplete = 'toss_incomplete';
+  static const String wonTheToss = 'won_the_toss';
+  static const String electedTo = 'elected_to';
+  static const String tapToFlip = 'tap_to_flip';
+  static const String tapToReflip = 'tap_to_reflip';
+
   static const String liveScore = 'live_score';
   static const String selectRuns = 'select_runs';
   static const String wickets = 'wickets';
@@ -122,6 +137,11 @@ class TranslationKeys {
   static const String byeOrLegBye = 'bye_or_leg_bye';
   static const String bye = 'bye';
   static const String legBye = 'leg_bye';
+
+  /// Rate tracking
+  static const String currentRunRateShort = 'current_run_rate_short';
+  static const String requiredRunRateShort = 'required_run_rate_short';
+  static const String partnership = 'partnership';
 
   /// Batsmen & strike
   static const String striker = 'striker';
@@ -147,6 +167,22 @@ class TranslationKeys {
   static const String cannotBowlConsecutiveOvers =
       'cannot_bowl_consecutive_overs';
 
+  /// Undo
+  static const String undoLastBall = 'undo_last_ball';
+
+  /// Spectator
+  static const String watchLiveMatch = 'watch_live_match';
+  static const String enterMatchCodeDescription =
+      'enter_match_code_description';
+  static const String matchCode = 'match_code';
+  static const String enterMatchCode = 'enter_match_code';
+  static const String matchCodeRequired = 'match_code_required';
+  static const String invalidShareLink = 'invalid_share_link';
+  static const String waitingForPlayToBegin = 'waiting_for_play_to_begin';
+  static const String matchCompleted = 'match_completed';
+  static const String copyShareCode = 'copy_share_code';
+  static const String codeCopied = 'code_copied';
+
   /// Wickets
   static const String out = 'out';
   static const String howOut = 'how_out';
@@ -164,4 +200,29 @@ class TranslationKeys {
   static const String notPossibleOffNoBall = 'not_possible_off_no_ball';
   static const String notPossibleOffWide = 'not_possible_off_wide';
   static const String allOut = 'all_out';
+
+  /// Result screen
+  static const String matchResult = 'match_result';
+  static const String wonBy = 'won_by';
+  static const String matchTied = 'match_tied';
+
+  /// The natural-language word, for the result sentence — distinct from
+  /// [runsShort], the table-column abbreviation.
+  static const String runsWord = 'runs_word';
+  static const String battingFigures = 'batting_figures';
+  static const String bowlingFigures = 'bowling_figures';
+  static const String batter = 'batter';
+  static const String bowler = 'bowler';
+  static const String notOut = 'not_out';
+  static const String runsShort = 'runs_short';
+  static const String ballsShort = 'balls_short';
+  static const String foursShort = 'fours_short';
+  static const String sixesShort = 'sixes_short';
+  static const String strikeRateShort = 'strike_rate_short';
+  static const String oversShort = 'overs_short';
+  static const String maidensShort = 'maidens_short';
+  static const String wicketsShort = 'wickets_short';
+  static const String economyShort = 'economy_short';
+  static const String widesShort = 'wides_short';
+  static const String noBallsShort = 'no_balls_short';
 }

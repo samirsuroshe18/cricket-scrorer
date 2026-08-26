@@ -11,6 +11,8 @@ CreateMatchReq _$CreateMatchReqFromJson(Map<String, dynamic> json) =>
       teamAName: json['teamAName'] as String,
       teamBName: json['teamBName'] as String,
       totalOvers: (json['totalOvers'] as num).toInt(),
+      tossWinner: json['tossWinner'] as String?,
+      tossDecision: json['tossDecision'] as String?,
     );
 
 Map<String, dynamic> _$CreateMatchReqToJson(CreateMatchReq instance) =>
@@ -18,4 +20,6 @@ Map<String, dynamic> _$CreateMatchReqToJson(CreateMatchReq instance) =>
       'teamAName': instance.teamAName,
       'teamBName': instance.teamBName,
       'totalOvers': instance.totalOvers,
+      'tossWinner': instance.tossWinner,
+      'tossDecision': instance.tossDecision,
     };
