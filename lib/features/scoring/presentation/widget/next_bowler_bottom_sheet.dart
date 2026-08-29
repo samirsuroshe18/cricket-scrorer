@@ -139,8 +139,11 @@ class _NextBowlerBottomSheetState extends State<NextBowlerBottomSheet> {
       return;
     }
 
-    if (await widget.onSubmit(name)) {
-      Get.back<void>();
+    // Navigator.pop rather than Get.back() — see _undo()'s comment below for
+    // why: GetX's `back()` closes an open snackbar instead of this sheet
+    // whenever one happens to be showing.
+    if (await widget.onSubmit(name) && mounted) {
+      Navigator.of(context).pop();
     }
   }
 
@@ -157,8 +160,16 @@ class _NextBowlerBottomSheetState extends State<NextBowlerBottomSheet> {
   /// the bowler the over already had, so nobody is owed and this sheet has
   /// nothing left to ask.
   Future<void> _undo() async {
-    if (await widget.onUndo()) {
-      Get.back<void>();
+    // Navigator.pop, not Get.back(): GetX's `back()` special-cases an open
+    // snackbar and closes that instead of popping, unconditionally, before
+    // it ever looks at the navigator — see extension_navigation.dart's
+    // `back<T>()`. Offline, the "Live connection lost" snackbar
+    // (score_ball_controller.dart) can be showing at exactly this moment on
+    // every failed reconnect attempt, which made this sheet stay open with
+    // stale over/bowler state even though the undo had already succeeded.
+    // Popping this sheet's own route directly sidesteps that entirely.
+    if (await widget.onUndo() && mounted) {
+      Navigator.of(context).pop();
     }
   }
 

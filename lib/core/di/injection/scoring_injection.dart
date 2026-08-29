@@ -1,5 +1,8 @@
 import 'package:cricket_scorer/core/network/api_client_service.dart';
 import 'package:cricket_scorer/core/network/socket_client_service.dart';
+import 'package:cricket_scorer/features/scoring/data/data_sources/local/database/scoring_queue_dao.dart';
+import 'package:cricket_scorer/features/scoring/data/data_sources/local/database/scoring_queue_database.dart';
+import 'package:cricket_scorer/features/scoring/data/data_sources/local/offline_sync_service.dart';
 import 'package:cricket_scorer/features/scoring/data/data_sources/remote/match_api_service/match_api_service.dart';
 import 'package:cricket_scorer/features/scoring/data/data_sources/remote/match_socket_service/match_socket_service.dart';
 import 'package:cricket_scorer/features/scoring/data/match_endpoint.dart';
@@ -9,6 +12,7 @@ import 'package:cricket_scorer/features/scoring/domain/usecases/create_match.dar
 import 'package:cricket_scorer/features/scoring/domain/usecases/score_ball.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/select_bowler.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/start_innings.dart';
+import 'package:cricket_scorer/features/scoring/domain/usecases/sync_match.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/undo_ball.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/get_public_match.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/get_scorecard.dart';
@@ -75,6 +79,33 @@ class ScoringInjection {
 
     Get.lazyPut<GetScorecardUseCase>(
       () => GetScorecardUseCase(matchRepository: Get.find<MatchRepository>()),
+      fenix: true,
+    );
+
+    Get.lazyPut<SyncMatchUseCase>(
+      () => SyncMatchUseCase(matchRepository: Get.find<MatchRepository>()),
+      fenix: true,
+    );
+
+    // The offline queue's local database and the service that owns it —
+    // feature-scoped, not core: see this file's own convention and the
+    // client CLAUDE.md's "don't register feature dependencies in
+    // CoreInjection". No async init needed (Drift's LazyDatabase defers the
+    // real file I/O to first query on its own), so a plain lazyPut is
+    // enough — the queue/lifecycle-listener/connectivity-subscription only
+    // start existing once a match screen first resolves them.
+    Get.lazyPut<ScoringQueueDatabase>(() => ScoringQueueDatabase(), fenix: true);
+
+    Get.lazyPut<ScoringQueueDao>(
+      () => ScoringQueueDao(Get.find<ScoringQueueDatabase>()),
+      fenix: true,
+    );
+
+    Get.lazyPut<OfflineSyncService>(
+      () => OfflineSyncService(
+        dao: Get.find<ScoringQueueDao>(),
+        syncMatchUseCase: Get.find<SyncMatchUseCase>(),
+      ),
       fenix: true,
     );
   }

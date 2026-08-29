@@ -6,10 +6,12 @@ import 'package:cricket_scorer/core/global/widgets/snackbars/cricket_snackbar.da
 import 'package:cricket_scorer/core/global/widgets/cricket_text.dart';
 import 'package:cricket_scorer/core/global/widgets/custom_app_bar.dart';
 import 'package:cricket_scorer/core/translations/translation_keys.dart';
+import 'package:cricket_scorer/features/scoring/data/data_sources/local/offline_sync_service.dart';
 import 'package:cricket_scorer/features/scoring/data/scoring_constants.dart';
 import 'package:cricket_scorer/features/scoring/presentation/controllers/score_ball_controller.dart';
 import 'package:cricket_scorer/features/scoring/presentation/widget/rate_stats_line.dart';
 import 'package:cricket_scorer/features/scoring/presentation/widget/strike_banner.dart';
+import 'package:cricket_scorer/features/scoring/presentation/widget/sync_status_banner.dart';
 import 'package:cricket_scorer/features/scoring/presentation/widget/toss_line.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -106,10 +108,34 @@ class ScoreBallScreen extends GetView<ScoreBallController> {
           ),
         ],
       ),
-      body: Padding(
+      // Scrollable rather than a bare Column: the sync banner at the top
+      // adds height on demand (offline queue banner, conflict/blocked-on-rule
+      // states), and a fixed-height body would push the run/OUT buttons
+      // below the viewport instead of just scrolling to reach them.
+      body: SingleChildScrollView(
         padding: 24.p,
         child: Column(
           children: [
+            // Topmost, above even the team names — "is my data safe" should
+            // never require scrolling past the score to find out.
+            Obx(() {
+              final pendingCount = controller.offlineSyncService.pendingCount.value;
+              final phase = controller.offlineSyncService.phase.value;
+              if (pendingCount == 0 && phase == SyncPhase.idle) {
+                return const SizedBox.shrink();
+              }
+              return Column(
+                children: [
+                  SyncStatusBanner(
+                    pendingCount: pendingCount,
+                    phase: phase,
+                    lastError: controller.offlineSyncService.lastError.value,
+                    onRetry: () => unawaited(controller.handleSyncBannerTap()),
+                  ),
+                  12.h,
+                ],
+              );
+            }),
             CricketText(
               text:
                   '${controller.match.teamA.name} vs ${controller.match.teamB.name}',

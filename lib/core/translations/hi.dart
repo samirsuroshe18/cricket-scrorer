@@ -218,4 +218,22 @@ Map<String, String> hi = {
   TranslationKeys.economyShort: 'इकॉन',
   TranslationKeys.widesShort: 'वा',
   TranslationKeys.noBallsShort: 'नोबॉ',
+
+  TranslationKeys.syncConflict:
+      'यह मैच अपने आप सिंक नहीं हो सका — कुछ भी खोया नहीं है, लेकिन इस पर ध्यान देना ज़रूरी है',
+  TranslationKeys.syncConflictTitle: 'सिंक विरोध',
+  TranslationKeys.syncConflictMessage:
+      'आपके ऑफ़लाइन रहते समय किसी और ने इस मैच पर स्कोर किया। आपकी पेंडिंग गेंदें इस डिवाइस पर सुरक्षित हैं, लेकिन इन्हें अपने आप लागू नहीं किया जा सकता।',
+  TranslationKeys.discardAndReload: 'हटाएं और फिर से लोड करें',
+  TranslationKeys.reviewLater: 'बाद में देखें',
+  TranslationKeys.unsyncedDeliveries: 'अनसिंक',
+  TranslationKeys.syncBlockedOnRule:
+      'एक पेंडिंग गेंद लागू नहीं हो सकी। बाकी रुकी हुई हैं — इसे ऑनलाइन ठीक करें, फिर पुनः प्रयास करें।',
+  TranslationKeys.retrySync: 'सिंक पुनः प्रयास करें',
+  TranslationKeys.syncingNow: 'सिंक हो रहा है…',
+  TranslationKeys.waitingForConnectionTitle: 'पारी समाप्त',
+  TranslationKeys.waitingForConnectionMessage:
+      'यह पारी समाप्त हो चुकी है। अगली पारी शुरू करने के लिए कनेक्शन ज़रूरी है — जारी रखने के लिए फिर से जुड़ें।',
+  TranslationKeys.waitingForConnectionMessageFinal:
+      'यह पारी समाप्त हो चुकी है। परिणाम की पुष्टि के लिए कनेक्शन ज़रूरी है — जारी रखने के लिए फिर से जुड़ें।',
 };

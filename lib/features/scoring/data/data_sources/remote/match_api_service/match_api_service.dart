@@ -7,6 +7,7 @@ import 'package:cricket_scorer/features/scoring/data/models/request/create_match
 import 'package:cricket_scorer/features/scoring/data/models/request/score_ball_req.dart';
 import 'package:cricket_scorer/features/scoring/data/models/request/select_bowler_req.dart';
 import 'package:cricket_scorer/features/scoring/data/models/request/start_innings_req.dart';
+import 'package:cricket_scorer/features/scoring/data/models/request/sync_req.dart';
 import 'package:cricket_scorer/features/scoring/data/models/request/undo_ball_req.dart';
 
 class MatchApiService {
@@ -60,6 +61,16 @@ class MatchApiService {
   }) async {
     return await apiClient.post(
       endpoint: matchEndpoint.undoBall(matchId),
+      data: params?.toJson(),
+    );
+  }
+
+  Future<Either<ApiResponseModel, CricketFailure>> sync({
+    required String matchId,
+    required SyncReq? params,
+  }) async {
+    return await apiClient.post(
+      endpoint: matchEndpoint.sync(matchId),
       data: params?.toJson(),
     );
   }

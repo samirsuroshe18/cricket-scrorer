@@ -218,4 +218,22 @@ Map<String, String> mr = {
   TranslationKeys.economyShort: 'इकॉन',
   TranslationKeys.widesShort: 'वाइ',
   TranslationKeys.noBallsShort: 'नोबॉ',
+
+  TranslationKeys.syncConflict:
+      'हा सामना आपोआप सिंक होऊ शकला नाही — काहीही गमावले नाही, पण याकडे लक्ष देणे आवश्यक आहे',
+  TranslationKeys.syncConflictTitle: 'सिंक संघर्ष',
+  TranslationKeys.syncConflictMessage:
+      'तुम्ही ऑफलाइन असताना दुसऱ्या कोणीतरी या सामन्यावर स्कोअर केला. तुमचे प्रलंबित चेंडू या डिव्हाइसवर सुरक्षित आहेत, पण ते आपोआप लागू करता येणार नाहीत.',
+  TranslationKeys.discardAndReload: 'रद्द करा आणि पुन्हा लोड करा',
+  TranslationKeys.reviewLater: 'नंतर पहा',
+  TranslationKeys.unsyncedDeliveries: 'अनसिंक',
+  TranslationKeys.syncBlockedOnRule:
+      'एक प्रलंबित चेंडू लागू होऊ शकला नाही. उर्वरित थांबले आहेत — ते ऑनलाइन दुरुस्त करा, मग पुन्हा प्रयत्न करा.',
+  TranslationKeys.retrySync: 'सिंक पुन्हा प्रयत्न करा',
+  TranslationKeys.syncingNow: 'सिंक होत आहे…',
+  TranslationKeys.waitingForConnectionTitle: 'डाव संपला',
+  TranslationKeys.waitingForConnectionMessage:
+      'हा डाव संपला आहे. पुढचा डाव सुरू करण्यासाठी कनेक्शन आवश्यक आहे — सुरू ठेवण्यासाठी पुन्हा कनेक्ट व्हा.',
+  TranslationKeys.waitingForConnectionMessageFinal:
+      'हा डाव संपला आहे. निकालाची पुष्टी करण्यासाठी कनेक्शन आवश्यक आहे — सुरू ठेवण्यासाठी पुन्हा कनेक्ट व्हा.',
 };

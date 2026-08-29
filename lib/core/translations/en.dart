@@ -216,4 +216,22 @@ Map<String, String> en = {
   TranslationKeys.economyShort: 'Econ',
   TranslationKeys.widesShort: 'Wd',
   TranslationKeys.noBallsShort: 'NB',
+
+  TranslationKeys.syncConflict:
+      "This match couldn't be synced automatically — nothing was lost, but it needs your attention",
+  TranslationKeys.syncConflictTitle: 'Sync conflict',
+  TranslationKeys.syncConflictMessage:
+      "Someone else scored on this match while you were offline. Your queued deliveries are still saved on this device, but they can't be applied automatically.",
+  TranslationKeys.discardAndReload: 'Discard & reload',
+  TranslationKeys.reviewLater: 'Review later',
+  TranslationKeys.unsyncedDeliveries: 'unsynced',
+  TranslationKeys.syncBlockedOnRule:
+      "One queued delivery couldn't be applied. The rest is on hold — fix it online, then retry.",
+  TranslationKeys.retrySync: 'Retry sync',
+  TranslationKeys.syncingNow: 'Syncing…',
+  TranslationKeys.waitingForConnectionTitle: 'Innings complete',
+  TranslationKeys.waitingForConnectionMessage:
+      'This innings has ended. Starting the next one needs a connection — reconnect to continue.',
+  TranslationKeys.waitingForConnectionMessageFinal:
+      'This innings has ended. Confirming the result needs a connection — reconnect to continue.',
 };

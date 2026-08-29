@@ -225,4 +225,19 @@ class TranslationKeys {
   static const String economyShort = 'economy_short';
   static const String widesShort = 'wides_short';
   static const String noBallsShort = 'no_balls_short';
+
+  // Offline sync
+  static const String syncConflict = 'sync_conflict';
+  static const String syncConflictTitle = 'sync_conflict_title';
+  static const String syncConflictMessage = 'sync_conflict_message';
+  static const String discardAndReload = 'discard_and_reload';
+  static const String reviewLater = 'review_later';
+  static const String unsyncedDeliveries = 'unsynced_deliveries';
+  static const String syncBlockedOnRule = 'sync_blocked_on_rule';
+  static const String retrySync = 'retry_sync';
+  static const String syncingNow = 'syncing_now';
+  static const String waitingForConnectionTitle = 'waiting_for_connection_title';
+  static const String waitingForConnectionMessage = 'waiting_for_connection_message';
+  static const String waitingForConnectionMessageFinal =
+      'waiting_for_connection_message_final';
 }

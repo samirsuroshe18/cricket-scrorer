@@ -11,6 +11,8 @@ class MatchEndpoint {
 
   String undoBall(String matchId) => '/v1/match/$matchId/undo-ball';
 
+  String sync(String matchId) => '/v1/match/$matchId/sync';
+
   String scorecard(String matchId) => '/v1/match/$matchId/scorecard';
 
   String publicMatch(String code) => '/v1/match/public/$code';

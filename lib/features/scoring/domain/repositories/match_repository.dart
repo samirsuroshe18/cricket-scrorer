@@ -11,6 +11,8 @@ import 'package:cricket_scorer/features/scoring/data/models/response/over_comple
 import 'package:cricket_scorer/features/scoring/data/models/response/score_ball_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/select_bowler_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/start_innings_res.dart';
+import 'package:cricket_scorer/features/scoring/data/models/request/sync_req.dart';
+import 'package:cricket_scorer/features/scoring/data/models/response/sync_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/request/undo_ball_req.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/undo_ball_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/match_complete_res.dart';
@@ -63,6 +65,17 @@ abstract class MatchRepository {
   Future<Either<CricketResponse<UndoBallRes>, CricketFailure>> undoBall({
     required String matchId,
     required UndoBallReq? undoBallReq,
+  });
+
+  /// Applies an ordered batch of events queued while offline. See
+  /// docs/api.md's sync section — a lost response is safe to retry (its own
+  /// keys are recognised and skipped), an individually-bad event stops the
+  /// batch where it is (`failedAt`/`failedCode`) rather than rejecting
+  /// everything, and a genuine conflict — the server holding deliveries this
+  /// client never queued — refuses the batch whole via [CricketConflictFailure].
+  Future<Either<CricketResponse<SyncRes>, CricketFailure>> syncMatch({
+    required String matchId,
+    required SyncReq? syncReq,
   });
 
   /// Live score updates for [matchId], driven by the `match:state`/`score:update`

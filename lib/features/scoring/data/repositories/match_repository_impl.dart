@@ -14,6 +14,8 @@ import 'package:cricket_scorer/features/scoring/data/models/response/over_comple
 import 'package:cricket_scorer/features/scoring/data/models/response/score_ball_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/select_bowler_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/start_innings_res.dart';
+import 'package:cricket_scorer/features/scoring/data/models/request/sync_req.dart';
+import 'package:cricket_scorer/features/scoring/data/models/response/sync_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/request/undo_ball_req.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/undo_ball_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/match_complete_res.dart';
@@ -127,6 +129,27 @@ class MatchRepositoryImpl extends MatchRepository {
       return Either.result(
         CricketResponse(
           data: UndoBallRes.fromJson(
+            response.result.data as Map<String, dynamic>,
+          ),
+          message: response.result.message,
+        ),
+      );
+    } else {
+      return Either.fallback(response.fallback);
+    }
+  }
+
+  @override
+  Future<Either<CricketResponse<SyncRes>, CricketFailure>> syncMatch({
+    required String matchId,
+    required SyncReq? syncReq,
+  }) async {
+    Either<ApiResponseModel, CricketFailure> response = await matchApiService
+        .sync(matchId: matchId, params: syncReq);
+    if (response.isResult) {
+      return Either.result(
+        CricketResponse(
+          data: SyncRes.fromJson(
             response.result.data as Map<String, dynamic>,
           ),
           message: response.result.message,
