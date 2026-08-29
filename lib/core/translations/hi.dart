@@ -231,9 +231,6 @@ Map<String, String> hi = {
       'एक पेंडिंग गेंद लागू नहीं हो सकी। बाकी रुकी हुई हैं — इसे ऑनलाइन ठीक करें, फिर पुनः प्रयास करें।',
   TranslationKeys.retrySync: 'सिंक पुनः प्रयास करें',
   TranslationKeys.syncingNow: 'सिंक हो रहा है…',
-  TranslationKeys.waitingForConnectionTitle: 'पारी समाप्त',
-  TranslationKeys.waitingForConnectionMessage:
-      'यह पारी समाप्त हो चुकी है। अगली पारी शुरू करने के लिए कनेक्शन ज़रूरी है — जारी रखने के लिए फिर से जुड़ें।',
-  TranslationKeys.waitingForConnectionMessageFinal:
-      'यह पारी समाप्त हो चुकी है। परिणाम की पुष्टि के लिए कनेक्शन ज़रूरी है — जारी रखने के लिए फिर से जुड़ें।',
+  TranslationKeys.scorecardPendingSync:
+      'सिंक होने के बाद पूरा स्कोरकार्ड दिखाई देगा।',
 };

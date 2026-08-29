@@ -229,9 +229,6 @@ Map<String, String> en = {
       "One queued delivery couldn't be applied. The rest is on hold — fix it online, then retry.",
   TranslationKeys.retrySync: 'Retry sync',
   TranslationKeys.syncingNow: 'Syncing…',
-  TranslationKeys.waitingForConnectionTitle: 'Innings complete',
-  TranslationKeys.waitingForConnectionMessage:
-      'This innings has ended. Starting the next one needs a connection — reconnect to continue.',
-  TranslationKeys.waitingForConnectionMessageFinal:
-      'This innings has ended. Confirming the result needs a connection — reconnect to continue.',
+  TranslationKeys.scorecardPendingSync:
+      'The full scorecard will appear once this syncs.',
 };

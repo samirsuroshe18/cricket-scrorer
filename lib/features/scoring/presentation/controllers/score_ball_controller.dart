@@ -6,6 +6,7 @@ import 'package:cricket_scorer/core/error/cricket_failure.dart';
 import 'package:cricket_scorer/core/global/widgets/snackbars/cricket_snackbar.dart';
 import 'package:cricket_scorer/core/translations/translation_keys.dart';
 import 'package:cricket_scorer/core/utils/either_util.dart';
+import 'package:cricket_scorer/features/scoring/data/data_sources/local/database/scoring_queue_database.dart';
 import 'package:cricket_scorer/features/scoring/data/data_sources/local/offline_sync_service.dart';
 import 'package:cricket_scorer/features/scoring/data/models/request/score_ball_req.dart';
 import 'package:cricket_scorer/features/scoring/data/models/request/select_bowler_req.dart';
@@ -16,12 +17,15 @@ import 'package:cricket_scorer/features/scoring/data/models/response/create_matc
 import 'package:cricket_scorer/features/scoring/data/models/response/live_score_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/match_complete_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/over_complete_res.dart';
+import 'package:cricket_scorer/features/scoring/data/models/response/score_ball_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/strike.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/sync_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/undo_ball_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/wicket.dart';
 import 'package:cricket_scorer/features/scoring/data/scoring_constants.dart';
+import 'package:cricket_scorer/features/scoring/domain/offline/ball_outcome_preview.dart';
 import 'package:cricket_scorer/features/scoring/domain/offline/pre_event_state.dart';
+import 'package:cricket_scorer/features/scoring/domain/offline/resolve_match_result.dart';
 import 'package:cricket_scorer/features/scoring/domain/repositories/match_repository.dart';
 import 'package:cricket_scorer/features/scoring/domain/run_rate.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/score_ball.dart';
@@ -31,7 +35,6 @@ import 'package:cricket_scorer/features/scoring/domain/usecases/undo_ball.dart';
 import 'package:cricket_scorer/features/scoring/presentation/widget/next_bowler_bottom_sheet.dart';
 import 'package:cricket_scorer/features/scoring/presentation/widget/openers_bottom_sheet.dart';
 import 'package:cricket_scorer/features/scoring/presentation/widget/sync_conflict_bottom_sheet.dart';
-import 'package:cricket_scorer/features/scoring/presentation/widget/waiting_for_connection_bottom_sheet.dart';
 import 'package:cricket_scorer/features/scoring/presentation/widget/wicket_bottom_sheet.dart';
 import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
@@ -136,19 +139,6 @@ class ScoreBallController extends GetxController {
   /// disable each other without either claiming to be the other.
   final isUndoing = false.obs;
 
-  /// Ball ids scored on this console, oldest first. [undoLastBall] takes the
-  /// last one and pops it on success.
-  ///
-  /// A stack rather than one remembered id because undo is repeatable
-  /// server-side, and the client can only chain if it knows the *previous*
-  /// ball's id — `score:update` carries none, only the REST ack does. Keeping
-  /// them all is what lets a scorer walk back three mis-taps instead of one.
-  ///
-  /// Session-local is enough today: nothing can resume a match, so no delivery
-  /// on screen predates this console. The day a match list exists, the server's
-  /// `canUndo` becomes the better source and this becomes a cache.
-  final _scoredBallIds = <String>[].obs;
-
   /// The most recent dismissal, for the console to acknowledge. Server-reported
   /// like everything else here.
   final lastWicket = Rxn<Wicket>();
@@ -215,16 +205,20 @@ class ScoreBallController extends GetxController {
   /// the moment the first real payload arrives.
   int _currentInningsNumber = 1;
 
+  /// `'teamA'` / `'teamB'`, whoever is batting the current innings — from
+  /// `start-innings`'s own response, or computed (the other team from last
+  /// innings) when that call had to happen offline. Nothing else remembers
+  /// this: the live Rx totals get zeroed the moment the next innings starts,
+  /// but the eventual match result (and, for an offline-started innings 2,
+  /// its own target) both need to know who was batting when an innings
+  /// ended, including one that ended entirely offline.
+  String? _currentBattingTeam;
+
   /// Whether the local queue has anything at all. Backed by
   /// [OfflineSyncService.pendingCount] rather than a locally-mirrored id list
   /// on purpose: the service deletes rows out from under the controller the
   /// moment a flush lands, and a copy here would drift stale the instant that
-  /// happens. [undoLastBall] checks this BEFORE [_scoredBallIds] — a
-  /// still-queued ball is undone by deleting its row directly, via
-  /// [OfflineSyncService.lastQueuedBall], never by sending an `undo` sync
-  /// event — see docs/api.md's sync contract on why (undo frees the
-  /// idempotencyKey; replaying it later would silently re-score the removed
-  /// delivery).
+  /// happens.
   bool get _hasQueuedBalls => offlineSyncService.pendingCount.value > 0;
 
   /// The provisional innings snapshot offline preview builds on top of.
@@ -241,15 +235,9 @@ class ScoreBallController extends GetxController {
   /// every field unconditionally and clears this, never merges with it.
   final isProvisional = false.obs;
 
-  /// True once a QUEUED (not yet synced) ball's preview reports the innings
-  /// complete. A sync batch can never carry `start-innings`, so the console
-  /// cannot let the scorer walk into a new innings it has no way to open —
-  /// see [_promptIfNeeded]'s early branch.
-  final isBlockedAtInningsBreak = false.obs;
-
   bool get hasOpeners => strike.value?.strikerName != null;
 
-  /// Everything the console can act on is gated on the same four facts, so a
+  /// Everything the console can act on is gated on the same three facts, so a
   /// run button and the OUT button can never disagree about whether the match
   /// is scoreable. [needsBowler] belongs here for the same reason [hasOpeners]
   /// does: the server refuses the delivery either way, and a disabled button is
@@ -258,19 +246,27 @@ class ScoreBallController extends GetxController {
       !isScoring.value &&
       hasOpeners &&
       !isInningsComplete.value &&
-      !needsBowler.value &&
-      !isBlockedAtInningsBreak.value;
+      !needsBowler.value;
 
   /// Deliberately **not** gated on [isInningsComplete] or [needsBowler], unlike
   /// [canScore]. Undoing a mis-tapped tenth wicket, or the ball that ended an
   /// over you did not mean to end, is exactly what undo is for — those are the
-  /// states a scorer most needs a way out of. [_hasQueuedBalls] is checked
-  /// too: a still-queued ball is exactly as undoable as a synced one, just
-  /// resolved locally instead of over the network — see [undoLastBall].
+  /// states a scorer most needs a way out of.
+  ///
+  /// [OfflineSyncService.queuedBallCount] (a still-queued ball, undone
+  /// locally) and [OfflineSyncService.historyCount] (an already-synced ball,
+  /// undone via the local ledger — see [undoLastBall]) — never
+  /// [_hasQueuedBalls]: a pending `undo` row is a correction already made,
+  /// not something further to undo, and counting it here would leave this
+  /// true forever once one is queued offline, however empty the ledger and
+  /// queue of undoable balls actually are. Both counts are DB-backed rather
+  /// than in-memory, so this survives a cold app relaunch, not just the
+  /// current session.
   bool get canUndo =>
       !isScoring.value &&
       !isUndoing.value &&
-      (_scoredBallIds.isNotEmpty || _hasQueuedBalls);
+      (offlineSyncService.historyCount.value > 0 ||
+          offlineSyncService.queuedBallCount.value > 0);
 
   /// Set once the socket layer has reported *anything* — the join ack, a score
   /// update, or a connection failure. The openers prompt waits on this so a
@@ -322,6 +318,23 @@ class ScoreBallController extends GetxController {
     super.onInit();
     match = Get.arguments as CreateMatchRes;
 
+    // Best-effort seed for [_currentBattingTeam] on a resumed session — the
+    // one where `startInnings()` itself won't run again this session to set
+    // it directly, since the innings is already open. Genuinely best-effort:
+    // toss is commonly skipped entirely (see `TossLine`'s own comment), and
+    // when it is, a resumed session simply has no source for this at all
+    // until either a real `start-innings`/sync response supplies it, or the
+    // match completes and the server's own result settles the question. This
+    // mirrors this controller's other documented resume-time approximations
+    // (e.g. the excluded-bowler note on [_applyPreEventStateAsCurrent]).
+    final tossWinner = match.tossWinner;
+    final tossDecision = match.tossDecision;
+    if (tossWinner != null && tossDecision != null) {
+      _currentBattingTeam = tossDecision == 'bat'
+          ? tossWinner
+          : (tossWinner == 'teamA' ? 'teamB' : 'teamA');
+    }
+
     // Best-effort default until the join ack or start-innings corrects it —
     // see [_currentInningsNumber]'s own doc comment. Re-called whenever that
     // field changes so the queue/pending-count the service watches is always
@@ -370,7 +383,8 @@ class ScoreBallController extends GetxController {
             // stale broadcast must not push a second checkpoint for a
             // dismissal already accounted for.
             final incomingSeq = event.result.lastBall?.absoluteBallSeq;
-            final isNewBall = incomingSeq != null && incomingSeq > _lastAppliedSeq;
+            final isNewBall =
+                incomingSeq != null && incomingSeq > _lastAppliedSeq;
 
             if (!_partnershipInitialized) {
               // First payload this session — join ack or a fresh socket
@@ -469,8 +483,14 @@ class ScoreBallController extends GetxController {
     if (_navigatedToResult) return;
     _navigatedToResult = true;
     isMatchComplete.value = true;
+    // `arguments: match` is what lets `ResultController` resolve team names
+    // and watch the right innings' queue offline, before any scorecard has
+    // ever loaded — see that controller's own doc comment on `_match`.
     unawaited(
-      Get.offNamed<dynamic>(AppRoutes.matchResultPath(match.matchId)),
+      Get.offNamed<dynamic>(
+        AppRoutes.matchResultPath(match.matchId),
+        arguments: match,
+      ),
     );
   }
 
@@ -486,10 +506,6 @@ class ScoreBallController extends GetxController {
     // usecase call, so this listener is the only thing that turns that flag
     // flipping into the openers sheet reopening for innings 2.
     ever<bool>(isInningsComplete, (_) => unawaited(_promptIfNeeded()));
-    // A queued ball's preview can flip this on its own — see [_queueBallOffline]
-    // — and it needs the same re-entry the three listeners above give the
-    // rest of the loop.
-    ever<bool>(isBlockedAtInningsBreak, (_) => unawaited(_promptIfNeeded()));
 
     // A batch was refused whole. Routed through `_promptIfNeeded`'s own loop
     // (see its top-priority branch) rather than opened directly from here —
@@ -497,7 +513,10 @@ class ScoreBallController extends GetxController {
     // could silently miss a conflict that lands while the wicket sheet (a
     // separate flow this listener knows nothing about) is already up. The
     // loop's own re-entry after that sheet closes is what catches it instead.
-    ever<SyncPhase>(offlineSyncService.phase, (_) => unawaited(_promptIfNeeded()));
+    ever<SyncPhase>(
+      offlineSyncService.phase,
+      (_) => unawaited(_promptIfNeeded()),
+    );
 
     // A flush actually landed — reconcile the provisional preview back to
     // real server truth. See [_reconcileFromSyncedState].
@@ -560,26 +579,12 @@ class ScoreBallController extends GetxController {
           );
           _offlinePre = null;
           isProvisional.value = false;
-          isBlockedAtInningsBreak.value = false;
           // The socket's `match:state` ack only ever fires once, on the
           // initial join — nothing else repaints this console until another
           // delivery happens to be broadcast. A discarded queue needs fresh
           // truth immediately, not "whenever the next ball lands", so pull it
           // directly rather than waiting on the socket.
           await _reloadFromServerTruth();
-          continue;
-        }
-
-        // Ahead of the openers check: a QUEUED ball's preview can also flip
-        // `isInningsComplete`, and that must never be read as "call
-        // start-innings" the way a real ack's does — a sync batch can't carry
-        // start-innings, so there is nothing valid to submit here until
-        // signal returns. This sheet is the difference between the two.
-        if (isBlockedAtInningsBreak.value) {
-          await WaitingForConnectionBottomSheet.show(
-            isFinalInnings: _currentInningsNumber == 2,
-            isBlocked: isBlockedAtInningsBreak,
-          );
           continue;
         }
 
@@ -841,21 +846,21 @@ class ScoreBallController extends GetxController {
   Future<bool> _queueBallOffline(ScoreBallReq req) async {
     final pre = _offlinePre ?? _currentPreEventStateFromLive();
 
-    final queued = await offlineSyncService.enqueueBall(
+    await offlineSyncService.enqueueBall(
       matchId: match.matchId,
       inningsNumber: _currentInningsNumber,
       req: req,
       pre: pre,
     );
-    if (!queued) {
-      // An undo of an already-synced ball is still pending — mixing it with
-      // a new delivery in the same batch is exactly what the server refuses
-      // outright with `SYNC_MIXED_BATCH`. Refuse here instead of building a
-      // batch that can only fail. It clears itself the moment that undo
-      // actually syncs, which is normally within one round trip.
-      CricketSnackbar.showAlertMessage(TranslationKeys.syncBlockedOnRule.tr);
-      return false;
-    }
+    // Same snapshot, same instant — the queue row and the ledger row both
+    // describe "state immediately before this ball". `ballEventId` starts
+    // null: this ball hasn't synced yet, so there is no server id for it
+    // until `OfflineSyncService._attemptSync` backfills one on flush.
+    await offlineSyncService.recordBallHistory(
+      matchId: match.matchId,
+      inningsNumber: _currentInningsNumber,
+      pre: pre,
+    );
 
     final preview = offlineSyncService.previewNextBall(
       pre: pre,
@@ -880,13 +885,33 @@ class ScoreBallController extends GetxController {
     _legalBalls = totals.legalBalls;
     _recomputeRates();
 
-    // Never [_navigateToResult] from a preview — the match result itself
-    // (margin, winner) is server-computed and cannot be previewed. This is
-    // the difference between "the innings looks over" and "the match is
-    // over": only a real ack ever claims the second, via [_applyBallOutcome]'s
-    // own `matchComplete` parameter, left at its default false here.
+    // The just-finished innings' final numbers, captured now because nothing
+    // else will remember them past the next `startInnings()` call zeroing
+    // these same fields — needed offline for innings 2's own target, and
+    // (whichever innings this was) for the eventual match result.
     if (preview.inningsComplete) {
-      isBlockedAtInningsBreak.value = true;
+      unawaited(
+        offlineSyncService.recordInningsSummary(
+          matchId: match.matchId,
+          inningsNumber: _currentInningsNumber,
+          battingTeam: _currentBattingTeam ?? '',
+          totalRuns: totals.totalRuns,
+          wickets: totals.wickets,
+          overs: overs.value,
+        ),
+      );
+
+      // Innings 2 ending IS match completion — unlike innings 1 ending, this
+      // is previewable: `resolveMatchResultPreview` needs only both innings'
+      // final `battingTeam`/`totalRuns` and innings 2's wickets, all of which
+      // this device already has (innings 1's from the summary just like the
+      // one above, written when IT completed). Persisted rather than just
+      // held in memory, since `ResultScreen` is a separate route that can
+      // outlive this controller, including across an app relaunch.
+      if (_currentInningsNumber == 2) {
+        unawaited(_saveProvisionalMatchResult(preview: preview));
+        _navigateToResult();
+      }
     }
 
     _applyBallOutcome(
@@ -905,6 +930,36 @@ class ScoreBallController extends GetxController {
     return true;
   }
 
+  /// Computes and persists a provisional win/margin for the terminal ball of
+  /// innings 2, queued offline. A no-op if innings 1's own summary somehow
+  /// isn't there — it always should be by this point, since nothing reaches
+  /// innings 2 without innings 1 having completed first, online or off.
+  Future<void> _saveProvisionalMatchResult({
+    required BallOutcomePreview preview,
+  }) async {
+    final innings1 = await offlineSyncService.inningsSummaryFor(
+      matchId: match.matchId,
+      inningsNumber: 1,
+    );
+    if (innings1 == null) return;
+
+    final result = resolveMatchResultPreview(
+      completionReason: preview.completionReason,
+      battingTeam1: innings1.battingTeam,
+      battingTeam2: _currentBattingTeam ?? '',
+      runs1: innings1.totalRuns,
+      runs2: preview.inningsTotals.totalRuns,
+      wickets2: preview.inningsTotals.wickets,
+    );
+
+    await offlineSyncService.saveProvisionalResult(
+      matchId: match.matchId,
+      winner: result.winner,
+      marginType: result.marginType,
+      margin: result.margin,
+    );
+  }
+
   /// Undoes the most recently queued (never-synced) ball — the local half of
   /// [undoLastBall]. Rolls back to that row's own stored pre-ball snapshot in
   /// O(1): no replay, no network.
@@ -919,6 +974,21 @@ class ScoreBallController extends GetxController {
     isUndoing.value = true;
     await offlineSyncService.deleteQueuedEvent(row.id);
 
+    // The [BallHistory] row inserted alongside this one when it was queued
+    // (see [_queueBallOffline]) must go with it — a ball/bowler queue row
+    // and its ledger row are always inserted together, in the same order,
+    // so the ledger's current top entry IS this ball's. Left behind, it
+    // would sit there as a stale, un-synced "ghost" that a later
+    // already-synced undo could wrongly target next, restoring to a state
+    // that belongs to a ball this device never actually sent anywhere.
+    final ledgerEntry = await offlineSyncService.latestBallHistory(
+      matchId: match.matchId,
+      inningsNumber: _currentInningsNumber,
+    );
+    if (ledgerEntry != null) {
+      await offlineSyncService.deleteBallHistoryEntry(ledgerEntry.id);
+    }
+
     final restored = PreEventState.fromJson(
       jsonDecode(snapshot) as Map<String, dynamic>,
     );
@@ -930,8 +1000,6 @@ class ScoreBallController extends GetxController {
 
     _offlinePre = stillQueued == null ? null : restored;
     isProvisional.value = stillQueued != null;
-    // Undoing can only ever un-complete an innings, never complete one.
-    isBlockedAtInningsBreak.value = false;
 
     // Same rewind [_applyUndo] does for the online path, and for the same
     // reason: if the undone ball completed an over, `_applyOverEnd`'s guard
@@ -972,9 +1040,7 @@ class ScoreBallController extends GetxController {
     // while offline left [isInningsComplete] true with [isMatchComplete]
     // never set, and the openers-sheet branch below has no other way to
     // tell "innings ended" from "match ended" — it would reopen Opening
-    // Players for an innings 3 that will never exist. `_currentInningsNumber
-    // == 2` is the same test [WaitingForConnectionBottomSheet] already uses
-    // a few lines up in this file for exactly this distinction.
+    // Players for an innings 3 that will never exist.
     if (state.inningsComplete && _currentInningsNumber == 2) {
       _navigateToResult();
     }
@@ -997,7 +1063,6 @@ class ScoreBallController extends GetxController {
     } else {
       _offlinePre = null;
       isProvisional.value = false;
-      isBlockedAtInningsBreak.value = false;
     }
   }
 
@@ -1057,6 +1122,7 @@ class ScoreBallController extends GetxController {
     required String nonStrikerName,
     required String bowlerName,
   }) async {
+    final previousInningsNumber = _currentInningsNumber;
     isStartingInnings.value = true;
 
     final response = await startInningsUseCase(
@@ -1073,37 +1139,147 @@ class ScoreBallController extends GetxController {
     isStartingInnings.value = false;
 
     if (!response.isResult) {
-      // No offline fallback here, deliberately: a sync batch can never carry
-      // start-innings (see docs/api.md), so there is nothing to queue. A
-      // `CricketNoInternetFailure`'s own default message already says
-      // exactly the true thing — no connection — with no special-casing
-      // needed.
+      // `/sync` can never carry `start-innings` (see docs/api.md) — a batch
+      // cannot bootstrap an innings whose Inning document doesn't exist yet
+      // server-side — so there is nothing to enqueue here, only something to
+      // do differently: a genuine innings TRANSITION (a prior innings has
+      // already completed, online or offline) can still open the next one
+      // entirely locally and let the real call catch up once signal
+      // returns; the very first `start-innings` of the match — nothing to
+      // transition FROM — still has no offline path, matching "match
+      // creation requires connectivity" from the product's own design.
+      if (response.fallback is CricketNoInternetFailure) {
+        final previousSummary = await offlineSyncService.inningsSummaryFor(
+          matchId: match.matchId,
+          inningsNumber: previousInningsNumber,
+        );
+        if (previousSummary != null) {
+          return _startInningsOffline(
+            previousInningsNumber: previousInningsNumber,
+            previousSummary: previousSummary,
+            strikerName: strikerName,
+            nonStrikerName: nonStrikerName,
+            bowlerName: bowlerName,
+          );
+        }
+      }
       CricketSnackbar.showAlertMessage(response.fallback.message);
       return false;
     }
 
+    final data = response.result.data;
+    _applyInningsStarted(
+      previousInningsNumber: previousInningsNumber,
+      inningsNumber: data?.inningsNumber ?? _currentInningsNumber,
+      battingTeam: data?.battingTeam,
+      strike: data?.strike,
+      bowlerName: data?.bowler?.bowlerName,
+      target: data?.target,
+      totals: data?.inningsTotals,
+    );
+
+    // Deliberately no success snackbar: `Get.showSnackbar` pushes a route, so
+    // one here would sit on top of the sheet and swallow its `Get.back()`,
+    // leaving the sheet up over an innings that had already started. The banner
+    // filling in behind is the confirmation, and a better one.
+    return true;
+  }
+
+  /// Opens the next innings entirely locally, when `start-innings` itself
+  /// couldn't be reached — the offline half of [startInnings]. Everything
+  /// here is computable from data this device already has: [previousSummary]
+  /// (written the moment the prior innings was detected complete, online or
+  /// off — see `_queueBallOffline`/`_score`) gives the batting side to flip
+  /// and the total that becomes this innings' target, and the entered names
+  /// are exactly what a real response would otherwise have supplied.
+  ///
+  /// The real call is not abandoned, only deferred: [PendingStartInnings]
+  /// records exactly what it needs, and `OfflineSyncService`'s reconnect
+  /// chain makes it for real — with these same names — the moment signal
+  /// returns, ahead of flushing anything queued for this new innings.
+  Future<bool> _startInningsOffline({
+    required int previousInningsNumber,
+    required InningsSummary previousSummary,
+    required String strikerName,
+    required String nonStrikerName,
+    required String bowlerName,
+  }) async {
+    final inningsNumber = previousInningsNumber + 1;
+    final battingTeam = previousSummary.battingTeam == 'teamA'
+        ? 'teamB'
+        : 'teamA';
+
+    await offlineSyncService.savePendingStartInnings(
+      matchId: match.matchId,
+      inningsNumber: inningsNumber,
+      strikerName: strikerName,
+      nonStrikerName: nonStrikerName,
+      bowlerName: bowlerName,
+    );
+
+    _applyInningsStarted(
+      previousInningsNumber: previousInningsNumber,
+      inningsNumber: inningsNumber,
+      battingTeam: battingTeam,
+      strike: Strike(strikerName: strikerName, nonStrikerName: nonStrikerName),
+      bowlerName: bowlerName,
+      // Innings 1 only — a target only ever exists for innings 2, and this
+      // branch is only ever reached transitioning INTO an innings that has
+      // one, per the offline scope this feature targets.
+      target: previousSummary.totalRuns + 1,
+      totals: null,
+    );
+
+    return true;
+  }
+
+  /// Everything a freshly-opened innings needs applied to console state —
+  /// shared by [startInnings]'s online success and [_startInningsOffline],
+  /// so the two can never drift: an offline-started innings 2 looks, feels,
+  /// and previews exactly like an online one until the moment it actually
+  /// syncs. [battingTeam] is nullable only because `StartInningsRes` could
+  /// theoretically omit it; [_currentBattingTeam] simply stays whatever it
+  /// was rather than guessing.
+  void _applyInningsStarted({
+    required int previousInningsNumber,
+    required int inningsNumber,
+    required String? battingTeam,
+    required Strike? strike,
+    required String? bowlerName,
+    required int? target,
+    required InningsTotals? totals,
+  }) {
     // The offline queue is innings-scoped; re-point the service at whichever
     // innings just opened, and start the new innings with a clean slate —
     // any provisional state belonged to the innings that just ended.
-    _currentInningsNumber =
-        response.result.data?.inningsNumber ?? _currentInningsNumber;
+    _currentInningsNumber = inningsNumber;
+    _currentBattingTeam = battingTeam ?? _currentBattingTeam;
     offlineSyncService.watch(
       matchId: match.matchId,
       inningsNumber: _currentInningsNumber,
     );
     _offlinePre = null;
     isProvisional.value = false;
-    isBlockedAtInningsBreak.value = false;
+
+    // The just-finished innings' undo history has no business surviving
+    // into the new one — the server's own Inning documents are separate,
+    // and a stale entry here would let a later undo tap restore to a
+    // snapshot that belongs to an innings which no longer accepts writes.
+    unawaited(
+      offlineSyncService.clearBallHistory(
+        matchId: match.matchId,
+        inningsNumber: previousInningsNumber,
+      ),
+    );
 
     // No delivery behind this payload, so no sequence — it is the current
     // state and always applies.
-    _applyStrike(response.result.data?.strike);
+    _applyStrike(strike);
 
     // Over 1's bowler comes from here, which is why the console never prompts
     // for a bowler at the start of an innings.
-    final openingBowler = response.result.data?.bowler?.bowlerName;
-    currentBowler.value = openingBowler;
-    _rememberBowler(openingBowler);
+    currentBowler.value = bowlerName;
+    _rememberBowler(bowlerName);
     needsBowler.value = false;
     excludedBowler.value = null;
 
@@ -1119,12 +1295,11 @@ class ScoreBallController extends GetxController {
     // innings' final score under a "Striker: ..." banner for a brand new one
     // until the first ball landed. "All zero" is not an assumption about this
     // response — it is the one thing InningsTotals is guaranteed to be here.
-    final totals = response.result.data?.inningsTotals;
     totalRuns.value = totals?.totalRuns ?? 0;
     wickets.value = totals?.wickets ?? 0;
     overs.value = '0.0';
     extrasTotal.value = totals?.extras.total ?? 0;
-    target.value = response.result.data?.target;
+    this.target.value = target;
     _legalBalls = totals?.legalBalls ?? 0;
 
     // A fresh partnership for the new pair. Also marks the checkpoint
@@ -1140,12 +1315,6 @@ class ScoreBallController extends GetxController {
     // the rest of the match, on both the REST ack and the socket.
     _lastAppliedSeq = 0;
     _recomputeRates();
-
-    // Deliberately no success snackbar: `Get.showSnackbar` pushes a route, so
-    // one here would sit on top of the sheet and swallow its `Get.back()`,
-    // leaving the sheet up over an innings that had already started. The banner
-    // filling in behind is the confirmation, and a better one.
-    return true;
   }
 
   /// An ordinary delivery. Runs come from the grid; the armed fault and
@@ -1226,23 +1395,20 @@ class ScoreBallController extends GetxController {
   }
 
   /// Queues a bowler selection locally. No rule-checking on this side — see
-  /// [selectBowler]'s own comment — so the only way this refuses is a still-
-  /// pending undo (see [_queueBallOffline]'s doc comment); a rule rejection
-  /// can only ever come back later, via `failedCode` on the eventual sync
-  /// response.
+  /// [selectBowler]'s own comment; a rule rejection can only ever come back
+  /// later, via `failedCode` on the eventual sync response. No [BallHistory]
+  /// row for this: only a delivery is ever an undo target, and a ball's own
+  /// snapshot already carries who was bowling at that point, so a
+  /// bowler-selection event needs no ledger entry of its own.
   Future<bool> _queueBowlerOffline(SelectBowlerReq req) async {
     final pre = _offlinePre ?? _currentPreEventStateFromLive();
 
-    final queued = await offlineSyncService.enqueueBowler(
+    await offlineSyncService.enqueueBowler(
       matchId: match.matchId,
       inningsNumber: _currentInningsNumber,
       req: req,
       pre: pre,
     );
-    if (!queued) {
-      CricketSnackbar.showAlertMessage(TranslationKeys.syncBlockedOnRule.tr);
-      return false;
-    }
 
     _offlinePre = PreEventState(
       totalRuns: pre.totalRuns,
@@ -1310,17 +1476,35 @@ class ScoreBallController extends GetxController {
   /// Returns true once the server has accepted it, so the next-bowler sheet can
   /// close itself only on success.
   ///
-  /// [_hasQueuedBalls] is checked first: a still-queued (never-synced) ball
-  /// is undone locally, via [_undoQueuedBall] — deleted from the queue
-  /// directly, never sent as an `undo` sync event. See docs/api.md: replaying
-  /// that ball's `idempotencyKey` after undo would silently re-score the
-  /// delivery just removed.
+  /// Three-way branch, in priority order:
+  /// 1. A still-queued (never-synced) ball — undone locally, via
+  ///    [_undoQueuedBall], deleted from the queue directly, never sent as an
+  ///    `undo` sync event. See docs/api.md: replaying that ball's
+  ///    `idempotencyKey` after undo would silently re-score the delivery
+  ///    just removed.
+  /// 2. An already-synced ball with an entry in the local [BallHistory]
+  ///    ledger — targeted below. The ledger, not an in-memory stack, is what
+  ///    lets this chain arbitrarily far back through already-synced balls
+  ///    while offline, not just the single most recent one.
+  /// 3. Nothing left in either place — nothing to undo.
   Future<bool> undoLastBall() async {
     if (isUndoing.value || isScoring.value) return false;
-    if (_hasQueuedBalls) return _undoQueuedBall();
-    if (_scoredBallIds.isEmpty) return false;
 
-    final targetId = _scoredBallIds.last;
+    final queuedBall = await offlineSyncService.lastQueuedBall(
+      matchId: match.matchId,
+      inningsNumber: _currentInningsNumber,
+    );
+    if (queuedBall != null) return _undoQueuedBall();
+
+    final entry = await offlineSyncService.latestBallHistory(
+      matchId: match.matchId,
+      inningsNumber: _currentInningsNumber,
+    );
+    if (entry == null) return false;
+
+    final targetId = await _resolveUndoTargetId(entry);
+    if (targetId == null) return false;
+
     isUndoing.value = true;
 
     final response = await undoBallUseCase(
@@ -1335,36 +1519,42 @@ class ScoreBallController extends GetxController {
     if (!response.isResult) {
       // Already-synced ball, currently offline: queue the undo instead of
       // showing an error — see docs/api.md on why this becomes its own
-      // all-undo batch. `lastBallEventId` (from the last real ack or sync
-      // response) is what makes this targetable at all for a ball that was
-      // originally scored via a batch rather than a single-shot call.
+      // all-undo batch.
       if (response.fallback is CricketNoInternetFailure) {
-        final queued = await offlineSyncService.enqueueUndo(
+        await offlineSyncService.enqueueUndo(
           matchId: match.matchId,
           inningsNumber: _currentInningsNumber,
           ballEventId: targetId,
         );
-        if (queued) {
-          _scoredBallIds.remove(targetId);
-          // The console has no way to know what this undo will restore
-          // until it syncs — the pending-count banner is the honest signal
-          // here, not a guessed rollback of state this side cannot compute.
-          return true;
-        }
-        // A ball/bowler event is already queued ahead of this one — the
-        // all-undo-or-no-undo rule refuses to mix them in one batch. Surface
-        // it rather than silently drop the tap.
-        CricketSnackbar.showAlertMessage(TranslationKeys.syncBlockedOnRule.tr);
-        return false;
+        await offlineSyncService.deleteBallHistoryEntry(entry.id);
+
+        // The ledger row being undone stores exactly the state from
+        // immediately BEFORE it — precisely what the console should show now
+        // that it's gone. No network round trip needed to know this, unlike
+        // before the ledger existed.
+        final restored = PreEventState.fromJson(
+          jsonDecode(entry.preEventStateJson) as Map<String, dynamic>,
+        );
+        _offlinePre = restored;
+        isProvisional.value = true;
+        // Same rewind [_undoQueuedBall] does, and for the same reason — see
+        // that method's own comment.
+        _lastOverPrompted = restored.oversCompleted;
+        _applyPreEventStateAsCurrent(restored);
+        return true;
       }
 
       // `BALL_NOT_LATEST` means a delivery landed that this console never saw
-      // the ack for — the stack is fiction from that point on, so drop it
-      // rather than leave a button that keeps failing on the same stale id.
-      // Anything else says nothing about the id, so the stack survives and
-      // the scorer can simply try again.
+      // the ack for — the whole ledger is fiction from that point on
+      // (everything in it was captured assuming a history that turned out to
+      // be wrong), so drop it rather than leave a button that keeps failing
+      // on the same stale id. Anything else says nothing about the id, so
+      // the ledger survives and the scorer can simply try again.
       if (response.fallback.code == 'BALL_NOT_LATEST') {
-        _scoredBallIds.clear();
+        await offlineSyncService.clearBallHistory(
+          matchId: match.matchId,
+          inningsNumber: _currentInningsNumber,
+        );
       }
       CricketSnackbar.showAlertMessage(response.fallback.message);
       return false;
@@ -1391,11 +1581,28 @@ class ScoreBallController extends GetxController {
 
     // Popped whether or not the server actually removed anything: an
     // `alreadyUndone` answer means this id was gone before we asked, so it has
-    // no business staying on the stack either.
-    _scoredBallIds.remove(targetId);
+    // no business staying in the ledger either.
+    await offlineSyncService.deleteBallHistoryEntry(entry.id);
 
     _applyUndo(data);
     return true;
+  }
+
+  /// The server id a [BallHistoryEntry] should be undone by. Its own
+  /// `ballEventId` is set the moment its ball's own flush resolves one (see
+  /// `OfflineSyncService._attemptSync`'s backfill), which — because ball
+  /// events are flushed one at a time specifically so this always resolves —
+  /// should already cover every entry that has ever reached the top of the
+  /// stack. `SyncBaseline.lastBallEventId` is kept only as a defensive
+  /// fallback for anything that slips through that expectation; null from
+  /// both means there is genuinely nothing to target.
+  Future<String?> _resolveUndoTargetId(BallHistoryEntry entry) async {
+    if (entry.ballEventId != null) return entry.ballEventId;
+    final baseline = await offlineSyncService.baselineFor(
+      matchId: match.matchId,
+      inningsNumber: _currentInningsNumber,
+    );
+    return baseline?.lastBallEventId;
   }
 
   /// Folds an undo response into console state.
@@ -1496,7 +1703,6 @@ class ScoreBallController extends GetxController {
       CricketSnackbar.showAlertMessage(TranslationKeys.allOut.tr);
       return false;
     }
-    if (isBlockedAtInningsBreak.value) return false;
 
     isScoring.value = true;
 
@@ -1563,9 +1769,20 @@ class ScoreBallController extends GetxController {
     // when the socket lags or drops — the patchy-signal case this product
     // exists for. The sequence guard is what keeps the two sources ordered.
     if (ball != null) {
-      // Pushed before anything is applied, so a ball that lands is undoable
-      // even if something below throws.
-      _scoredBallIds.add(ball.ballEventId);
+      // Captured before anything below mutates the live fields it reads —
+      // this is exactly the "state immediately before this ball" a
+      // [BallHistory] row needs, and recorded before anything is applied so
+      // a ball that lands is undoable even if something below throws. The
+      // real `ballEventId` is already known (no batch involved), unlike a
+      // queued ball's row, which starts null and is backfilled on flush.
+      unawaited(
+        offlineSyncService.recordBallHistory(
+          matchId: match.matchId,
+          inningsNumber: _currentInningsNumber,
+          pre: _currentPreEventStateFromLive(),
+          ballEventId: ball.ballEventId,
+        ),
+      );
 
       // `nextBowler` non-null IS the instruction to prompt — the server has
       // already folded in whether the innings ended on this ball, so there is
@@ -1599,6 +1816,22 @@ class ScoreBallController extends GetxController {
       target.value = ball.target;
       _legalBalls = totals.legalBalls;
       _recomputeRates();
+
+      // Same capture `_queueBallOffline` does for a queued terminal ball —
+      // see that method's own comment on why this can't be reconstructed
+      // later from anywhere else.
+      if (ball.inningsComplete) {
+        unawaited(
+          offlineSyncService.recordInningsSummary(
+            matchId: match.matchId,
+            inningsNumber: _currentInningsNumber,
+            battingTeam: _currentBattingTeam ?? '',
+            totalRuns: totals.totalRuns,
+            wickets: totals.wickets,
+            overs: overs.value,
+          ),
+        );
+      }
 
       // Keeps the sync protocol's own bookkeeping fresh even on a purely
       // online stretch — see [OfflineSyncService.recordAck]'s own comment on

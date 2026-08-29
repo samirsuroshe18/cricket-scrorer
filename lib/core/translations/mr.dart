@@ -231,9 +231,6 @@ Map<String, String> mr = {
       'एक प्रलंबित चेंडू लागू होऊ शकला नाही. उर्वरित थांबले आहेत — ते ऑनलाइन दुरुस्त करा, मग पुन्हा प्रयत्न करा.',
   TranslationKeys.retrySync: 'सिंक पुन्हा प्रयत्न करा',
   TranslationKeys.syncingNow: 'सिंक होत आहे…',
-  TranslationKeys.waitingForConnectionTitle: 'डाव संपला',
-  TranslationKeys.waitingForConnectionMessage:
-      'हा डाव संपला आहे. पुढचा डाव सुरू करण्यासाठी कनेक्शन आवश्यक आहे — सुरू ठेवण्यासाठी पुन्हा कनेक्ट व्हा.',
-  TranslationKeys.waitingForConnectionMessageFinal:
-      'हा डाव संपला आहे. निकालाची पुष्टी करण्यासाठी कनेक्शन आवश्यक आहे — सुरू ठेवण्यासाठी पुन्हा कनेक्ट व्हा.',
+  TranslationKeys.scorecardPendingSync:
+      'सिंक झाल्यावर संपूर्ण स्कोअरकार्ड दिसेल.',
 };

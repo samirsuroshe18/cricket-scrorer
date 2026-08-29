@@ -236,8 +236,5 @@ class TranslationKeys {
   static const String syncBlockedOnRule = 'sync_blocked_on_rule';
   static const String retrySync = 'retry_sync';
   static const String syncingNow = 'syncing_now';
-  static const String waitingForConnectionTitle = 'waiting_for_connection_title';
-  static const String waitingForConnectionMessage = 'waiting_for_connection_message';
-  static const String waitingForConnectionMessageFinal =
-      'waiting_for_connection_message_final';
+  static const String scorecardPendingSync = 'scorecard_pending_sync';
 }

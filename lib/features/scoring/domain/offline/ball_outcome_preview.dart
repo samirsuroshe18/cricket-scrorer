@@ -35,6 +35,12 @@ class BallOutcomePreview {
   /// out for the next over. Null unless [overComplete] is true.
   final String? bowlerJustBowled;
 
+  /// See [BallOutcome.completionReason]. Exposed here so a caller with only
+  /// this preview — never the underlying [BallOutcome] — can still compute a
+  /// provisional match result for innings 2's terminal ball, via
+  /// `resolveMatchResultPreview`.
+  final String? completionReason;
+
   final PreEventState nextPreEventState;
 
   const BallOutcomePreview({
@@ -45,6 +51,7 @@ class BallOutcomePreview {
     required this.newBowlerRequired,
     required this.inningsComplete,
     this.bowlerJustBowled,
+    required this.completionReason,
     required this.nextPreEventState,
   });
 }
@@ -117,7 +124,9 @@ BallOutcomePreview previewBall({
     // Cleared on over completion, exactly like the server's
     // Inning.currentBowlerId — a delivery refuses to apply without one.
     currentBowlerName: outcome.overComplete ? null : pre.currentBowlerName,
-    overTotalRuns: outcome.overComplete ? 0 : pre.overTotalRuns + delivery.teamRuns,
+    overTotalRuns: outcome.overComplete
+        ? 0
+        : pre.overTotalRuns + delivery.teamRuns,
     overLegalDeliveries: outcome.overComplete
         ? 0
         : pre.overLegalDeliveries + (delivery.isLegal ? 1 : 0),
@@ -170,6 +179,7 @@ BallOutcomePreview previewBall({
     newBowlerRequired: outcome.newBowlerRequired,
     inningsComplete: outcome.inningsComplete,
     bowlerJustBowled: outcome.overComplete ? pre.currentBowlerName : null,
+    completionReason: outcome.completionReason,
     nextPreEventState: nextPre,
   );
 }

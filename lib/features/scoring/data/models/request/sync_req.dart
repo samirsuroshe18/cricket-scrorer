@@ -44,7 +44,9 @@ class SyncUndoEvent extends SyncEvent {
 
 /// `POST /:matchId/sync`'s request body. See docs/api.md — a batch is either
 /// all [SyncUndoEvent]s or contains none at all, enforced before this is ever
-/// built (see `ScoringQueueDao.enqueueUndo`), not here.
+/// built, by `OfflineSyncService._attemptSync`'s homogeneous-run grouping —
+/// not here, and not at enqueue time either (the local queue itself can be
+/// mixed; only what's actually sent in one call cannot be).
 class SyncReq {
   final int inningsNumber;
 

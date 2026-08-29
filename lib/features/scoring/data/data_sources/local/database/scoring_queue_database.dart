@@ -92,6 +92,95 @@ class SyncBaseline extends Table {
   Set<Column> get primaryKey => {matchId, inningsNumber};
 }
 
+/// Per-innings ball-by-ball pre-state ledger — a client-side mirror of the
+/// server's own append-only `BallEvent.preEventState` history, needed so an
+/// offline undo can keep going indefinitely (chained undos of already-synced
+/// balls, not just the single most recent one) without a network round trip.
+///
+/// Deliberately its own table rather than folded into [QueuedSyncEvents]:
+/// that table's whole contract is FIFO-and-delete-on-commit (a row's job
+/// ends the moment it's flushed or removed), while a history row must
+/// OUTLIVE sync and only dies at an innings boundary or a conflict-discard.
+/// Mixing those two retention policies in one table risks a future
+/// `clearQueue`-shaped call silently taking history down with it.
+@DataClassName('BallHistoryEntry')
+class BallHistory extends Table {
+  /// Autoincrement, so insertion order IS ball order — the same FIFO trick
+  /// [QueuedSyncEvents.id] uses, here read newest-first (a stack) since undo
+  /// only ever targets the most recent entry.
+  IntColumn get id => integer().autoIncrement()();
+
+  TextColumn get matchId => text()();
+  IntColumn get inningsNumber => integer()();
+
+  /// The server id this ball can be targeted by, once known. Null until
+  /// resolved — only the entry currently on TOP of the stack ever needs one,
+  /// since undo is always most-recent-only; see `ScoreBallController`'s
+  /// three-way `undoLastBall` branch for how a null here falls back to
+  /// `SyncBaseline.lastBallEventId`.
+  TextColumn get ballEventId => text().nullable()();
+
+  /// [PreEventState.toJson] as it stood immediately BEFORE this ball —
+  /// exactly what `QueuedSyncEvents.preEventStateJson` already captures for a
+  /// still-queued row, just kept around after that row is deleted on flush
+  /// instead of being thrown away with it.
+  TextColumn get preEventStateJson => text()();
+}
+
+/// A local-only marker for opening the NEXT innings while offline. Never
+/// transmitted to `/sync` — the wire protocol has no `start-innings` event
+/// type (a batch can't cross an innings boundary) — this is purely what lets
+/// the reconnect chain in `OfflineSyncService` know to call the real
+/// `start-innings` endpoint, with these cached names, once connectivity
+/// returns and the prior innings' tail has flushed.
+@DataClassName('PendingStartInnings')
+class PendingStartInningsTable extends Table {
+  TextColumn get matchId => text()();
+  IntColumn get inningsNumber => integer()();
+  TextColumn get strikerName => text()();
+  TextColumn get nonStrikerName => text()();
+  TextColumn get bowlerName => text()();
+
+  @override
+  Set<Column> get primaryKey => {matchId, inningsNumber};
+}
+
+/// An innings' final totals, kept around past the point the console resets
+/// its live fields to zero for the next innings. Nothing else remembers
+/// this: `ScoreBallController`'s Rx fields are overwritten the moment
+/// innings 2 starts, but the target for innings 2 (`runs + 1`) and the
+/// eventual match-result margin both need innings 1's numbers to still be
+/// readable at that point — including entirely offline, when there is no
+/// server response to re-fetch them from.
+@DataClassName('InningsSummary')
+class InningsSummaries extends Table {
+  TextColumn get matchId => text()();
+  IntColumn get inningsNumber => integer()();
+  TextColumn get battingTeam => text()();
+  IntColumn get totalRuns => integer()();
+  IntColumn get wickets => integer()();
+  TextColumn get overs => text()();
+
+  @override
+  Set<Column> get primaryKey => {matchId, inningsNumber};
+}
+
+/// A locally-computed win/margin, held only until the real, server-confirmed
+/// scorecard becomes fetchable. `ResultController` is a separate route with
+/// no access to `ScoreBallController`'s in-memory state, and the app can be
+/// killed while sitting on this screen offline — so this has to be
+/// persisted, not passed as navigation arguments.
+@DataClassName('ProvisionalMatchResult')
+class ProvisionalMatchResults extends Table {
+  TextColumn get matchId => text()();
+  TextColumn get winner => text()();
+  TextColumn get marginType => text().nullable()();
+  IntColumn get margin => integer().nullable()();
+
+  @override
+  Set<Column> get primaryKey => {matchId};
+}
+
 LazyDatabase _openConnection() {
   return LazyDatabase(() async {
     final dir = await getApplicationDocumentsDirectory();
@@ -100,7 +189,16 @@ LazyDatabase _openConnection() {
   });
 }
 
-@DriftDatabase(tables: [QueuedSyncEvents, SyncBaseline])
+@DriftDatabase(
+  tables: [
+    QueuedSyncEvents,
+    SyncBaseline,
+    BallHistory,
+    PendingStartInningsTable,
+    InningsSummaries,
+    ProvisionalMatchResults,
+  ],
+)
 class ScoringQueueDatabase extends _$ScoringQueueDatabase {
   ScoringQueueDatabase() : super(_openConnection());
 
@@ -111,5 +209,18 @@ class ScoringQueueDatabase extends _$ScoringQueueDatabase {
   ScoringQueueDatabase.forTesting(super.executor);
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
+
+  @override
+  MigrationStrategy get migration => MigrationStrategy(
+    onCreate: (m) => m.createAll(),
+    onUpgrade: (m, from, to) async {
+      if (from < 2) {
+        await m.createTable(ballHistory);
+        await m.createTable(pendingStartInningsTable);
+        await m.createTable(inningsSummaries);
+        await m.createTable(provisionalMatchResults);
+      }
+    },
+  );
 }

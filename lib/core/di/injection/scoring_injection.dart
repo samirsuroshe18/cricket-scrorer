@@ -94,7 +94,10 @@ class ScoringInjection {
     // real file I/O to first query on its own), so a plain lazyPut is
     // enough — the queue/lifecycle-listener/connectivity-subscription only
     // start existing once a match screen first resolves them.
-    Get.lazyPut<ScoringQueueDatabase>(() => ScoringQueueDatabase(), fenix: true);
+    Get.lazyPut<ScoringQueueDatabase>(
+      () => ScoringQueueDatabase(),
+      fenix: true,
+    );
 
     Get.lazyPut<ScoringQueueDao>(
       () => ScoringQueueDao(Get.find<ScoringQueueDatabase>()),
@@ -105,6 +108,7 @@ class ScoringInjection {
       () => OfflineSyncService(
         dao: Get.find<ScoringQueueDao>(),
         syncMatchUseCase: Get.find<SyncMatchUseCase>(),
+        startInningsUseCase: Get.find<StartInningsUseCase>(),
       ),
       fenix: true,
     );

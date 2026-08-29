@@ -27,6 +27,15 @@ class BallOutcome {
   final bool inningsComplete;
   final bool newBowlerRequired;
 
+  /// `'target_achieved'` / `'all_out'` / `'overs_complete'` / null — mirrors
+  /// `resolveOver.js`'s own precedence exactly: a target reached wins even
+  /// over a simultaneous all-out/overs-done, and all-out wins over
+  /// overs-done below that (the tenth wicket falling on the last ball of the
+  /// last over is a dismissal, not simply running out of overs). Needed by
+  /// [resolveMatchResultPreview] — the server's own result computation takes
+  /// exactly this string, not the three booleans separately.
+  final String? completionReason;
+
   const BallOutcome({
     required this.overComplete,
     required this.wicketsAfter,
@@ -37,6 +46,7 @@ class BallOutcome {
     required this.targetAchieved,
     required this.inningsComplete,
     required this.newBowlerRequired,
+    required this.completionReason,
   });
 }
 
@@ -82,5 +92,8 @@ BallOutcome resolveBallOutcome({
     targetAchieved: targetAchieved,
     inningsComplete: inningsComplete,
     newBowlerRequired: overComplete && !inningsComplete,
+    completionReason: targetAchieved
+        ? 'target_achieved'
+        : (allOut ? 'all_out' : (oversDone ? 'overs_complete' : null)),
   );
 }
