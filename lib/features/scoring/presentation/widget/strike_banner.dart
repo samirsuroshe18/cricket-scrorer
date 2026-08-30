@@ -25,6 +25,7 @@ class StrikeBanner extends StatelessWidget {
       decoration: BoxDecoration(
         color: context.colorScheme.surfaceContainerHighest,
         borderRadius: 12.radius,
+        border: Border.all(color: context.colorScheme.outline),
       ),
       child: current?.strikerName == null
           ? const _EmptyPrompt()
@@ -105,6 +106,7 @@ class _BatsmanTile extends StatelessWidget {
                 text: label,
                 style: context.textTheme.labelSmall?.copyWith(
                   color: isOnStrike ? accent : muted,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
             ),
