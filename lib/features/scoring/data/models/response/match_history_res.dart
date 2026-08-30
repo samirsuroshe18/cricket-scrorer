@@ -18,6 +18,11 @@ class MatchHistoryItem {
   final String matchId;
   final TeamRef teamA;
   final TeamRef teamB;
+
+  /// Null for matches created before share codes existed — see the scorer
+  /// screen's share-icon guard, which hides the icon rather than offer to
+  /// copy null.
+  final String? joinCode;
   final int totalOvers;
 
   /// `upcoming` / `live` / `innings_break` / `completed` / `abandoned` — the
@@ -32,6 +37,7 @@ class MatchHistoryItem {
     required this.matchId,
     required this.teamA,
     required this.teamB,
+    this.joinCode,
     required this.totalOvers,
     required this.status,
     this.result,

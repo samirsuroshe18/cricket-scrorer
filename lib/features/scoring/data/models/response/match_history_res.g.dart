@@ -11,6 +11,7 @@ MatchHistoryItem _$MatchHistoryItemFromJson(Map<String, dynamic> json) =>
       matchId: json['matchId'] as String,
       teamA: TeamRef.fromJson(json['teamA'] as Map<String, dynamic>),
       teamB: TeamRef.fromJson(json['teamB'] as Map<String, dynamic>),
+      joinCode: json['joinCode'] as String?,
       totalOvers: (json['totalOvers'] as num).toInt(),
       status: json['status'] as String,
       result: json['result'] == null
@@ -24,6 +25,7 @@ Map<String, dynamic> _$MatchHistoryItemToJson(MatchHistoryItem instance) =>
       'matchId': instance.matchId,
       'teamA': instance.teamA.toJson(),
       'teamB': instance.teamB.toJson(),
+      'joinCode': instance.joinCode,
       'totalOvers': instance.totalOvers,
       'status': instance.status,
       'result': instance.result?.toJson(),

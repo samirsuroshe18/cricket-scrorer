@@ -6,6 +6,7 @@ import 'package:cricket_scorer/core/error/cricket_failure.dart';
 import 'package:cricket_scorer/core/global/widgets/snackbars/cricket_snackbar.dart';
 import 'package:cricket_scorer/core/translations/translation_keys.dart';
 import 'package:cricket_scorer/core/utils/either_util.dart';
+import 'package:cricket_scorer/features/home/presentation/controllers/home_controller.dart';
 import 'package:cricket_scorer/features/scoring/data/data_sources/local/database/scoring_queue_database.dart';
 import 'package:cricket_scorer/features/scoring/data/data_sources/local/offline_sync_service.dart';
 import 'package:cricket_scorer/features/scoring/data/models/request/score_ball_req.dart';
@@ -40,6 +41,7 @@ import 'package:cricket_scorer/features/scoring/presentation/widget/sync_blocked
 import 'package:cricket_scorer/features/scoring/presentation/widget/sync_conflict_bottom_sheet.dart';
 import 'package:cricket_scorer/features/scoring/presentation/widget/wicket_bottom_sheet.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart' show ModalRoute;
 import 'package:get/get.dart';
 import 'package:uuid/uuid.dart';
 
@@ -493,12 +495,27 @@ class ScoreBallController extends GetxController {
     if (_navigatedToResult) return;
     _navigatedToResult = true;
     isMatchComplete.value = true;
+    // Home is never popped by anything else on the way here — reopening a
+    // live match pushes this console with `Get.toNamed`, and creating one
+    // pushes create-match then this console the same way — so it's still
+    // alive underneath with the stale (pre-completion) list `onInit` fetched
+    // once. Refresh it directly rather than relying on a pop to trigger a
+    // refetch.
+    if (Get.isRegistered<HomeController>()) {
+      unawaited(Get.find<HomeController>().loadHistory());
+    }
+    // `Get.offNamedUntil` rather than `Get.offNamed`: the latter only
+    // replaces this console, leaving whatever pushed it (create-match, for a
+    // freshly created match) sitting underneath the result screen — so its
+    // back button would land there instead of Home. Popping back to Home
+    // first puts the result screen directly on top of it for every path in.
     // `arguments: match` is what lets `ResultController` resolve team names
     // and watch the right innings' queue offline, before any scorecard has
     // ever loaded — see that controller's own doc comment on `_match`.
     unawaited(
-      Get.offNamed<dynamic>(
+      Get.offNamedUntil<dynamic>(
         AppRoutes.matchResultPath(match.matchId),
+        ModalRoute.withName(AppRoutes.home),
         arguments: match,
       ),
     );

@@ -8,7 +8,6 @@ import 'package:cricket_scorer/core/services/shared_preference_service.dart';
 import 'package:cricket_scorer/core/translations/translation_keys.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/scheduler.dart';
 import 'package:get/get.dart';
 
 class ThemeService extends GetxService {
@@ -28,12 +27,13 @@ class ThemeService extends GetxService {
             )
             as String?;
 
-    if (saved == null) {
-      final brightness =
-          SchedulerBinding.instance.platformDispatcher.platformBrightness;
-      return brightness == Brightness.dark ? ThemeMode.dark : ThemeMode.light;
-    }
-
+    // No saved choice means the user has never opened the theme picker, so
+    // this must resolve to `ThemeMode.system` rather than a snapshot of the
+    // current platform brightness — a snapshot bakes in a *fixed* light/dark
+    // value that Flutter then never revisits, so a later OS-level dark-mode
+    // toggle is invisible to the app until the next cold start re-samples
+    // it here. `ThemeMode.system` instead makes Flutter track platform
+    // brightness changes live for as long as no explicit choice overrides it.
     return switch (saved) {
       'dark' => ThemeMode.dark,
       'light' => ThemeMode.light,

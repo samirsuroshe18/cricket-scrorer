@@ -112,7 +112,7 @@ class HomeController extends GetxController {
           AppRoutes.scoreBall,
           arguments: CreateMatchRes(
             matchId: item.matchId,
-            joinCode: null,
+            joinCode: item.joinCode,
             teamA: item.teamA,
             teamB: item.teamB,
             totalOvers: item.totalOvers,
