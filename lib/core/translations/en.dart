@@ -226,9 +226,30 @@ Map<String, String> en = {
   TranslationKeys.reviewLater: 'Review later',
   TranslationKeys.unsyncedDeliveries: 'unsynced',
   TranslationKeys.syncBlockedOnRule:
-      "One queued delivery couldn't be applied. The rest is on hold — fix it online, then retry.",
+      "One queued delivery can't be applied — undo back to it to continue.",
+  TranslationKeys.syncBlockedTitle: 'Sync blocked',
+  TranslationKeys.syncBlockedMessage:
+      "One of your queued deliveries was rejected by a match rule — retrying can't fix this. Undo back through it to keep scoring; the deliveries after it will be undone too.",
+  TranslationKeys.undoBackToHere: 'Undo back to here',
   TranslationKeys.retrySync: 'Retry sync',
   TranslationKeys.syncingNow: 'Syncing…',
   TranslationKeys.scorecardPendingSync:
       'The full scorecard will appear once this syncs.',
+
+  TranslationKeys.matchHistory: 'Your matches',
+  TranslationKeys.noMatchesYet: 'No matches yet',
+  TranslationKeys.noMatchesYetHint: 'Start a match to see it here.',
+  TranslationKeys.statusUpcoming: 'Upcoming',
+  TranslationKeys.statusLive: 'Live',
+  TranslationKeys.statusInningsBreak: 'Innings break',
+  TranslationKeys.statusCompleted: 'Completed',
+  TranslationKeys.statusAbandoned: 'Abandoned',
+  TranslationKeys.abandonMatch: 'Abandon match',
+  TranslationKeys.abandonMatchConfirmTitle: 'Abandon this match?',
+  TranslationKeys.abandonMatchConfirmMessage:
+      "This ends the match now — it can't be resumed. The scores recorded so far are kept.",
+  TranslationKeys.deleteMatch: 'Delete match',
+  TranslationKeys.deleteMatchConfirmTitle: 'Delete this match?',
+  TranslationKeys.deleteMatchConfirmMessage:
+      "This removes it from your history for good — it can't be undone.",
 };

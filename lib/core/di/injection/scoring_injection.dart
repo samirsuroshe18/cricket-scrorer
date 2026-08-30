@@ -14,6 +14,9 @@ import 'package:cricket_scorer/features/scoring/domain/usecases/select_bowler.da
 import 'package:cricket_scorer/features/scoring/domain/usecases/start_innings.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/sync_match.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/undo_ball.dart';
+import 'package:cricket_scorer/features/scoring/domain/usecases/abandon_match.dart';
+import 'package:cricket_scorer/features/scoring/domain/usecases/delete_match.dart';
+import 'package:cricket_scorer/features/scoring/domain/usecases/get_match_history.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/get_public_match.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/get_scorecard.dart';
 import 'package:get/get.dart';
@@ -79,6 +82,22 @@ class ScoringInjection {
 
     Get.lazyPut<GetScorecardUseCase>(
       () => GetScorecardUseCase(matchRepository: Get.find<MatchRepository>()),
+      fenix: true,
+    );
+
+    Get.lazyPut<GetMatchHistoryUseCase>(
+      () =>
+          GetMatchHistoryUseCase(matchRepository: Get.find<MatchRepository>()),
+      fenix: true,
+    );
+
+    Get.lazyPut<AbandonMatchUseCase>(
+      () => AbandonMatchUseCase(matchRepository: Get.find<MatchRepository>()),
+      fenix: true,
+    );
+
+    Get.lazyPut<DeleteMatchUseCase>(
+      () => DeleteMatchUseCase(matchRepository: Get.find<MatchRepository>()),
       fenix: true,
     );
 

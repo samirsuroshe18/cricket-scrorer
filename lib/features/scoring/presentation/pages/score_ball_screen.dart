@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:cricket_scorer/core/extensions/space_extension.dart';
 import 'package:cricket_scorer/core/extensions/theme_x.dart';
+import 'package:cricket_scorer/core/global/widgets/bootom_sheets/custom_bottomsheet.dart';
 import 'package:cricket_scorer/core/global/widgets/snackbars/cricket_snackbar.dart';
 import 'package:cricket_scorer/core/global/widgets/cricket_text.dart';
 import 'package:cricket_scorer/core/global/widgets/custom_app_bar.dart';
@@ -63,6 +64,21 @@ class _BowlerLine extends StatelessWidget {
   }
 }
 
+/// The confirmation for [ScoreBallController.abandonMatch] — a destructive,
+/// unresumable action, so it goes through the same warning-sheet pattern as
+/// every other confirm-before-you-break-something moment in this codebase
+/// rather than firing straight off a menu tap.
+Future<void> _confirmAbandon(ScoreBallController controller) async {
+  final confirmed = await CustomBottomSheet.warningBottomSheet<bool>(
+    title: TranslationKeys.abandonMatchConfirmTitle.tr,
+    message: TranslationKeys.abandonMatchConfirmMessage.tr,
+    confirmButtonName: TranslationKeys.abandonMatch.tr,
+  );
+  if (confirmed == true) {
+    await controller.abandonMatch();
+  }
+}
+
 class ScoreBallScreen extends GetView<ScoreBallController> {
   const ScoreBallScreen({super.key});
 
@@ -105,6 +121,26 @@ class ScoreBallScreen extends GetView<ScoreBallController> {
                     )
                   : const Icon(LucideIcons.undo2),
             ),
+          ),
+          Obx(
+            () => controller.isAbandoning.value
+                ? const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 16),
+                    child: SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
+                  )
+                : PopupMenuButton<void>(
+                    icon: const Icon(Icons.more_vert),
+                    itemBuilder: (context) => [
+                      PopupMenuItem<void>(
+                        onTap: () => unawaited(_confirmAbandon(controller)),
+                        child: CricketText(text: TranslationKeys.abandonMatch.tr),
+                      ),
+                    ],
+                  ),
           ),
         ],
       ),

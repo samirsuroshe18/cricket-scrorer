@@ -7,11 +7,7 @@ part of 'select_bowler_req.dart';
 // **************************************************************************
 
 SelectBowlerReq _$SelectBowlerReqFromJson(Map<String, dynamic> json) =>
-    SelectBowlerReq(
-      bowlerName: json['bowlerName'] as String,
-    );
+    SelectBowlerReq(bowlerName: json['bowlerName'] as String);
 
 Map<String, dynamic> _$SelectBowlerReqToJson(SelectBowlerReq instance) =>
-    <String, dynamic>{
-      'bowlerName': instance.bowlerName,
-    };
+    <String, dynamic>{'bowlerName': instance.bowlerName};

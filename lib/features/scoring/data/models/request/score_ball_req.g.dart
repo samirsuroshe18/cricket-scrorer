@@ -16,22 +16,13 @@ ScoreBallReq _$ScoreBallReqFromJson(Map<String, dynamic> json) => ScoreBallReq(
   idempotencyKey: json['idempotencyKey'] as String,
 );
 
-Map<String, dynamic> _$ScoreBallReqToJson(ScoreBallReq instance) {
-  final val = <String, dynamic>{
-    'runs': instance.runs,
-  };
-
-  void writeNotNull(String key, dynamic value) {
-    if (value != null) {
-      val[key] = value;
-    }
-  }
-
-  writeNotNull('extraType', instance.extraType);
-  writeNotNull('runsFrom', instance.runsFrom);
-  writeNotNull('wicketType', instance.wicketType);
-  writeNotNull('dismissedBatsman', instance.dismissedBatsman);
-  writeNotNull('incomingBatsmanName', instance.incomingBatsmanName);
-  val['idempotencyKey'] = instance.idempotencyKey;
-  return val;
-}
+Map<String, dynamic> _$ScoreBallReqToJson(ScoreBallReq instance) =>
+    <String, dynamic>{
+      'runs': instance.runs,
+      'extraType': ?instance.extraType,
+      'runsFrom': ?instance.runsFrom,
+      'wicketType': ?instance.wicketType,
+      'dismissedBatsman': ?instance.dismissedBatsman,
+      'incomingBatsmanName': ?instance.incomingBatsmanName,
+      'idempotencyKey': instance.idempotencyKey,
+    };

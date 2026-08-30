@@ -6,10 +6,8 @@ part of 'create_match_res.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
-TeamRef _$TeamRefFromJson(Map<String, dynamic> json) => TeamRef(
-  id: json['id'] as String,
-  name: json['name'] as String,
-);
+TeamRef _$TeamRefFromJson(Map<String, dynamic> json) =>
+    TeamRef(id: json['id'] as String, name: json['name'] as String);
 
 Map<String, dynamic> _$TeamRefToJson(TeamRef instance) => <String, dynamic>{
   'id': instance.id,

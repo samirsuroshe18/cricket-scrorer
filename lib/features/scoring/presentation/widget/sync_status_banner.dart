@@ -70,9 +70,13 @@ class SyncStatusBanner extends StatelessWidget {
             ),
           ),
           // No retry affordance while a flush is already running, and none
-          // for a conflict — that one is resolved through the alert sheet
+          // for a conflict or a blocked-on-rule state — both are resolved
+          // through their own alert sheet, which
           // `ScoreBallController._promptIfNeeded` reopens on tap, via
-          // [onRetry] being reused as the "review it again" trigger.
+          // [onRetry] being reused as the "review it again" trigger. The
+          // icon reflects that: a triangle (needs a decision), never the
+          // refresh glyph, for either — a blocked delivery cannot actually
+          // be fixed by retrying.
           if (phase == SyncPhase.syncing)
             const SizedBox(
               width: 18,
@@ -81,11 +85,14 @@ class SyncStatusBanner extends StatelessWidget {
             )
           else
             IconButton(
-              tooltip: phase == SyncPhase.conflict
-                  ? TranslationKeys.syncConflictTitle.tr
-                  : TranslationKeys.retrySync.tr,
+              tooltip: switch (phase) {
+                SyncPhase.conflict => TranslationKeys.syncConflictTitle.tr,
+                SyncPhase.blockedOnRule => TranslationKeys.syncBlockedTitle.tr,
+                SyncPhase.syncing || SyncPhase.idle =>
+                  TranslationKeys.retrySync.tr,
+              },
               icon: Icon(
-                phase == SyncPhase.conflict
+                phase == SyncPhase.conflict || phase == SyncPhase.blockedOnRule
                     ? LucideIcons.triangleAlert
                     : LucideIcons.refreshCw,
                 size: 18,

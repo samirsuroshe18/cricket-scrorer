@@ -244,24 +244,33 @@ class _NextBowlerBottomSheetState extends State<NextBowlerBottomSheet> {
               ),
             ),
 
-            if (widget.canUndo()) ...[
-              8.h,
-              Center(
-                child: Obx(
-                  () => TextButton(
-                    onPressed: widget.isUndoing.value
-                        ? null
-                        : () => unawaited(_undo()),
-                    child: CricketText(
-                      text: TranslationKeys.undoLastBall.tr,
-                      style: context.textTheme.bodyMedium?.copyWith(
-                        color: context.colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ],
+            // A single Obx around both the visibility check and the button
+            // itself — `canUndo()` reads Rx state internally (queue/ledger
+            // counts), so evaluating it inside build() only, outside any
+            // Obx, left this link's visibility stale if that state changed
+            // while the (undismissable) sheet was already open.
+            Obx(
+              () => widget.canUndo()
+                  ? Column(
+                      children: [
+                        8.h,
+                        Center(
+                          child: TextButton(
+                            onPressed: widget.isUndoing.value
+                                ? null
+                                : () => unawaited(_undo()),
+                            child: CricketText(
+                              text: TranslationKeys.undoLastBall.tr,
+                              style: context.textTheme.bodyMedium?.copyWith(
+                                color: context.colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    )
+                  : const SizedBox.shrink(),
+            ),
             16.h,
           ],
         ),

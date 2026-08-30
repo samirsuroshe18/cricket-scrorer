@@ -228,9 +228,30 @@ Map<String, String> mr = {
   TranslationKeys.reviewLater: 'नंतर पहा',
   TranslationKeys.unsyncedDeliveries: 'अनसिंक',
   TranslationKeys.syncBlockedOnRule:
-      'एक प्रलंबित चेंडू लागू होऊ शकला नाही. उर्वरित थांबले आहेत — ते ऑनलाइन दुरुस्त करा, मग पुन्हा प्रयत्न करा.',
+      'एक प्रलंबित चेंडू लागू होऊ शकला नाही — पुढे जाण्यासाठी तो पूर्ववत करा.',
+  TranslationKeys.syncBlockedTitle: 'सिंक अडकले आहे',
+  TranslationKeys.syncBlockedMessage:
+      'तुमचा एक प्रलंबित चेंडू सामन्याच्या नियमामुळे नाकारला गेला — पुन्हा प्रयत्न करून हे दुरुस्त होणार नाही. स्कोअरिंग सुरू ठेवण्यासाठी तो पूर्ववत करा; त्यानंतरचे चेंडूही पूर्ववत होतील.',
+  TranslationKeys.undoBackToHere: 'इथपर्यंत पूर्ववत करा',
   TranslationKeys.retrySync: 'सिंक पुन्हा प्रयत्न करा',
   TranslationKeys.syncingNow: 'सिंक होत आहे…',
   TranslationKeys.scorecardPendingSync:
       'सिंक झाल्यावर संपूर्ण स्कोअरकार्ड दिसेल.',
+
+  TranslationKeys.matchHistory: 'तुमचे सामने',
+  TranslationKeys.noMatchesYet: 'अजून कोणताही सामना नाही',
+  TranslationKeys.noMatchesYetHint: 'सामना सुरू करा, तो इथे दिसेल.',
+  TranslationKeys.statusUpcoming: 'आगामी',
+  TranslationKeys.statusLive: 'लाइव्ह',
+  TranslationKeys.statusInningsBreak: 'डावाचा ब्रेक',
+  TranslationKeys.statusCompleted: 'संपला',
+  TranslationKeys.statusAbandoned: 'रद्द',
+  TranslationKeys.abandonMatch: 'सामना रद्द करा',
+  TranslationKeys.abandonMatchConfirmTitle: 'हा सामना रद्द करायचा आहे का?',
+  TranslationKeys.abandonMatchConfirmMessage:
+      'यामुळे सामना आत्ता संपेल — तो पुन्हा सुरू करता येणार नाही. आतापर्यंतचे स्कोअर जतन राहतील.',
+  TranslationKeys.deleteMatch: 'सामना हटवा',
+  TranslationKeys.deleteMatchConfirmTitle: 'हा सामना हटवायचा आहे का?',
+  TranslationKeys.deleteMatchConfirmMessage:
+      'हे तुमच्या इतिहासातून कायमचे हटवले जाईल — ते परत आणता येणार नाही.',
 };

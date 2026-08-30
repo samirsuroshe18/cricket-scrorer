@@ -95,8 +95,18 @@ class _OpenersBottomSheetState extends State<OpenersBottomSheet> {
       return;
     }
 
-    if (await widget.onSubmit(striker, nonStriker, bowler)) {
-      Get.back<void>();
+    // Navigator.pop rather than Get.back(): GetX's `back()` treats an open
+    // snackbar as higher priority than the pop itself — if the "Live
+    // connection lost" snackbar (score_ball_controller.dart) happens to be
+    // showing at this exact moment, which it routinely is immediately after
+    // completing an innings offline, `Get.back()` closes only the snackbar
+    // and returns, leaving this sheet stuck open even though the innings
+    // had already opened successfully (online or via the offline branch).
+    // Popping this sheet's own route directly is unaffected by any overlay
+    // elsewhere. See wicket_bottom_sheet.dart/next_bowler_bottom_sheet.dart
+    // for the same fix applied earlier.
+    if (await widget.onSubmit(striker, nonStriker, bowler) && mounted) {
+      Navigator.of(context).pop();
     }
   }
 

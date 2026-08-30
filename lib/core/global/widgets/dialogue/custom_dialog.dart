@@ -27,7 +27,7 @@ class CricketLoaderDialog {
                 height: 120,
                 width: 120,
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: Get.theme.colorScheme.surface,
                   borderRadius: BorderRadius.circular(10.0),
                 ),
                 alignment: Alignment.center,

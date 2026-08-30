@@ -3,6 +3,8 @@ class MatchEndpoint {
 
   final String createMatch = '/v1/match/create';
 
+  final String history = '/v1/match/history';
+
   String startInnings(String matchId) => '/v1/match/$matchId/start-innings';
 
   String selectBowler(String matchId) => '/v1/match/$matchId/select-bowler';
@@ -14,6 +16,10 @@ class MatchEndpoint {
   String sync(String matchId) => '/v1/match/$matchId/sync';
 
   String scorecard(String matchId) => '/v1/match/$matchId/scorecard';
+
+  String abandon(String matchId) => '/v1/match/$matchId/abandon';
+
+  String delete(String matchId) => '/v1/match/$matchId';
 
   String publicMatch(String code) => '/v1/match/public/$code';
 }

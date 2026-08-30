@@ -25,6 +25,28 @@ class MatchApiService {
     );
   }
 
+  Future<Either<ApiResponseModel, CricketFailure>> abandonMatch({
+    required String matchId,
+  }) async {
+    return await apiClient.post(endpoint: matchEndpoint.abandon(matchId));
+  }
+
+  Future<Either<ApiResponseModel, CricketFailure>> deleteMatch({
+    required String matchId,
+  }) async {
+    return await apiClient.delete(endpoint: matchEndpoint.delete(matchId));
+  }
+
+  Future<Either<ApiResponseModel, CricketFailure>> getMatchHistory({
+    required int page,
+    required int limit,
+  }) async {
+    return await apiClient.get(
+      endpoint: matchEndpoint.history,
+      queryParameters: {'page': page, 'limit': limit},
+    );
+  }
+
   Future<Either<ApiResponseModel, CricketFailure>> startInnings({
     required String matchId,
     required StartInningsReq? params,

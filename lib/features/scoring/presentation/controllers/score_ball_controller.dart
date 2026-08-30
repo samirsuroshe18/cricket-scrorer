@@ -28,12 +28,14 @@ import 'package:cricket_scorer/features/scoring/domain/offline/pre_event_state.d
 import 'package:cricket_scorer/features/scoring/domain/offline/resolve_match_result.dart';
 import 'package:cricket_scorer/features/scoring/domain/repositories/match_repository.dart';
 import 'package:cricket_scorer/features/scoring/domain/run_rate.dart';
+import 'package:cricket_scorer/features/scoring/domain/usecases/abandon_match.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/score_ball.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/select_bowler.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/start_innings.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/undo_ball.dart';
 import 'package:cricket_scorer/features/scoring/presentation/widget/next_bowler_bottom_sheet.dart';
 import 'package:cricket_scorer/features/scoring/presentation/widget/openers_bottom_sheet.dart';
+import 'package:cricket_scorer/features/scoring/presentation/widget/sync_blocked_bottom_sheet.dart';
 import 'package:cricket_scorer/features/scoring/presentation/widget/sync_conflict_bottom_sheet.dart';
 import 'package:cricket_scorer/features/scoring/presentation/widget/wicket_bottom_sheet.dart';
 import 'package:flutter/foundation.dart';
@@ -45,6 +47,7 @@ class ScoreBallController extends GetxController {
   final StartInningsUseCase startInningsUseCase;
   final SelectBowlerUseCase selectBowlerUseCase;
   final UndoBallUseCase undoBallUseCase;
+  final AbandonMatchUseCase abandonMatchUseCase;
   final MatchRepository matchRepository;
   final OfflineSyncService offlineSyncService;
 
@@ -53,6 +56,7 @@ class ScoreBallController extends GetxController {
     required this.startInningsUseCase,
     required this.selectBowlerUseCase,
     required this.undoBallUseCase,
+    required this.abandonMatchUseCase,
     required this.matchRepository,
     required this.offlineSyncService,
   });
@@ -494,6 +498,27 @@ class ScoreBallController extends GetxController {
     );
   }
 
+  final isAbandoning = false.obs;
+
+  /// The console's own "call this match off" action — rain, a no-show,
+  /// anything short of playing it out. Online-only on purpose: the offline
+  /// queue has no representation for "abandon", so this is refused the same
+  /// way any other network call the queue can't stand in for would be.
+  /// Lands on the result screen exactly like a normal completion does,
+  /// where [ResultScreen] renders the [AbandonedMatchBanner] variant once it
+  /// sees a null `result`.
+  Future<void> abandonMatch() async {
+    isAbandoning.value = true;
+    final response = await abandonMatchUseCase(params: match.matchId);
+    isAbandoning.value = false;
+
+    if (response.isResult) {
+      _navigateToResult();
+    } else {
+      CricketSnackbar.showErrorMessage(response.fallback.message);
+    }
+  }
+
   @override
   void onReady() {
     super.onReady();
@@ -585,6 +610,20 @@ class ScoreBallController extends GetxController {
           // truth immediately, not "whenever the next ball lands", so pull it
           // directly rather than waiting on the socket.
           await _reloadFromServerTruth();
+          continue;
+        }
+
+        // A queued delivery failed a genuine rule check offline (e.g. a
+        // stale bowler exclusion) — [SyncPhase.blockedOnRule] will fail
+        // identically on retry, so the only resolution is undoing back
+        // through it. Same non-auto-resolving treatment as `conflict`
+        // above, and for the same reason.
+        if (offlineSyncService.phase.value == SyncPhase.blockedOnRule) {
+          final undo = await SyncBlockedBottomSheet.show();
+          if (undo != true) {
+            break;
+          }
+          await undoBackToBlockedBall();
           continue;
         }
 
@@ -1016,6 +1055,27 @@ class ScoreBallController extends GetxController {
     return true;
   }
 
+  /// [SyncBlockedBottomSheet]'s "Undo back to here" action. Undoes every
+  /// queued ball, tail first via repeated [_undoQueuedBall] calls, back
+  /// through — and including — the one [OfflineSyncService.phase] reported
+  /// as [SyncPhase.blockedOnRule]: since that ball always sits at the head
+  /// of the queue (deliveries sync oldest-first, and nothing after it can
+  /// have been applied while it blocks the front), draining the queue
+  /// entirely is exactly "undo back through the stuck one".
+  ///
+  /// Nothing else clears `phase`/`lastError` once a queue empties this way
+  /// — [OfflineSyncService.deleteQueuedEvent] doesn't touch either — so this
+  /// is the one place that resets them, mirroring what
+  /// [OfflineSyncService.discardQueueAndReload] does for a `conflict`.
+  Future<void> undoBackToBlockedBall() async {
+    while (offlineSyncService.pendingCount.value > 0) {
+      final undone = await _undoQueuedBall();
+      if (!undone) break;
+    }
+    offlineSyncService.phase.value = SyncPhase.idle;
+    offlineSyncService.lastError.value = null;
+  }
+
   /// Reconciles the console back to real server truth once a flush actually
   /// lands — a hard replace, never a merge, of everything a provisional
   /// preview stood in for. Fires even on a partial apply (see
@@ -1102,13 +1162,15 @@ class ScoreBallController extends GetxController {
 
   /// The banner's single tap handler, for either of its two meanings: an
   /// actual retry most of the time, or — when [OfflineSyncService.phase] is
-  /// already [SyncPhase.conflict] — reopening the alert sheet instead.
-  /// [retrySync] alone would not do that: a conflict needs the scorer's own
-  /// decision, not another sync attempt that would just hit the same 409
-  /// again, and only `_promptIfNeeded`'s own loop knows how to open that
-  /// sheet without risking it stacking on top of another one.
+  /// already [SyncPhase.conflict] or [SyncPhase.blockedOnRule] — reopening
+  /// the relevant alert sheet instead. [retrySync] alone would not do that:
+  /// neither state can be fixed by another sync attempt (a conflict needs
+  /// the scorer's own decision; a rule-blocked delivery would just fail
+  /// identically again), and only `_promptIfNeeded`'s own loop knows how to
+  /// open either sheet without risking it stacking on top of another one.
   Future<void> handleSyncBannerTap() {
-    if (offlineSyncService.phase.value == SyncPhase.conflict) {
+    if (offlineSyncService.phase.value == SyncPhase.conflict ||
+        offlineSyncService.phase.value == SyncPhase.blockedOnRule) {
       return _promptIfNeeded();
     }
     return retrySync();
@@ -1314,6 +1376,21 @@ class ScoreBallController extends GetxController {
     // strike guard in [_applyStrike] would silently drop every update for
     // the rest of the match, on both the REST ack and the socket.
     _lastAppliedSeq = 0;
+
+    // Same hazard as [_lastAppliedSeq] just above, for the SAME reason:
+    // `overNumber` is innings-scoped (over 1 of innings 2 reports 1, same as
+    // over 1 of innings 1 did), but this watermark is not. Left unreset, the
+    // very first over of innings 2 to complete would read as
+    // `overNumber <= _lastOverPrompted` — "already prompted, a stale/
+    // duplicate replay" — and [_applyOverEnd] would return before even
+    // clearing [currentBowler] or setting [needsBowler], for every over
+    // boundary until [_lastOverPrompted] is naturally exceeded again. On any
+    // match longer than one over per innings (i.e. essentially all of them),
+    // this silently lets the scorer keep bowling the same bowler across an
+    // over boundary in innings 2 with no prompt and no queued `bowler` sync
+    // event — a delivery the real server rejects outright
+    // (`BOWLER_NOT_SELECTED`) the moment that stretch of the queue is synced.
+    _lastOverPrompted = 0;
     _recomputeRates();
   }
 
@@ -1532,15 +1609,71 @@ class ScoreBallController extends GetxController {
         // immediately BEFORE it — precisely what the console should show now
         // that it's gone. No network round trip needed to know this, unlike
         // before the ledger existed.
-        final restored = PreEventState.fromJson(
-          jsonDecode(entry.preEventStateJson) as Map<String, dynamic>,
-        );
+        //
+        // Deliberately logged and guarded, unlike every other step above:
+        // this is the one place a malformed or unexpected snapshot could
+        // silently leave the console showing pre-undo numbers while the
+        // undo itself has already gone out to the queue (visible via the
+        // sync banner) — a rejected write that only logs is the same
+        // failure as a silent overwrite. If this throws, the undo has still
+        // genuinely queued; only the local preview failed to update, so the
+        // scorer needs an explicit signal rather than a quietly stale screen.
+        if (kDebugMode) {
+          debugPrint(
+            'offline undo of already-synced ball $targetId: '
+            'restoring from ${entry.preEventStateJson}',
+          );
+        }
+
+        final PreEventState restored;
+        try {
+          restored = PreEventState.fromJson(
+            jsonDecode(entry.preEventStateJson) as Map<String, dynamic>,
+          );
+        } catch (e, stack) {
+          if (kDebugMode) {
+            debugPrint(
+              'offline undo: failed to restore local state: $e\n$stack',
+            );
+          }
+          CricketSnackbar.showErrorMessage(
+            TranslationKeys.somethingWentWrong.tr,
+          );
+          return true;
+        }
+
         _offlinePre = restored;
         isProvisional.value = true;
         // Same rewind [_undoQueuedBall] does, and for the same reason — see
         // that method's own comment.
         _lastOverPrompted = restored.oversCompleted;
+
+        // This ball DID advance [_lastAppliedSeq] when it first scored
+        // online (`_score`'s success path passes its real `absoluteBallSeq`
+        // through `_applyStrike`) — unlike a queued ball's own offline
+        // preview, which never touches that watermark at all. Left stale,
+        // the very next real ack — once connectivity returns and a new ball
+        // replaces this one at the same sequence number — would arrive with
+        // `seq <= _lastAppliedSeq` and get silently dropped by
+        // [_applyStrike]'s guard: totals update (they bypass that guard
+        // entirely), but the striker/non-striker freeze on whatever this
+        // undo just restored, forever, since nothing ever exceeds the stale
+        // watermark again. `restored.totalBalls` is exactly right for this:
+        // the server assigns `absoluteBallSeq: inning.totalBalls + 1`, so
+        // the ball count immediately before the one just undone IS that
+        // ball's `absoluteBallSeq - 1` — the same rewind [_applyUndo] does
+        // online via `undone.absoluteBallSeq - 1`, expressed in the terms
+        // this offline path actually has on hand.
+        _lastAppliedSeq = restored.totalBalls;
+
         _applyPreEventStateAsCurrent(restored);
+
+        // Matches [_applyUndo]'s own cleanup: the undone ball's modifiers
+        // are gone, so the next tap must not silently inherit whatever was
+        // still armed from before the undo.
+        selectedFault.value = null;
+        selectedRunsFrom.value = null;
+
         return true;
       }
 
@@ -1706,6 +1839,17 @@ class ScoreBallController extends GetxController {
 
     isScoring.value = true;
 
+    // Captured here, before anything is even sent, not after the ack comes
+    // back: a live socket broadcast for this SAME ball can arrive and mutate
+    // these exact fields while the REST call is in flight — the app also
+    // listens to `score:update` for the "ack lost on patchy signal" case,
+    // and that listener does not know this call is already in flight. A
+    // capture taken after awaiting the response would then be reading this
+    // ball's own POST-state as if it were its pre-state, which is exactly
+    // what happened here: nothing could possibly have reported this ball
+    // yet at this point, socket included, since it has not been sent.
+    final pre = _currentPreEventStateFromLive();
+
     final fault = selectedFault.value;
     final runsFrom = fault == ExtraType.wide ? null : selectedRunsFrom.value;
     // Generated once, here, before anything is attempted — reused verbatim
@@ -1769,17 +1913,17 @@ class ScoreBallController extends GetxController {
     // when the socket lags or drops — the patchy-signal case this product
     // exists for. The sequence guard is what keeps the two sources ordered.
     if (ball != null) {
-      // Captured before anything below mutates the live fields it reads —
-      // this is exactly the "state immediately before this ball" a
-      // [BallHistory] row needs, and recorded before anything is applied so
-      // a ball that lands is undoable even if something below throws. The
-      // real `ballEventId` is already known (no batch involved), unlike a
-      // queued ball's row, which starts null and is backfilled on flush.
+      // [pre] — captured before the request was even sent, not here — is
+      // exactly the "state immediately before this ball" a [BallHistory]
+      // row needs. Recorded now, rather than earlier, so a ball that lands
+      // is undoable even if something below throws; the real `ballEventId`
+      // is already known (no batch involved), unlike a queued ball's row,
+      // which starts null and is backfilled on flush.
       unawaited(
         offlineSyncService.recordBallHistory(
           matchId: match.matchId,
           inningsNumber: _currentInningsNumber,
-          pre: _currentPreEventStateFromLive(),
+          pre: pre,
           ballEventId: ball.ballEventId,
         ),
       );

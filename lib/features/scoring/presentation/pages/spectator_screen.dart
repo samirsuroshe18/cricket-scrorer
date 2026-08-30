@@ -5,6 +5,7 @@ import 'package:cricket_scorer/core/global/widgets/cricket_text.dart';
 import 'package:cricket_scorer/core/global/widgets/custom_app_bar.dart';
 import 'package:cricket_scorer/core/translations/translation_keys.dart';
 import 'package:cricket_scorer/features/scoring/presentation/controllers/spectator_controller.dart';
+import 'package:cricket_scorer/features/scoring/presentation/widget/abandoned_match_banner.dart';
 import 'package:cricket_scorer/features/scoring/presentation/widget/match_result_banner.dart';
 import 'package:cricket_scorer/features/scoring/presentation/widget/rate_stats_line.dart';
 import 'package:cricket_scorer/features/scoring/presentation/widget/strike_banner.dart';
@@ -121,7 +122,31 @@ class _MatchView extends StatelessWidget {
             ),
             24.h,
 
-            if (controller.matchResult.value != null) ...[
+            if (controller.isAbandoned.value) ...[
+              // Checked first: mutually exclusive with matchResult (see
+              // isAbandoned's own doc comment), and — like the result branch
+              // below — not gated on hasInningsStarted, since an abandonment
+              // can land whether or not a batsman happened to be at the
+              // crease at the time.
+              const AbandonedMatchBanner(),
+              16.h,
+              CricketText(
+                text:
+                    '${controller.totalRuns.value}/${controller.wickets.value}',
+                style: context.textTheme.displayMedium,
+              ),
+              8.h,
+              CricketText(
+                text: '${TranslationKeys.overs.tr}: ${controller.overs.value}',
+                style: context.textTheme.bodyMedium,
+              ),
+              4.h,
+              CricketText(
+                text:
+                    '${TranslationKeys.extras.tr}: ${controller.extrasTotal.value}',
+                style: context.textTheme.bodySmall,
+              ),
+            ] else if (controller.matchResult.value != null) ...[
               // Not gated on hasInningsStarted, unlike the live block below:
               // an overs-complete or target-achieved ending dismisses
               // nobody, so the striker is still non-null and that flag would

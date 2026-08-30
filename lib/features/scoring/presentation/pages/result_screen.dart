@@ -9,6 +9,7 @@ import 'package:cricket_scorer/core/translations/translation_keys.dart';
 import 'package:cricket_scorer/features/scoring/data/data_sources/local/offline_sync_service.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/scorecard_res.dart';
 import 'package:cricket_scorer/features/scoring/presentation/controllers/result_controller.dart';
+import 'package:cricket_scorer/features/scoring/presentation/widget/abandoned_match_banner.dart';
 import 'package:cricket_scorer/features/scoring/presentation/widget/match_result_banner.dart';
 import 'package:cricket_scorer/features/scoring/presentation/widget/sync_status_banner.dart';
 import 'package:flutter/material.dart';
@@ -163,14 +164,23 @@ class _ResultView extends StatelessWidget {
             textAlign: TextAlign.center,
           ),
           16.h,
-          MatchResultBanner(result: data.result, nameFor: data.nameFor),
+          // `result` is null exactly when the match was abandoned rather
+          // than completed — no winner was ever decided, so there is
+          // nothing for [MatchResultBanner] to describe.
+          if (data.result case final result?)
+            MatchResultBanner(result: result, nameFor: data.nameFor)
+          else
+            const AbandonedMatchBanner(),
           24.h,
-          for (final innings in data.innings) ...[
-            _InningsSummary(data: data, innings: innings),
-            16.h,
-            _InningsScorecard(data: data, innings: innings),
-            24.h,
-          ],
+          // An abandoned match can have a null innings[1] — the match never
+          // reached innings 2. A completed match never has a null entry.
+          for (final innings in data.innings)
+            if (innings != null) ...[
+              _InningsSummary(data: data, innings: innings),
+              16.h,
+              _InningsScorecard(data: data, innings: innings),
+              24.h,
+            ],
         ],
       ),
     );
