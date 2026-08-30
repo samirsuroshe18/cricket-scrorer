@@ -17,6 +17,8 @@ MatchHistoryItem _$MatchHistoryItemFromJson(Map<String, dynamic> json) =>
       result: json['result'] == null
           ? null
           : MatchResultInfo.fromJson(json['result'] as Map<String, dynamic>),
+      tossWinner: json['tossWinner'] as String?,
+      tossDecision: json['tossDecision'] as String?,
       createdAt: json['createdAt'] as String,
     );
 
@@ -29,6 +31,8 @@ Map<String, dynamic> _$MatchHistoryItemToJson(MatchHistoryItem instance) =>
       'totalOvers': instance.totalOvers,
       'status': instance.status,
       'result': instance.result?.toJson(),
+      'tossWinner': instance.tossWinner,
+      'tossDecision': instance.tossDecision,
       'createdAt': instance.createdAt,
     };
 

@@ -31,6 +31,15 @@ class MatchHistoryItem {
   /// ones open the result screen.
   final String status;
   final MatchResultInfo? result;
+
+  /// `teamA` / `teamB`, or null when the toss was skipped — same pair, same
+  /// meaning, as `CreateMatchRes.tossWinner`/`tossDecision`. Needed here so
+  /// reopening a live match from history can still show the toss line.
+  final String? tossWinner;
+
+  /// `bat` / `bowl`. Null exactly when [tossWinner] is null.
+  final String? tossDecision;
+
   final String createdAt;
 
   MatchHistoryItem({
@@ -41,6 +50,8 @@ class MatchHistoryItem {
     required this.totalOvers,
     required this.status,
     this.result,
+    this.tossWinner,
+    this.tossDecision,
     required this.createdAt,
   });
 

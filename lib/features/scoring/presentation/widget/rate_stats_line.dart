@@ -16,6 +16,7 @@ class RateStatsLine extends StatelessWidget {
     required this.requiredRunRate,
     required this.partnershipRuns,
     required this.partnershipBalls,
+    this.highContrast = false,
   });
 
   final double currentRunRate;
@@ -27,11 +28,21 @@ class RateStatsLine extends StatelessWidget {
   final int partnershipRuns;
   final int partnershipBalls;
 
+  /// Opts into `onSurface` at a heavier weight instead of the default muted
+  /// `onSurfaceVariant` — for the scorer's console, read outdoors under
+  /// pressure, not the dimmer-screen spectator view this widget also serves.
+  final bool highContrast;
+
   @override
   Widget build(BuildContext context) {
-    final style = context.textTheme.bodySmall?.copyWith(
-      color: context.colorScheme.onSurfaceVariant,
-    );
+    final style = highContrast
+        ? context.textTheme.bodyMedium?.copyWith(
+            color: context.colorScheme.onSurface,
+            fontWeight: FontWeight.bold,
+          )
+        : context.textTheme.bodySmall?.copyWith(
+            color: context.colorScheme.onSurfaceVariant,
+          );
 
     return Column(
       children: [
