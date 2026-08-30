@@ -7,14 +7,10 @@ part of 'public_match_res.dart';
 // **************************************************************************
 
 PublicTeamRef _$PublicTeamRefFromJson(Map<String, dynamic> json) =>
-    PublicTeamRef(
-      name: json['name'] as String?,
-    );
+    PublicTeamRef(name: json['name'] as String?);
 
 Map<String, dynamic> _$PublicTeamRefToJson(PublicTeamRef instance) =>
-    <String, dynamic>{
-      'name': instance.name,
-    };
+    <String, dynamic>{'name': instance.name};
 
 PublicMatchInfo _$PublicMatchInfoFromJson(Map<String, dynamic> json) =>
     PublicMatchInfo(
@@ -88,7 +84,8 @@ PublicMatchRes _$PublicMatchResFromJson(Map<String, dynamic> json) =>
       innings: json['innings'] == null
           ? null
           : PublicInningsState.fromJson(
-              json['innings'] as Map<String, dynamic>),
+              json['innings'] as Map<String, dynamic>,
+            ),
     );
 
 Map<String, dynamic> _$PublicMatchResToJson(PublicMatchRes instance) =>

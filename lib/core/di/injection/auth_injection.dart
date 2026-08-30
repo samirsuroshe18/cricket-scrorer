@@ -1,7 +1,5 @@
-import 'package:cricket_scorer/core/database/app_database.dart';
 import 'package:cricket_scorer/core/network/api_client_service.dart';
 import 'package:cricket_scorer/features/auth/data/auth_endpoint.dart';
-import 'package:cricket_scorer/features/auth/data/data_sources/local/DAO/user_dao.dart';
 import 'package:cricket_scorer/features/auth/data/data_sources/remote/user_api_service/user_api_service.dart';
 import 'package:cricket_scorer/features/auth/data/repositories/auth_repository_impl.dart';
 import 'package:cricket_scorer/features/auth/domain/repositories/auth_repository.dart';
@@ -21,11 +19,6 @@ class AuthInjection {
 
   static void init() {
     const authEndpoint = AuthEndpoint();
-
-    Get.lazyPut<UserDao>(
-      () => Get.find<AppDatabase>().userDao,
-      fenix: true,
-    );
 
     Get.lazyPut<UserApiService>(
       () => UserApiService(

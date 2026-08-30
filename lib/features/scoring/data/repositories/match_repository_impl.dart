@@ -7,13 +7,19 @@ import 'package:cricket_scorer/features/scoring/data/data_sources/remote/match_s
 import 'package:cricket_scorer/features/scoring/data/models/request/create_match_req.dart';
 import 'package:cricket_scorer/features/scoring/data/models/request/score_ball_req.dart';
 import 'package:cricket_scorer/features/scoring/data/models/request/select_bowler_req.dart';
+import 'package:cricket_scorer/features/scoring/data/models/response/abandon_match_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/create_match_res.dart';
+import 'package:cricket_scorer/features/scoring/data/models/response/delete_match_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/live_score_res.dart';
+import 'package:cricket_scorer/features/scoring/data/models/response/match_abandoned_res.dart';
+import 'package:cricket_scorer/features/scoring/data/models/response/match_history_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/request/start_innings_req.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/over_complete_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/score_ball_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/select_bowler_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/start_innings_res.dart';
+import 'package:cricket_scorer/features/scoring/data/models/request/sync_req.dart';
+import 'package:cricket_scorer/features/scoring/data/models/response/sync_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/request/undo_ball_req.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/undo_ball_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/match_complete_res.dart';
@@ -138,6 +144,27 @@ class MatchRepositoryImpl extends MatchRepository {
   }
 
   @override
+  Future<Either<CricketResponse<SyncRes>, CricketFailure>> syncMatch({
+    required String matchId,
+    required SyncReq? syncReq,
+  }) async {
+    Either<ApiResponseModel, CricketFailure> response = await matchApiService
+        .sync(matchId: matchId, params: syncReq);
+    if (response.isResult) {
+      return Either.result(
+        CricketResponse(
+          data: SyncRes.fromJson(
+            response.result.data as Map<String, dynamic>,
+          ),
+          message: response.result.message,
+        ),
+      );
+    } else {
+      return Either.fallback(response.fallback);
+    }
+  }
+
+  @override
   Stream<Either<LiveScoreRes, CricketFailure>> watchScoreUpdates({
     required String matchId,
   }) {
@@ -202,5 +229,69 @@ class MatchRepositoryImpl extends MatchRepository {
     required String matchId,
   }) {
     return matchSocketService.watchMatchComplete(matchId);
+  }
+
+  @override
+  Stream<Either<MatchAbandonedRes, CricketFailure>> watchMatchAbandoned({
+    required String matchId,
+  }) {
+    return matchSocketService.watchMatchAbandoned(matchId);
+  }
+
+  @override
+  Future<Either<CricketResponse<AbandonMatchRes>, CricketFailure>>
+  abandonMatch({required String matchId}) async {
+    Either<ApiResponseModel, CricketFailure> response = await matchApiService
+        .abandonMatch(matchId: matchId);
+    if (response.isResult) {
+      return Either.result(
+        CricketResponse(
+          data: AbandonMatchRes.fromJson(
+            response.result.data as Map<String, dynamic>,
+          ),
+          message: response.result.message,
+        ),
+      );
+    } else {
+      return Either.fallback(response.fallback);
+    }
+  }
+
+  @override
+  Future<Either<CricketResponse<DeleteMatchRes>, CricketFailure>>
+  deleteMatch({required String matchId}) async {
+    Either<ApiResponseModel, CricketFailure> response = await matchApiService
+        .deleteMatch(matchId: matchId);
+    if (response.isResult) {
+      return Either.result(
+        CricketResponse(
+          data: DeleteMatchRes.fromJson(
+            response.result.data as Map<String, dynamic>,
+          ),
+          message: response.result.message,
+        ),
+      );
+    } else {
+      return Either.fallback(response.fallback);
+    }
+  }
+
+  @override
+  Future<Either<CricketResponse<MatchHistoryRes>, CricketFailure>>
+  getMatchHistory({required int page, required int limit}) async {
+    Either<ApiResponseModel, CricketFailure> response = await matchApiService
+        .getMatchHistory(page: page, limit: limit);
+    if (response.isResult) {
+      return Either.result(
+        CricketResponse(
+          data: MatchHistoryRes.fromJson(
+            response.result.data as Map<String, dynamic>,
+          ),
+          message: response.result.message,
+        ),
+      );
+    } else {
+      return Either.fallback(response.fallback);
+    }
   }
 }

@@ -7,16 +7,16 @@ part of 'scorecard_res.dart';
 // **************************************************************************
 
 BattingLine _$BattingLineFromJson(Map<String, dynamic> json) => BattingLine(
-      playerId: json['playerId'] as String,
-      playerName: json['playerName'] as String,
-      runs: (json['runs'] as num).toInt(),
-      balls: (json['balls'] as num).toInt(),
-      fours: (json['fours'] as num).toInt(),
-      sixes: (json['sixes'] as num).toInt(),
-      strikeRate: (json['strikeRate'] as num).toDouble(),
-      dismissalType: json['dismissalType'] as String?,
-      isNotOut: json['isNotOut'] as bool,
-    );
+  playerId: json['playerId'] as String,
+  playerName: json['playerName'] as String,
+  runs: (json['runs'] as num).toInt(),
+  balls: (json['balls'] as num).toInt(),
+  fours: (json['fours'] as num).toInt(),
+  sixes: (json['sixes'] as num).toInt(),
+  strikeRate: (json['strikeRate'] as num).toDouble(),
+  dismissalType: json['dismissalType'] as String?,
+  isNotOut: json['isNotOut'] as bool,
+);
 
 Map<String, dynamic> _$BattingLineToJson(BattingLine instance) =>
     <String, dynamic>{
@@ -32,16 +32,16 @@ Map<String, dynamic> _$BattingLineToJson(BattingLine instance) =>
     };
 
 BowlingLine _$BowlingLineFromJson(Map<String, dynamic> json) => BowlingLine(
-      playerId: json['playerId'] as String,
-      playerName: json['playerName'] as String,
-      overs: json['overs'] as String,
-      maidens: (json['maidens'] as num).toInt(),
-      runs: (json['runs'] as num).toInt(),
-      wickets: (json['wickets'] as num).toInt(),
-      economy: (json['economy'] as num).toDouble(),
-      wides: (json['wides'] as num).toInt(),
-      noBalls: (json['noBalls'] as num).toInt(),
-    );
+  playerId: json['playerId'] as String,
+  playerName: json['playerName'] as String,
+  overs: json['overs'] as String,
+  maidens: (json['maidens'] as num).toInt(),
+  runs: (json['runs'] as num).toInt(),
+  wickets: (json['wickets'] as num).toInt(),
+  economy: (json['economy'] as num).toDouble(),
+  wides: (json['wides'] as num).toInt(),
+  noBalls: (json['noBalls'] as num).toInt(),
+);
 
 Map<String, dynamic> _$BowlingLineToJson(BowlingLine instance) =>
     <String, dynamic>{
@@ -105,20 +105,26 @@ Map<String, dynamic> _$InningsScorecardToJson(InningsScorecard instance) =>
     };
 
 ScorecardRes _$ScorecardResFromJson(Map<String, dynamic> json) => ScorecardRes(
-      matchId: json['matchId'] as String,
-      teamA: PublicTeamRef.fromJson(json['teamA'] as Map<String, dynamic>),
-      teamB: PublicTeamRef.fromJson(json['teamB'] as Map<String, dynamic>),
-      result: MatchResultInfo.fromJson(json['result'] as Map<String, dynamic>),
-      innings: (json['innings'] as List<dynamic>)
-          .map((e) => InningsScorecard.fromJson(e as Map<String, dynamic>))
-          .toList(),
-    );
+  matchId: json['matchId'] as String,
+  teamA: PublicTeamRef.fromJson(json['teamA'] as Map<String, dynamic>),
+  teamB: PublicTeamRef.fromJson(json['teamB'] as Map<String, dynamic>),
+  result: json['result'] == null
+      ? null
+      : MatchResultInfo.fromJson(json['result'] as Map<String, dynamic>),
+  innings: (json['innings'] as List<dynamic>)
+      .map(
+        (e) => e == null
+            ? null
+            : InningsScorecard.fromJson(e as Map<String, dynamic>),
+      )
+      .toList(),
+);
 
 Map<String, dynamic> _$ScorecardResToJson(ScorecardRes instance) =>
     <String, dynamic>{
       'matchId': instance.matchId,
-      'result': instance.result.toJson(),
-      'innings': instance.innings.map((e) => e.toJson()).toList(),
+      'result': instance.result?.toJson(),
+      'innings': instance.innings.map((e) => e?.toJson()).toList(),
       'teamA': instance.teamA.toJson(),
       'teamB': instance.teamB.toJson(),
     };

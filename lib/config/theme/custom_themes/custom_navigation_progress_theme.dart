@@ -28,7 +28,7 @@ class CustomNavigationProgressTheme {
       ProgressIndicatorThemeData(
         color: AppColor.primaryRed,
         linearTrackColor: CustomColorScheme.lightColorScheme.outline,
-        refreshBackgroundColor: AppColor.primaryRed,
+        refreshBackgroundColor: CustomColorScheme.lightColorScheme.surface,
       );
 
   // DARK
@@ -53,6 +53,6 @@ class CustomNavigationProgressTheme {
       ProgressIndicatorThemeData(
         color: AppColor.primaryRed,
         linearTrackColor: CustomColorScheme.darkColorScheme.outline,
-        refreshBackgroundColor: AppColor.primaryRed,
+        refreshBackgroundColor: CustomColorScheme.darkColorScheme.surface,
       );
 }

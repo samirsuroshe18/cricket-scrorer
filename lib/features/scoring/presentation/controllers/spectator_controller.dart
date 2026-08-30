@@ -5,6 +5,7 @@ import 'package:cricket_scorer/core/global/widgets/snackbars/cricket_snackbar.da
 import 'package:cricket_scorer/core/translations/translation_keys.dart';
 import 'package:cricket_scorer/core/utils/either_util.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/live_score_res.dart';
+import 'package:cricket_scorer/features/scoring/data/models/response/match_abandoned_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/match_complete_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/match_result_info.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/public_match_res.dart';
@@ -119,10 +120,23 @@ class SpectatorController extends GetxController {
   /// endings instead of just one.
   final matchResult = Rxn<MatchResultInfo>();
 
+  /// True once the match has been abandoned — rain, a no-show. Mutually
+  /// exclusive with [matchResult]: `abandonMatch` refuses a match that is
+  /// already `completed`, and a genuine finish never sets `status` to
+  /// `abandoned`, so the two can never both be true. Checked first in the UI
+  /// for exactly that reason. Set two ways, mirroring [matchResult]: from
+  /// `match.status` on the initial fetch, and from `match:abandoned` while
+  /// connected live — the only way a spectator watching mid-match learns the
+  /// match was just called off, since there is no REST ack the way the
+  /// scorer's own console has.
+  final isAbandoned = false.obs;
+
   StreamSubscription<Either<LiveScoreRes, CricketFailure>>? _scoreSub;
   StreamSubscription<Either<ScoreUndoRes, CricketFailure>>? _undoSub;
   StreamSubscription<Either<MatchCompleteRes, CricketFailure>>?
   _matchCompleteSub;
+  StreamSubscription<Either<MatchAbandonedRes, CricketFailure>>?
+  _matchAbandonedSub;
 
   /// Same guard, same reason, as `ScoreBallController._lastAppliedSeq`: strike
   /// arrives from more than one source — the join ack, `score:update`,
@@ -173,6 +187,7 @@ class SpectatorController extends GetxController {
 
     matchInfo.value = data.match;
     matchResult.value = data.match.result;
+    isAbandoned.value = data.match.status == 'abandoned';
     _applyInnings(data.innings);
     isLoading.value = false;
 
@@ -317,6 +332,15 @@ class SpectatorController extends GetxController {
           if (!event.isResult) return;
           matchResult.value = event.result.result;
         });
+
+    // Same "only way this reaches a spectator" reasoning as the subscription
+    // above, for the other way a match ends.
+    _matchAbandonedSub = matchRepository
+        .watchMatchAbandoned(matchId: matchId)
+        .listen((event) {
+          if (!event.isResult) return;
+          isAbandoned.value = true;
+        });
   }
 
   void _applyStrike(Strike? incoming, {int? seq}) {
@@ -332,6 +356,7 @@ class SpectatorController extends GetxController {
     unawaited(_scoreSub?.cancel());
     unawaited(_undoSub?.cancel());
     unawaited(_matchCompleteSub?.cancel());
+    unawaited(_matchAbandonedSub?.cancel());
     super.onClose();
   }
 }

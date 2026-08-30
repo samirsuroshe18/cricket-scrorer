@@ -15,9 +15,6 @@ analyzer:
     strict-raw-types: true
 
   errors:
-    # 1. Fixes your Floor warning: Silences experimental tags across the project
-    experimental_member_use: ignore
-
     # Upgrade critical flaws from warnings to errors so CI/CD pipelines catch them
     missing_required_param: error
     missing_return: error

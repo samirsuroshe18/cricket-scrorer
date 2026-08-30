@@ -4,6 +4,7 @@ import 'package:cricket_scorer/core/error/cricket_failure.dart';
 import 'package:cricket_scorer/core/network/socket_client_service.dart';
 import 'package:cricket_scorer/core/utils/either_util.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/live_score_res.dart';
+import 'package:cricket_scorer/features/scoring/data/models/response/match_abandoned_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/match_complete_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/over_complete_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/score_undo_res.dart';
@@ -147,6 +148,36 @@ class MatchSocketService {
 
     controller.onCancel = () async {
       socket.off('match:complete', onMatchComplete);
+      await controller.close();
+    };
+
+    return controller.stream;
+  }
+
+  /// The `match:abandoned` event — a live/innings-break match called off
+  /// (rain, a no-show) rather than finished. Only the spectator screen
+  /// subscribes to this: the scorer's own console already gets the same fact
+  /// from `POST .../abandon`'s REST ack, the same asymmetry as
+  /// [watchScoreUndo].
+  Stream<Either<MatchAbandonedRes, CricketFailure>> watchMatchAbandoned(
+    String matchId,
+  ) {
+    final socket = socketClientService.socket;
+    final controller =
+        StreamController<Either<MatchAbandonedRes, CricketFailure>>();
+
+    void onMatchAbandoned(dynamic data) {
+      controller.add(
+        Either.result(
+          MatchAbandonedRes.fromJson(Map<String, dynamic>.from(data as Map)),
+        ),
+      );
+    }
+
+    socket.on('match:abandoned', onMatchAbandoned);
+
+    controller.onCancel = () async {
+      socket.off('match:abandoned', onMatchAbandoned);
       await controller.close();
     };
 

@@ -126,14 +126,18 @@ class InningsScorecard {
   Map<String, dynamic> toJson() => _$InningsScorecardToJson(this);
 }
 
-/// `GET /v1/match/:matchId/scorecard`. Always both innings, in order — a
-/// match cannot complete without both, so unlike [PublicMatchRes.innings]
-/// this is never null and never a single innings.
+/// `GET /v1/match/:matchId/scorecard`. Always length-2 `innings`, but an
+/// entry can be `null` — a `completed` match always has both (it cannot
+/// complete without playing out both), but an `abandoned` one only has
+/// whichever innings actually started before play was called off, so
+/// `innings[1]` is `null` if the match never reached innings 2. `result` is
+/// `null` for the same reason an abandoned match has: no winner was ever
+/// decided.
 @JsonSerializable(explicitToJson: true)
 class ScorecardRes {
   final String matchId;
-  final MatchResultInfo result;
-  final List<InningsScorecard> innings;
+  final MatchResultInfo? result;
+  final List<InningsScorecard?> innings;
 
   /// Resolved names, unlike [InningsScorecard.battingTeam] and
   /// [MatchResultInfo.winner], which stay side labels. Reused from the

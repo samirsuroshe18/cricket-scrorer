@@ -154,7 +154,14 @@ class _WicketBottomSheetState extends State<WicketBottomSheet> {
       incomingBatsmanName: incoming,
     );
 
-    if (accepted) Get.back<void>();
+    // Navigator.pop rather than Get.back(): GetX's `back()` treats an open
+    // snackbar as higher priority than the pop itself — if the "Live
+    // connection lost" snackbar (score_ball_controller.dart) happens to be
+    // showing at this exact moment, `Get.back()` closes only the snackbar
+    // and returns, leaving this sheet stuck open even though the wicket was
+    // already accepted and queued. Popping this sheet's own route directly
+    // is unaffected by any overlay elsewhere.
+    if (accepted && mounted) Navigator.of(context).pop();
   }
 
   @override

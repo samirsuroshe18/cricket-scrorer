@@ -158,20 +158,37 @@ class ApiClient extends GetxService {
     }
   }
 
+  // Every timeout/connection-error variant, alongside a raw SocketException,
+  // means Dio never got a response at all — a slow or patchy connection is
+  // exactly the same "we can't reach the server" fact as an outright drop,
+  // and the offline queue's fallback trigger depends on both reading as
+  // CricketNoInternetFailure. Before this, only a bare SocketException did;
+  // a timeout fell through to a generic CricketServerErrorFailure, which is
+  // indistinguishable from a real 500 and would never route to the queue.
+  static const _networkFailureTypes = {
+    DioExceptionType.connectionTimeout,
+    DioExceptionType.sendTimeout,
+    DioExceptionType.receiveTimeout,
+    DioExceptionType.connectionError,
+  };
+
   Future<CricketFailure> _handleError(dynamic error) async {
     try {
       if (error is DioException) {
         if (error.response == null) {
-          if (error.error is SocketException) {
+          if (error.error is SocketException ||
+              _networkFailureTypes.contains(error.type)) {
             return CricketNoInternetFailure(statusCode: 0);
           }
           return CricketServerErrorFailure();
         }
+        final code = error.response?.data['code'] as String?;
         switch (error.response?.statusCode ?? 0) {
           case 400:
             return CricketBadRequestFailure(
               message: error.response?.data['message'].toString(),
               statusCode: error.response?.data['statusCode'] as int?,
+              code: code,
             );
           case 401:
             return CricketUnauthorizedErrorFailure(
@@ -179,24 +196,33 @@ class ApiClient extends GetxService {
                   error.response?.data['message'] as String? ??
                   'You are not authorized to access this resource...',
               statusCode: error.response?.data['statusCode'] as int?,
+              code: code,
             );
           case 403:
             return CricketForbiddenErrorFailure(
               message: error.response?.data['message'] as String?,
               statusCode: error.response?.data['statusCode'] as int?,
+              code: code,
             );
           case 404:
             return CricketNotFoundErrorFailure(
               message: error.response?.data['message'] as String?,
               statusCode: error.response?.data['statusCode'] as int?,
+              code: code,
+            );
+          case 409:
+            return CricketConflictFailure(
+              message: error.response?.data['message'] as String?,
+              statusCode: error.response?.data['statusCode'] as int?,
+              code: code,
             );
           case 422:
             // return error.response!.data;
-            return CricketSomethingWentWrongFailure(statusCode: 422);
+            return CricketSomethingWentWrongFailure(statusCode: 422, code: code);
           case >= 500:
-            return CricketServerErrorFailure(statusCode: 500);
+            return CricketServerErrorFailure(statusCode: 500, code: code);
           default:
-            return CricketSomethingWentWrongFailure();
+            return CricketSomethingWentWrongFailure(code: code);
         }
       }
       return CricketSomethingWentWrongFailure();

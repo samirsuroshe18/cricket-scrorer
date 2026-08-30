@@ -218,4 +218,40 @@ Map<String, String> hi = {
   TranslationKeys.economyShort: 'इकॉन',
   TranslationKeys.widesShort: 'वा',
   TranslationKeys.noBallsShort: 'नोबॉ',
+
+  TranslationKeys.syncConflict:
+      'यह मैच अपने आप सिंक नहीं हो सका — कुछ भी खोया नहीं है, लेकिन इस पर ध्यान देना ज़रूरी है',
+  TranslationKeys.syncConflictTitle: 'सिंक विरोध',
+  TranslationKeys.syncConflictMessage:
+      'आपके ऑफ़लाइन रहते समय किसी और ने इस मैच पर स्कोर किया। आपकी पेंडिंग गेंदें इस डिवाइस पर सुरक्षित हैं, लेकिन इन्हें अपने आप लागू नहीं किया जा सकता।',
+  TranslationKeys.discardAndReload: 'हटाएं और फिर से लोड करें',
+  TranslationKeys.reviewLater: 'बाद में देखें',
+  TranslationKeys.unsyncedDeliveries: 'अनसिंक',
+  TranslationKeys.syncBlockedOnRule:
+      'एक पेंडिंग गेंद लागू नहीं हो सकी — आगे बढ़ने के लिए इसे अनडू करें।',
+  TranslationKeys.syncBlockedTitle: 'सिंक रुका हुआ है',
+  TranslationKeys.syncBlockedMessage:
+      'आपकी एक पेंडिंग गेंद एक मैच नियम द्वारा अस्वीकार कर दी गई — पुनः प्रयास करने से यह ठीक नहीं होगा। स्कोरिंग जारी रखने के लिए इसे अनडू करें; इसके बाद की गेंदें भी अनडू हो जाएंगी।',
+  TranslationKeys.undoBackToHere: 'यहाँ तक अनडू करें',
+  TranslationKeys.retrySync: 'सिंक पुनः प्रयास करें',
+  TranslationKeys.syncingNow: 'सिंक हो रहा है…',
+  TranslationKeys.scorecardPendingSync:
+      'सिंक होने के बाद पूरा स्कोरकार्ड दिखाई देगा।',
+
+  TranslationKeys.matchHistory: 'आपके मैच',
+  TranslationKeys.noMatchesYet: 'अभी कोई मैच नहीं',
+  TranslationKeys.noMatchesYetHint: 'मैच शुरू करें, यह यहाँ दिखेगा।',
+  TranslationKeys.statusUpcoming: 'आगामी',
+  TranslationKeys.statusLive: 'लाइव',
+  TranslationKeys.statusInningsBreak: 'पारी का विराम',
+  TranslationKeys.statusCompleted: 'समाप्त',
+  TranslationKeys.statusAbandoned: 'रद्द',
+  TranslationKeys.abandonMatch: 'मैच रद्द करें',
+  TranslationKeys.abandonMatchConfirmTitle: 'क्या इस मैच को रद्द करें?',
+  TranslationKeys.abandonMatchConfirmMessage:
+      'इससे मैच अभी समाप्त हो जाएगा — इसे फिर से शुरू नहीं किया जा सकता। अब तक दर्ज स्कोर सुरक्षित रहेंगे।',
+  TranslationKeys.deleteMatch: 'मैच हटाएं',
+  TranslationKeys.deleteMatchConfirmTitle: 'क्या इस मैच को हटाएं?',
+  TranslationKeys.deleteMatchConfirmMessage:
+      'यह इसे आपके इतिहास से हमेशा के लिए हटा देगा — इसे वापस नहीं लाया जा सकता।',
 };

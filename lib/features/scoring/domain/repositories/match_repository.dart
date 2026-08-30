@@ -4,13 +4,19 @@ import 'package:cricket_scorer/core/utils/either_util.dart';
 import 'package:cricket_scorer/features/scoring/data/models/request/create_match_req.dart';
 import 'package:cricket_scorer/features/scoring/data/models/request/score_ball_req.dart';
 import 'package:cricket_scorer/features/scoring/data/models/request/select_bowler_req.dart';
+import 'package:cricket_scorer/features/scoring/data/models/response/abandon_match_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/create_match_res.dart';
+import 'package:cricket_scorer/features/scoring/data/models/response/match_abandoned_res.dart';
+import 'package:cricket_scorer/features/scoring/data/models/response/delete_match_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/live_score_res.dart';
+import 'package:cricket_scorer/features/scoring/data/models/response/match_history_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/request/start_innings_req.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/over_complete_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/score_ball_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/select_bowler_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/start_innings_res.dart';
+import 'package:cricket_scorer/features/scoring/data/models/request/sync_req.dart';
+import 'package:cricket_scorer/features/scoring/data/models/response/sync_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/request/undo_ball_req.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/undo_ball_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/match_complete_res.dart';
@@ -65,6 +71,17 @@ abstract class MatchRepository {
     required UndoBallReq? undoBallReq,
   });
 
+  /// Applies an ordered batch of events queued while offline. See
+  /// docs/api.md's sync section — a lost response is safe to retry (its own
+  /// keys are recognised and skipped), an individually-bad event stops the
+  /// batch where it is (`failedAt`/`failedCode`) rather than rejecting
+  /// everything, and a genuine conflict — the server holding deliveries this
+  /// client never queued — refuses the batch whole via [CricketConflictFailure].
+  Future<Either<CricketResponse<SyncRes>, CricketFailure>> syncMatch({
+    required String matchId,
+    required SyncReq? syncReq,
+  });
+
   /// Live score updates for [matchId], driven by the `match:state`/`score:update`
   /// socket events. No usecase wraps this — the base `UseCase<T, P>` contract is
   /// `Future<T> call(...)`, a bad fit for a stream, and there's no other
@@ -112,4 +129,32 @@ abstract class MatchRepository {
   Stream<Either<MatchCompleteRes, CricketFailure>> watchMatchComplete({
     required String matchId,
   });
+
+  /// The `match:abandoned` event — see
+  /// [MatchSocketService.watchMatchAbandoned]. Only the spectator screen
+  /// subscribes: the scorer's own console already learns this from
+  /// `abandonMatch`'s REST ack.
+  Stream<Either<MatchAbandonedRes, CricketFailure>> watchMatchAbandoned({
+    required String matchId,
+  });
+
+  /// `GET /v1/match/history` — the caller's own matches, newest first,
+  /// paginated. Feeds the history/home screen; a card's `status` is what
+  /// decides whether tapping it reopens the scoring console or the result
+  /// screen.
+  Future<Either<CricketResponse<MatchHistoryRes>, CricketFailure>>
+  getMatchHistory({required int page, required int limit});
+
+  /// `POST /v1/match/:matchId/abandon` — a live/innings-break match that will
+  /// never finish (rain, a no-show). Generates a best-effort partial
+  /// scorecard server-side and notifies any connected spectators via
+  /// `match:abandoned`; see docs/api.md.
+  Future<Either<CricketResponse<AbandonMatchRes>, CricketFailure>>
+  abandonMatch({required String matchId});
+
+  /// `DELETE /v1/match/:matchId` — soft-delete, any status. No socket
+  /// emission: a spectator on a deleted match just finds the next public
+  /// read 404s, same as an unknown code.
+  Future<Either<CricketResponse<DeleteMatchRes>, CricketFailure>>
+  deleteMatch({required String matchId});
 }

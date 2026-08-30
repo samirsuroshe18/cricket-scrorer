@@ -2,14 +2,17 @@ import 'dart:async';
 
 import 'package:cricket_scorer/core/extensions/space_extension.dart';
 import 'package:cricket_scorer/core/extensions/theme_x.dart';
+import 'package:cricket_scorer/core/global/widgets/bootom_sheets/custom_bottomsheet.dart';
 import 'package:cricket_scorer/core/global/widgets/snackbars/cricket_snackbar.dart';
 import 'package:cricket_scorer/core/global/widgets/cricket_text.dart';
 import 'package:cricket_scorer/core/global/widgets/custom_app_bar.dart';
 import 'package:cricket_scorer/core/translations/translation_keys.dart';
+import 'package:cricket_scorer/features/scoring/data/data_sources/local/offline_sync_service.dart';
 import 'package:cricket_scorer/features/scoring/data/scoring_constants.dart';
 import 'package:cricket_scorer/features/scoring/presentation/controllers/score_ball_controller.dart';
 import 'package:cricket_scorer/features/scoring/presentation/widget/rate_stats_line.dart';
 import 'package:cricket_scorer/features/scoring/presentation/widget/strike_banner.dart';
+import 'package:cricket_scorer/features/scoring/presentation/widget/sync_status_banner.dart';
 import 'package:cricket_scorer/features/scoring/presentation/widget/toss_line.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -61,6 +64,21 @@ class _BowlerLine extends StatelessWidget {
   }
 }
 
+/// The confirmation for [ScoreBallController.abandonMatch] — a destructive,
+/// unresumable action, so it goes through the same warning-sheet pattern as
+/// every other confirm-before-you-break-something moment in this codebase
+/// rather than firing straight off a menu tap.
+Future<void> _confirmAbandon(ScoreBallController controller) async {
+  final confirmed = await CustomBottomSheet.warningBottomSheet<bool>(
+    title: TranslationKeys.abandonMatchConfirmTitle.tr,
+    message: TranslationKeys.abandonMatchConfirmMessage.tr,
+    confirmButtonName: TranslationKeys.abandonMatch.tr,
+  );
+  if (confirmed == true) {
+    await controller.abandonMatch();
+  }
+}
+
 class ScoreBallScreen extends GetView<ScoreBallController> {
   const ScoreBallScreen({super.key});
 
@@ -104,12 +122,56 @@ class ScoreBallScreen extends GetView<ScoreBallController> {
                   : const Icon(LucideIcons.undo2),
             ),
           ),
+          Obx(
+            () => controller.isAbandoning.value
+                ? const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 16),
+                    child: SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
+                  )
+                : PopupMenuButton<void>(
+                    icon: const Icon(Icons.more_vert),
+                    itemBuilder: (context) => [
+                      PopupMenuItem<void>(
+                        onTap: () => unawaited(_confirmAbandon(controller)),
+                        child: CricketText(text: TranslationKeys.abandonMatch.tr),
+                      ),
+                    ],
+                  ),
+          ),
         ],
       ),
-      body: Padding(
+      // Scrollable rather than a bare Column: the sync banner at the top
+      // adds height on demand (offline queue banner, conflict/blocked-on-rule
+      // states), and a fixed-height body would push the run/OUT buttons
+      // below the viewport instead of just scrolling to reach them.
+      body: SingleChildScrollView(
         padding: 24.p,
         child: Column(
           children: [
+            // Topmost, above even the team names — "is my data safe" should
+            // never require scrolling past the score to find out.
+            Obx(() {
+              final pendingCount = controller.offlineSyncService.pendingCount.value;
+              final phase = controller.offlineSyncService.phase.value;
+              if (pendingCount == 0 && phase == SyncPhase.idle) {
+                return const SizedBox.shrink();
+              }
+              return Column(
+                children: [
+                  SyncStatusBanner(
+                    pendingCount: pendingCount,
+                    phase: phase,
+                    lastError: controller.offlineSyncService.lastError.value,
+                    onRetry: () => unawaited(controller.handleSyncBannerTap()),
+                  ),
+                  12.h,
+                ],
+              );
+            }),
             CricketText(
               text:
                   '${controller.match.teamA.name} vs ${controller.match.teamB.name}',

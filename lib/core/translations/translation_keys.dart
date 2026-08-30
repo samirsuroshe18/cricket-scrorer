@@ -225,4 +225,37 @@ class TranslationKeys {
   static const String economyShort = 'economy_short';
   static const String widesShort = 'wides_short';
   static const String noBallsShort = 'no_balls_short';
+
+  // Offline sync
+  static const String syncConflict = 'sync_conflict';
+  static const String syncConflictTitle = 'sync_conflict_title';
+  static const String syncConflictMessage = 'sync_conflict_message';
+  static const String discardAndReload = 'discard_and_reload';
+  static const String reviewLater = 'review_later';
+  static const String unsyncedDeliveries = 'unsynced_deliveries';
+  static const String syncBlockedOnRule = 'sync_blocked_on_rule';
+  static const String syncBlockedTitle = 'sync_blocked_title';
+  static const String syncBlockedMessage = 'sync_blocked_message';
+  static const String undoBackToHere = 'undo_back_to_here';
+  static const String retrySync = 'retry_sync';
+  static const String syncingNow = 'syncing_now';
+  static const String scorecardPendingSync = 'scorecard_pending_sync';
+
+  // Match history / home
+  static const String matchHistory = 'match_history';
+  static const String noMatchesYet = 'no_matches_yet';
+  static const String noMatchesYetHint = 'no_matches_yet_hint';
+  static const String statusUpcoming = 'status_upcoming';
+  static const String statusLive = 'status_live';
+  static const String statusInningsBreak = 'status_innings_break';
+  static const String statusCompleted = 'status_completed';
+  static const String statusAbandoned = 'status_abandoned';
+  static const String abandonMatch = 'abandon_match';
+  static const String abandonMatchConfirmTitle = 'abandon_match_confirm_title';
+  static const String abandonMatchConfirmMessage =
+      'abandon_match_confirm_message';
+  static const String deleteMatch = 'delete_match';
+  static const String deleteMatchConfirmTitle = 'delete_match_confirm_title';
+  static const String deleteMatchConfirmMessage =
+      'delete_match_confirm_message';
 }

@@ -43,16 +43,16 @@ Map<String, dynamic> _$InningsTotalsToJson(InningsTotals instance) =>
     };
 
 OverSummary _$OverSummaryFromJson(Map<String, dynamic> json) => OverSummary(
-      overNumber: (json['overNumber'] as num?)?.toInt(),
-      legalDeliveries: (json['legalDeliveries'] as num?)?.toInt() ?? 0,
-      totalRuns: (json['totalRuns'] as num?)?.toInt() ?? 0,
-      wickets: (json['wickets'] as num?)?.toInt() ?? 0,
-      extras: json['extras'] == null
-          ? null
-          : ExtrasBreakdown.fromJson(json['extras'] as Map<String, dynamic>),
-      bowlerId: json['bowlerId'] as String?,
-      bowlerName: json['bowlerName'] as String?,
-    );
+  overNumber: (json['overNumber'] as num?)?.toInt(),
+  legalDeliveries: (json['legalDeliveries'] as num?)?.toInt() ?? 0,
+  totalRuns: (json['totalRuns'] as num?)?.toInt() ?? 0,
+  wickets: (json['wickets'] as num?)?.toInt() ?? 0,
+  extras: json['extras'] == null
+      ? null
+      : ExtrasBreakdown.fromJson(json['extras'] as Map<String, dynamic>),
+  bowlerId: json['bowlerId'] as String?,
+  bowlerName: json['bowlerName'] as String?,
+);
 
 Map<String, dynamic> _$OverSummaryToJson(OverSummary instance) =>
     <String, dynamic>{
@@ -66,9 +66,9 @@ Map<String, dynamic> _$OverSummaryToJson(OverSummary instance) =>
     };
 
 NextBowler _$NextBowlerFromJson(Map<String, dynamic> json) => NextBowler(
-      excludedBowlerId: json['excludedBowlerId'] as String?,
-      excludedBowlerName: json['excludedBowlerName'] as String?,
-    );
+  excludedBowlerId: json['excludedBowlerId'] as String?,
+  excludedBowlerName: json['excludedBowlerName'] as String?,
+);
 
 Map<String, dynamic> _$NextBowlerToJson(NextBowler instance) =>
     <String, dynamic>{
@@ -77,36 +77,37 @@ Map<String, dynamic> _$NextBowlerToJson(NextBowler instance) =>
     };
 
 ScoreBallRes _$ScoreBallResFromJson(Map<String, dynamic> json) => ScoreBallRes(
-      ballEventId: json['ballEventId'] as String,
-      matchId: json['matchId'] as String,
-      inningsId: json['inningsId'] as String,
-      overNumber: (json['overNumber'] as num).toInt(),
-      ballNumber: (json['ballNumber'] as num).toInt(),
-      absoluteBallSeq: (json['absoluteBallSeq'] as num).toInt(),
-      runs: (json['runs'] as num).toInt(),
-      extras: (json['extras'] as num?)?.toInt() ?? 0,
-      extraType: json['extraType'] as String?,
-      runsFrom: json['runsFrom'] as String?,
-      isLegal: json['isLegal'] as bool? ?? true,
-      overComplete: json['overComplete'] as bool? ?? false,
-      over: json['over'] == null
-          ? null
-          : OverSummary.fromJson(json['over'] as Map<String, dynamic>),
-      nextBowler: json['nextBowler'] == null
-          ? null
-          : NextBowler.fromJson(json['nextBowler'] as Map<String, dynamic>),
-      inningsComplete: json['inningsComplete'] as bool? ?? false,
-      matchComplete: json['matchComplete'] as bool? ?? false,
-      wicket: json['wicket'] == null
-          ? null
-          : Wicket.fromJson(json['wicket'] as Map<String, dynamic>),
-      strike: json['strike'] == null
-          ? null
-          : Strike.fromJson(json['strike'] as Map<String, dynamic>),
-      target: (json['target'] as num?)?.toInt(),
-      inningsTotals:
-          InningsTotals.fromJson(json['inningsTotals'] as Map<String, dynamic>),
-    );
+  ballEventId: json['ballEventId'] as String,
+  matchId: json['matchId'] as String,
+  inningsId: json['inningsId'] as String,
+  overNumber: (json['overNumber'] as num).toInt(),
+  ballNumber: (json['ballNumber'] as num).toInt(),
+  absoluteBallSeq: (json['absoluteBallSeq'] as num).toInt(),
+  runs: (json['runs'] as num).toInt(),
+  extras: (json['extras'] as num?)?.toInt() ?? 0,
+  extraType: json['extraType'] as String?,
+  runsFrom: json['runsFrom'] as String?,
+  isLegal: json['isLegal'] as bool? ?? true,
+  overComplete: json['overComplete'] as bool? ?? false,
+  over: json['over'] == null
+      ? null
+      : OverSummary.fromJson(json['over'] as Map<String, dynamic>),
+  nextBowler: json['nextBowler'] == null
+      ? null
+      : NextBowler.fromJson(json['nextBowler'] as Map<String, dynamic>),
+  inningsComplete: json['inningsComplete'] as bool? ?? false,
+  matchComplete: json['matchComplete'] as bool? ?? false,
+  wicket: json['wicket'] == null
+      ? null
+      : Wicket.fromJson(json['wicket'] as Map<String, dynamic>),
+  strike: json['strike'] == null
+      ? null
+      : Strike.fromJson(json['strike'] as Map<String, dynamic>),
+  target: (json['target'] as num?)?.toInt(),
+  inningsTotals: InningsTotals.fromJson(
+    json['inningsTotals'] as Map<String, dynamic>,
+  ),
+);
 
 Map<String, dynamic> _$ScoreBallResToJson(ScoreBallRes instance) =>
     <String, dynamic>{
