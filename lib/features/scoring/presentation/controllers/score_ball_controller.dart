@@ -23,6 +23,7 @@ import 'package:cricket_scorer/features/scoring/data/models/response/sync_res.da
 import 'package:cricket_scorer/features/scoring/data/models/response/undo_ball_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/wicket.dart';
 import 'package:cricket_scorer/features/scoring/data/scoring_constants.dart';
+import 'package:cricket_scorer/features/scoring/domain/bowler_ref.dart';
 import 'package:cricket_scorer/features/scoring/domain/offline/ball_outcome_preview.dart';
 import 'package:cricket_scorer/features/scoring/domain/offline/pre_event_state.dart';
 import 'package:cricket_scorer/features/scoring/domain/offline/resolve_match_result.dart';
@@ -184,7 +185,11 @@ class ScoreBallController extends GetxController {
   /// Player on the bowling side, so there is no roster to fetch, and on a fresh
   /// app launch mid-match this holds at most the two names `match:state`
   /// supplies. That is exactly why the sheet always offers a name field.
-  final bowlersSeen = <String>[].obs;
+  ///
+  /// [BowlerRef.id] may be null — a name recorded from an offline queue entry
+  /// (never yet acknowledged by the server) has no real id to attach. Picking
+  /// such a chip still sends a bare name, exactly as typing it would.
+  final bowlersSeen = <BowlerRef>[].obs;
 
   /// Highest over number whose end has been acted on. The ack and the socket
   /// both report an over ending, and a replayed idempotency key can report an
@@ -456,6 +461,7 @@ class ScoreBallController extends GetxController {
           _applyOverEnd(
             overNumber: over.overNumber,
             bowlerJustBowled: over.over.bowlerName,
+            bowlerJustBowledId: over.over.bowlerId,
             // The event carries no excluded bowler: the spectator room is
             // unauthenticated and has no picker to feed. The bowler who just
             // bowled *is* the one Law 17.6 excludes, so fall back to him.
@@ -679,8 +685,8 @@ class ScoreBallController extends GetxController {
   }) {
     if (bowler == null) return;
 
-    _rememberBowler(bowler.currentBowlerName);
-    _rememberBowler(bowler.previousBowlerName);
+    _rememberBowler(bowler.currentBowlerId, bowler.currentBowlerName);
+    _rememberBowler(bowler.previousBowlerId, bowler.previousBowlerName);
 
     currentBowler.value = bowler.currentBowlerName;
 
@@ -707,12 +713,13 @@ class ScoreBallController extends GetxController {
   void _applyOverEnd({
     required int? overNumber,
     required String? bowlerJustBowled,
+    String? bowlerJustBowledId,
     required String? excludedName,
     required bool newBowlerRequired,
   }) {
     // Recorded before the ordering guard: a name is worth keeping for the
     // picker even from a payload that is otherwise stale.
-    _rememberBowler(bowlerJustBowled);
+    _rememberBowler(bowlerJustBowledId, bowlerJustBowled);
 
     if (overNumber == null || overNumber <= _lastOverPrompted) return;
     _lastOverPrompted = overNumber;
@@ -731,12 +738,25 @@ class ScoreBallController extends GetxController {
 
   /// Case-insensitive, order-preserving. The picker shows these as chips; the
   /// scorer types anyone else.
-  void _rememberBowler(String? name) {
+  ///
+  /// [id] is nullable because some payloads that name a bowler don't carry
+  /// one (an offline preview, or an over-complete event with only a name) —
+  /// see [BowlerRef]. An existing name-only entry is upgraded in place the
+  /// first time a real id shows up for it, never the reverse: a later payload
+  /// with no id is never taken to mean the bowler stopped having one.
+  void _rememberBowler(String? id, String? name) {
     final trimmed = name?.trim();
     if (trimmed == null || trimmed.isEmpty) return;
-    final lower = trimmed.toLowerCase();
-    if (bowlersSeen.any((String n) => n.toLowerCase() == lower)) return;
-    bowlersSeen.add(trimmed);
+
+    final index = bowlersSeen.indexWhere((b) => b.sameName(trimmed));
+    if (index == -1) {
+      bowlersSeen.add(BowlerRef(id: id, name: trimmed));
+      return;
+    }
+
+    if (id != null && bowlersSeen[index].id == null) {
+      bowlersSeen[index] = BowlerRef(id: id, name: trimmed);
+    }
   }
 
   /// The single place [strike] is written. Drops any payload older than the
@@ -858,6 +878,7 @@ class ScoreBallController extends GetxController {
     Wicket? wicket,
     int? overNumber,
     String? bowlerJustBowled,
+    String? bowlerJustBowledId,
     bool newBowlerRequired = false,
     String? excludedBowlerName,
   }) {
@@ -872,6 +893,7 @@ class ScoreBallController extends GetxController {
       _applyOverEnd(
         overNumber: overNumber,
         bowlerJustBowled: bowlerJustBowled,
+        bowlerJustBowledId: bowlerJustBowledId,
         excludedName: excludedBowlerName,
         newBowlerRequired: newBowlerRequired,
       );
@@ -1107,8 +1129,8 @@ class ScoreBallController extends GetxController {
 
     final bowler = state.bowler;
     if (bowler != null) {
-      _rememberBowler(bowler.currentBowlerName);
-      _rememberBowler(bowler.previousBowlerName);
+      _rememberBowler(bowler.currentBowlerId, bowler.currentBowlerName);
+      _rememberBowler(bowler.previousBowlerId, bowler.previousBowlerName);
       currentBowler.value = bowler.currentBowlerName;
       excludedBowler.value = bowler.awaitingBowler
           ? bowler.previousBowlerName
@@ -1236,6 +1258,7 @@ class ScoreBallController extends GetxController {
       battingTeam: data?.battingTeam,
       strike: data?.strike,
       bowlerName: data?.bowler?.bowlerName,
+      bowlerId: data?.bowler?.bowlerId,
       target: data?.target,
       totals: data?.inningsTotals,
     );
@@ -1308,6 +1331,7 @@ class ScoreBallController extends GetxController {
     required String? battingTeam,
     required Strike? strike,
     required String? bowlerName,
+    String? bowlerId,
     required int? target,
     required InningsTotals? totals,
   }) {
@@ -1341,7 +1365,7 @@ class ScoreBallController extends GetxController {
     // Over 1's bowler comes from here, which is why the console never prompts
     // for a bowler at the start of an innings.
     currentBowler.value = bowlerName;
-    _rememberBowler(bowlerName);
+    _rememberBowler(bowlerId, bowlerName);
     needsBowler.value = false;
     excludedBowler.value = null;
 
@@ -1432,8 +1456,14 @@ class ScoreBallController extends GetxController {
   /// Same network-first, queue-on-`CricketNoInternetFailure` shape as
   /// [_score], including skipping the network attempt outright when a queue
   /// already exists — see that method's own comment on why.
-  Future<bool> selectBowler(String bowlerName) async {
-    final req = SelectBowlerReq(bowlerName: bowlerName);
+  ///
+  /// [bowlerId] is what the picker sends when the scorer tapped a known
+  /// bowler's chip rather than typing a name — see [BowlerRef] and
+  /// docs/api.md's "Identity: bowlerId vs a bare name". Omitted, it names a
+  /// new player; passed, it names this exact one, no matter what other
+  /// `Player` on the team might share the typed name.
+  Future<bool> selectBowler(String bowlerName, {String? bowlerId}) async {
+    final req = SelectBowlerReq(bowlerName: bowlerName, bowlerId: bowlerId);
 
     if (_hasQueuedBalls) {
       return _queueBowlerOffline(req);
@@ -1457,8 +1487,8 @@ class ScoreBallController extends GetxController {
 
     final data = response.result.data;
     currentBowler.value = data?.bowler.bowlerName;
-    _rememberBowler(data?.bowler.bowlerName);
-    _rememberBowler(data?.previousBowler?.bowlerName);
+    _rememberBowler(data?.bowler.bowlerId, data?.bowler.bowlerName);
+    _rememberBowler(data?.previousBowler?.bowlerId, data?.previousBowler?.bowlerName);
 
     needsBowler.value = false;
     excludedBowler.value = null;
@@ -1504,7 +1534,11 @@ class ScoreBallController extends GetxController {
     isProvisional.value = true;
 
     currentBowler.value = req.bowlerName;
-    _rememberBowler(req.bowlerName);
+    // `req.bowlerId` is only ever non-null here if the scorer picked an
+    // already-known chip whose id this device learned before going offline
+    // — a genuinely new offline name never has one yet, since ids are only
+    // ever assigned server-side, on sync.
+    _rememberBowler(req.bowlerId, req.bowlerName);
     needsBowler.value = false;
     excludedBowler.value = null;
     overComplete.value = false;
@@ -1785,8 +1819,8 @@ class ScoreBallController extends GetxController {
 
     final bowler = state.bowler;
     if (bowler != null) {
-      _rememberBowler(bowler.currentBowlerName);
-      _rememberBowler(bowler.previousBowlerName);
+      _rememberBowler(bowler.currentBowlerId, bowler.currentBowlerName);
+      _rememberBowler(bowler.previousBowlerId, bowler.previousBowlerName);
       currentBowler.value = bowler.currentBowlerName;
 
       // Read from the payload rather than hardcoded to false, even though a
@@ -1940,6 +1974,7 @@ class ScoreBallController extends GetxController {
         wicket: ball.wicket,
         overNumber: ball.over?.overNumber ?? ball.overNumber,
         bowlerJustBowled: ball.over?.bowlerName,
+        bowlerJustBowledId: ball.over?.bowlerId,
         newBowlerRequired: ball.nextBowler != null,
         excludedBowlerName: ball.nextBowler?.excludedBowlerName,
       );

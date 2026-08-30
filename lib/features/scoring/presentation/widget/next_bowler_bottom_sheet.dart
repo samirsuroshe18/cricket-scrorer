@@ -8,6 +8,7 @@ import 'package:cricket_scorer/core/global/widgets/cricket_text_field.dart';
 import 'package:cricket_scorer/core/global/widgets/bootom_sheets/custom_bottomsheet.dart';
 import 'package:cricket_scorer/core/global/widgets/snackbars/cricket_snackbar.dart';
 import 'package:cricket_scorer/core/translations/translation_keys.dart';
+import 'package:cricket_scorer/features/scoring/domain/bowler_ref.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -45,7 +46,7 @@ class NextBowlerBottomSheet extends StatefulWidget {
   final String? excludedBowlerName;
 
   /// Bowlers seen this innings. A shortcut, not a roster — see the class doc.
-  final List<String> knownBowlers;
+  final List<BowlerRef> knownBowlers;
 
   /// Button-level loading, owned by the controller.
   final RxBool isSubmitting;
@@ -53,7 +54,11 @@ class NextBowlerBottomSheet extends StatefulWidget {
   /// Returns true once the server accepts the bowler. While it returns false
   /// the sheet stays up with the typed name intact, so a rejected name is
   /// corrected rather than retyped.
-  final Future<bool> Function(String bowlerName) onSubmit;
+  ///
+  /// [bowlerId] is what tells the server this is a known bowler returning,
+  /// not a new player who happens to share a name — see [BowlerRef]. Sent
+  /// only when the text still reads exactly as picked; see [_submit].
+  final Future<bool> Function(String bowlerName, {String? bowlerId}) onSubmit;
 
   /// Whether there is a delivery to take back. False on a resumed match, where
   /// the console never saw an ack for the ball that ended the over.
@@ -69,9 +74,10 @@ class NextBowlerBottomSheet extends StatefulWidget {
 
   static Future<void> show({
     required String? excludedBowlerName,
-    required List<String> knownBowlers,
+    required List<BowlerRef> knownBowlers,
     required RxBool isSubmitting,
-    required Future<bool> Function(String) onSubmit,
+    required Future<bool> Function(String bowlerName, {String? bowlerId})
+    onSubmit,
     required bool Function() canUndo,
     required RxBool isUndoing,
     required Future<bool> Function() onUndo,
@@ -101,6 +107,12 @@ class _NextBowlerBottomSheetState extends State<NextBowlerBottomSheet> {
   final _controller = TextEditingController();
   final _formKey = GlobalKey<FormState>();
 
+  /// The chip most recently tapped, if the field still reads exactly as it
+  /// left it — see [_submit]. Cleared implicitly by comparison, not by a
+  /// text listener: editing the field away from the picked name doesn't
+  /// need its own handler, `_submit` simply stops finding a match.
+  BowlerRef? _picked;
+
   bool _isExcluded(String name) {
     final excluded = widget.excludedBowlerName?.trim().toLowerCase();
     if (excluded == null || excluded.isEmpty) return false;
@@ -117,10 +129,13 @@ class _NextBowlerBottomSheetState extends State<NextBowlerBottomSheet> {
   /// Tapping a chip fills the field rather than submitting, so the chips and
   /// the field are one input with one confirm — a scorer can pick a name and
   /// still correct a typo in it before sending.
-  void _pick(String name) {
+  void _pick(BowlerRef bowler) {
     setState(() {
-      _controller.text = name;
-      _controller.selection = TextSelection.collapsed(offset: name.length);
+      _controller.text = bowler.name;
+      _controller.selection = TextSelection.collapsed(
+        offset: bowler.name.length,
+      );
+      _picked = bowler;
     });
   }
 
@@ -139,10 +154,20 @@ class _NextBowlerBottomSheetState extends State<NextBowlerBottomSheet> {
       return;
     }
 
+    // Only sent when the field still reads exactly as the tap left it — a
+    // scorer who picks a chip and then edits the name is typing someone
+    // else, and that must reach the server as a bare name, not the chip's
+    // id. This is what tells the server "this exact returning bowler" apart
+    // from "a new player who happens to share a name".
+    final picked = _picked;
+    final bowlerId = (picked != null && picked.name == name)
+        ? picked.id
+        : null;
+
     // Navigator.pop rather than Get.back() — see _undo()'s comment below for
     // why: GetX's `back()` closes an open snackbar instead of this sheet
     // whenever one happens to be showing.
-    if (await widget.onSubmit(name) && mounted) {
+    if (await widget.onSubmit(name, bowlerId: bowlerId) && mounted) {
       Navigator.of(context).pop();
     }
   }
@@ -201,14 +226,14 @@ class _NextBowlerBottomSheetState extends State<NextBowlerBottomSheet> {
               Wrap(
                 spacing: 8,
                 runSpacing: 8,
-                children: widget.knownBowlers.map((String name) {
-                  final blocked = _isExcluded(name);
+                children: widget.knownBowlers.map((BowlerRef bowler) {
+                  final blocked = _isExcluded(bowler.name);
                   return ChoiceChip(
-                    label: CricketText(text: name),
-                    selected: _controller.text.trim() == name,
+                    label: CricketText(text: bowler.name),
+                    selected: _controller.text.trim() == bowler.name,
                     // Greyed, not removed. `onSelected: null` is what disables a
                     // chip in Material; the reason line below says why.
-                    onSelected: blocked ? null : (_) => _pick(name),
+                    onSelected: blocked ? null : (_) => _pick(bowler),
                   );
                 }).toList(),
               ),

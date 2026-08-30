@@ -54,6 +54,15 @@ class _OfflineMatchRepository implements MatchRepository {
   /// unset field on this fake.
   Either<CricketResponse<AbandonMatchRes>, CricketFailure>? abandonMatchResponse;
 
+  /// Settable per test, same convention — null falls back to this fake's
+  /// default "no internet" answer below.
+  Either<CricketResponse<SelectBowlerRes>, CricketFailure>? selectBowlerResponse;
+
+  /// Captured on every call, regardless of [selectBowlerResponse] — what
+  /// proves the controller actually sent a `bowlerId`, not just that
+  /// `bowlersSeen` ended up looking right.
+  SelectBowlerReq? lastSelectBowlerReq;
+
   @override
   Future<Either<CricketResponse<CreateMatchRes>, CricketFailure>> createMatch({
     required CreateMatchReq? createMatchReq,
@@ -80,7 +89,12 @@ class _OfflineMatchRepository implements MatchRepository {
   selectBowler({
     required String matchId,
     required SelectBowlerReq? selectBowlerReq,
-  }) async => Either.fallback(CricketNoInternetFailure(statusCode: 0));
+  }) async {
+    lastSelectBowlerReq = selectBowlerReq;
+    final response = selectBowlerResponse;
+    if (response != null) return response;
+    return Either.fallback(CricketNoInternetFailure(statusCode: 0));
+  }
 
   @override
   Future<Either<CricketResponse<UndoBallRes>, CricketFailure>> undoBall({
@@ -2207,5 +2221,109 @@ void main() {
     // onInit()-only, no pumped widget tree, so that call throws a null-check
     // error from GetX's snackbar queue outside one. Verified manually
     // instead (abandoning an already-ended match against the real backend).
+  });
+
+  group('selectBowler bowlerId disambiguation', () {
+    Future<
+      ({ScoreBallController controller, _OfflineMatchRepository repo})
+    >
+    buildController() async {
+      final repo = _OfflineMatchRepository();
+      final db = ScoringQueueDatabase.forTesting(NativeDatabase.memory());
+      final dao = ScoringQueueDao(db);
+      final syncService = OfflineSyncService(
+        dao: dao,
+        syncMatchUseCase: SyncMatchUseCase(matchRepository: repo),
+        startInningsUseCase: StartInningsUseCase(matchRepository: repo),
+      );
+      final controller = ScoreBallController(
+        scoreBallUseCase: ScoreBallUseCase(matchRepository: repo),
+        startInningsUseCase: StartInningsUseCase(matchRepository: repo),
+        selectBowlerUseCase: SelectBowlerUseCase(matchRepository: repo),
+        undoBallUseCase: UndoBallUseCase(matchRepository: repo),
+        abandonMatchUseCase: AbandonMatchUseCase(matchRepository: repo),
+        matchRepository: repo,
+        offlineSyncService: syncService,
+      );
+
+      Get.testMode = true;
+      Get.routing.args = CreateMatchRes(
+        matchId: 'match-1',
+        joinCode: null,
+        teamA: TeamRef(id: 'team-a', name: 'Team A'),
+        teamB: TeamRef(id: 'team-b', name: 'Team B'),
+        totalOvers: 2,
+        status: 'live',
+        syncStatus: 'local',
+        createdAt: '2026-01-01T00:00:00.000Z',
+      );
+
+      controller.onInit();
+
+      return (controller: controller, repo: repo);
+    }
+
+    test(
+      'a bowler picked by bare name sends no bowlerId and is remembered '
+      'with the id the server assigns',
+      () async {
+        final built = await buildController();
+        built.repo.selectBowlerResponse = Either.result(
+          CricketResponse(
+            message: 'ok',
+            data: SelectBowlerRes(
+              matchId: 'match-1',
+              inningsId: 'innings-1',
+              overNumber: 2,
+              bowler: Bowler(bowlerId: 'bowler-rahul', bowlerName: 'Rahul'),
+            ),
+          ),
+        );
+
+        final result = await built.controller.selectBowler('Rahul');
+
+        expect(result, isTrue);
+        expect(
+          built.repo.lastSelectBowlerReq?.bowlerId,
+          isNull,
+          reason: 'a freshly-typed name names a new player, not a known one',
+        );
+        expect(
+          built.controller.bowlersSeen.any(
+            (b) => b.id == 'bowler-rahul' && b.name == 'Rahul',
+          ),
+          isTrue,
+          reason:
+              'the id the server assigned must be retained, not just the '
+              'name, so a later re-pick of the same chip can reference it',
+        );
+      },
+    );
+
+    test(
+      'picking a known bowler by id sends that exact id, not just the name',
+      () async {
+        final built = await buildController();
+        built.repo.selectBowlerResponse = Either.result(
+          CricketResponse(
+            message: 'ok',
+            data: SelectBowlerRes(
+              matchId: 'match-1',
+              inningsId: 'innings-1',
+              overNumber: 4,
+              bowler: Bowler(bowlerId: 'bowler-rahul', bowlerName: 'Rahul'),
+            ),
+          ),
+        );
+
+        final result = await built.controller.selectBowler(
+          'Rahul',
+          bowlerId: 'bowler-rahul',
+        );
+
+        expect(result, isTrue);
+        expect(built.repo.lastSelectBowlerReq?.bowlerId, 'bowler-rahul');
+      },
+    );
   });
 }
