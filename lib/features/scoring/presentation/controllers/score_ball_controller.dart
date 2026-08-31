@@ -213,7 +213,8 @@ class ScoreBallController extends GetxController {
   /// `start-innings`'s own response) — the offline queue is innings-scoped,
   /// so every DAO call needs this. Defaults to 1, the same default the
   /// backend's own `Match.currentInnings` schema field has, and is corrected
-  /// the moment the first real payload arrives.
+  /// either by [_initializeOfflineQueueState] (a cold restart with a
+  /// non-empty local queue) or the moment the first real payload arrives.
   int _currentInningsNumber = 1;
 
   /// `'teamA'` / `'teamB'`, whoever is batting the current innings — from
@@ -346,15 +347,10 @@ class ScoreBallController extends GetxController {
           : (tossWinner == 'teamA' ? 'teamB' : 'teamA');
     }
 
-    // Best-effort default until the join ack or start-innings corrects it —
-    // see [_currentInningsNumber]'s own doc comment. Re-called whenever that
-    // field changes so the queue/pending-count the service watches is always
-    // scoped to the innings actually in progress.
-    offlineSyncService.watch(
-      matchId: match.matchId,
-      inningsNumber: _currentInningsNumber,
-    );
-    unawaited(_seedProvisionalStateIfQueued());
+    // Resolves [_currentInningsNumber] against the local queue before
+    // [OfflineSyncService.watch] and [_seedProvisionalStateIfQueued] both key
+    // off it — see [_initializeOfflineQueueState]'s own doc comment.
+    unawaited(_initializeOfflineQueueState());
 
     _subscription = matchRepository
         .watchScoreUpdates(matchId: match.matchId)
@@ -542,18 +538,38 @@ class ScoreBallController extends GetxController {
     }
   }
 
+  /// Every `ever()` worker registered below, disposed explicitly in
+  /// [onClose]. `ever()` is not tied to a GetxController's lifecycle the way
+  /// a `StreamSubscription` field discipline makes obvious it should be —
+  /// left uncaptured, a worker keeps its closure (and everything it
+  /// closes over, including this whole controller) alive for as long as
+  /// whatever `Rx` it listens to lives. Two of these listen on
+  /// [OfflineSyncService.phase]/[OfflineSyncService.lastAppliedState] — a
+  /// `fenix`-registered singleton that outlives every route — so without
+  /// this, every match ever opened in a session would leave one more dead
+  /// controller permanently wired to fire `_promptIfNeeded()`/
+  /// [_reconcileFromSyncedState] on the next match's sync activity, from
+  /// whatever screen the user has since navigated to.
+  final List<Worker> _workers = [];
+
   @override
   void onReady() {
     super.onReady();
-    ever<bool>(_serverStateArrived, (_) => unawaited(_promptIfNeeded()));
-    ever<bool>(needsBowler, (_) => unawaited(_promptIfNeeded()));
+    _workers.add(
+      ever<bool>(_serverStateArrived, (_) => unawaited(_promptIfNeeded())),
+    );
+    _workers.add(
+      ever<bool>(needsBowler, (_) => unawaited(_promptIfNeeded())),
+    );
     // Without this, nothing re-enters the loop when an innings ends via
     // overs_complete or a mid-over wicket — neither of those changes
     // `needsBowler` (no over boundary) or `_serverStateArrived` (already
     // true). `_score` sets [isInningsComplete] directly rather than through a
     // usecase call, so this listener is the only thing that turns that flag
     // flipping into the openers sheet reopening for innings 2.
-    ever<bool>(isInningsComplete, (_) => unawaited(_promptIfNeeded()));
+    _workers.add(
+      ever<bool>(isInningsComplete, (_) => unawaited(_promptIfNeeded())),
+    );
 
     // A batch was refused whole. Routed through `_promptIfNeeded`'s own loop
     // (see its top-priority branch) rather than opened directly from here —
@@ -561,16 +577,20 @@ class ScoreBallController extends GetxController {
     // could silently miss a conflict that lands while the wicket sheet (a
     // separate flow this listener knows nothing about) is already up. The
     // loop's own re-entry after that sheet closes is what catches it instead.
-    ever<SyncPhase>(
-      offlineSyncService.phase,
-      (_) => unawaited(_promptIfNeeded()),
+    _workers.add(
+      ever<SyncPhase>(
+        offlineSyncService.phase,
+        (_) => unawaited(_promptIfNeeded()),
+      ),
     );
 
     // A flush actually landed — reconcile the provisional preview back to
     // real server truth. See [_reconcileFromSyncedState].
-    ever<SyncState?>(offlineSyncService.lastAppliedState, (state) {
-      if (state != null) _reconcileFromSyncedState(state);
-    });
+    _workers.add(
+      ever<SyncState?>(offlineSyncService.lastAppliedState, (state) {
+        if (state != null) _reconcileFromSyncedState(state);
+      }),
+    );
 
     unawaited(_promptIfNeeded());
   }
@@ -659,6 +679,15 @@ class ScoreBallController extends GetxController {
         // forever on exactly those two endings, having correctly unlocked on
         // the third.
         if (!hasOpeners || isInningsComplete.value) {
+          // [isInningsComplete] is exactly the innings-1-to-2 transition
+          // case (a fresh match's first-ever openers prompt reaches this
+          // branch via `!hasOpeners` instead, with nothing yet to summarize
+          // or undo back into) — so it doubles as the signal for whether
+          // there is a previous innings to show and an escape hatch to
+          // offer. `totalRuns`/`wickets`/`overs` still hold innings 1's
+          // final figures here: nothing resets them until this form actually
+          // submits.
+          final justFinishedInnings = isInningsComplete.value;
           await OpenersBottomSheet.show(
             isSubmitting: isStartingInnings,
             onSubmit: (strikerName, nonStrikerName, bowlerName) => startInnings(
@@ -666,6 +695,15 @@ class ScoreBallController extends GetxController {
               nonStrikerName: nonStrikerName,
               bowlerName: bowlerName,
             ),
+            previousInningsRuns: justFinishedInnings ? totalRuns.value : null,
+            previousInningsWickets: justFinishedInnings ? wickets.value : null,
+            previousInningsOvers: justFinishedInnings ? overs.value : null,
+            // Same reasoning as the next-bowler sheet's identical wiring
+            // below: undismissable, so this is the only way out of a
+            // mis-tapped final ball of innings 1 once the sheet is up.
+            canUndo: () => canUndo,
+            isUndoing: isUndoing,
+            onUndo: undoLastBall,
           );
         } else if (needsBowler.value) {
           await NextBowlerBottomSheet.show(
@@ -796,11 +834,49 @@ class ScoreBallController extends GetxController {
   // this builds on.
   // ---------------------------------------------------------------------
 
-  /// Called once from [onInit]. A non-null result means the app was killed
-  /// and relaunched while still offline with a non-empty queue — the only
-  /// case nothing else supplies a seed for. An empty queue means the
-  /// ordinary server payloads about to arrive are already enough, so this
-  /// deliberately does nothing further in that case.
+  /// Called once from [onInit], before anything else touches the offline
+  /// queue.
+  ///
+  /// The first [OfflineSyncService.watch] call below is deliberately
+  /// synchronous — it runs before this method's first `await`, so it
+  /// executes inline within [onInit] exactly as it always did. Callers rely
+  /// on that: [OfflineSyncService.pendingCount]/`queuedBallCount` (and so
+  /// `canUndo`) must be reactively wired up the instant the controller
+  /// initializes, not one microtask later. Only if the async lookup then
+  /// finds a *different* innings — the cold-restart case — is [watch]
+  /// re-pointed, exactly as [_applyInningsStarted] already re-points it on
+  /// every live innings transition.
+  ///
+  /// [_currentInningsNumber] itself still needs correcting before
+  /// [_seedProvisionalStateIfQueued] reads it: a cold restart mid-innings-2
+  /// with balls still queued would otherwise seed from innings 1's queue by
+  /// the field's stale default — nothing else corrects it until the
+  /// socket's first payload arrives, asynchronously, well after a seed
+  /// would already have run.
+  Future<void> _initializeOfflineQueueState() async {
+    offlineSyncService.watch(
+      matchId: match.matchId,
+      inningsNumber: _currentInningsNumber,
+    );
+
+    final pendingInnings = await offlineSyncService
+        .latestInningsWithPendingEvents(matchId: match.matchId);
+    if (pendingInnings != null && pendingInnings != _currentInningsNumber) {
+      _currentInningsNumber = pendingInnings;
+      offlineSyncService.watch(
+        matchId: match.matchId,
+        inningsNumber: _currentInningsNumber,
+      );
+    }
+
+    await _seedProvisionalStateIfQueued();
+  }
+
+  /// Called once from [_initializeOfflineQueueState]. A non-null result
+  /// means the app was killed and relaunched while still offline with a
+  /// non-empty queue — the only case nothing else supplies a seed for. An
+  /// empty queue means the ordinary server payloads about to arrive are
+  /// already enough, so this deliberately does nothing further in that case.
   Future<void> _seedProvisionalStateIfQueued() async {
     final pre = await offlineSyncService.currentProvisionalState(
       matchId: match.matchId,
@@ -810,9 +886,38 @@ class ScoreBallController extends GetxController {
     );
     if (pre == null) return;
 
-    _offlinePre = pre;
+    // Re-read immediately before applying, rather than trusting the read
+    // above: nothing orders that read (a real DB round trip, slower on a
+    // large local DB or under scheduler pressure) against the socket's own
+    // first event, or against [OfflineSyncService]'s independent
+    // auto-sync-on-resume — either can leave this exact queue flushed by the
+    // time the read above finally resolves, in which case `pre` describes a
+    // queue that no longer exists. Applying it anyway would repaint the
+    // console with a stale snapshot right over server truth that already
+    // arrived, regressing the display until the next ball or sync event
+    // corrects it again.
+    //
+    // Deliberately a second one-shot query rather than
+    // [OfflineSyncService.pendingCount]/[_hasQueuedBalls]: that field is
+    // only as current as its own Drift *stream*'s last emission, which reacts
+    // to a write asynchronously and is not guaranteed to have caught up by
+    // the instant this method's own (unrelated) query resolves — so it can
+    // itself still read the pre-flush count for a moment. A fresh one-shot
+    // read against the same table has no such lag; it reflects whatever is
+    // actually committed at the moment it runs, which — with no `await`
+    // between it and the writes below — is effectively the moment of
+    // application.
+    final current = await offlineSyncService.currentProvisionalState(
+      matchId: match.matchId,
+      inningsNumber: _currentInningsNumber,
+      totalOvers: match.totalOvers,
+      target: target.value,
+    );
+    if (current == null) return;
+
+    _offlinePre = current;
     isProvisional.value = true;
-    _applyPreEventStateAsCurrent(pre);
+    _applyPreEventStateAsCurrent(current);
   }
 
   /// Seeds a [PreEventState] from the controller's own live Rx fields — used
@@ -1088,6 +1193,14 @@ class ScoreBallController extends GetxController {
     // `restored.oversCompleted` is exactly `undone.overNumber - 1` would be
     // server-side: how many overs existed before the ball just undone.
     _lastOverPrompted = restored.oversCompleted;
+
+    // A ball cannot have been queued against a completed innings — scoring
+    // refuses that offline exactly like it does online — so undoing one
+    // always reopens it. Without this, undoing the queued ball that just
+    // completed innings 1 left this flag true, and the openers sheet
+    // (blocking on it, per `_promptIfNeeded`) would reopen itself the
+    // instant this undo closed it.
+    isInningsComplete.value = false;
 
     _applyPreEventStateAsCurrent(restored);
     isUndoing.value = false;
@@ -1505,7 +1618,10 @@ class ScoreBallController extends GetxController {
     final data = response.result.data;
     currentBowler.value = data?.bowler.bowlerName;
     _rememberBowler(data?.bowler.bowlerId, data?.bowler.bowlerName);
-    _rememberBowler(data?.previousBowler?.bowlerId, data?.previousBowler?.bowlerName);
+    _rememberBowler(
+      data?.previousBowler?.bowlerId,
+      data?.previousBowler?.bowlerName,
+    );
 
     needsBowler.value = false;
     excludedBowler.value = null;
@@ -1716,6 +1832,11 @@ class ScoreBallController extends GetxController {
         // online via `undone.absoluteBallSeq - 1`, expressed in the terms
         // this offline path actually has on hand.
         _lastAppliedSeq = restored.totalBalls;
+
+        // Same reopening [_undoQueuedBall] does, and for the same reason:
+        // this ball cannot have completed the innings and still have
+        // something after it to undo offline — undoing it always reopens.
+        isInningsComplete.value = false;
 
         _applyPreEventStateAsCurrent(restored);
 
@@ -2054,6 +2175,14 @@ class ScoreBallController extends GetxController {
     unawaited(_subscription?.cancel());
     unawaited(_overCompleteSubscription?.cancel());
     unawaited(_matchCompleteSubscription?.cancel());
+    // Not optional cleanup: two of these are registered on
+    // offlineSyncService's own Rx fields (a singleton this controller does
+    // not own), so leaving them undisposed keeps this entire controller
+    // alive and firing on every future match's sync activity — see
+    // [_workers]'s own doc comment.
+    for (final worker in _workers) {
+      worker.dispose();
+    }
     // Does NOT stop a flush already in flight, or future ones — the service
     // is `fenix`-registered and outlives this controller/route on purpose,
     // so a queue keeps trying to drain even after the scorer navigates away.

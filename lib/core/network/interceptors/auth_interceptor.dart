@@ -27,12 +27,25 @@ class AuthInterceptor extends Interceptor {
       return super.onRequest(options, handler);
     }
 
+    options.headers['accept-language'] =
+        Get.find<LanguageService>().currentLanguage;
+
+    // A caller that has already set its own Authorization header knows
+    // better than this interceptor's default — never clobber it. The one
+    // caller that does this is logout (user_api_service.dart), which must
+    // send the refresh token, not the access token; every other call site
+    // relies on this interceptor to attach the access token, so this branch
+    // only ever changes logout's behavior. Without it, logout's deliberately-
+    // set header was silently overwritten below, the request carried the
+    // wrong token, and the server-side session was never actually revoked.
+    if (options.headers.containsKey('Authorization')) {
+      return super.onRequest(options, handler);
+    }
+
     final accessToken = await Get.find<SecureStorageService>().get(
       SharedPrefKey.accessToken,
     );
 
-    options.headers['accept-language'] =
-        Get.find<LanguageService>().currentLanguage;
     if (accessToken != null && accessToken.isNotEmpty) {
       options.headers['Authorization'] = 'Bearer $accessToken';
       if (kDebugMode) {

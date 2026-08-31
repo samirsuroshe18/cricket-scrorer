@@ -159,6 +159,7 @@ Map<String, String> mr = {
   TranslationKeys.batsmanNameRequired: 'फलंदाजाचे नाव आवश्यक आहे',
   TranslationKeys.batsmenMustDiffer: 'दोन्ही फलंदाज वेगवेगळे असणे आवश्यक आहे',
   TranslationKeys.endOfOver: 'षटक संपले',
+  TranslationKeys.inningsOneComplete: 'डाव 1 पूर्ण',
   TranslationKeys.openingPlayers: 'सुरुवातीचे खेळाडू',
   TranslationKeys.openingBowler: 'सुरुवातीचा गोलंदाज',
   TranslationKeys.currentBowler: 'गोलंदाजी',

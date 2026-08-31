@@ -157,6 +157,7 @@ Map<String, String> en = {
   TranslationKeys.batsmanNameRequired: 'Batsman name is required',
   TranslationKeys.batsmenMustDiffer: 'The two batsmen must be different',
   TranslationKeys.endOfOver: 'End of over',
+  TranslationKeys.inningsOneComplete: 'Innings 1 complete',
   TranslationKeys.openingPlayers: 'Opening Players',
   TranslationKeys.openingBowler: 'Opening bowler',
   TranslationKeys.currentBowler: 'Bowling',

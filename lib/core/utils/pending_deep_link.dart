@@ -23,6 +23,14 @@ class PendingDeepLink {
 
   static final _spectatorPattern = RegExp(r'^/spectate/([^/?]+)');
 
+  /// The share code from a `/spectate/<code>` link, or null for any URI this
+  /// app doesn't recognise. Pure and side-effect-free on purpose: shared
+  /// between this class's own cold-start read and [DeepLinkService]'s
+  /// warm-launch listener, so the two can never recognise the link
+  /// differently.
+  static String? spectatorCodeFrom(Uri uri) =>
+      _spectatorPattern.firstMatch(uri.path)?.group(1);
+
   /// The share code from a `cricketscorer:///spectate/<code>` cold launch, or
   /// null for an ordinary launch (or any link this app doesn't recognise).
   ///
@@ -43,7 +51,7 @@ class PendingDeepLink {
         const Duration(seconds: 3),
       );
       if (uri == null) return null;
-      return _spectatorPattern.firstMatch(uri.path)?.group(1);
+      return spectatorCodeFrom(uri);
     } catch (e) {
       // Covers both a thrown platform-channel error and the TimeoutException
       // above — both must degrade to "no deep link" rather than block launch.
