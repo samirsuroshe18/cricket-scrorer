@@ -132,9 +132,24 @@ class OfflineSyncService extends GetxService {
   /// Subscribes [pendingCount] to one match/innings' queue and remembers it
   /// as the scope the lifecycle/connectivity triggers act on. Call once from
   /// the controller's `onInit`.
+  ///
+  /// [pendingCount]/[queuedBallCount]/[historyCount] are reset to zero
+  /// synchronously, before the new subscriptions are even created — Drift's
+  /// `.watch()` streams deliver their first emission asynchronously (a real
+  /// DB round trip, sometimes crossing an isolate boundary), and until then
+  /// these plain fields would otherwise still read whatever the *previous*
+  /// match/innings left them at. Left stale, `ScoreBallController.canUndo`
+  /// (which reads them directly) can show Undo as tappable on a match that
+  /// was never scored at all, and `_hasQueuedBalls` can briefly pick the
+  /// wrong network-first-vs-queue-first path for the very first ball.
   void watch({required String matchId, required int inningsNumber}) {
     _watchedMatchId = matchId;
     _watchedInningsNumber = inningsNumber;
+
+    pendingCount.value = 0;
+    queuedBallCount.value = 0;
+    historyCount.value = 0;
+
     unawaited(_queueSub?.cancel());
     _queueSub = dao
         .watchQueue(matchId: matchId, inningsNumber: inningsNumber)
@@ -153,6 +168,13 @@ class OfflineSyncService extends GetxService {
   /// Stops watching a match's queue — does NOT stop background flush
   /// attempts already in flight, and a later [watch] for the same innings
   /// picks the queue up exactly where it was.
+  ///
+  /// Resets the same three counters [watch] does, and for the same reason:
+  /// once nothing is watched, nothing will ever correct them again until the
+  /// next [watch] call's own first stream emission — which, per [watch]'s
+  /// own doc comment, is not synchronous either. A screen that reads
+  /// `canUndo` in the gap between one match's `unwatch()` and the next
+  /// match's `watch()` must not see the first match's counts.
   void unwatch() {
     unawaited(_queueSub?.cancel());
     _queueSub = null;
@@ -162,6 +184,9 @@ class OfflineSyncService extends GetxService {
     _watchedInningsNumber = null;
     phase.value = SyncPhase.idle;
     lastError.value = null;
+    pendingCount.value = 0;
+    queuedBallCount.value = 0;
+    historyCount.value = 0;
   }
 
   Future<SyncBaselineData?> baselineFor({
@@ -169,6 +194,10 @@ class OfflineSyncService extends GetxService {
     required int inningsNumber,
   }) {
     return dao.baselineFor(matchId: matchId, inningsNumber: inningsNumber);
+  }
+
+  Future<int?> latestInningsWithPendingEvents({required String matchId}) {
+    return dao.latestInningsWithPendingEvents(matchId: matchId);
   }
 
   /// Queues one delivery. No longer refuses when an undo is pending — a

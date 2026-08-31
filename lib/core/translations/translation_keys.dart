@@ -154,6 +154,7 @@ class TranslationKeys {
   static const String batsmanNameRequired = 'batsman_name_required';
   static const String batsmenMustDiffer = 'batsmen_must_differ';
   static const String endOfOver = 'end_of_over';
+  static const String inningsOneComplete = 'innings_one_complete';
 
   /// Bowlers
   static const String openingPlayers = 'opening_players';

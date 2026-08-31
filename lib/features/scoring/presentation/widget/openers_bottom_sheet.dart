@@ -1,8 +1,10 @@
 import 'dart:async';
 
 import 'package:cricket_scorer/core/extensions/space_extension.dart';
+import 'package:cricket_scorer/core/extensions/theme_x.dart';
 import 'package:cricket_scorer/core/global/widgets/bootom_sheets/custom_bottomsheet.dart';
 import 'package:cricket_scorer/core/global/widgets/cricket_button.dart';
+import 'package:cricket_scorer/core/global/widgets/cricket_text.dart';
 import 'package:cricket_scorer/core/global/widgets/cricket_text_field.dart';
 import 'package:cricket_scorer/core/global/widgets/snackbars/cricket_snackbar.dart';
 import 'package:cricket_scorer/core/translations/translation_keys.dart';
@@ -26,6 +28,12 @@ class OpenersBottomSheet extends StatefulWidget {
   const OpenersBottomSheet({
     required this.onSubmit,
     required this.isSubmitting,
+    required this.canUndo,
+    required this.isUndoing,
+    required this.onUndo,
+    this.previousInningsRuns,
+    this.previousInningsWickets,
+    this.previousInningsOvers,
     super.key,
   });
 
@@ -42,16 +50,52 @@ class OpenersBottomSheet extends StatefulWidget {
   /// Button-level loading, owned by the controller.
   final RxBool isSubmitting;
 
+  /// Innings 1's final score, shown above the form so a mis-tapped last ball
+  /// is visible before the scorer commits to opening innings 2 — the point at
+  /// which undoing it stops being reachable from here (see [canUndo]/
+  /// [onUndo]). Null for the very first innings, where there is nothing to
+  /// show; all three are supplied together or not at all.
+  final int? previousInningsRuns;
+  final int? previousInningsWickets;
+  final String? previousInningsOvers;
+
+  /// Whether there is a delivery to take back. Same signature as
+  /// [NextBowlerBottomSheet]'s, and false for exactly the same reason on a
+  /// fresh first innings: nothing has been scored yet.
+  final bool Function() canUndo;
+
+  /// In-flight flag for [onUndo], owned by the controller.
+  final RxBool isUndoing;
+
+  /// Takes back the most recent delivery. For innings 1's final ball this is
+  /// the only way out — see the class doc.
+  final Future<bool> Function() onUndo;
+
   static Future<void> show({
     required Future<bool> Function(String, String, String) onSubmit,
     required RxBool isSubmitting,
+    required bool Function() canUndo,
+    required RxBool isUndoing,
+    required Future<bool> Function() onUndo,
+    int? previousInningsRuns,
+    int? previousInningsWickets,
+    String? previousInningsOvers,
   }) {
     return CustomBottomSheet.cricketCustomBottomSheet<void>(
       headlineText: TranslationKeys.openingPlayers.tr,
       isXButtonRequired: false,
       isDismissible: false,
       heightFactor: 0.7,
-      child: OpenersBottomSheet(onSubmit: onSubmit, isSubmitting: isSubmitting),
+      child: OpenersBottomSheet(
+        onSubmit: onSubmit,
+        isSubmitting: isSubmitting,
+        canUndo: canUndo,
+        isUndoing: isUndoing,
+        onUndo: onUndo,
+        previousInningsRuns: previousInningsRuns,
+        previousInningsWickets: previousInningsWickets,
+        previousInningsOvers: previousInningsOvers,
+      ),
     );
   }
 
@@ -110,6 +154,21 @@ class _OpenersBottomSheetState extends State<OpenersBottomSheet> {
     }
   }
 
+  /// The way out of a mis-tapped final ball of the previous innings.
+  ///
+  /// This sheet is undismissable, so once it is up — meaning innings 1 has
+  /// already completed — the console's own undo control is unreachable
+  /// behind it, and (per docs/api.md's undo scope) submitting this form is
+  /// the point past which undo can no longer reach back into innings 1 at
+  /// all. See next_bowler_bottom_sheet.dart's identical `_undo` for the same
+  /// reasoning applied to the over boundary.
+  Future<void> _undo() async {
+    // Navigator.pop, not Get.back() — same snackbar hazard as `_submit`.
+    if (await widget.onUndo() && mounted) {
+      Navigator.of(context).pop();
+    }
+  }
+
   @override
   void dispose() {
     _strikerController.dispose();
@@ -120,11 +179,40 @@ class _OpenersBottomSheetState extends State<OpenersBottomSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final runs = widget.previousInningsRuns;
+    final wickets = widget.previousInningsWickets;
+    final overs = widget.previousInningsOvers;
+    final hasPreviousInnings = runs != null && wickets != null && overs != null;
+
     return Form(
       key: _formKey,
       child: SingleChildScrollView(
         child: Column(
           children: [
+            if (hasPreviousInnings) ...[
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(
+                  vertical: 12,
+                  horizontal: 12,
+                ),
+                decoration: BoxDecoration(
+                  color: context.colors.statusInfo.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: CricketText(
+                  text:
+                      '${TranslationKeys.inningsOneComplete.tr}: '
+                      '$runs/$wickets ($overs ${TranslationKeys.overs.tr})',
+                  style: context.textTheme.titleSmall?.copyWith(
+                    color: context.colors.statusInfo,
+                    fontWeight: FontWeight.w600,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+              16.h,
+            ],
             CricketTextField(
               controller: _strikerController,
               labelText: TranslationKeys.striker.tr,
@@ -162,6 +250,35 @@ class _OpenersBottomSheetState extends State<OpenersBottomSheet> {
                 onPressed: () => unawaited(_submit()),
               ),
             ),
+
+            // Same reasoning and the same Obx-around-both-checks structure as
+            // next_bowler_bottom_sheet.dart's identical block: `canUndo()`
+            // reads Rx state internally, so it needs to live inside the Obx
+            // too or this link's visibility goes stale while the
+            // (undismissable) sheet is open.
+            Obx(
+              () => widget.canUndo()
+                  ? Column(
+                      children: [
+                        8.h,
+                        Center(
+                          child: TextButton(
+                            onPressed: widget.isUndoing.value
+                                ? null
+                                : () => unawaited(_undo()),
+                            child: CricketText(
+                              text: TranslationKeys.undoLastBall.tr,
+                              style: context.textTheme.bodyMedium?.copyWith(
+                                color: context.colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    )
+                  : const SizedBox.shrink(),
+            ),
+            16.h,
           ],
         ),
       ),

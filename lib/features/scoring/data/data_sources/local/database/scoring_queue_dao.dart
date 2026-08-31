@@ -189,6 +189,22 @@ class ScoringQueueDao extends DatabaseAccessor<ScoringQueueDatabase>
     return row.read(queuedSyncEvents.id.count()) ?? 0;
   }
 
+  /// The highest innings number that currently has any row queued for this
+  /// match — used to resolve which innings is actually live on a cold app
+  /// restart, before any server payload has had a chance to correct
+  /// `ScoreBallController._currentInningsNumber`'s stale default. An
+  /// unflushed innings-1 tail and a freshly-opened innings-2 queue can
+  /// coexist here — the higher number is always the one on screen.
+  Future<int?> latestInningsWithPendingEvents({
+    required String matchId,
+  }) async {
+    final query = selectOnly(queuedSyncEvents)
+      ..addColumns([queuedSyncEvents.inningsNumber.max()])
+      ..where(queuedSyncEvents.matchId.equals(matchId));
+    final row = await query.getSingle();
+    return row.read(queuedSyncEvents.inningsNumber.max());
+  }
+
   Future<void> upsertBaseline(SyncBaselineCompanion data) {
     return into(syncBaseline).insertOnConflictUpdate(data);
   }

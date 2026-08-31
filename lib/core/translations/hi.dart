@@ -159,6 +159,7 @@ Map<String, String> hi = {
   TranslationKeys.batsmanNameRequired: 'बल्लेबाज का नाम आवश्यक है',
   TranslationKeys.batsmenMustDiffer: 'दोनों बल्लेबाज अलग-अलग होने चाहिए',
   TranslationKeys.endOfOver: 'ओवर समाप्त',
+  TranslationKeys.inningsOneComplete: 'पारी 1 समाप्त',
   TranslationKeys.openingPlayers: 'शुरुआती खिलाड़ी',
   TranslationKeys.openingBowler: 'शुरुआती गेंदबाज',
   TranslationKeys.currentBowler: 'गेंदबाजी',

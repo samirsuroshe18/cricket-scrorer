@@ -52,11 +52,13 @@ class _OfflineMatchRepository implements MatchRepository {
 
   /// Settable per test — null means "not exercised", matching every other
   /// unset field on this fake.
-  Either<CricketResponse<AbandonMatchRes>, CricketFailure>? abandonMatchResponse;
+  Either<CricketResponse<AbandonMatchRes>, CricketFailure>?
+  abandonMatchResponse;
 
   /// Settable per test, same convention — null falls back to this fake's
   /// default "no internet" answer below.
-  Either<CricketResponse<SelectBowlerRes>, CricketFailure>? selectBowlerResponse;
+  Either<CricketResponse<SelectBowlerRes>, CricketFailure>?
+  selectBowlerResponse;
 
   /// Captured on every call, regardless of [selectBowlerResponse] — what
   /// proves the controller actually sent a `bowlerId`, not just that
@@ -170,8 +172,9 @@ class _OfflineMatchRepository implements MatchRepository {
   }
 
   @override
-  Future<Either<CricketResponse<DeleteMatchRes>, CricketFailure>>
-  deleteMatch({required String matchId}) async {
+  Future<Either<CricketResponse<DeleteMatchRes>, CricketFailure>> deleteMatch({
+    required String matchId,
+  }) async {
     throw UnimplementedError('Not exercised in this test.');
   }
 }
@@ -417,8 +420,9 @@ class _MixedMatchRepository implements MatchRepository {
   }
 
   @override
-  Future<Either<CricketResponse<DeleteMatchRes>, CricketFailure>>
-  deleteMatch({required String matchId}) async {
+  Future<Either<CricketResponse<DeleteMatchRes>, CricketFailure>> deleteMatch({
+    required String matchId,
+  }) async {
     throw UnimplementedError('Not exercised in this test.');
   }
 }
@@ -559,8 +563,9 @@ class _RecordingMatchRepository implements MatchRepository {
   }
 
   @override
-  Future<Either<CricketResponse<DeleteMatchRes>, CricketFailure>>
-  deleteMatch({required String matchId}) async {
+  Future<Either<CricketResponse<DeleteMatchRes>, CricketFailure>> deleteMatch({
+    required String matchId,
+  }) async {
     throw UnimplementedError('Not exercised in this test.');
   }
 }
@@ -862,8 +867,9 @@ class _ServerSimulatingMatchRepository implements MatchRepository {
   }
 
   @override
-  Future<Either<CricketResponse<DeleteMatchRes>, CricketFailure>>
-  deleteMatch({required String matchId}) async {
+  Future<Either<CricketResponse<DeleteMatchRes>, CricketFailure>> deleteMatch({
+    required String matchId,
+  }) async {
     throw UnimplementedError('Not exercised in this test.');
   }
 }
@@ -1006,9 +1012,49 @@ class _RuleBlockingMatchRepository implements MatchRepository {
   }
 
   @override
-  Future<Either<CricketResponse<DeleteMatchRes>, CricketFailure>>
-  deleteMatch({required String matchId}) async {
+  Future<Either<CricketResponse<DeleteMatchRes>, CricketFailure>> deleteMatch({
+    required String matchId,
+  }) async {
     throw UnimplementedError('Not exercised in this test.');
+  }
+}
+
+/// Deterministically reproduces the race `_seedProvisionalStateIfQueued`
+/// guards against: something else finishes flushing this exact queue while
+/// the seed's own read of it is still in flight. Rather than trying to time
+/// a real async race, this makes it happen — the queue is cleared for real,
+/// from directly inside the overridden read, immediately before it returns
+/// the (now stale) snapshot it had already computed.
+class _RaceyOfflineSyncService extends OfflineSyncService {
+  _RaceyOfflineSyncService({
+    required super.dao,
+    required super.syncMatchUseCase,
+    required super.startInningsUseCase,
+  });
+
+  @override
+  Future<PreEventState?> currentProvisionalState({
+    required String matchId,
+    required int inningsNumber,
+    required int totalOvers,
+    int? target,
+  }) async {
+    final pre = await super.currentProvisionalState(
+      matchId: matchId,
+      inningsNumber: inningsNumber,
+      totalOvers: totalOvers,
+      target: target,
+    );
+
+    // The concurrent flush landing mid-read — real rows deleted for real,
+    // through the same dao/db the controller's own `watch()` is subscribed
+    // to, so `pendingCount` reacts exactly as it would in production. Left
+    // for the *caller* to pump/settle afterward — nesting a pumpEventQueue()
+    // call inside a Future this same test is also pumping from the outside
+    // is a re-entrancy hazard, not a synchronization primitive.
+    await dao.clearQueue(matchId: matchId, inningsNumber: inningsNumber);
+
+    return pre;
   }
 }
 
@@ -1606,6 +1652,143 @@ void main() {
     );
   });
 
+  group('cold-restart provisional seeding across an innings break', () {
+    test(
+      'a queued ball in innings 2, with the app killed and relaunched before '
+      'reconnecting, seeds the provisional preview from innings 2 — not the '
+      '_currentInningsNumber default of 1',
+      () async {
+        final repo = _MixedMatchRepository();
+        final db = ScoringQueueDatabase.forTesting(NativeDatabase.memory());
+        final dao = ScoringQueueDao(db);
+
+        final syncService1 = OfflineSyncService(
+          dao: dao,
+          syncMatchUseCase: SyncMatchUseCase(matchRepository: repo),
+          startInningsUseCase: StartInningsUseCase(matchRepository: repo),
+        );
+        final controller1 = ScoreBallController(
+          scoreBallUseCase: ScoreBallUseCase(matchRepository: repo),
+          startInningsUseCase: StartInningsUseCase(matchRepository: repo),
+          selectBowlerUseCase: SelectBowlerUseCase(matchRepository: repo),
+          undoBallUseCase: UndoBallUseCase(matchRepository: repo),
+          abandonMatchUseCase: AbandonMatchUseCase(matchRepository: repo),
+          matchRepository: repo,
+          offlineSyncService: syncService1,
+        );
+
+        Get.testMode = true;
+        Get.routing.args = CreateMatchRes(
+          matchId: 'match-1',
+          joinCode: null,
+          teamA: TeamRef(id: 'team-a', name: 'Team A'),
+          teamB: TeamRef(id: 'team-b', name: 'Team B'),
+          totalOvers: 2,
+          status: 'live',
+          syncStatus: 'local',
+          createdAt: '2026-01-01T00:00:00.000Z',
+        );
+
+        repo.startInningsResponse = StartInningsRes(
+          matchId: 'match-1',
+          inningsId: 'innings-1',
+          inningsNumber: 1,
+          battingTeam: 'teamA',
+          bowlingTeam: 'teamB',
+          strike: Strike(strikerName: 'Striker', nonStrikerName: 'Non-Striker'),
+          bowler: Bowler(bowlerId: 'bowler-1', bowlerName: 'Bumrah'),
+          target: null,
+          inningsTotals: InningsTotals(
+            totalRuns: 0,
+            wickets: 0,
+            legalBalls: 0,
+            totalBalls: 0,
+            oversCompleted: 0,
+            extras: ExtrasBreakdown(),
+          ),
+        );
+
+        controller1.onInit();
+        await controller1.startInnings(
+          strikerName: 'Striker',
+          nonStrikerName: 'Non-Striker',
+          bowlerName: 'Bumrah',
+        );
+
+        // Innings 1 "completed" without ever queuing a single ball for it —
+        // exactly like the `offline innings transition` group above. This is
+        // what makes the bug reproducible: innings 1's own queue is
+        // genuinely empty, so a seed that wrongly targets it (the stale
+        // `_currentInningsNumber` default) finds nothing at all, rather than
+        // merely the wrong balls.
+        await syncService1.recordInningsSummary(
+          matchId: 'match-1',
+          inningsNumber: 1,
+          battingTeam: 'teamA',
+          totalRuns: 120,
+          wickets: 3,
+          overs: '2.0',
+        );
+
+        // Go offline, open innings 2 offline, and queue two deliveries for
+        // it — everything a scorer would have done before the app died.
+        repo.online = false;
+        await controller1.startInnings(
+          strikerName: 'New Striker',
+          nonStrikerName: 'New Non-Striker',
+          bowlerName: 'New Bowler',
+        );
+        await controller1.scoreRuns(4);
+        await controller1.scoreRuns(4);
+
+        expect(
+          await dao.pendingCount(matchId: 'match-1', inningsNumber: 2),
+          2,
+          reason: 'sanity check: both deliveries actually queued for innings 2',
+        );
+
+        // Simulate the app being killed and relaunched, still offline: a
+        // fresh `OfflineSyncService` and a fresh `ScoreBallController`, both
+        // starting with `_currentInningsNumber`'s default of 1, backed by
+        // the SAME on-disk queue the first controller just wrote to.
+        final syncService2 = OfflineSyncService(
+          dao: dao,
+          syncMatchUseCase: SyncMatchUseCase(matchRepository: repo),
+          startInningsUseCase: StartInningsUseCase(matchRepository: repo),
+        );
+        final controller2 = ScoreBallController(
+          scoreBallUseCase: ScoreBallUseCase(matchRepository: repo),
+          startInningsUseCase: StartInningsUseCase(matchRepository: repo),
+          selectBowlerUseCase: SelectBowlerUseCase(matchRepository: repo),
+          undoBallUseCase: UndoBallUseCase(matchRepository: repo),
+          abandonMatchUseCase: AbandonMatchUseCase(matchRepository: repo),
+          matchRepository: repo,
+          offlineSyncService: syncService2,
+        );
+
+        controller2.onInit();
+        await pumpEventQueue();
+
+        expect(
+          controller2.isProvisional.value,
+          isTrue,
+          reason: 'a non-empty queue must always resume as provisional',
+        );
+        expect(
+          controller2.totalRuns.value,
+          8,
+          reason:
+              'the two queued innings-2 deliveries, not innings 1\'s '
+              'finished total of 120 and not a stale zero',
+        );
+        expect(controller2.strike.value?.strikerName, 'New Striker');
+
+        await repo.watchScoreUpdatesController.close();
+        await db.close();
+      },
+    );
+  });
+
   group('offline match completion', () {
     late _MixedMatchRepository repo;
     late ScoringQueueDao dao;
@@ -2148,9 +2331,7 @@ void main() {
   });
 
   group('abandonMatch', () {
-    Future<
-      ({ScoreBallController controller, _OfflineMatchRepository repo})
-    >
+    Future<({ScoreBallController controller, _OfflineMatchRepository repo})>
     buildAbandonableController() async {
       final repo = _OfflineMatchRepository();
       final db = ScoringQueueDatabase.forTesting(NativeDatabase.memory());
@@ -2224,9 +2405,7 @@ void main() {
   });
 
   group('selectBowler bowlerId disambiguation', () {
-    Future<
-      ({ScoreBallController controller, _OfflineMatchRepository repo})
-    >
+    Future<({ScoreBallController controller, _OfflineMatchRepository repo})>
     buildController() async {
       final repo = _OfflineMatchRepository();
       final db = ScoringQueueDatabase.forTesting(NativeDatabase.memory());
@@ -2323,6 +2502,162 @@ void main() {
 
         expect(result, isTrue);
         expect(built.repo.lastSelectBowlerReq?.bowlerId, 'bowler-rahul');
+      },
+    );
+  });
+
+  group('onClose disposes ever() workers on the shared OfflineSyncService', () {
+    test(
+      'a zombie controller (onClose already called, no longer on screen) '
+      'does not react when the singleton it used to watch reports a later '
+      'match\'s sync activity',
+      () async {
+        final repo = _OfflineMatchRepository();
+        final db = ScoringQueueDatabase.forTesting(NativeDatabase.memory());
+        final dao = ScoringQueueDao(db);
+        final syncService = OfflineSyncService(
+          dao: dao,
+          syncMatchUseCase: SyncMatchUseCase(matchRepository: repo),
+          startInningsUseCase: StartInningsUseCase(matchRepository: repo),
+        );
+        final controller = ScoreBallController(
+          scoreBallUseCase: ScoreBallUseCase(matchRepository: repo),
+          startInningsUseCase: StartInningsUseCase(matchRepository: repo),
+          selectBowlerUseCase: SelectBowlerUseCase(matchRepository: repo),
+          undoBallUseCase: UndoBallUseCase(matchRepository: repo),
+          abandonMatchUseCase: AbandonMatchUseCase(matchRepository: repo),
+          matchRepository: repo,
+          offlineSyncService: syncService,
+        );
+
+        Get.testMode = true;
+        Get.routing.args = CreateMatchRes(
+          matchId: 'match-1',
+          joinCode: null,
+          teamA: TeamRef(id: 'team-a', name: 'Team A'),
+          teamB: TeamRef(id: 'team-b', name: 'Team B'),
+          totalOvers: 2,
+          status: 'live',
+          syncStatus: 'local',
+          createdAt: '2026-01-01T00:00:00.000Z',
+        );
+
+        // onReady() is what registers the five `ever()` workers under test —
+        // safe to call here because `_OfflineMatchRepository.watchScoreUpdates`
+        // is `Stream.empty()`, so `_serverStateArrived` never flips and
+        // `_promptIfNeeded()` breaks out immediately without touching a
+        // (nonexistent) widget tree.
+        controller.onInit();
+        controller.onReady();
+        await pumpEventQueue();
+
+        // Simulates GetX tearing this controller down after the scorer
+        // navigates away from this match's console — exactly what happens on
+        // every route pop.
+        controller.onClose();
+
+        expect(controller.totalRuns.value, 0);
+
+        // A LATER match's sync flush landing on the same, shared,
+        // fenix-registered singleton — the only way this fires in
+        // production, since OfflineSyncService is a GetxService, not scoped
+        // per match.
+        syncService.lastAppliedState.value = SyncState(
+          inningsTotals: InningsTotals(
+            totalRuns: 999,
+            wickets: 9,
+            legalBalls: 118,
+            totalBalls: 120,
+            oversCompleted: 19,
+            extras: ExtrasBreakdown(),
+          ),
+          overs: '19.6',
+        );
+
+        expect(
+          controller.totalRuns.value,
+          0,
+          reason:
+              'before the fix, the undisposed ever(lastAppliedState, ...) '
+              'worker registered in onReady() would still fire here and '
+              'overwrite this dead controller\'s totals with a completely '
+              'unrelated match\'s',
+        );
+
+        await db.close();
+      },
+    );
+  });
+
+  group('cold-restart seed vs. a concurrent flush of the same queue', () {
+    test(
+      'does not repaint the console with a stale offline snapshot once the '
+      'queue it describes has already been flushed for real',
+      () async {
+        final repo = _OfflineMatchRepository();
+        final db = ScoringQueueDatabase.forTesting(NativeDatabase.memory());
+        final dao = ScoringQueueDao(db);
+        final syncService = _RaceyOfflineSyncService(
+          dao: dao,
+          syncMatchUseCase: SyncMatchUseCase(matchRepository: repo),
+          startInningsUseCase: StartInningsUseCase(matchRepository: repo),
+        );
+        final controller = ScoreBallController(
+          scoreBallUseCase: ScoreBallUseCase(matchRepository: repo),
+          startInningsUseCase: StartInningsUseCase(matchRepository: repo),
+          selectBowlerUseCase: SelectBowlerUseCase(matchRepository: repo),
+          undoBallUseCase: UndoBallUseCase(matchRepository: repo),
+          abandonMatchUseCase: AbandonMatchUseCase(matchRepository: repo),
+          matchRepository: repo,
+          offlineSyncService: syncService,
+        );
+
+        Get.testMode = true;
+        Get.routing.args = CreateMatchRes(
+          matchId: 'match-1',
+          joinCode: null,
+          teamA: TeamRef(id: 'team-a', name: 'Team A'),
+          teamB: TeamRef(id: 'team-b', name: 'Team B'),
+          totalOvers: 2,
+          status: 'live',
+          syncStatus: 'local',
+          createdAt: '2026-01-01T00:00:00.000Z',
+        );
+
+        // A queued ball from before the app was killed — exactly what
+        // `_seedProvisionalStateIfQueued` exists to resume from.
+        await dao.enqueueBall(
+          matchId: 'match-1',
+          inningsNumber: 1,
+          req: ScoreBallReq(runs: 4, idempotencyKey: 'k1'),
+          pre: const PreEventState(
+            totalRuns: 0,
+            wickets: 0,
+            legalBalls: 0,
+            totalBalls: 0,
+            oversCompleted: 0,
+            overTotalRuns: 0,
+            overLegalDeliveries: 0,
+          ),
+        );
+
+        controller.onInit();
+        // _RaceyOfflineSyncService clears the queue for real from inside
+        // the seed's own read, before that read even returns — by the time
+        // onInit's async chain finishes, the race has already happened.
+        await pumpEventQueue();
+
+        expect(
+          controller.isProvisional.value,
+          isFalse,
+          reason:
+              'before the fix, this unconditionally applied the stale '
+              'snapshot the read had already captured, regardless of the '
+              'queue having been flushed out from under it in the meantime',
+        );
+        expect(controller.totalRuns.value, 0);
+
+        await db.close();
       },
     );
   });

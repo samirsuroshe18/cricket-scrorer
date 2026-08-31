@@ -2,6 +2,7 @@ import 'package:cricket_scorer/config/flavor_config.dart';
 import 'package:cricket_scorer/core/network/api_client_service.dart';
 import 'package:cricket_scorer/core/network/socket_client_service.dart';
 import 'package:cricket_scorer/core/services/compression_service.dart';
+import 'package:cricket_scorer/core/services/deep_link_service.dart';
 import 'package:cricket_scorer/core/services/firebase_service.dart';
 import 'package:cricket_scorer/core/services/flavor_service.dart';
 import 'package:cricket_scorer/core/services/language_service.dart';
@@ -55,5 +56,9 @@ class CoreInjection {
       () async => CompressionService(),
       permanent: true,
     );
+    // Warm-launch spectator links (a share-link tap while the app is
+    // already running) — see DeepLinkService's own doc comment for why
+    // PendingDeepLink's cold-start read alone can't cover this.
+    Get.put<DeepLinkService>(DeepLinkService(), permanent: true);
   }
 }
