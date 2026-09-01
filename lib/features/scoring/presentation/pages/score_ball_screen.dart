@@ -345,7 +345,12 @@ class _ModifierKeySurface extends StatelessWidget {
 /// Wide / No Ball / Bye / Leg Bye, matched in height to the run dial below.
 /// Deliberately **not** gated on `canScore`, matching the pre-redesign
 /// behaviour exactly: only [isRunsFromDisabled] (a wide already armed) turns
-/// Bye/Leg Bye off.
+/// Bye/Leg Bye off — so a key here is tappable even while the console is
+/// locked (no openers yet, or a bowler is still owed). An arm made in that
+/// window no longer rides along once unlocked: `ScoreBallController`
+/// clears both fields exactly on the locked -> unlocked transition (see
+/// `_applyStrike` and the `needsBowler` worker in `onReady`), rather than
+/// silently applying to the first delivery the scorer taps once they can.
 class _ModifierRow extends StatelessWidget {
   const _ModifierRow({
     required this.selectedFault,

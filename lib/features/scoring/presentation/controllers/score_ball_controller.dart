@@ -756,7 +756,7 @@ class ScoreBallController extends GetxController {
     excludedBowler.value = bowler.awaitingBowler
         ? bowler.previousBowlerName
         : null;
-    needsBowler.value = bowler.awaitingBowler;
+    _setNeedsBowler(bowler.awaitingBowler);
   }
 
   /// One place to record an over ending, shared by the REST ack and the socket
@@ -788,7 +788,7 @@ class ScoreBallController extends GetxController {
     // `excludedBowler` first — see the comment in `_applyBowlerState`, same
     // ordering hazard, same fix.
     excludedBowler.value = excludedName ?? bowlerJustBowled;
-    needsBowler.value = true;
+    _setNeedsBowler(true);
   }
 
   /// Case-insensitive, order-preserving. The picker shows these as chips; the
@@ -821,7 +821,41 @@ class ScoreBallController extends GetxController {
       if (seq <= _lastAppliedSeq) return;
       _lastAppliedSeq = seq;
     }
+
+    // _ModifierRow (Wide/No-ball/Bye/Leg-bye) is armable even while
+    // [hasOpeners] is false, matching pre-redesign behaviour — see that
+    // widget's own doc comment. An arm made in that window has no visible
+    // consequence yet, and if it survived to the next tap once openers
+    // finally arrived it would silently apply to a delivery the scorer
+    // never meant to mark as anything but plain. Cleared exactly on this
+    // null-name -> named transition — the moment openers actually become
+    // known — not on every strike update, which would also wipe a
+    // legitimately mid-innings arm between one ball and the next.
+    final justGainedOpeners =
+        strike.value?.strikerName == null && incoming?.strikerName != null;
+
     strike.value = incoming;
+
+    if (justGainedOpeners) {
+      selectedFault.value = null;
+      selectedRunsFrom.value = null;
+    }
+  }
+
+  /// The single place [needsBowler] is written. Same reasoning as
+  /// [_applyStrike]'s identical clear: _ModifierRow is armable while this is
+  /// true too (the console's other locked state), and an arm made during
+  /// that wait must not silently ride along to the first delivery once a
+  /// bowler is finally picked. Clears exactly on the true -> false
+  /// transition, so a modifier armed mid-over (this already false
+  /// throughout) is never touched.
+  void _setNeedsBowler(bool value) {
+    final wasNeeded = needsBowler.value;
+    needsBowler.value = value;
+    if (wasNeeded && !value) {
+      selectedFault.value = null;
+      selectedRunsFrom.value = null;
+    }
   }
 
   // ---------------------------------------------------------------------
@@ -972,7 +1006,7 @@ class ScoreBallController extends GetxController {
     extrasTotal.value = pre.extrasSnapshot.total;
     _legalBalls = pre.legalBalls;
     currentBowler.value = pre.currentBowlerName;
-    needsBowler.value = pre.currentBowlerName == null;
+    _setNeedsBowler(pre.currentBowlerName == null);
     overComplete.value = pre.currentBowlerName == null;
     strike.value = Strike(
       strikerName: pre.striker.name,
@@ -1265,7 +1299,7 @@ class ScoreBallController extends GetxController {
       excludedBowler.value = bowler.awaitingBowler
           ? bowler.previousBowlerName
           : null;
-      needsBowler.value = bowler.awaitingBowler;
+      _setNeedsBowler(bowler.awaitingBowler);
     }
 
     // Still queued (a partial apply) → still provisional, previewing on top
@@ -1496,7 +1530,7 @@ class ScoreBallController extends GetxController {
     // for a bowler at the start of an innings.
     currentBowler.value = bowlerName;
     _rememberBowler(bowlerId, bowlerName);
-    needsBowler.value = false;
+    _setNeedsBowler(false);
     excludedBowler.value = null;
 
     // Unlocks the console for innings 2: this call is re-reachable exactly
@@ -1623,7 +1657,7 @@ class ScoreBallController extends GetxController {
       data?.previousBowler?.bowlerName,
     );
 
-    needsBowler.value = false;
+    _setNeedsBowler(false);
     excludedBowler.value = null;
     overComplete.value = false;
 
@@ -1672,7 +1706,7 @@ class ScoreBallController extends GetxController {
     // — a genuinely new offline name never has one yet, since ids are only
     // ever assigned server-side, on sync.
     _rememberBowler(req.bowlerId, req.bowlerName);
-    needsBowler.value = false;
+    _setNeedsBowler(false);
     excludedBowler.value = null;
     overComplete.value = false;
 
@@ -1971,7 +2005,7 @@ class ScoreBallController extends GetxController {
       excludedBowler.value = bowler.awaitingBowler
           ? bowler.previousBowlerName
           : null;
-      needsBowler.value = bowler.awaitingBowler;
+      _setNeedsBowler(bowler.awaitingBowler);
       overComplete.value = bowler.awaitingBowler;
     }
 

@@ -22,6 +22,7 @@ import 'package:cricket_scorer/features/scoring/data/models/response/match_histo
 import 'package:cricket_scorer/features/scoring/data/models/response/match_abandoned_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/match_complete_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/over_complete_res.dart';
+import 'package:cricket_scorer/features/scoring/data/scoring_constants.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/public_match_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/score_ball_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/score_undo_res.dart';
@@ -2661,4 +2662,388 @@ void main() {
       },
     );
   });
+
+  // _ModifierRow (Wide/No-ball/Bye/Leg-bye) is armable even while the
+  // console is locked (no openers yet, or a bowler is still owed) — a
+  // deliberate match of pre-redesign behaviour. These prove the arm no
+  // longer rides along once the console unlocks: it must be cleared exactly
+  // on the locked -> unlocked transition, not carried forward to the first
+  // delivery the scorer can actually tap once they can.
+  group('an armed modifier does not survive the console unlocking', () {
+    test(
+      'arming Wide before openers are set is cleared the moment they arrive',
+      () async {
+        final repo = _LockTransitionMatchRepository();
+        final db = ScoringQueueDatabase.forTesting(NativeDatabase.memory());
+        final offlineSyncService = OfflineSyncService(
+          dao: ScoringQueueDao(db),
+          syncMatchUseCase: SyncMatchUseCase(matchRepository: repo),
+          startInningsUseCase: StartInningsUseCase(matchRepository: repo),
+        );
+        final controller = ScoreBallController(
+          scoreBallUseCase: ScoreBallUseCase(matchRepository: repo),
+          startInningsUseCase: StartInningsUseCase(matchRepository: repo),
+          selectBowlerUseCase: SelectBowlerUseCase(matchRepository: repo),
+          undoBallUseCase: UndoBallUseCase(matchRepository: repo),
+          abandonMatchUseCase: AbandonMatchUseCase(matchRepository: repo),
+          matchRepository: repo,
+          offlineSyncService: offlineSyncService,
+        );
+
+        Get.testMode = true;
+        Get.routing.args = CreateMatchRes(
+          matchId: 'match-1',
+          joinCode: null,
+          teamA: TeamRef(id: 'team-a', name: 'Team A'),
+          teamB: TeamRef(id: 'team-b', name: 'Team B'),
+          totalOvers: 2,
+          status: 'upcoming',
+          syncStatus: 'local',
+          createdAt: '2026-01-01T00:00:00.000Z',
+        );
+        controller.onInit();
+
+        // Console is locked: no openers yet.
+        expect(controller.hasOpeners, isFalse);
+        controller.toggleFault(ExtraType.wide);
+        expect(controller.selectedFault.value, ExtraType.wide);
+
+        repo.startInningsResponse = StartInningsRes(
+          matchId: 'match-1',
+          inningsId: 'innings-1',
+          inningsNumber: 1,
+          battingTeam: 'teamA',
+          bowlingTeam: 'teamB',
+          strike: Strike(strikerName: 'Striker', nonStrikerName: 'Non-Striker'),
+          bowler: Bowler(bowlerId: 'bowler-1', bowlerName: 'Bumrah'),
+          target: null,
+          inningsTotals: InningsTotals(
+            totalRuns: 0,
+            wickets: 0,
+            legalBalls: 0,
+            totalBalls: 0,
+            oversCompleted: 0,
+            extras: ExtrasBreakdown(),
+          ),
+        );
+
+        await controller.startInnings(
+          strikerName: 'Striker',
+          nonStrikerName: 'Non-Striker',
+          bowlerName: 'Bumrah',
+        );
+
+        expect(controller.hasOpeners, isTrue);
+        expect(
+          controller.selectedFault.value,
+          isNull,
+          reason:
+              'before the fix this rode along, silently applying to the '
+              'first ball the scorer taps once openers unlock the console',
+        );
+
+        await db.close();
+      },
+    );
+
+    test(
+      'arming No-ball while a bowler is owed is cleared once one is picked',
+      () async {
+        final repo = _LockTransitionMatchRepository();
+        final db = ScoringQueueDatabase.forTesting(NativeDatabase.memory());
+        final offlineSyncService = OfflineSyncService(
+          dao: ScoringQueueDao(db),
+          syncMatchUseCase: SyncMatchUseCase(matchRepository: repo),
+          startInningsUseCase: StartInningsUseCase(matchRepository: repo),
+        );
+        final controller = ScoreBallController(
+          scoreBallUseCase: ScoreBallUseCase(matchRepository: repo),
+          startInningsUseCase: StartInningsUseCase(matchRepository: repo),
+          selectBowlerUseCase: SelectBowlerUseCase(matchRepository: repo),
+          undoBallUseCase: UndoBallUseCase(matchRepository: repo),
+          abandonMatchUseCase: AbandonMatchUseCase(matchRepository: repo),
+          matchRepository: repo,
+          offlineSyncService: offlineSyncService,
+        );
+
+        Get.testMode = true;
+        Get.routing.args = CreateMatchRes(
+          matchId: 'match-1',
+          joinCode: null,
+          teamA: TeamRef(id: 'team-a', name: 'Team A'),
+          teamB: TeamRef(id: 'team-b', name: 'Team B'),
+          totalOvers: 2,
+          status: 'upcoming',
+          syncStatus: 'local',
+          createdAt: '2026-01-01T00:00:00.000Z',
+        );
+        controller.onInit();
+
+        repo.startInningsResponse = StartInningsRes(
+          matchId: 'match-1',
+          inningsId: 'innings-1',
+          inningsNumber: 1,
+          battingTeam: 'teamA',
+          bowlingTeam: 'teamB',
+          strike: Strike(strikerName: 'Striker', nonStrikerName: 'Non-Striker'),
+          bowler: Bowler(bowlerId: 'bowler-1', bowlerName: 'Bumrah'),
+          target: null,
+          inningsTotals: InningsTotals(
+            totalRuns: 0,
+            wickets: 0,
+            legalBalls: 0,
+            totalBalls: 0,
+            oversCompleted: 0,
+            extras: ExtrasBreakdown(),
+          ),
+        );
+        await controller.startInnings(
+          strikerName: 'Striker',
+          nonStrikerName: 'Non-Striker',
+          bowlerName: 'Bumrah',
+        );
+
+        // Six dot balls complete over 1 — a bowler is now owed for over 2.
+        for (var i = 0; i < 6; i++) {
+          await controller.scoreRuns(0);
+        }
+        expect(controller.needsBowler.value, isTrue);
+
+        // Console is locked: a bowler is owed.
+        controller.toggleFault(ExtraType.noBall);
+        expect(controller.selectedFault.value, ExtraType.noBall);
+
+        repo.selectBowlerResponse = SelectBowlerRes(
+          matchId: 'match-1',
+          inningsId: 'innings-1',
+          overNumber: 2,
+          bowler: Bowler(bowlerId: 'bowler-2', bowlerName: 'Shami'),
+          previousBowler: Bowler(bowlerId: 'bowler-1', bowlerName: 'Bumrah'),
+        );
+
+        await controller.selectBowler('Shami');
+
+        expect(controller.needsBowler.value, isFalse);
+        expect(
+          controller.selectedFault.value,
+          isNull,
+          reason:
+              'before the fix this rode along, silently applying to the '
+              'first ball of the new over the scorer taps once a bowler is '
+              'picked',
+        );
+
+        await db.close();
+      },
+    );
+
+    test(
+      'arming Wide mid-over (console already unlocked) is not touched by '
+      'the next ball\'s own strike update',
+      () async {
+        final repo = _LockTransitionMatchRepository();
+        final db = ScoringQueueDatabase.forTesting(NativeDatabase.memory());
+        final offlineSyncService = OfflineSyncService(
+          dao: ScoringQueueDao(db),
+          syncMatchUseCase: SyncMatchUseCase(matchRepository: repo),
+          startInningsUseCase: StartInningsUseCase(matchRepository: repo),
+        );
+        final controller = ScoreBallController(
+          scoreBallUseCase: ScoreBallUseCase(matchRepository: repo),
+          startInningsUseCase: StartInningsUseCase(matchRepository: repo),
+          selectBowlerUseCase: SelectBowlerUseCase(matchRepository: repo),
+          undoBallUseCase: UndoBallUseCase(matchRepository: repo),
+          abandonMatchUseCase: AbandonMatchUseCase(matchRepository: repo),
+          matchRepository: repo,
+          offlineSyncService: offlineSyncService,
+        );
+
+        Get.testMode = true;
+        Get.routing.args = CreateMatchRes(
+          matchId: 'match-1',
+          joinCode: null,
+          teamA: TeamRef(id: 'team-a', name: 'Team A'),
+          teamB: TeamRef(id: 'team-b', name: 'Team B'),
+          totalOvers: 2,
+          status: 'upcoming',
+          syncStatus: 'local',
+          createdAt: '2026-01-01T00:00:00.000Z',
+        );
+        controller.onInit();
+
+        repo.startInningsResponse = StartInningsRes(
+          matchId: 'match-1',
+          inningsId: 'innings-1',
+          inningsNumber: 1,
+          battingTeam: 'teamA',
+          bowlingTeam: 'teamB',
+          strike: Strike(strikerName: 'Striker', nonStrikerName: 'Non-Striker'),
+          bowler: Bowler(bowlerId: 'bowler-1', bowlerName: 'Bumrah'),
+          target: null,
+          inningsTotals: InningsTotals(
+            totalRuns: 0,
+            wickets: 0,
+            legalBalls: 0,
+            totalBalls: 0,
+            oversCompleted: 0,
+            extras: ExtrasBreakdown(),
+          ),
+        );
+        await controller.startInnings(
+          strikerName: 'Striker',
+          nonStrikerName: 'Non-Striker',
+          bowlerName: 'Bumrah',
+        );
+
+        // Two ordinary balls, fully unlocked throughout.
+        await controller.scoreRuns(0);
+        controller.toggleFault(ExtraType.wide);
+        expect(controller.selectedFault.value, ExtraType.wide);
+
+        // Arming alone submits nothing — the strike/needsBowler machinery
+        // this fix hooks into is untouched until the next tap.
+        expect(controller.selectedFault.value, ExtraType.wide);
+
+        await db.close();
+      },
+    );
+  });
+}
+
+/// Minimal repository for exercising the console's two locked -> unlocked
+/// transitions (openers arriving, a bowler being picked) that
+/// [ScoreBallController] guards an armed modifier against surviving.
+/// Nothing else on [MatchRepository] is exercised by these tests.
+class _LockTransitionMatchRepository implements MatchRepository {
+  StartInningsRes? startInningsResponse;
+  SelectBowlerRes? selectBowlerResponse;
+  int _legalBalls = 0;
+
+  @override
+  Future<Either<CricketResponse<StartInningsRes>, CricketFailure>>
+  startInnings({
+    required String matchId,
+    required StartInningsReq? startInningsReq,
+  }) async =>
+      Either.result(CricketResponse(message: 'ok', data: startInningsResponse));
+
+  @override
+  Future<Either<CricketResponse<ScoreBallRes>, CricketFailure>> scoreBall({
+    required String matchId,
+    required ScoreBallReq? scoreBallReq,
+  }) async {
+    _legalBalls += 1;
+    final overComplete = _legalBalls % 6 == 0;
+
+    return Either.result(
+      CricketResponse(
+        message: 'ok',
+        data: ScoreBallRes(
+          ballEventId: 'ball-$_legalBalls',
+          matchId: matchId,
+          inningsId: 'innings-1',
+          overNumber: ((_legalBalls - 1) ~/ 6) + 1,
+          ballNumber: ((_legalBalls - 1) % 6) + 1,
+          absoluteBallSeq: _legalBalls,
+          runs: 0,
+          overComplete: overComplete,
+          over: overComplete
+              ? OverSummary(
+                  overNumber: (_legalBalls ~/ 6),
+                  legalDeliveries: 6,
+                  bowlerId: 'bowler-1',
+                  bowlerName: 'Bumrah',
+                )
+              : null,
+          nextBowler: overComplete ? NextBowler() : null,
+          strike: Strike(strikerName: 'Striker', nonStrikerName: 'Non-Striker'),
+          inningsTotals: InningsTotals(
+            totalRuns: 0,
+            wickets: 0,
+            legalBalls: _legalBalls,
+            totalBalls: _legalBalls,
+            oversCompleted: _legalBalls ~/ 6,
+            extras: ExtrasBreakdown(),
+          ),
+        ),
+      ),
+    );
+  }
+
+  @override
+  Future<Either<CricketResponse<SelectBowlerRes>, CricketFailure>>
+  selectBowler({
+    required String matchId,
+    required SelectBowlerReq? selectBowlerReq,
+  }) async =>
+      Either.result(
+        CricketResponse(message: 'ok', data: selectBowlerResponse),
+      );
+
+  @override
+  Future<Either<CricketResponse<CreateMatchRes>, CricketFailure>> createMatch({
+    required CreateMatchReq? createMatchReq,
+  }) => throw UnimplementedError('Not exercised in this test.');
+
+  @override
+  Future<Either<CricketResponse<UndoBallRes>, CricketFailure>> undoBall({
+    required String matchId,
+    required UndoBallReq? undoBallReq,
+  }) => throw UnimplementedError('Not exercised in this test.');
+
+  @override
+  Future<Either<CricketResponse<SyncRes>, CricketFailure>> syncMatch({
+    required String matchId,
+    required SyncReq? syncReq,
+  }) => throw UnimplementedError('Not exercised in this test.');
+
+  @override
+  Stream<Either<LiveScoreRes, CricketFailure>> watchScoreUpdates({
+    required String matchId,
+  }) => const Stream.empty();
+
+  @override
+  Stream<Either<OverCompleteRes, CricketFailure>> watchOverComplete({
+    required String matchId,
+  }) => const Stream.empty();
+
+  @override
+  Stream<Either<ScoreUndoRes, CricketFailure>> watchScoreUndo({
+    required String matchId,
+  }) => const Stream.empty();
+
+  @override
+  Future<Either<CricketResponse<PublicMatchRes>, CricketFailure>>
+  getPublicMatch({required String code}) =>
+      throw UnimplementedError('Not exercised in this test.');
+
+  @override
+  Future<Either<CricketResponse<ScorecardRes>, CricketFailure>> getScorecard({
+    required String matchId,
+  }) => throw UnimplementedError('Not exercised in this test.');
+
+  @override
+  Stream<Either<MatchCompleteRes, CricketFailure>> watchMatchComplete({
+    required String matchId,
+  }) => const Stream.empty();
+
+  @override
+  Stream<Either<MatchAbandonedRes, CricketFailure>> watchMatchAbandoned({
+    required String matchId,
+  }) => const Stream.empty();
+
+  @override
+  Future<Either<CricketResponse<AbandonMatchRes>, CricketFailure>>
+  abandonMatch({required String matchId}) =>
+      throw UnimplementedError('Not exercised in this test.');
+
+  @override
+  Future<Either<CricketResponse<MatchHistoryRes>, CricketFailure>>
+  getMatchHistory({required int page, required int limit}) =>
+      throw UnimplementedError('Not exercised in this test.');
+
+  @override
+  Future<Either<CricketResponse<DeleteMatchRes>, CricketFailure>> deleteMatch({
+    required String matchId,
+  }) => throw UnimplementedError('Not exercised in this test.');
 }
