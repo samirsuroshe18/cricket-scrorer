@@ -29,7 +29,7 @@ Map<String, String> hi = {
   TranslationKeys.emailRequired: 'ईमेल आवश्यक है',
   TranslationKeys.enterValidEmail: 'एक वैध ईमेल दर्ज करें',
   TranslationKeys.passwordRequired: 'पासवर्ड आवश्यक है',
-  TranslationKeys.passwordTooShort: 'पासवर्ड कम से कम 6 अक्षरों का होना चाहिए',
+  TranslationKeys.passwordTooShort: 'पासवर्ड कम से कम 8 अक्षरों का होना चाहिए',
   TranslationKeys.failedToSaveSession:
       'लॉगिन सेशन सहेजने में विफल। कृपया पुनः प्रयास करें।',
   TranslationKeys.liveScoring: 'लाइव स्कोरिंग',
