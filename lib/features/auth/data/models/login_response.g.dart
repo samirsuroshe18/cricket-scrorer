@@ -46,6 +46,9 @@ LoggedInUser _$LoggedInUserFromJson(Map<String, dynamic> json) => LoggedInUser(
   bio: json['bio'] as String?,
   fullName: json['fullName'] as String?,
   photoUrl: json['photoUrl'] as String?,
+  language: json['language'] as String?,
+  userType: json['userType'] as String?,
+  fcmToken: json['fcmToken'] as String?,
 );
 
 Map<String, dynamic> _$LoggedInUserToJson(LoggedInUser instance) =>
@@ -65,4 +68,7 @@ Map<String, dynamic> _$LoggedInUserToJson(LoggedInUser instance) =>
       'bio': instance.bio,
       'fullName': instance.fullName,
       'photoUrl': instance.photoUrl,
+      'language': instance.language,
+      'userType': instance.userType,
+      'fcmToken': instance.fcmToken,
     };
