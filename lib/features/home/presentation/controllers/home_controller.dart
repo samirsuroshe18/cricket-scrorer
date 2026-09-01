@@ -2,15 +2,11 @@ import 'dart:async';
 
 import 'package:cricket_scorer/config/routes/app_routes.dart';
 import 'package:cricket_scorer/core/constants/shared_pref_key.dart';
-import 'package:cricket_scorer/core/error/cricket_failure.dart';
 import 'package:cricket_scorer/core/global/widgets/dialogue/custom_dialog.dart';
 import 'package:cricket_scorer/core/global/widgets/snackbars/cricket_snackbar.dart';
 import 'package:cricket_scorer/core/network/api_client_service.dart';
-import 'package:cricket_scorer/core/network/models/cricket_response.dart';
 import 'package:cricket_scorer/core/services/secure_storages_service.dart';
 import 'package:cricket_scorer/core/services/shared_preference_service.dart';
-import 'package:cricket_scorer/core/translations/translation_keys.dart';
-import 'package:cricket_scorer/core/utils/either_util.dart';
 import 'package:cricket_scorer/features/auth/data/models/request/logout_req.dart';
 import 'package:cricket_scorer/features/auth/domain/usecases/logout.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/create_match_res.dart';
@@ -153,39 +149,37 @@ class HomeController extends GetxController {
     }
   }
 
+  /// Signing out is a local, on-device action first and a courtesy to the
+  /// server second: the local session is always cleared and the console
+  /// always returns to login below, regardless of whether the API call
+  /// (best-effort revocation of the server-side session) succeeded, returned
+  /// a failure, or threw outright. A logout that can leave the console
+  /// apparently still signed in after the user explicitly asked to leave —
+  /// and, on a route that shares this device's session with every other
+  /// in-flight request, can show a "logout failed" toast in the same breath
+  /// as [AuthInterceptor]'s own forced "session expired" redirect, if the
+  /// access token happened to be expired at the same moment — is worse than
+  /// occasionally missing the server-side revocation.
   Future<void> logout() async {
-    try {
-      CricketLoaderDialog.show();
+    CricketLoaderDialog.show();
 
-      String? refreshToken = await SecureStorageService.secure.get(
+    try {
+      final String? refreshToken = await SecureStorageService.secure.get(
         SharedPrefKey.refreshToken,
       );
 
-      Either<CricketResponse<Map<String, dynamic>>, CricketFailure> response =
-          await logoutUseCase(
-            params: LogoutReq(refreshToken: refreshToken),
-          );
-
-      CricketLoaderDialog.hide();
-
-      if (response.isResult) {
-        await SharedPreferenceService.sharedPrefService.clearForLogout();
-        await SecureStorageService.secure.clearForLogout();
-        ApiClient.cancelAllRequests();
-
-        unawaited(
-          Get.offAllNamed(
-            AppRoutes.login,
-          ),
-        );
-        CricketSnackbar.showSuccessMessage(response.result.message);
-      } else {
-        CricketSnackbar.showErrorMessage(response.fallback.message);
-      }
+      await logoutUseCase(params: LogoutReq(refreshToken: refreshToken));
     } catch (_) {
-      CricketSnackbar.showErrorMessage(
-        TranslationKeys.failedToLogout.tr,
-      );
+      // Best-effort — the local logout below proceeds regardless of what
+      // went wrong reaching the server.
     }
+
+    CricketLoaderDialog.hide();
+
+    await SharedPreferenceService.sharedPrefService.clearForLogout();
+    await SecureStorageService.secure.clearForLogout();
+    ApiClient.cancelAllRequests();
+
+    unawaited(Get.offAllNamed(AppRoutes.login));
   }
 }

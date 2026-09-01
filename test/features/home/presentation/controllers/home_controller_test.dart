@@ -1,8 +1,11 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:cricket_scorer/config/routes/app_routes.dart';
 import 'package:cricket_scorer/core/error/cricket_failure.dart';
 import 'package:cricket_scorer/core/network/models/cricket_response.dart';
+import 'package:cricket_scorer/core/services/secure_storages_service.dart';
+import 'package:cricket_scorer/core/services/shared_preference_service.dart';
 import 'package:cricket_scorer/core/utils/either_util.dart';
 import 'package:cricket_scorer/features/auth/data/models/login_request_model.dart';
 import 'package:cricket_scorer/features/auth/data/models/login_response.dart';
@@ -41,7 +44,9 @@ import 'package:cricket_scorer/features/scoring/data/models/response/undo_ball_r
 import 'package:cricket_scorer/features/scoring/domain/repositories/match_repository.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/delete_match.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/get_match_history.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:get/get.dart' hide Response;
 
 /// Every method throws — `HomeController` needs a `LogoutUseCase` in its
 /// constructor, but logout is never exercised by these tests.
@@ -89,6 +94,89 @@ class _UnusedAuthRepository implements AuthRepository {
   Future<Either<CricketResponse<Map<String, dynamic>>, CricketFailure>>
   logout({required String? refreshToken}) =>
       throw UnimplementedError('Not exercised in this test.');
+}
+
+/// `logout` is controllable per test (a canned result, or made to throw);
+/// every other method throws — nothing else on `AuthRepository` is exercised
+/// by `HomeController.logout`.
+class _FakeAuthRepository implements AuthRepository {
+  Either<CricketResponse<Map<String, dynamic>>, CricketFailure>?
+  logoutResponse;
+  Object? logoutThrows;
+
+  @override
+  Future<Either<CricketResponse<Map<String, dynamic>>, CricketFailure>>
+  logout({required String? refreshToken}) async {
+    final throwable = logoutThrows;
+    if (throwable != null) throw throwable;
+    final response = logoutResponse;
+    if (response == null) {
+      throw UnimplementedError('Not exercised in this test.');
+    }
+    return response;
+  }
+
+  @override
+  Future<Either<CricketResponse<LoginResponse>, CricketFailure>> login({
+    required LoginModel? loginModel,
+  }) => throw UnimplementedError('Not exercised in this test.');
+
+  @override
+  Future<Either<CricketResponse<User>, CricketFailure>> getUser() =>
+      throw UnimplementedError('Not exercised in this test.');
+
+  @override
+  Future<Either<CricketResponse<void>, CricketFailure>> forgotPassword({
+    required ForgotPassReq? forgotPass,
+  }) => throw UnimplementedError('Not exercised in this test.');
+
+  @override
+  Future<Either<CricketResponse<VerifyOtpRes>, CricketFailure>> verifyOtp({
+    required VerifyOtpReq? verifyOtp,
+  }) => throw UnimplementedError('Not exercised in this test.');
+
+  @override
+  Future<Either<CricketResponse<Map<String, dynamic>>, CricketFailure>>
+  resendOtp({required VerifyOtpReq? resendOtp}) =>
+      throw UnimplementedError('Not exercised in this test.');
+
+  @override
+  Future<Either<CricketResponse<Map<String, dynamic>>, CricketFailure>>
+  register({required RegisterReq? registerParam}) =>
+      throw UnimplementedError('Not exercised in this test.');
+
+  @override
+  Future<Either<CricketResponse<Map<String, dynamic>>, CricketFailure>>
+  setPass({required SetPassReq? params}) =>
+      throw UnimplementedError('Not exercised in this test.');
+
+  @override
+  Future<Either<CricketResponse<Map<String, dynamic>>, CricketFailure>>
+  updateProfile({required UpdateProfileReq? params, File? file}) =>
+      throw UnimplementedError('Not exercised in this test.');
+}
+
+/// Never touches the real `flutter_secure_storage` platform channel.
+class _FakeSecureStorageService extends SecureStorageService {
+  bool clearForLogoutCalled = false;
+
+  @override
+  Future<String?> get(String key) async => 'a-refresh-token';
+
+  @override
+  Future<void> clearForLogout() async {
+    clearForLogoutCalled = true;
+  }
+}
+
+/// Never touches the real `SharedPreferences` platform channel.
+class _FakeSharedPreferenceService extends SharedPreferenceService {
+  bool clearForLogoutCalled = false;
+
+  @override
+  Future<void> clearForLogout() async {
+    clearForLogoutCalled = true;
+  }
 }
 
 /// `getMatchHistory` and `deleteMatch` are controllable per test; every
@@ -338,4 +426,108 @@ void main() {
       expect(controller.deletingMatchIds, isEmpty);
     },
   );
+
+  // logout used to only clear the local session and navigate to login on a
+  // *successful* server response — a network hiccup, a server error, or the
+  // call throwing outright all left the console apparently still signed in,
+  // showing only an error snackbar. On a route that shares this device's
+  // session with every other in-flight request, that could also land
+  // alongside AuthInterceptor's own forced "session expired" redirect if the
+  // access token happened to be expired at the same moment — a contradictory
+  // "logout failed" toast next to a redirect that says the opposite. Signing
+  // out is now unconditional: the local session clears and the console
+  // returns to login regardless of what the server call did.
+  group('logout', () {
+    late _FakeAuthRepository authRepo;
+    late _FakeSecureStorageService secureStorage;
+    late _FakeSharedPreferenceService sharedPref;
+
+    setUp(() {
+      authRepo = _FakeAuthRepository();
+      secureStorage = _FakeSecureStorageService();
+      sharedPref = _FakeSharedPreferenceService();
+      Get.put<SecureStorageService>(secureStorage);
+      Get.put<SharedPreferenceService>(sharedPref);
+    });
+
+    tearDown(Get.reset);
+
+    Future<HomeController> pumpHarness(WidgetTester tester) async {
+      final homeController = HomeController(
+        logoutUseCase: LogoutUseCase(authRepository: authRepo),
+        getMatchHistoryUseCase: GetMatchHistoryUseCase(
+          matchRepository: _FakeMatchRepository(),
+        ),
+        deleteMatchUseCase: DeleteMatchUseCase(
+          matchRepository: _FakeMatchRepository(),
+        ),
+      );
+
+      await tester.pumpWidget(
+        GetMaterialApp(
+          initialRoute: '/home',
+          getPages: [
+            GetPage(name: '/home', page: () => const SizedBox()),
+            GetPage(name: AppRoutes.login, page: () => const SizedBox()),
+          ],
+        ),
+      );
+
+      return homeController;
+    }
+
+    testWidgets('clears the local session and returns to login on success', (
+      tester,
+    ) async {
+      authRepo.logoutResponse = Either.result(
+        const CricketResponse(message: 'Logged out', data: {}),
+      );
+      final homeController = await pumpHarness(tester);
+
+      await homeController.logout();
+      await tester.pumpAndSettle();
+
+      expect(Get.currentRoute, AppRoutes.login);
+      expect(secureStorage.clearForLogoutCalled, isTrue);
+      expect(sharedPref.clearForLogoutCalled, isTrue);
+    });
+
+    testWidgets(
+      'still clears the local session and returns to login when the server call fails',
+      (tester) async {
+        authRepo.logoutResponse = Either.fallback(
+          CricketServerErrorFailure(statusCode: 500, message: 'Server error'),
+        );
+        final homeController = await pumpHarness(tester);
+
+        await homeController.logout();
+        await tester.pumpAndSettle();
+
+        expect(
+          Get.currentRoute,
+          AppRoutes.login,
+          reason:
+              'a failed server-side revocation must not leave the console '
+              'apparently still signed in',
+        );
+        expect(secureStorage.clearForLogoutCalled, isTrue);
+        expect(sharedPref.clearForLogoutCalled, isTrue);
+      },
+    );
+
+    testWidgets(
+      'still clears the local session and returns to login when the call throws outright',
+      (tester) async {
+        authRepo.logoutThrows = Exception('network down');
+        final homeController = await pumpHarness(tester);
+
+        await homeController.logout();
+        await tester.pumpAndSettle();
+
+        expect(Get.currentRoute, AppRoutes.login);
+        expect(secureStorage.clearForLogoutCalled, isTrue);
+        expect(sharedPref.clearForLogoutCalled, isTrue);
+      },
+    );
+  });
 }

@@ -80,7 +80,6 @@ class TranslationKeys {
   static const String tellUsAboutYourself = 'tell_us_about_yourself';
   static const String bio = 'bio';
   static const String continueText = 'continue_text';
-  static const String failedToLogout = 'failed_to_logout';
 
   static const String cricketMatch = 'cricket_match';
   static const String passwordWeak = 'password_weak';

@@ -89,7 +89,6 @@ Map<String, String> en = {
   TranslationKeys.tellUsAboutYourself: 'Tell us about yourself',
   TranslationKeys.bio: 'Bio',
   TranslationKeys.continueText: 'Continue',
-  TranslationKeys.failedToLogout: 'Failed to logged out. Please try again.',
   TranslationKeys.cricketMatch: 'Cricket Match',
   TranslationKeys.passwordWeak: 'Weak',
   TranslationKeys.passwordFair: 'Fair',

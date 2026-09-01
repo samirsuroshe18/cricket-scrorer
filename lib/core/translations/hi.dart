@@ -89,8 +89,6 @@ Map<String, String> hi = {
   TranslationKeys.tellUsAboutYourself: 'हमें अपने बारे में बताएं',
   TranslationKeys.bio: 'बायो',
   TranslationKeys.continueText: 'जारी रखें',
-  TranslationKeys.failedToLogout:
-      'लॉगआउट करने में विफल। कृपया पुनः प्रयास करें।',
   TranslationKeys.cricketMatch: 'क्रिकेट मैच',
   TranslationKeys.passwordWeak: 'कमज़ोर',
   TranslationKeys.passwordFair: 'ठीक',
