@@ -29,7 +29,7 @@ Map<String, String> en = {
   TranslationKeys.emailRequired: 'Email is required',
   TranslationKeys.enterValidEmail: 'Enter a valid email',
   TranslationKeys.passwordRequired: 'Password is required',
-  TranslationKeys.passwordTooShort: 'Password must be at least 6 characters',
+  TranslationKeys.passwordTooShort: 'Password must be at least 8 characters',
   TranslationKeys.failedToSaveSession:
       'Failed to save login session. Please try again.',
   TranslationKeys.liveScoring: 'Live Scoring',
