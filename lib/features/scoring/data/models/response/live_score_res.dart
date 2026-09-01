@@ -64,6 +64,16 @@ class LiveScoreRes {
   /// no openers have been chosen yet.
   final Strike? strike;
 
+  /// The not-out pair's own runs and legal balls faced together since the
+  /// last wicket (or since the innings began, if none has fallen yet) —
+  /// server-aggregated from the innings' full ball history, the one thing a
+  /// client joining or resuming mid-match cannot work out on its own. Sent
+  /// only on `match:state`, never on `score:update`: a connected client
+  /// already tracks this incrementally ball to ball once it has one of these
+  /// to seed from. See `PartnershipCheckpoint.startFromServerPartnership`.
+  final int? partnershipRuns;
+  final int? partnershipBalls;
+
   /// Who is bowling and who bowled the over before. Sent on `match:state` only
   /// — `score:update` does not carry it — and null when no innings exists yet,
   /// alongside a null [strike].
@@ -85,6 +95,8 @@ class LiveScoreRes {
     this.target,
     this.extras,
     this.strike,
+    this.partnershipRuns,
+    this.partnershipBalls,
     this.bowler,
     this.lastBall,
   });

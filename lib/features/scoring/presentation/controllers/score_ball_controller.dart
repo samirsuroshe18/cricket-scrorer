@@ -395,13 +395,28 @@ class ScoreBallController extends GetxController {
 
             if (!_partnershipInitialized) {
               // First payload this session — join ack or a fresh socket
-              // connect. Nothing before this point is recoverable, so the
-              // partnership starts counting from here. See
-              // [PartnershipCheckpoint]'s doc comment.
-              _partnership.start(
-                runs: event.result.totalRuns,
-                legalBalls: _legalBalls,
-              );
+              // connect. The server reports the real partnership on this one
+              // (never on a later score:update — see LiveScoreRes'
+              // partnershipRuns/.partnershipBalls doc comment), so a resumed
+              // session seeds the exact checkpoint instead of assuming this
+              // moment IS the start of a new partnership. Falls back to that
+              // assumption only when the fields are absent, e.g. a fresh
+              // innings with genuinely nothing to report yet.
+              final serverPartnershipRuns = event.result.partnershipRuns;
+              final serverPartnershipBalls = event.result.partnershipBalls;
+              if (serverPartnershipRuns != null && serverPartnershipBalls != null) {
+                _partnership.startFromServerPartnership(
+                  currentRuns: event.result.totalRuns,
+                  currentLegalBalls: _legalBalls,
+                  partnershipRuns: serverPartnershipRuns,
+                  partnershipLegalBalls: serverPartnershipBalls,
+                );
+              } else {
+                _partnership.start(
+                  runs: event.result.totalRuns,
+                  legalBalls: _legalBalls,
+                );
+              }
               _partnershipInitialized = true;
             } else if (isNewBall && event.result.lastBall?.wicket != null) {
               _partnership.onWicket(

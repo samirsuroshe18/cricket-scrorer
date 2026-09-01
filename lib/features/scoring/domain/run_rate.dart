@@ -52,13 +52,14 @@ typedef _Snapshot = ({int runs, int legalBalls});
 /// figures are always `currentTotals - checkpoint`; only the checkpoint moves,
 /// and only on a wicket (forward) or undoing one (backward).
 ///
-/// A session that joins or resumes mid-partnership has no ball history to
-/// recover the true checkpoint from, so it starts at whatever totals were
-/// current on connect — the partnership then reads "since I connected," not
-/// "since the wicket," until the next dismissal makes it exact. Same shape of
-/// limitation as [SpectatorController.currentBowler]'s documented staleness;
-/// not solved for the same reason — it would need the backend to track
-/// partnerships from `BallEvent` history, which nothing here does yet.
+/// A session that joins or resumes mid-partnership has no ball history of its
+/// own to recover the true checkpoint from — that's what
+/// [startFromServerPartnership] is for, seeding it from a server-computed
+/// figure instead of guessing. [start] remains the fallback for a payload
+/// that genuinely has no partnership to report (a fresh innings, or one that
+/// has not started yet — see [SpectatorController.currentBowler] for the
+/// same shape of "nothing to seed from yet" case) and for a moment that truly
+/// is the start of a new partnership.
 class PartnershipCheckpoint {
   int runs = 0;
   int legalBalls = 0;
@@ -69,10 +70,32 @@ class PartnershipCheckpoint {
   final List<_Snapshot> _previous = [];
 
   /// Call once per new partnership: innings start, or resuming/joining
-  /// mid-innings with the totals as they stand right now.
+  /// mid-innings with the totals as they stand right now — the fallback for
+  /// when nothing better is available; prefer [startFromServerPartnership]
+  /// wherever a payload actually carries the server's own figure.
   void start({required int runs, required int legalBalls}) {
     this.runs = runs;
     this.legalBalls = legalBalls;
+    _previous.clear();
+  }
+
+  /// Call once per new partnership when the server reports the current
+  /// partnership directly — a `match:state` join ack or the initial public
+  /// fetch, both computed from the innings' full ball history, which this
+  /// client does not have. [currentRuns]/[currentLegalBalls] are the innings
+  /// totals that same payload carries; [partnershipRuns]/[partnershipBalls]
+  /// are what the server says the not-out pair has added since the last
+  /// wicket. Backs out the checkpoint those two facts imply, rather than
+  /// assuming (as [start] has to) that the connection moment IS the start of
+  /// a new partnership.
+  void startFromServerPartnership({
+    required int currentRuns,
+    required int currentLegalBalls,
+    required int partnershipRuns,
+    required int partnershipLegalBalls,
+  }) {
+    runs = currentRuns - partnershipRuns;
+    legalBalls = currentLegalBalls - partnershipLegalBalls;
     _previous.clear();
   }
 
