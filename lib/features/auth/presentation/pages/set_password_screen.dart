@@ -20,122 +20,126 @@ class SetPasswordScreen extends GetView<SetPasswordController> {
         padding: 24.p,
         child: Form(
           key: controller.formKey,
-          child: Column(
-            children: [
-              24.h,
+          child: AutofillGroup(
+            child: Column(
+              children: [
+                24.h,
 
-              const Icon(
-                Icons.lock_outline_rounded,
-                size: 80,
-              ),
-
-              24.h,
-
-              CricketText(
-                text: TranslationKeys.setNewPassword.tr,
-                style: Get.textTheme.headlineLarge,
-              ),
-              12.h,
-
-              CricketText(
-                text: TranslationKeys.setNewPasswordDesc.tr,
-                style: Get.textTheme.bodyMedium,
-                textAlign: TextAlign.center,
-              ),
-
-              40.h,
-
-              Obx(
-                () => CricketTextField(
-                  controller: controller.passwordController,
-                  labelText: TranslationKeys.newPassword.tr,
-                  hintText: TranslationKeys.enterNewPassword.tr,
-                  obscureText: !controller.isPasswordVisible.value,
-                  prefixIcon: const Icon(Icons.lock_outline),
-                  suffixIcon: IconButton(
-                    onPressed: controller.togglePasswordVisibility,
-                    icon: Icon(
-                      controller.isPasswordVisible.value
-                          ? Icons.visibility
-                          : Icons.visibility_off,
-                    ),
-                  ),
-                  validator: controller.validatePassword,
-                  isRequired: true,
+                const Icon(
+                  Icons.lock_outline_rounded,
+                  size: 80,
                 ),
-              ),
 
-              16.h,
+                24.h,
 
-              Obx(
-                () => CricketTextField(
-                  controller: controller.confirmPasswordController,
-                  labelText: TranslationKeys.confirmNewPassword.tr,
-                  hintText: TranslationKeys.enterConfirmNewPassword.tr,
-                  obscureText: !controller.isConfirmPasswordVisible.value,
-                  prefixIcon: const Icon(Icons.lock_outline),
-                  suffixIcon: IconButton(
-                    onPressed: controller.toggleConfirmPasswordVisibility,
-                    icon: Icon(
-                      controller.isConfirmPasswordVisible.value
-                          ? Icons.visibility
-                          : Icons.visibility_off,
-                    ),
-                  ),
-                  validator: controller.validateConfirmPassword,
-                  isRequired: true,
+                CricketText(
+                  text: TranslationKeys.setNewPassword.tr,
+                  style: Get.textTheme.headlineLarge,
                 ),
-              ),
+                12.h,
 
-              // Password strength indicator
-              16.h,
+                CricketText(
+                  text: TranslationKeys.setNewPasswordDesc.tr,
+                  style: Get.textTheme.bodyMedium,
+                  textAlign: TextAlign.center,
+                ),
 
-              Obx(() {
-                final score = controller.passwordStrength.value;
-                if (score <= 0) return const SizedBox.shrink();
+                40.h,
 
-                final strengthColor = _strengthColor(context, score);
+                Obx(
+                  () => CricketTextField(
+                    controller: controller.passwordController,
+                    labelText: TranslationKeys.newPassword.tr,
+                    hintText: TranslationKeys.enterNewPassword.tr,
+                    obscureText: !controller.isPasswordVisible.value,
+                    prefixIcon: const Icon(Icons.lock_outline),
+                    suffixIcon: IconButton(
+                      onPressed: controller.togglePasswordVisibility,
+                      icon: Icon(
+                        controller.isPasswordVisible.value
+                            ? Icons.visibility
+                            : Icons.visibility_off,
+                      ),
+                    ),
+                    validator: controller.validatePassword,
+                    autofillHints: const [AutofillHints.newPassword],
+                    isRequired: true,
+                  ),
+                ),
 
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: List.generate(
-                        4,
-                        (index) => Expanded(
-                          child: Container(
-                            margin: EdgeInsets.only(
-                              right: index < 3 ? 4 : 0,
-                            ),
-                            height: 4,
-                            decoration: BoxDecoration(
-                              borderRadius: 2.radius,
-                              color: index < score
-                                  ? strengthColor
-                                  : context.colorScheme.outlineVariant,
+                16.h,
+
+                Obx(
+                  () => CricketTextField(
+                    controller: controller.confirmPasswordController,
+                    labelText: TranslationKeys.confirmNewPassword.tr,
+                    hintText: TranslationKeys.enterConfirmNewPassword.tr,
+                    obscureText: !controller.isConfirmPasswordVisible.value,
+                    prefixIcon: const Icon(Icons.lock_outline),
+                    suffixIcon: IconButton(
+                      onPressed: controller.toggleConfirmPasswordVisibility,
+                      icon: Icon(
+                        controller.isConfirmPasswordVisible.value
+                            ? Icons.visibility
+                            : Icons.visibility_off,
+                      ),
+                    ),
+                    validator: controller.validateConfirmPassword,
+                    autofillHints: const [AutofillHints.newPassword],
+                    isRequired: true,
+                  ),
+                ),
+
+                // Password strength indicator
+                16.h,
+
+                Obx(() {
+                  final score = controller.passwordStrength.value;
+                  if (score <= 0) return const SizedBox.shrink();
+
+                  final strengthColor = _strengthColor(context, score);
+
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: List.generate(
+                          4,
+                          (index) => Expanded(
+                            child: Container(
+                              margin: EdgeInsets.only(
+                                right: index < 3 ? 4 : 0,
+                              ),
+                              height: 4,
+                              decoration: BoxDecoration(
+                                borderRadius: 2.radius,
+                                color: index < score
+                                    ? strengthColor
+                                    : context.colorScheme.outlineVariant,
+                              ),
                             ),
                           ),
                         ),
                       ),
-                    ),
-                    4.h,
-                    CricketText(
-                      text: controller.strengthLabel.value.tr,
-                      style: context.textTheme.bodySmall?.copyWith(
-                        color: strengthColor,
-                        fontWeight: FontWeight.w500,
+                      4.h,
+                      CricketText(
+                        text: controller.strengthLabel.value.tr,
+                        style: context.textTheme.bodySmall?.copyWith(
+                          color: strengthColor,
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
-                    ),
-                  ],
-                );
-              }),
+                    ],
+                  );
+                }),
 
-              32.h,
-              CricketButton(
-                buttonText: TranslationKeys.resetPassword.tr,
-                onPressed: controller.resetPassword,
-              ),
-            ],
+                32.h,
+                CricketButton(
+                  buttonText: TranslationKeys.resetPassword.tr,
+                  onPressed: controller.resetPassword,
+                ),
+              ],
+            ),
           ),
         ),
       ),

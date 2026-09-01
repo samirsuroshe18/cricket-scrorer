@@ -23,131 +23,139 @@ class RegisterScreen extends GetView<RegisterController> {
         padding: 24.p,
         child: Form(
           key: controller.formKey,
-          child: Column(
-            children: [
-              4.rh,
+          child: AutofillGroup(
+            child: Column(
+              children: [
+                4.rh,
 
-              const CricketImage(
-                source: CricketImageSource.asset(AssetsUtil.appLogo),
-                height: 120,
-                width: 120,
-                borderRadius: BorderRadius.all(Radius.circular(180)),
-              ),
+                const CricketImage(
+                  source: CricketImageSource.asset(AssetsUtil.appLogo),
+                  height: 120,
+                  width: 120,
+                  borderRadius: BorderRadius.all(Radius.circular(180)),
+                ),
 
-              24.h,
+                24.h,
 
-              CricketText(
-                text: TranslationKeys.createAccount.tr,
-                style: Get.textTheme.headlineLarge,
-              ),
+                CricketText(
+                  text: TranslationKeys.createAccount.tr,
+                  style: Get.textTheme.headlineLarge,
+                ),
 
-              8.h,
+                8.h,
 
-              CricketText(
-                text: TranslationKeys.joinAndStartScoring.tr,
-                style: Get.textTheme.bodyMedium,
-              ),
+                CricketText(
+                  text: TranslationKeys.joinAndStartScoring.tr,
+                  style: Get.textTheme.bodyMedium,
+                ),
 
-              40.h,
+                40.h,
 
-              CricketTextField(
-                controller: controller.fullNameController,
-                labelText: TranslationKeys.fullName.tr,
-                hintText: TranslationKeys.enterFullName.tr,
-                prefixIcon: const Icon(Icons.person_outline),
-                validator: controller.validateFullName,
-                keyboardType: TextInputType.name,
-                textCapitalization: TextCapitalization.words,
-                isRequired: true,
-              ),
-
-              16.h,
-
-              CricketTextField(
-                controller: controller.emailController,
-                labelText: TranslationKeys.email.tr,
-                hintText: TranslationKeys.enterEmail.tr,
-                prefixIcon: const Icon(Icons.email_outlined),
-                validator: controller.validateEmail,
-                keyboardType: TextInputType.emailAddress,
-                isRequired: true,
-              ),
-
-              16.h,
-
-              Obx(
-                () => CricketTextField(
-                  controller: controller.passwordController,
-                  labelText: TranslationKeys.password.tr,
-                  hintText: TranslationKeys.enterPassword.tr,
-                  obscureText: !controller.isPasswordVisible.value,
-                  prefixIcon: const Icon(Icons.lock_outline),
-                  suffixIcon: IconButton(
-                    onPressed: controller.togglePasswordVisibility,
-                    icon: Icon(
-                      controller.isPasswordVisible.value
-                          ? Icons.visibility
-                          : Icons.visibility_off,
-                    ),
-                  ),
-                  validator: controller.validatePassword,
+                CricketTextField(
+                  controller: controller.fullNameController,
+                  labelText: TranslationKeys.fullName.tr,
+                  hintText: TranslationKeys.enterFullName.tr,
+                  prefixIcon: const Icon(Icons.person_outline),
+                  validator: controller.validateFullName,
+                  keyboardType: TextInputType.name,
+                  textCapitalization: TextCapitalization.words,
                   isRequired: true,
                 ),
-              ),
 
-              16.h,
+                16.h,
 
-              Obx(
-                () => CricketTextField(
-                  controller: controller.confirmPasswordController,
-                  labelText: TranslationKeys.confirmPassword.tr,
-                  hintText: TranslationKeys.enterConfirmPassword.tr,
-                  obscureText: !controller.isConfirmPasswordVisible.value,
-                  prefixIcon: const Icon(Icons.lock_outline),
-                  suffixIcon: IconButton(
-                    onPressed: controller.toggleConfirmPasswordVisibility,
-                    icon: Icon(
-                      controller.isConfirmPasswordVisible.value
-                          ? Icons.visibility
-                          : Icons.visibility_off,
-                    ),
-                  ),
-                  validator: controller.validateConfirmPassword,
+                CricketTextField(
+                  controller: controller.emailController,
+                  labelText: TranslationKeys.email.tr,
+                  hintText: TranslationKeys.enterEmail.tr,
+                  prefixIcon: const Icon(Icons.email_outlined),
+                  validator: controller.validateEmail,
+                  keyboardType: TextInputType.emailAddress,
+                  autofillHints: const [
+                    AutofillHints.email,
+                    AutofillHints.newUsername,
+                  ],
                   isRequired: true,
                 ),
-              ),
 
-              24.h,
+                16.h,
 
-              CricketButton(
-                buttonText: TranslationKeys.register.tr,
-                onPressed: controller.register,
-              ),
-
-              18.h,
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  CricketText(
-                    text: TranslationKeys.alreadyHaveAccount.tr,
-                  ),
-                  TextButton(
-                    onPressed: controller.goToLogin,
-                    style: TextButton.styleFrom(
-                      padding: EdgeInsets.zero,
-                      minimumSize: Size.zero,
-                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    ),
-                    child: CricketText(
-                      text: TranslationKeys.login.tr,
-                      style: context.textTheme.bodyMedium?.copyWith(
-                        color: context.colorScheme.primary,
+                Obx(
+                  () => CricketTextField(
+                    controller: controller.passwordController,
+                    labelText: TranslationKeys.password.tr,
+                    hintText: TranslationKeys.enterPassword.tr,
+                    obscureText: !controller.isPasswordVisible.value,
+                    prefixIcon: const Icon(Icons.lock_outline),
+                    suffixIcon: IconButton(
+                      onPressed: controller.togglePasswordVisibility,
+                      icon: Icon(
+                        controller.isPasswordVisible.value
+                            ? Icons.visibility
+                            : Icons.visibility_off,
                       ),
                     ),
+                    validator: controller.validatePassword,
+                    autofillHints: const [AutofillHints.newPassword],
+                    isRequired: true,
                   ),
-                ],
-              ),
-            ],
+                ),
+
+                16.h,
+
+                Obx(
+                  () => CricketTextField(
+                    controller: controller.confirmPasswordController,
+                    labelText: TranslationKeys.confirmPassword.tr,
+                    hintText: TranslationKeys.enterConfirmPassword.tr,
+                    obscureText: !controller.isConfirmPasswordVisible.value,
+                    prefixIcon: const Icon(Icons.lock_outline),
+                    suffixIcon: IconButton(
+                      onPressed: controller.toggleConfirmPasswordVisibility,
+                      icon: Icon(
+                        controller.isConfirmPasswordVisible.value
+                            ? Icons.visibility
+                            : Icons.visibility_off,
+                      ),
+                    ),
+                    validator: controller.validateConfirmPassword,
+                    autofillHints: const [AutofillHints.newPassword],
+                    isRequired: true,
+                  ),
+                ),
+
+                24.h,
+
+                CricketButton(
+                  buttonText: TranslationKeys.register.tr,
+                  onPressed: controller.register,
+                ),
+
+                18.h,
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    CricketText(
+                      text: TranslationKeys.alreadyHaveAccount.tr,
+                    ),
+                    TextButton(
+                      onPressed: controller.goToLogin,
+                      style: TextButton.styleFrom(
+                        padding: EdgeInsets.zero,
+                        minimumSize: Size.zero,
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      ),
+                      child: CricketText(
+                        text: TranslationKeys.login.tr,
+                        style: context.textTheme.bodyMedium?.copyWith(
+                          color: context.colorScheme.primary,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
       ),
