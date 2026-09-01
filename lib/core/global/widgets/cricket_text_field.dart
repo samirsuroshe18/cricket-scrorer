@@ -17,6 +17,14 @@ class CricketTextField extends StatelessWidget {
   final void Function(String)? onChanged;
   final bool isRequired;
 
+  /// Null everywhere except an actual credential field — a text field with
+  /// no hint is invisible to a password manager, which is exactly what left
+  /// every email/password field in this app unfillable and unsaveable. See
+  /// each call site for which [AutofillHints] constant(s) apply; a login
+  /// field wants `email`+`username`, a new-password field wants
+  /// `newPassword`, and so on.
+  final Iterable<String>? autofillHints;
+
   const CricketTextField({
     super.key,
     this.controller,
@@ -32,6 +40,7 @@ class CricketTextField extends StatelessWidget {
     this.validator,
     this.onChanged,
     this.isRequired = false,
+    this.autofillHints,
   });
 
   @override
@@ -43,6 +52,7 @@ class CricketTextField extends StatelessWidget {
       validator: validator,
       onChanged: onChanged,
       textCapitalization: textCapitalization,
+      autofillHints: autofillHints,
       maxLength: maxLength,
       maxLines: maxLines,
       decoration: InputDecoration(

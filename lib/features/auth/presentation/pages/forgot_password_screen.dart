@@ -51,6 +51,7 @@ class ForgotPasswordScreen extends GetView<ForgotPasswordController> {
                 prefixIcon: const Icon(Icons.email_outlined),
                 validator: controller.validateEmail,
                 keyboardType: TextInputType.emailAddress,
+                autofillHints: const [AutofillHints.email],
                 isRequired: true,
               ),
 
