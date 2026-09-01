@@ -4,14 +4,19 @@ import 'package:cricket_scorer/features/scoring/domain/offline/pre_event_state.d
 /// `resolve_delivery.dart` for why this is a port rather than a
 /// reimplementation.
 ///
-/// Matched by (trimmed, case-insensitive) name rather than id — see
-/// `pre_event_state.dart` for why. With no dismissal this is a plain swap;
-/// order is load-bearing on a wicket: [dismissedName] names a batsman as of
-/// *before* the ball, and rotation may have moved them, so the substitution
-/// below matches on the player rather than on an end — the run-out case this
-/// exists for. Runs/balls travel WITH the pair being rotated/substituted, not
-/// separately, so a batsman's own figures can never end up attached to the
-/// wrong name.
+/// Substitution on a wicket is positional, not name-based: [dismissedWasStriker]
+/// names a *slot* (striker or non-striker) as of *before* the ball, and
+/// rotation may have swapped which slot that person now occupies — XORing
+/// against [rotated] follows them there without ever needing to recognise
+/// them by name. This used to match on `BatsmanFigures.name` instead (see
+/// `pre_event_state.dart`'s doc comment on why names are all this struct
+/// has), which broke down for two identically- or near-identically-named
+/// players at the crease — a common local-lineup collision (two "Ali"s) —
+/// since a dismissed "Ali" could evict the *other* Ali's figures instead of
+/// their own. Positional matching can't make that mistake: there are only
+/// ever two slots, and this ball's own `dismissedBatsman` selection already
+/// says unambiguously which one was out, independent of what either player
+/// is named.
 class StrikePreview {
   final BatsmanFigures striker;
   final BatsmanFigures nonStriker;
@@ -19,38 +24,30 @@ class StrikePreview {
   const StrikePreview({required this.striker, required this.nonStriker});
 }
 
-bool _sameName(String? a, String? b) =>
-    a != null &&
-    b != null &&
-    a.trim().toLowerCase() == b.trim().toLowerCase();
-
 StrikePreview resolveStrikePreview({
   required BatsmanFigures striker,
   required BatsmanFigures nonStriker,
   bool rotated = false,
-  String? dismissedName,
+  bool isWicket = false,
+  bool dismissedWasStriker = false,
   String? incomingName,
 }) {
   final pair = rotated
       ? StrikePreview(striker: nonStriker, nonStriker: striker)
       : StrikePreview(striker: striker, nonStriker: nonStriker);
 
-  if (dismissedName == null) return pair;
+  if (!isWicket) return pair;
 
   // The incoming batsman starts at (0, 0) — nothing offline can know
   // otherwise, and nor could the server before this ball was ever scored.
   final incoming = BatsmanFigures(name: incomingName);
 
-  if (_sameName(pair.striker.name, dismissedName)) {
-    return StrikePreview(striker: incoming, nonStriker: pair.nonStriker);
-  }
+  // Whichever slot held the dismissed batsman before this ball holds them
+  // after rotation too, unless rotation swapped the pair — the two cancel
+  // out via XOR rather than a second round of name matching.
+  final dismissedIsNowStriker = dismissedWasStriker != rotated;
 
-  if (_sameName(pair.nonStriker.name, dismissedName)) {
-    return StrikePreview(striker: pair.striker, nonStriker: incoming);
-  }
-
-  // Dismissed name matches neither — a bug upstream (a preview built off a
-  // stale pair). Leave the pair untouched rather than evicting the wrong
-  // batsman; the next real ack corrects it regardless.
-  return pair;
+  return dismissedIsNowStriker
+      ? StrikePreview(striker: incoming, nonStriker: pair.nonStriker)
+      : StrikePreview(striker: pair.striker, nonStriker: incoming);
 }

@@ -104,7 +104,8 @@ BallOutcomePreview previewBall({
     striker: creditedStriker,
     nonStriker: pre.nonStriker,
     rotated: strikeRotated,
-    dismissedName: dismissedName,
+    isWicket: isWicket,
+    dismissedWasStriker: dismissedIsStriker,
     incomingName: incomingName,
   );
 

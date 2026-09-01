@@ -2,12 +2,14 @@
 /// through [resolveOver]/[resolveStrikePreview] the same way the server's own
 /// `preEventState` snapshot drives `resolveBallOutcome`/`resolveStrike`.
 ///
-/// Name-keyed rather than id-keyed, deliberately: unlike the server, the
-/// client has no reliable local player-id concept for a name typed offline
-/// (ids are assigned server-side, on sync), and this struct exists purely to
-/// preview a score for display — matching by trimmed, case-insensitive name
-/// is the right amount of precision for that, not a shortcut taken for lack
-/// of a better option.
+/// [PreEventState.striker]/`.nonStriker` are always addressed positionally,
+/// never by name — unlike the server, the client has no reliable local
+/// player-id concept for a name typed offline (ids are assigned server-side,
+/// on sync), so `BatsmanFigures.name` exists purely for display. Two
+/// identically-named players at the crease are a real possibility in a
+/// local lineup, so nothing here ever searches or matches on that name to
+/// decide which slot a wicket's substitution belongs to — see
+/// `resolve_strike.dart`'s doc comment.
 class ExtrasSnapshot {
   final int wides;
   final int noBalls;
