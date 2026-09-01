@@ -41,6 +41,16 @@ class HomeController extends GetxController {
   final loadError = Rxn<String>();
   int _page = 1;
 
+  /// Guards [loadHistory] against a second overlapping call — a rapid double
+  /// pull-to-refresh, or a refresh landing while the initial `onInit` load is
+  /// still in flight. Not `isLoading` itself: that starts `true` for the
+  /// unrelated reason of showing a spinner before the very first load has
+  /// even begun, so gating on it would make that first call a no-op too.
+  /// Without this, two in-flight requests race independently, and whichever
+  /// resolves last — not whichever was sent last — is what the list ends up
+  /// showing.
+  bool _isLoadingHistory = false;
+
   @override
   void onInit() {
     super.onInit();
@@ -50,6 +60,8 @@ class HomeController extends GetxController {
   /// First page, replacing whatever list is already showing — the pull-to-
   /// refresh and initial-load entry point.
   Future<void> loadHistory() async {
+    if (_isLoadingHistory) return;
+    _isLoadingHistory = true;
     isLoading.value = true;
     loadError.value = null;
     _page = 1;
@@ -59,6 +71,7 @@ class HomeController extends GetxController {
     );
 
     isLoading.value = false;
+    _isLoadingHistory = false;
 
     if (response.isResult) {
       final data = response.result.data;
