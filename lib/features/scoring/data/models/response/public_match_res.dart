@@ -90,6 +90,14 @@ class PublicInningsState {
   final int? target;
   final ExtrasBreakdown extras;
   final Strike? strike;
+
+  /// See `LiveScoreRes.partnershipRuns`/`.partnershipBalls` — the same
+  /// server-computed field, present here for the same reason: this is one of
+  /// the two payloads (the other being `match:state`) a client has no local
+  /// ball history to seed a resumed partnership from on its own.
+  final int? partnershipRuns;
+  final int? partnershipBalls;
+
   final BowlerState? bowler;
 
   PublicInningsState({
@@ -101,6 +109,8 @@ class PublicInningsState {
     this.target,
     required this.extras,
     this.strike,
+    this.partnershipRuns,
+    this.partnershipBalls,
     this.bowler,
   });
 

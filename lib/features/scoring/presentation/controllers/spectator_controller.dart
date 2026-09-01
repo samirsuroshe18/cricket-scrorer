@@ -205,11 +205,23 @@ class SpectatorController extends GetxController {
 
     target.value = innings.target;
     _legalBalls = legalBallsFromOvers(innings.overs);
-    // A partnership already in progress at fetch time starts counting from
-    // here — see [PartnershipCheckpoint]. The live socket join ack below
+    // A partnership already in progress at fetch time is seeded from the
+    // server's own figure — see [PartnershipCheckpoint.startFromServerPartnership]
+    // — rather than assumed to start here. The live socket join ack below
     // reports the same totals moments later and leaves this alone, since
     // [_partnershipInitialized] is now true.
-    _partnership.start(runs: innings.totalRuns, legalBalls: _legalBalls);
+    final partnershipRuns = innings.partnershipRuns;
+    final partnershipBalls = innings.partnershipBalls;
+    if (partnershipRuns != null && partnershipBalls != null) {
+      _partnership.startFromServerPartnership(
+        currentRuns: innings.totalRuns,
+        currentLegalBalls: _legalBalls,
+        partnershipRuns: partnershipRuns,
+        partnershipLegalBalls: partnershipBalls,
+      );
+    } else {
+      _partnership.start(runs: innings.totalRuns, legalBalls: _legalBalls);
+    }
     _partnershipInitialized = true;
     _recomputeRates();
   }
@@ -258,8 +270,20 @@ class SpectatorController extends GetxController {
       if (!_partnershipInitialized) {
         // The initial REST fetch had no innings yet (a spectator who opened
         // the link before start-innings) — this join ack is the first state
-        // this controller has ever seen.
-        _partnership.start(runs: live.totalRuns, legalBalls: _legalBalls);
+        // this controller has ever seen. Seed from the server's own
+        // partnership figure when it's there, same as [_applyInnings] above.
+        final serverPartnershipRuns = live.partnershipRuns;
+        final serverPartnershipBalls = live.partnershipBalls;
+        if (serverPartnershipRuns != null && serverPartnershipBalls != null) {
+          _partnership.startFromServerPartnership(
+            currentRuns: live.totalRuns,
+            currentLegalBalls: _legalBalls,
+            partnershipRuns: serverPartnershipRuns,
+            partnershipLegalBalls: serverPartnershipBalls,
+          );
+        } else {
+          _partnership.start(runs: live.totalRuns, legalBalls: _legalBalls);
+        }
         _partnershipInitialized = true;
       } else if (isNewBall && live.lastBall?.wicket != null) {
         _partnership.onWicket(

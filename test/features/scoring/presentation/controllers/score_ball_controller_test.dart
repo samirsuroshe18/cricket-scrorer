@@ -1231,6 +1231,117 @@ void main() {
     },
   );
 
+  group('resuming a live match seeds the partnership from the server', () {
+    late _MixedMatchRepository resumeRepo;
+    late ScoringQueueDatabase resumeDb;
+    late ScoreBallController resumeController;
+
+    setUp(() {
+      resumeRepo = _MixedMatchRepository();
+      resumeDb = ScoringQueueDatabase.forTesting(NativeDatabase.memory());
+      final dao = ScoringQueueDao(resumeDb);
+      final offlineSyncService = OfflineSyncService(
+        dao: dao,
+        syncMatchUseCase: SyncMatchUseCase(matchRepository: resumeRepo),
+        startInningsUseCase: StartInningsUseCase(matchRepository: resumeRepo),
+      );
+
+      resumeController = ScoreBallController(
+        scoreBallUseCase: ScoreBallUseCase(matchRepository: resumeRepo),
+        startInningsUseCase: StartInningsUseCase(matchRepository: resumeRepo),
+        selectBowlerUseCase: SelectBowlerUseCase(matchRepository: resumeRepo),
+        undoBallUseCase: UndoBallUseCase(matchRepository: resumeRepo),
+        abandonMatchUseCase: AbandonMatchUseCase(matchRepository: resumeRepo),
+        matchRepository: resumeRepo,
+        offlineSyncService: offlineSyncService,
+      );
+
+      Get.testMode = true;
+      Get.routing.args = CreateMatchRes(
+        matchId: 'match-1',
+        joinCode: null,
+        teamA: TeamRef(id: 'team-a', name: 'Team A'),
+        teamB: TeamRef(id: 'team-b', name: 'Team B'),
+        totalOvers: 2,
+        status: 'live',
+        syncStatus: 'synced',
+        createdAt: '2026-01-01T00:00:00.000Z',
+      );
+
+      // Deliberately NEVER calls startInnings() — that is what real "open a
+      // live match from the history card" navigation looks like: the innings
+      // already exists server-side, so onInit()'s socket subscription is the
+      // very first state this controller instance ever sees, exactly like
+      // the join ack a fresh app launch or a resumed session gets.
+      resumeController.onInit();
+    });
+
+    tearDown(() async {
+      await resumeRepo.watchScoreUpdatesController.close();
+      await resumeDb.close();
+    });
+
+    test(
+      'a join ack carrying the server\'s own partnership seeds the exact '
+      'checkpoint instead of reading the reconnect moment as 0(0)',
+      () async {
+        resumeRepo.watchScoreUpdatesController.add(
+          Either.result(
+            LiveScoreRes(
+              matchId: 'match-1',
+              inningsNumber: 1,
+              totalRuns: 18,
+              wickets: 1,
+              overs: '0.3',
+              strike: Strike(
+                strikerName: 'Striker',
+                strikerRuns: 5,
+                strikerBalls: 2,
+                nonStrikerName: 'Non-Striker',
+              ),
+              partnershipRuns: 5,
+              partnershipBalls: 2,
+            ),
+          ),
+        );
+        await pumpEventQueue();
+
+        expect(resumeController.totalRuns.value, 18);
+        expect(
+          resumeController.partnershipRuns.value,
+          5,
+          reason:
+              'the server-reported figure, not 0 — the bug this fixes would '
+              'read totalRuns - totalRuns here',
+        );
+        expect(resumeController.partnershipBalls.value, 2);
+      },
+    );
+
+    test(
+      'a join ack with no partnership field falls back to seeding from the '
+      'connection moment, exactly as before this fix',
+      () async {
+        resumeRepo.watchScoreUpdatesController.add(
+          Either.result(
+            LiveScoreRes(
+              matchId: 'match-1',
+              inningsNumber: 1,
+              totalRuns: 0,
+              wickets: 0,
+              overs: '0.0',
+              strike: null,
+            ),
+          ),
+        );
+        await pumpEventQueue();
+
+        expect(resumeController.partnershipRuns.value, 0);
+        expect(resumeController.partnershipBalls.value, 0);
+      },
+    );
+  });
+
   group('chained offline undo of already-synced balls', () {
     late _MixedMatchRepository mixedRepo;
     late ScoringQueueDao mixedDao;

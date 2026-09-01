@@ -60,6 +60,8 @@ PublicInningsState _$PublicInningsStateFromJson(Map<String, dynamic> json) =>
       strike: json['strike'] == null
           ? null
           : Strike.fromJson(json['strike'] as Map<String, dynamic>),
+      partnershipRuns: (json['partnershipRuns'] as num?)?.toInt(),
+      partnershipBalls: (json['partnershipBalls'] as num?)?.toInt(),
       bowler: json['bowler'] == null
           ? null
           : BowlerState.fromJson(json['bowler'] as Map<String, dynamic>),
@@ -75,6 +77,8 @@ Map<String, dynamic> _$PublicInningsStateToJson(PublicInningsState instance) =>
       'target': instance.target,
       'extras': instance.extras.toJson(),
       'strike': instance.strike?.toJson(),
+      'partnershipRuns': instance.partnershipRuns,
+      'partnershipBalls': instance.partnershipBalls,
       'bowler': instance.bowler?.toJson(),
     };
 
