@@ -99,6 +99,17 @@ class _FakeMatchRepository implements MatchRepository {
   Either<CricketResponse<DeleteMatchRes>, CricketFailure>? deleteResponse;
 
   /// Set by a test that needs to observe the in-flight window instead of an
+  /// instantaneous resolve — [getMatchHistory] awaits this future when
+  /// present, checked ahead of [historyResponse].
+  Completer<Either<CricketResponse<MatchHistoryRes>, CricketFailure>>?
+  historyCompleter;
+
+  /// How many times [getMatchHistory] was actually invoked — the way a test
+  /// proves a second overlapping call never reached the repository at all,
+  /// not just that its result didn't win.
+  int historyCallCount = 0;
+
+  /// Set by a test that needs to observe the in-flight window instead of an
   /// instantaneous resolve — [deleteMatch] awaits this future when present,
   /// checked ahead of [deleteResponse].
   Completer<Either<CricketResponse<DeleteMatchRes>, CricketFailure>>?
@@ -107,6 +118,9 @@ class _FakeMatchRepository implements MatchRepository {
   @override
   Future<Either<CricketResponse<MatchHistoryRes>, CricketFailure>>
   getMatchHistory({required int page, required int limit}) async {
+    historyCallCount += 1;
+    final completer = historyCompleter;
+    if (completer != null) return completer.future;
     final response = historyResponse;
     if (response == null) {
       throw UnimplementedError('Not exercised in this test.');
@@ -336,6 +350,50 @@ void main() {
       await future;
 
       expect(controller.deletingMatchIds, isEmpty);
+    },
+  );
+
+  // loadHistory had no in-flight guard, unlike loadMore — a rapid double
+  // pull-to-refresh (or a refresh landing while the initial onInit load was
+  // still going) fired two independent requests, and whichever RESOLVED
+  // last won, not whichever was SENT last. A slower first response landing
+  // after a faster, fresher second one would silently regress the list back
+  // to stale data.
+  test(
+    'a second loadHistory call while one is already in flight is a no-op, '
+    'same as loadMore',
+    () async {
+      final completer =
+          Completer<Either<CricketResponse<MatchHistoryRes>, CricketFailure>>();
+      repo.historyCompleter = completer;
+
+      final first = controller.loadHistory();
+      await Future<void>.delayed(Duration.zero);
+      expect(repo.historyCallCount, 1);
+
+      // The second call must return immediately without ever reaching the
+      // repository — proving the guard, not just that its result lost a race.
+      final second = controller.loadHistory();
+      await second;
+      expect(repo.historyCallCount, 1);
+
+      completer.complete(
+        Either.result(
+          CricketResponse(
+            message: 'ok',
+            data: MatchHistoryRes(
+              matches: [_item('match-1')],
+              page: 1,
+              limit: 20,
+              total: 1,
+            ),
+          ),
+        ),
+      );
+      await first;
+
+      expect(controller.matches.length, 1);
+      expect(controller.isLoading.value, isFalse);
     },
   );
 }
