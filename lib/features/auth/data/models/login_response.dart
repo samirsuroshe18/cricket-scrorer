@@ -69,6 +69,19 @@ class LoggedInUser {
   final String? fullName;
   @JsonKey(name: 'photoUrl')
   final String? photoUrl;
+  // Sent by the backend's loginUser (user.toObject() minus the explicitly
+  // stripped secret fields) but previously undeclared here, so they were
+  // silently dropped on parse — harmless today only because each has its
+  // own dedicated endpoint (language: GET /user/language) or isn't read
+  // back from this response anywhere yet (userType, fcmToken). Declaring
+  // them is what would let a future screen use this response as a cache for
+  // any of the three instead of a fresh call.
+  @JsonKey(name: 'language')
+  final String? language;
+  @JsonKey(name: 'userType')
+  final String? userType;
+  @JsonKey(name: 'fcmToken')
+  final String? fcmToken;
 
   LoggedInUser({
     this.id,
@@ -86,6 +99,9 @@ class LoggedInUser {
     this.bio,
     this.fullName,
     this.photoUrl,
+    this.language,
+    this.userType,
+    this.fcmToken,
   });
 
   LoggedInUser copyWith({
@@ -104,6 +120,9 @@ class LoggedInUser {
     String? bio,
     String? fullName,
     String? photoUrl,
+    String? language,
+    String? userType,
+    String? fcmToken,
   }) => LoggedInUser(
     id: id ?? this.id,
     email: email ?? this.email,
@@ -120,6 +139,9 @@ class LoggedInUser {
     bio: bio ?? this.bio,
     fullName: fullName ?? this.fullName,
     photoUrl: photoUrl ?? this.photoUrl,
+    language: language ?? this.language,
+    userType: userType ?? this.userType,
+    fcmToken: fcmToken ?? this.fcmToken,
   );
 
   factory LoggedInUser.fromJson(Map<String, dynamic> json) =>
