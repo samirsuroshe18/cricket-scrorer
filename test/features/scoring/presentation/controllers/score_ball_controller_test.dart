@@ -1180,6 +1180,57 @@ void main() {
     },
   );
 
+  test(
+    'undoing an offline-queued wicket rolls the partnership checkpoint back '
+    'too, instead of leaving it ahead of the restored totals',
+    () async {
+      // Two dot balls for the openers' partnership: 0 runs off 2 balls.
+      await controller.scoreRuns(0);
+      await controller.scoreRuns(0);
+      expect(controller.partnershipRuns.value, 0);
+      expect(controller.partnershipBalls.value, 2);
+
+      // A wicket falls, offline, ending that partnership. A new pair starts.
+      final scored = await controller.scoreWicket(
+        wicketType: WicketType.bowled,
+        dismissedBatsman: DismissedBatsman.striker,
+        runs: 0,
+        incomingBatsmanName: 'New Batsman',
+      );
+      expect(scored, isTrue);
+      expect(
+        controller.partnershipRuns.value,
+        0,
+        reason: 'the new pair has faced nothing yet',
+      );
+      expect(controller.partnershipBalls.value, 0);
+
+      // The scorer undoes that same wicket ball — still queued, so this is
+      // the local-only `_undoQueuedBall` path. The console (correctly) goes
+      // back to the pre-wicket totals: 0 runs off 2 balls, no wicket down.
+      final undone = await controller.undoLastBall();
+      expect(undone, isTrue);
+      expect(controller.wickets.value, 0);
+      expect(controller.overs.value, '0.2');
+
+      // The partnership checkpoint must roll back with it. Left pointing at
+      // the (now-undone) wicket's totals, [partnershipBalls] goes negative —
+      // the restored ball count (2) minus a checkpoint still sitting at 3.
+      expect(
+        controller.partnershipRuns.value,
+        0,
+        reason: 'back to the reopened opening partnership',
+      );
+      expect(
+        controller.partnershipBalls.value,
+        2,
+        reason:
+            'must match the restored ball count, not stay pinned to the '
+            'undone wicket\'s',
+      );
+    },
+  );
+
   group('chained offline undo of already-synced balls', () {
     late _MixedMatchRepository mixedRepo;
     late ScoringQueueDao mixedDao;

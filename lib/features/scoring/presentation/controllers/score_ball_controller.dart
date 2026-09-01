@@ -999,6 +999,13 @@ class ScoreBallController extends GetxController {
   /// known from this alone. Harmless: the server still enforces the rule the
   /// moment a bowler selection actually syncs.
   void _applyPreEventStateAsCurrent(PreEventState pre) {
+    // Captured before [wickets] is overwritten below: a drop in the wicket
+    // count means the ball this snapshot restores past was itself the one
+    // that took a wicket — the only way an offline undo (queued or
+    // already-synced) can tell, since neither carries the removed ball's own
+    // outcome the way the online undo response does.
+    final wicketWasUndone = wickets.value > pre.wickets;
+
     totalRuns.value = pre.totalRuns;
     wickets.value = pre.wickets;
     overs.value =
@@ -1016,6 +1023,12 @@ class ScoreBallController extends GetxController {
       nonStrikerRuns: pre.nonStriker.runs,
       nonStrikerBalls: pre.nonStriker.balls,
     );
+    // Mirrors the online path's `if (undone?.wicket != null)
+    // _partnership.onUndoneWicket()`. Without this, undoing a wicket offline
+    // leaves the checkpoint pointing at the now-undone dismissal's totals
+    // while [_legalBalls]/[totalRuns] roll back below it — partnershipBalls
+    // then reads negative.
+    if (wicketWasUndone) _partnership.onUndoneWicket();
     _recomputeRates();
   }
 
@@ -1100,6 +1113,18 @@ class ScoreBallController extends GetxController {
         '${totals.oversCompleted}.${totals.legalBalls - totals.oversCompleted * 6}';
     extrasTotal.value = totals.extras.total;
     _legalBalls = totals.legalBalls;
+
+    // Mirrors the socket listener's own `onWicket` call for an online ball:
+    // a dismissal starts a new partnership even when it happens offline.
+    // Without this, the checkpoint stays pinned to whatever it was before
+    // this delivery, and the new pair's partnership reads as everything
+    // since the LAST wicket rather than since this one.
+    if (preview.wicket != null) {
+      _partnership.onWicket(
+        totalRunsAfter: totals.totalRuns,
+        legalBallsAfter: totals.legalBalls,
+      );
+    }
     _recomputeRates();
 
     // The just-finished innings' final numbers, captured now because nothing
