@@ -218,6 +218,25 @@ class OfflineSyncService extends GetxService {
     );
   }
 
+  /// Queues one delivery and records its [BallHistory] ledger row together,
+  /// in one transaction — see `ScoringQueueDao.enqueueBallWithHistory`. The
+  /// caller of this must never call [enqueueBall] and [recordBallHistory]
+  /// as two separate steps for a queued ball: this is what keeps them from
+  /// being torn apart by a crash in between.
+  Future<void> enqueueBallWithHistory({
+    required String matchId,
+    required int inningsNumber,
+    required ScoreBallReq req,
+    required PreEventState pre,
+  }) {
+    return dao.enqueueBallWithHistory(
+      matchId: matchId,
+      inningsNumber: inningsNumber,
+      req: req,
+      pre: pre,
+    );
+  }
+
   /// See [enqueueBall]'s doc comment.
   Future<void> enqueueBowler({
     required String matchId,

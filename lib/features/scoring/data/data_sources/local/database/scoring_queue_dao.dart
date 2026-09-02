@@ -45,6 +45,35 @@ class ScoringQueueDao extends DatabaseAccessor<ScoringQueueDatabase>
     );
   }
 
+  /// Inserts a queued ball event and its [BallHistory] ledger row together,
+  /// in one SQLite transaction — the two were previously separate,
+  /// independently-committed statements, so anything that broke between
+  /// them (a process kill, most plausibly) left an orphaned queue row with
+  /// no matching ledger row. `_undoQueuedBall` deletes whatever
+  /// `latestHistoryEntry()` returns assuming it's paired with the queue row
+  /// it just popped — a torn write there meant it could silently delete an
+  /// unrelated, possibly already-synced ball's ledger entry instead.
+  Future<void> enqueueBallWithHistory({
+    required String matchId,
+    required int inningsNumber,
+    required ScoreBallReq req,
+    required PreEventState pre,
+  }) {
+    return transaction(() async {
+      await enqueueBall(
+        matchId: matchId,
+        inningsNumber: inningsNumber,
+        req: req,
+        pre: pre,
+      );
+      await insertHistoryEntry(
+        matchId: matchId,
+        inningsNumber: inningsNumber,
+        pre: pre,
+      );
+    });
+  }
+
   /// See [enqueueBall]'s doc comment.
   Future<int?> enqueueBowler({
     required String matchId,
