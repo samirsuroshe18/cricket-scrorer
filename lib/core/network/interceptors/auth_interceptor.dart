@@ -10,7 +10,6 @@ import 'package:cricket_scorer/core/services/secure_storages_service.dart';
 import 'package:cricket_scorer/core/services/shared_preference_service.dart';
 import 'package:cricket_scorer/core/translations/translation_keys.dart';
 import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart';
 import 'package:get/get.dart' hide Response;
 
 // Holds in-flight refresh so parallel 401s don't trigger multiple refresh calls
@@ -48,9 +47,6 @@ class AuthInterceptor extends Interceptor {
 
     if (accessToken != null && accessToken.isNotEmpty) {
       options.headers['Authorization'] = 'Bearer $accessToken';
-      if (kDebugMode) {
-        print(options.headers['Authorization']);
-      }
     }
     super.onRequest(options, handler);
   }
