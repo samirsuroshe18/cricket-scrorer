@@ -7,6 +7,13 @@ analyzer:
     - "**/*.g.dart"
     - "**/*.freezed.dart"
     - "lib/generated/**"
+    # Native build output — most importantly build/ios/SourcePackages, where
+    # Xcode/CocoaPods vendors each plugin's own source (including its own
+    # test/mock files, e.g. firebase_messaging's). Without this, a bare
+    # `flutter analyze` reports ~90 errors from code this project doesn't
+    # own and can't fix, burying real findings in lib/ and test/ underneath
+    # them.
+    - "build/**"
 
   # Strong language type checks for production-grade safety
   language:
