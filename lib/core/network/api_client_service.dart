@@ -20,6 +20,13 @@ class ApiClient extends GetxService {
 
   static CancelToken _cancelToken = CancelToken();
 
+  /// The token every request not given its own explicit `cancelToken`
+  /// carries — including [AuthInterceptor]'s own retry after a token
+  /// refresh, which builds its request by hand on the raw [Dio] instance
+  /// rather than through this class's get/post/etc wrappers, and so would
+  /// otherwise carry no cancel token at all.
+  static CancelToken get currentCancelToken => _cancelToken;
+
   static void cancelAllRequests() {
     _cancelToken.cancel();
     _cancelToken = CancelToken();
