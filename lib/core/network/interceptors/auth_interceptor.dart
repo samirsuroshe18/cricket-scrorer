@@ -187,6 +187,12 @@ class AuthInterceptor extends Interceptor {
       options.path,
       data: options.data,
       queryParameters: options.queryParameters,
+      // Every other request path attaches this by default (it's
+      // ApiClient.get/post/etc's own fallback) — built by hand here since
+      // this bypasses those wrappers, so without it a retried request had
+      // no cancel token at all and could outlive a logout that happens
+      // while it's in flight.
+      cancelToken: ApiClient.currentCancelToken,
       options: Options(
         method: options.method,
         headers: {
@@ -205,6 +211,11 @@ class AuthInterceptor extends Interceptor {
   Future<void> _forceLogout() async {
     await SharedPreferenceService.sharedPrefService.clearForLogout();
     await SecureStorageService.secure.clearForLogout();
+    // Matches the user-initiated logout path (home_controller.dart): storage
+    // clears first, then whatever is still in flight is cancelled — without
+    // this, a request that outlives the session it belonged to could still
+    // land after the app has already navigated to the login screen.
+    ApiClient.cancelAllRequests();
 
     unawaited(Get.offAllNamed<dynamic>(AppRoutes.login));
 
