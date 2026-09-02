@@ -30,6 +30,10 @@ class CreateMatchScreen extends GetView<CreateMatchController> {
                 prefixIcon: const Icon(Icons.sports_cricket),
                 validator: controller.validateTeamName,
                 textCapitalization: TextCapitalization.words,
+                // Matches Team.name's backend maxlength: 50 — without this,
+                // a name over the limit passes this form cleanly and only
+                // fails on the backend's own validation.
+                maxLength: 50,
                 isRequired: true,
               ),
               16.h,
@@ -40,6 +44,7 @@ class CreateMatchScreen extends GetView<CreateMatchController> {
                 prefixIcon: const Icon(Icons.sports_cricket),
                 validator: controller.validateTeamName,
                 textCapitalization: TextCapitalization.words,
+                maxLength: 50,
                 isRequired: true,
               ),
               16.h,
