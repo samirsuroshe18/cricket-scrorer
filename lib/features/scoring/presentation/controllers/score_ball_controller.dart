@@ -249,16 +249,32 @@ class ScoreBallController extends GetxController {
 
   bool get hasOpeners => strike.value?.strikerName != null;
 
-  /// Everything the console can act on is gated on the same three facts, so a
-  /// run button and the OUT button can never disagree about whether the match
-  /// is scoreable. [needsBowler] belongs here for the same reason [hasOpeners]
+  /// True once the local queue is stuck in a state a retry cannot resolve on
+  /// its own — [SyncPhase.conflict] or [SyncPhase.blockedOnRule], both
+  /// deliberately non-auto-resolving (see [_promptIfNeeded]). Read by
+  /// [canScore] so the console locks the moment either phase is entered,
+  /// rather than only once `_promptIfNeeded`'s sheet manages to open —
+  /// which it may not: a sheet already open for something else, or the
+  /// scorer picking "review later", both leave this phase in place with
+  /// nothing else disabling the run/wicket buttons. Without this, every ball
+  /// scored during that window queues normally behind the stuck one and is
+  /// discarded, all at once and with no per-ball notice, the moment the
+  /// block is eventually resolved.
+  bool get _isSyncBlocked =>
+      offlineSyncService.phase.value == SyncPhase.conflict ||
+      offlineSyncService.phase.value == SyncPhase.blockedOnRule;
+
+  /// Everything the console can act on is gated on the same facts, so a run
+  /// button and the OUT button can never disagree about whether the match is
+  /// scoreable. [needsBowler] belongs here for the same reason [hasOpeners]
   /// does: the server refuses the delivery either way, and a disabled button is
   /// a better explanation than a snackbar after the tap.
   bool get canScore =>
       !isScoring.value &&
       hasOpeners &&
       !isInningsComplete.value &&
-      !needsBowler.value;
+      !needsBowler.value &&
+      !_isSyncBlocked;
 
   /// Deliberately **not** gated on [isInningsComplete] or [needsBowler], unlike
   /// [canScore]. Undoing a mis-tapped tenth wicket, or the ball that ended an

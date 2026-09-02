@@ -2491,6 +2491,179 @@ void main() {
         await db.close();
       },
     );
+
+    // Before this fix, `canScore` read only `isScoring`/`hasOpeners`/
+    // `isInningsComplete`/`needsBowler` — never `offlineSyncService.phase`.
+    // So a scorer who saw the blocked-sync sheet and dismissed it ("review
+    // later"), or who simply tapped a run button before `_promptIfNeeded`
+    // got a chance to show it, could keep queuing balls behind a queue that
+    // was guaranteed to fail identically on every retry — and when it was
+    // eventually resolved via `undoBackToBlockedBall`, ALL of them,
+    // including the ones scored after the block was already known, were
+    // discarded with no per-ball notice.
+    test(
+      'canScore is false while sync is blockedOnRule, and true again once '
+      'undoBackToBlockedBall resolves it',
+      () async {
+        final repo = _RuleBlockingMatchRepository();
+        final db = ScoringQueueDatabase.forTesting(NativeDatabase.memory());
+        final dao = ScoringQueueDao(db);
+        final syncService = OfflineSyncService(
+          dao: dao,
+          syncMatchUseCase: SyncMatchUseCase(matchRepository: repo),
+          startInningsUseCase: StartInningsUseCase(matchRepository: repo),
+        );
+        final controller = ScoreBallController(
+          scoreBallUseCase: ScoreBallUseCase(matchRepository: repo),
+          startInningsUseCase: StartInningsUseCase(matchRepository: repo),
+          selectBowlerUseCase: SelectBowlerUseCase(matchRepository: repo),
+          undoBallUseCase: UndoBallUseCase(matchRepository: repo),
+          abandonMatchUseCase: AbandonMatchUseCase(matchRepository: repo),
+          matchRepository: repo,
+          offlineSyncService: syncService,
+        );
+
+        Get.testMode = true;
+        Get.routing.args = CreateMatchRes(
+          matchId: 'match-1',
+          joinCode: null,
+          teamA: TeamRef(id: 'team-a', name: 'Team A'),
+          teamB: TeamRef(id: 'team-b', name: 'Team B'),
+          totalOvers: 2,
+          status: 'live',
+          syncStatus: 'local',
+          createdAt: '2026-01-01T00:00:00.000Z',
+        );
+
+        repo.startInningsResponse = StartInningsRes(
+          matchId: 'match-1',
+          inningsId: 'innings-1',
+          inningsNumber: 1,
+          battingTeam: 'teamA',
+          bowlingTeam: 'teamB',
+          strike: Strike(strikerName: 'Striker', nonStrikerName: 'Non-Striker'),
+          bowler: Bowler(bowlerId: 'bowler-1', bowlerName: 'Bumrah'),
+          target: null,
+          inningsTotals: InningsTotals(
+            totalRuns: 0,
+            wickets: 0,
+            legalBalls: 0,
+            totalBalls: 0,
+            oversCompleted: 0,
+            extras: ExtrasBreakdown(),
+          ),
+        );
+
+        controller.onInit();
+        await controller.startInnings(
+          strikerName: 'Striker',
+          nonStrikerName: 'Non-Striker',
+          bowlerName: 'Bumrah',
+        );
+
+        expect(
+          controller.canScore,
+          isTrue,
+          reason: 'nothing queued yet — scoring is open',
+        );
+
+        await controller.scoreRuns(1);
+        await controller.scoreRuns(4);
+        await pumpEventQueue();
+        await syncService.retryNow(matchId: 'match-1', inningsNumber: 1);
+
+        expect(syncService.phase.value, SyncPhase.blockedOnRule);
+        expect(
+          controller.canScore,
+          isFalse,
+          reason:
+              'a queue that will fail identically on every retry must not '
+              'accept more deliveries behind it',
+        );
+
+        await controller.undoBackToBlockedBall();
+
+        expect(syncService.phase.value, SyncPhase.idle);
+        expect(
+          controller.canScore,
+          isTrue,
+          reason: 'resolved — scoring is open again',
+        );
+
+        await db.close();
+      },
+    );
+
+    // Same guard, the sibling phase: `_isSyncBlocked` reads both
+    // SyncPhase.conflict and SyncPhase.blockedOnRule identically, so
+    // `canScore` must lock the console for a whole-batch conflict too, not
+    // only a per-event rule failure. Driven directly rather than through a
+    // real 409, since nothing else in this suite needs a conflict-shaped
+    // fake repository.
+    test('canScore is false while sync is conflict', () async {
+      final repo = _RuleBlockingMatchRepository();
+      final db = ScoringQueueDatabase.forTesting(NativeDatabase.memory());
+      final dao = ScoringQueueDao(db);
+      final syncService = OfflineSyncService(
+        dao: dao,
+        syncMatchUseCase: SyncMatchUseCase(matchRepository: repo),
+        startInningsUseCase: StartInningsUseCase(matchRepository: repo),
+      );
+      final controller = ScoreBallController(
+        scoreBallUseCase: ScoreBallUseCase(matchRepository: repo),
+        startInningsUseCase: StartInningsUseCase(matchRepository: repo),
+        selectBowlerUseCase: SelectBowlerUseCase(matchRepository: repo),
+        undoBallUseCase: UndoBallUseCase(matchRepository: repo),
+        abandonMatchUseCase: AbandonMatchUseCase(matchRepository: repo),
+        matchRepository: repo,
+        offlineSyncService: syncService,
+      );
+
+      Get.testMode = true;
+      Get.routing.args = CreateMatchRes(
+        matchId: 'match-1',
+        joinCode: null,
+        teamA: TeamRef(id: 'team-a', name: 'Team A'),
+        teamB: TeamRef(id: 'team-b', name: 'Team B'),
+        totalOvers: 2,
+        status: 'live',
+        syncStatus: 'local',
+        createdAt: '2026-01-01T00:00:00.000Z',
+      );
+
+      repo.startInningsResponse = StartInningsRes(
+        matchId: 'match-1',
+        inningsId: 'innings-1',
+        inningsNumber: 1,
+        battingTeam: 'teamA',
+        bowlingTeam: 'teamB',
+        strike: Strike(strikerName: 'Striker', nonStrikerName: 'Non-Striker'),
+        bowler: Bowler(bowlerId: 'bowler-1', bowlerName: 'Bumrah'),
+        target: null,
+        inningsTotals: InningsTotals(
+          totalRuns: 0,
+          wickets: 0,
+          legalBalls: 0,
+          totalBalls: 0,
+          oversCompleted: 0,
+          extras: ExtrasBreakdown(),
+        ),
+      );
+
+      controller.onInit();
+      await controller.startInnings(
+        strikerName: 'Striker',
+        nonStrikerName: 'Non-Striker',
+        bowlerName: 'Bumrah',
+      );
+      expect(controller.canScore, isTrue);
+
+      syncService.phase.value = SyncPhase.conflict;
+
+      expect(controller.canScore, isFalse);
+
+      await db.close();
+    });
   });
 
   group('abandonMatch', () {
