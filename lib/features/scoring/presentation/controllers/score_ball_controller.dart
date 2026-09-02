@@ -1091,19 +1091,18 @@ class ScoreBallController extends GetxController {
   Future<bool> _queueBallOffline(ScoreBallReq req) async {
     final pre = _offlinePre ?? _currentPreEventStateFromLive();
 
-    await offlineSyncService.enqueueBall(
-      matchId: match.matchId,
-      inningsNumber: _currentInningsNumber,
-      req: req,
-      pre: pre,
-    );
     // Same snapshot, same instant — the queue row and the ledger row both
     // describe "state immediately before this ball". `ballEventId` starts
     // null: this ball hasn't synced yet, so there is no server id for it
-    // until `OfflineSyncService._attemptSync` backfills one on flush.
-    await offlineSyncService.recordBallHistory(
+    // until `OfflineSyncService._attemptSync` backfills one on flush. Both
+    // rows are inserted in one transaction — see
+    // `ScoringQueueDao.enqueueBallWithHistory` — so a crash between what
+    // used to be two separate writes can no longer leave one without the
+    // other.
+    await offlineSyncService.enqueueBallWithHistory(
       matchId: match.matchId,
       inningsNumber: _currentInningsNumber,
+      req: req,
       pre: pre,
     );
 
