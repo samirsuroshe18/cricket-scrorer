@@ -17,7 +17,14 @@ class AppRoutes {
   /// Never navigate with this constant directly — use [spectatorPath].
   static const String spectator = '/spectate/:code';
 
-  static String spectatorPath(String code) => '/spectate/$code';
+  /// Encoded here, not by callers — the single point every caller (the
+  /// code-entry sheet's manually-typed input, a resolved deep link) funnels
+  /// through. The deep-link path is already structurally constrained (its
+  /// own parsing regex excludes '/' and '?'), but a pasted code has no such
+  /// guarantee, and encoding unconditionally is a no-op for an already-safe
+  /// plain alphanumeric code either way.
+  static String spectatorPath(String code) =>
+      '/spectate/${Uri.encodeComponent(code)}';
 
   /// Registered with a GetX path parameter. Reachable two ways: automatically
   /// from `ScoreBallController._navigateToResult` on `match:complete`, or by
