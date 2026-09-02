@@ -54,6 +54,14 @@ class MatchSocketService {
       socket.off('score:update', onUpdate);
       socket.off('disconnect', onDisconnect);
       socket.off('connect_error', onConnectError);
+      // The inverse of match:join above, on the same shared, app-wide socket
+      // this stream never owns exclusively — without this, navigating from
+      // one match to another (spectating A, then B, in one continuous
+      // session) left the connection sitting in every room it had ever
+      // joined, for the rest of the process. See match.socket.js's own
+      // match:leave handler: read-only, no DB access, safe to send even if
+      // this room was already left or never joined.
+      socket.emit('match:leave', {'matchId': matchId});
       await controller.close();
     };
 
