@@ -54,6 +54,16 @@ class ResultController extends GetxController {
 
   Worker? _phaseWorker;
 
+  /// Guards [_load] against a second overlapping call — `onInit`'s own
+  /// first load, [_phaseWorker]'s auto-retry once the offline queue drains,
+  /// and the manual [retry] button can all fire it independently. Not
+  /// `isLoading` itself: gating on that would make the very first call, for
+  /// which it also starts `true`, a no-op too. Without this, two in-flight
+  /// requests race independently, and whichever resolves last — not
+  /// whichever was triggered last — is what this screen ends up showing.
+  /// Same shape and same fix as `HomeController.loadHistory`'s own guard.
+  bool _isLoadingResult = false;
+
   @override
   void onInit() {
     super.onInit();
@@ -117,39 +127,46 @@ class ResultController extends GetxController {
   }
 
   Future<void> _load() async {
+    if (_isLoadingResult) return;
+    _isLoadingResult = true;
+
     isLoading.value = true;
     loadError.value = null;
 
-    final response = await getScorecardUseCase(
-      params: GetScorecardParams(matchId: _matchId),
-    );
-
-    final data = response.isResult ? response.result.data : null;
-
-    if (!response.isResult || data == null) {
-      final provisional = await offlineSyncService.provisionalResultFor(
-        _matchId,
+    try {
+      final response = await getScorecardUseCase(
+        params: GetScorecardParams(matchId: _matchId),
       );
-      if (provisional != null) {
-        provisionalResult.value = MatchResultInfo(
-          winner: provisional.winner,
-          marginType: provisional.marginType,
-          margin: provisional.margin,
+
+      final data = response.isResult ? response.result.data : null;
+
+      if (!response.isResult || data == null) {
+        final provisional = await offlineSyncService.provisionalResultFor(
+          _matchId,
         );
+        if (provisional != null) {
+          provisionalResult.value = MatchResultInfo(
+            winner: provisional.winner,
+            marginType: provisional.marginType,
+            margin: provisional.margin,
+          );
+          isLoading.value = false;
+          return;
+        }
+
+        loadError.value = response.isResult
+            ? TranslationKeys.somethingWentWrong.tr
+            : response.fallback.message;
         isLoading.value = false;
         return;
       }
 
-      loadError.value = response.isResult
-          ? TranslationKeys.somethingWentWrong.tr
-          : response.fallback.message;
+      provisionalResult.value = null;
+      unawaited(offlineSyncService.deleteProvisionalResult(_matchId));
+      scorecard.value = data;
       isLoading.value = false;
-      return;
+    } finally {
+      _isLoadingResult = false;
     }
-
-    provisionalResult.value = null;
-    unawaited(offlineSyncService.deleteProvisionalResult(_matchId));
-    scorecard.value = data;
-    isLoading.value = false;
   }
 }
