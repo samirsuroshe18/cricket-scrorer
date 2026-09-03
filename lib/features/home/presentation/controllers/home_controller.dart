@@ -75,7 +75,16 @@ class HomeController extends GetxController {
 
     if (response.isResult) {
       final data = response.result.data;
-      matches.assignAll(data?.matches ?? []);
+      // A refresh's GET can be sent while a delete's own request hasn't yet
+      // committed server-side — this response may be a snapshot from
+      // before that delete landed. Filtering out anything still in
+      // deletingMatchIds is what stops that stale snapshot from
+      // resurrecting a card the scorer just asked to delete.
+      matches.assignAll(
+        (data?.matches ?? []).where(
+          (match) => !deletingMatchIds.contains(match.matchId),
+        ),
+      );
       hasMore.value = data?.hasMore ?? false;
     } else {
       loadError.value = response.fallback.message;

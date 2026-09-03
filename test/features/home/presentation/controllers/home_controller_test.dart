@@ -441,6 +441,66 @@ void main() {
     },
   );
 
+  // A refresh's GET can be sent while a delete's request hasn't yet
+  // committed server-side. If that refresh's own response — a snapshot from
+  // before the delete landed — arrives while the delete is still in
+  // flight, loadHistory's plain matches.assignAll(...) used to resurrect
+  // the card the scorer just asked to delete, until the delete itself
+  // settled (removing it again) or the next refresh corrected it. Not
+  // data-corrupting, but a visible flicker/regression.
+  test(
+    'loadHistory does not resurrect a card whose delete is still in flight',
+    () async {
+      repo.historyResponse = Either.result(
+        CricketResponse(
+          message: 'ok',
+          data: MatchHistoryRes(
+            matches: [_item('match-1'), _item('match-2')],
+            page: 1,
+            limit: 20,
+            total: 2,
+          ),
+        ),
+      );
+      await controller.loadHistory();
+      expect(controller.matches.length, 2);
+
+      final deleteCompleter = Completer<
+        Either<CricketResponse<DeleteMatchRes>, CricketFailure>
+      >();
+      repo.deleteCompleter = deleteCompleter;
+      final deleteFuture = controller.deleteMatch(_item('match-1'));
+      await Future<void>.delayed(Duration.zero);
+      expect(controller.deletingMatchIds, contains('match-1'));
+
+      // A refresh landing while that delete is still unsettled — its own
+      // response still lists match-1, exactly what a request sent before
+      // the delete committed would look like.
+      await controller.loadHistory();
+
+      expect(
+        controller.matches.map((m) => m.matchId),
+        isNot(contains('match-1')),
+        reason:
+            'a card actively being deleted must not reappear just because '
+            'a concurrent refresh has not caught up yet',
+      );
+
+      deleteCompleter.complete(
+        Either.result(
+          CricketResponse(
+            message: 'ok',
+            data: DeleteMatchRes(matchId: 'match-1'),
+          ),
+        ),
+      );
+      await deleteFuture;
+
+      expect(controller.deletingMatchIds, isEmpty);
+      expect(controller.matches.map((m) => m.matchId), isNot(contains('match-1')));
+    },
+  );
+
   // logout used to only clear the local session and navigate to login on a
   // *successful* server response — a network hiccup, a server error, or the
   // call throwing outright all left the console apparently still signed in,
