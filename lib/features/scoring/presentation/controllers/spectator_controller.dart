@@ -232,6 +232,17 @@ class SpectatorController extends GetxController {
   /// Joining by code here too would just be a second, worse way to fail: the
   /// socket answers an unresolvable code with silence, not an error.
   Future<void> _subscribeToLiveUpdates(String matchId) async {
+    // Only ever reachable today via retry() after a FAILED load (a
+    // successful one is the only thing that gets here in the first place),
+    // but nothing at this level stops a second successful load from
+    // reaching it too — cancelling whatever was already subscribed is what
+    // keeps that from leaking a listener on every such reload instead of
+    // replacing it.
+    unawaited(_scoreSub?.cancel());
+    unawaited(_undoSub?.cancel());
+    unawaited(_matchCompleteSub?.cancel());
+    unawaited(_matchAbandonedSub?.cancel());
+
     _scoreSub = matchRepository.watchScoreUpdates(matchId: matchId).listen((
       event,
     ) {
