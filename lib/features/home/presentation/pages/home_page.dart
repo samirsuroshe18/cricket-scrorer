@@ -14,6 +14,7 @@ import 'package:cricket_scorer/core/services/language_service.dart';
 import 'package:cricket_scorer/core/translations/translation_keys.dart';
 import 'package:cricket_scorer/features/home/presentation/controllers/home_controller.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/match_history_res.dart';
+import 'package:cricket_scorer/features/scoring/presentation/widget/match_history_card.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -44,6 +45,13 @@ class HomePage extends GetView<HomeController> {
       appBar: CustomAppBar(
         title: TranslationKeys.matchHistory.tr,
         actions: [
+          IconButton(
+            icon: const Icon(Icons.person_outline),
+            onPressed: () => Get.toNamed<dynamic>(
+              AppRoutes.updateProfile,
+              arguments: {'isEditing': true},
+            ),
+          ),
           IconButton(
             icon: const Icon(Icons.settings),
             onPressed: controller.logout,
@@ -108,11 +116,10 @@ class HomePage extends GetView<HomeController> {
                     );
                   }
                   final item = controller.matches[index];
-                  return _MatchHistoryCard(
+                  return MatchHistoryCard(
                     item: item,
                     onTap: () => controller.openMatch(item),
-                    onDelete: () =>
-                        unawaited(_confirmDelete(controller, item)),
+                    onDelete: () => unawaited(_confirmDelete(controller, item)),
                     isDeleting: () =>
                         controller.deletingMatchIds.contains(item.matchId),
                   );
@@ -195,148 +202,6 @@ class _ErrorState extends StatelessWidget {
               width: 160,
             ),
           ],
-        ),
-      ),
-    );
-  }
-}
-
-class _MatchHistoryCard extends StatelessWidget {
-  const _MatchHistoryCard({
-    required this.item,
-    required this.onTap,
-    required this.onDelete,
-    required this.isDeleting,
-  });
-
-  final MatchHistoryItem item;
-  final VoidCallback onTap;
-  final VoidCallback onDelete;
-
-  /// A callback rather than a plain `bool`: [deletingMatchIds] is reactive,
-  /// and this card needs to read it live, but the card list itself is
-  /// rebuilt from a plain (non-`Obx`) `ListView.separated` — wrapping just
-  /// the icon in its own `Obx` below is what makes only this one card's
-  /// icon react, not the whole list re-diffing on every delete.
-  final bool Function() isDeleting;
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: context.colorScheme.surfaceContainerHighest,
-      borderRadius: 12.radius,
-      child: InkWell(
-        borderRadius: 12.radius,
-        onTap: onTap,
-        child: Padding(
-          padding: 16.p,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Expanded(
-                    child: CricketText(
-                      text: '${item.teamA.name} vs ${item.teamB.name}',
-                      style: context.textTheme.titleSmall,
-                      maxLines: 1,
-                      textOverflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                  8.w,
-                  _StatusBadge(status: item.status),
-                  Obx(
-                    () => isDeleting()
-                        ? const Padding(
-                            padding: EdgeInsets.all(8),
-                            child: SizedBox(
-                              width: 16,
-                              height: 16,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                              ),
-                            ),
-                          )
-                        : IconButton(
-                            tooltip: TranslationKeys.deleteMatch.tr,
-                            visualDensity: VisualDensity.compact,
-                            icon: Icon(
-                              Icons.delete_outline,
-                              size: 20,
-                              color: context.colorScheme.onSurfaceVariant,
-                            ),
-                            onPressed: onDelete,
-                          ),
-                  ),
-                ],
-              ),
-              6.h,
-              CricketText(
-                text:
-                    '${item.totalOvers} ${TranslationKeys.overs.tr} · '
-                    '${_formatDate(item.createdAt)}',
-                style: context.textTheme.bodySmall?.copyWith(
-                  color: context.colorScheme.onSurfaceVariant,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  /// No `intl` dependency in this project (see pubspec.yaml) — a plain
-  /// "20 Aug 2026" built from the ISO string's own fields, deliberately not
-  /// locale-aware, matches every other date shown in this codebase today.
-  static const _months = [
-    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
-  ];
-
-  String _formatDate(String iso) {
-    final date = DateTime.tryParse(iso);
-    if (date == null) return iso;
-    return '${date.day} ${_months[date.month - 1]} ${date.year}';
-  }
-}
-
-class _StatusBadge extends StatelessWidget {
-  const _StatusBadge({required this.status});
-
-  final String status;
-
-  @override
-  Widget build(BuildContext context) {
-    final (label, color) = switch (status) {
-      'live' => (TranslationKeys.statusLive.tr, context.colors.statusInfo),
-      'innings_break' => (
-        TranslationKeys.statusInningsBreak.tr,
-        context.colors.statusInfo,
-      ),
-      'completed' => (
-        TranslationKeys.statusCompleted.tr,
-        context.colors.statusSuccess,
-      ),
-      'abandoned' => (
-        TranslationKeys.statusAbandoned.tr,
-        context.colors.statusDanger,
-      ),
-      _ => (TranslationKeys.statusUpcoming.tr, context.colors.statusWarning),
-    };
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.12),
-        borderRadius: 8.radius,
-      ),
-      child: CricketText(
-        text: label,
-        style: context.textTheme.labelSmall?.copyWith(
-          color: color,
-          fontWeight: FontWeight.w600,
         ),
       ),
     );

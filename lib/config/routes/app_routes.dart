@@ -35,4 +35,16 @@ class AppRoutes {
   static const String matchResult = '/match/:matchId/result';
 
   static String matchResultPath(String matchId) => '/match/$matchId/result';
+
+  /// Registered with a GetX path parameter, same shape as [matchResult].
+  /// Never navigate with this constant directly — use [playerStatsPath].
+  static const String playerStats = '/player/:playerId/stats';
+
+  static String playerStatsPath(String playerId) => '/player/$playerId/stats';
+
+  /// Registered with a GetX path parameter, same shape as [playerStats].
+  /// Never navigate with this constant directly — use [teamProfilePath].
+  static const String teamProfile = '/team/:teamId/profile';
+
+  static String teamProfilePath(String teamId) => '/team/$teamId/profile';
 }
