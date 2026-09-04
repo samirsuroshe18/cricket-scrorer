@@ -79,7 +79,27 @@ class TranslationKeys {
   static const String enterUsername = 'enter_username';
   static const String tellUsAboutYourself = 'tell_us_about_yourself';
   static const String bio = 'bio';
+  static const String battingStyle = 'batting_style';
+  static const String bowlingStyle = 'bowling_style';
+  static const String rightHanded = 'right_handed';
+  static const String leftHanded = 'left_handed';
+  static const String rightArmPace = 'right_arm_pace';
+  static const String leftArmPace = 'left_arm_pace';
+  static const String rightArmSpin = 'right_arm_spin';
+  static const String leftArmSpin = 'left_arm_spin';
   static const String continueText = 'continue_text';
+  static const String myProfile = 'my_profile';
+  static const String saveChanges = 'save_changes';
+
+  /// Player career-stats screen
+  static const String playerStats = 'player_stats';
+  static const String matchesPlayed = 'matches_played';
+  static const String innings = 'innings';
+  static const String average = 'average';
+  static const String highScore = 'high_score';
+  static const String fifties = 'fifties';
+  static const String hundreds = 'hundreds';
+  static const String bestBowling = 'best_bowling';
 
   static const String cricketMatch = 'cricket_match';
   static const String passwordWeak = 'password_weak';
@@ -258,4 +278,15 @@ class TranslationKeys {
   static const String deleteMatchConfirmTitle = 'delete_match_confirm_title';
   static const String deleteMatchConfirmMessage =
       'delete_match_confirm_message';
+
+  // Team profile
+  static const String teamProfile = 'team_profile';
+  static const String pastResults = 'past_results';
+  static const String roster = 'roster';
+  static const String noRosterYet = 'no_roster_yet';
+  static const String roleBatsman = 'role_batsman';
+  static const String roleBowler = 'role_bowler';
+  static const String roleAllrounder = 'role_allrounder';
+  static const String roleWicketkeeper = 'role_wicketkeeper';
+  static const String roleUnknown = 'role_unknown';
 }
