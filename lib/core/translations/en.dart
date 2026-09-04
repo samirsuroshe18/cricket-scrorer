@@ -137,6 +137,7 @@ Map<String, String> en = {
   TranslationKeys.teamNameRequired: 'Team name is required',
   TranslationKeys.invalidOvers: 'Overs must be a number between 1 and 50',
   TranslationKeys.teamNamesMustDiffer: 'Team names must be different',
+  TranslationKeys.reuseExistingTeam: 'Use an existing team',
   TranslationKeys.tossOptional: 'Toss (optional)',
   TranslationKeys.teamA: 'Team A',
   TranslationKeys.teamB: 'Team B',

@@ -130,6 +130,7 @@ class TranslationKeys {
   static const String teamNameRequired = 'team_name_required';
   static const String invalidOvers = 'invalid_overs';
   static const String teamNamesMustDiffer = 'team_names_must_differ';
+  static const String reuseExistingTeam = 'reuse_existing_team';
 
   /// Toss (optional at match creation)
   static const String tossOptional = 'toss_optional';

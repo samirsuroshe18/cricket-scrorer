@@ -1,5 +1,10 @@
 import 'package:cricket_scorer/config/theme/app_theme.dart';
+import 'package:cricket_scorer/core/error/cricket_failure.dart';
+import 'package:cricket_scorer/core/network/models/cricket_response.dart';
+import 'package:cricket_scorer/core/utils/either_util.dart';
+import 'package:cricket_scorer/features/scoring/data/models/response/my_teams_res.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/create_match.dart';
+import 'package:cricket_scorer/features/scoring/domain/usecases/get_my_teams.dart';
 import 'package:cricket_scorer/features/scoring/presentation/controllers/create_match_controller.dart';
 import 'package:cricket_scorer/features/scoring/presentation/pages/create_match_screen.dart';
 import 'package:flutter/material.dart';
@@ -9,6 +14,20 @@ import 'package:get/get.dart';
 /// Never actually invoked — this test only exercises the form's input
 /// fields, never taps submit.
 class _UnusedCreateMatchUseCase implements CreateMatchUseCase {
+  @override
+  dynamic noSuchMethod(Invocation invocation) =>
+      throw UnimplementedError('Not exercised in this test.');
+}
+
+/// Returns an empty team list — this test only exercises the form's text
+/// fields, never the chip picker.
+class _EmptyGetMyTeamsUseCase implements GetMyTeamsUseCase {
+  @override
+  Future<Either<CricketResponse<MyTeamsRes>, CricketFailure>> call({
+    void params,
+  }) async =>
+      Either.result(CricketResponse(message: 'ok', data: MyTeamsRes(teams: const [])));
+
   @override
   dynamic noSuchMethod(Invocation invocation) =>
       throw UnimplementedError('Not exercised in this test.');
@@ -28,6 +47,7 @@ void main() {
       Get.put<CreateMatchController>(
         CreateMatchController(
           createMatchUseCase: _UnusedCreateMatchUseCase(),
+          getMyTeamsUseCase: _EmptyGetMyTeamsUseCase(),
         ),
       );
 

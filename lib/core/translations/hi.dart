@@ -137,6 +137,7 @@ Map<String, String> hi = {
   TranslationKeys.teamNameRequired: 'टीम का नाम आवश्यक है',
   TranslationKeys.invalidOvers: 'ओवर 1 से 50 के बीच होने चाहिए',
   TranslationKeys.teamNamesMustDiffer: 'टीमों के नाम अलग-अलग होने चाहिए',
+  TranslationKeys.reuseExistingTeam: 'मौजूदा टीम इस्तेमाल करें',
   TranslationKeys.tossOptional: 'टॉस (वैकल्पिक)',
   TranslationKeys.teamA: 'टीम A',
   TranslationKeys.teamB: 'टीम B',

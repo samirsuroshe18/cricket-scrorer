@@ -138,6 +138,7 @@ Map<String, String> mr = {
   TranslationKeys.teamNameRequired: 'संघाचे नाव आवश्यक आहे',
   TranslationKeys.invalidOvers: 'षटके 1 ते 50 दरम्यान असावीत',
   TranslationKeys.teamNamesMustDiffer: 'संघांची नावे वेगवेगळी असणे आवश्यक आहे',
+  TranslationKeys.reuseExistingTeam: 'विद्यमान संघ वापरा',
   TranslationKeys.tossOptional: 'नाणेफेक (ऐच्छिक)',
   TranslationKeys.teamA: 'संघ A',
   TranslationKeys.teamB: 'संघ B',
