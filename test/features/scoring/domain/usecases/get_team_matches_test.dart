@@ -41,7 +41,7 @@ void main() {
     final useCase = GetTeamMatchesUseCase(matchRepository: repo);
 
     await useCase(
-      params: GetTeamMatchesParams(teamId: 'team-1', page: 2, limit: 10),
+      params: const GetTeamMatchesParams(teamId: 'team-1', page: 2, limit: 10),
     );
 
     expect(repo.lastTeamId, 'team-1');
@@ -53,7 +53,7 @@ void main() {
     final repo = _RecordingMatchRepository();
     final useCase = GetTeamMatchesUseCase(matchRepository: repo);
 
-    await useCase(params: GetTeamMatchesParams(teamId: 'team-1'));
+    await useCase(params: const GetTeamMatchesParams(teamId: 'team-1'));
 
     expect(repo.lastPage, 1);
     expect(repo.lastLimit, 20);
