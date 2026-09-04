@@ -19,6 +19,10 @@ import 'package:cricket_scorer/features/scoring/domain/usecases/delete_match.dar
 import 'package:cricket_scorer/features/scoring/domain/usecases/get_match_history.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/get_public_match.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/get_scorecard.dart';
+import 'package:cricket_scorer/features/scoring/domain/usecases/get_career_stats.dart';
+import 'package:cricket_scorer/features/scoring/domain/usecases/get_my_teams.dart';
+import 'package:cricket_scorer/features/scoring/domain/usecases/get_team_matches.dart';
+import 'package:cricket_scorer/features/scoring/domain/usecases/get_team_profile.dart';
 import 'package:get/get.dart';
 
 class ScoringInjection {
@@ -85,9 +89,29 @@ class ScoringInjection {
       fenix: true,
     );
 
+    Get.lazyPut<GetCareerStatsUseCase>(
+      () => GetCareerStatsUseCase(matchRepository: Get.find<MatchRepository>()),
+      fenix: true,
+    );
+
     Get.lazyPut<GetMatchHistoryUseCase>(
       () =>
           GetMatchHistoryUseCase(matchRepository: Get.find<MatchRepository>()),
+      fenix: true,
+    );
+
+    Get.lazyPut<GetMyTeamsUseCase>(
+      () => GetMyTeamsUseCase(matchRepository: Get.find<MatchRepository>()),
+      fenix: true,
+    );
+
+    Get.lazyPut<GetTeamProfileUseCase>(
+      () => GetTeamProfileUseCase(matchRepository: Get.find<MatchRepository>()),
+      fenix: true,
+    );
+
+    Get.lazyPut<GetTeamMatchesUseCase>(
+      () => GetTeamMatchesUseCase(matchRepository: Get.find<MatchRepository>()),
       fenix: true,
     );
 
