@@ -47,6 +47,32 @@ class MatchApiService {
     );
   }
 
+  /// `GET /v1/team` — the caller's own teams.
+  Future<Either<ApiResponseModel, CricketFailure>> getMyTeams() async {
+    return await apiClient.get(endpoint: matchEndpoint.myTeams);
+  }
+
+  /// `GET /v1/team/:teamId` — display name plus roster. `verifyJwt` plus a
+  /// `createdBy` ownership check server-side, same shape as [getScorecard].
+  Future<Either<ApiResponseModel, CricketFailure>> getTeamProfile({
+    required String teamId,
+  }) async {
+    return await apiClient.get(endpoint: matchEndpoint.teamProfile(teamId));
+  }
+
+  /// `GET /v1/team/:teamId/matches` — byte-for-byte the same shape as
+  /// [getMatchHistory], scoped to one team instead of the caller.
+  Future<Either<ApiResponseModel, CricketFailure>> getTeamMatches({
+    required String teamId,
+    required int page,
+    required int limit,
+  }) async {
+    return await apiClient.get(
+      endpoint: matchEndpoint.teamMatches(teamId),
+      queryParameters: {'page': page, 'limit': limit},
+    );
+  }
+
   Future<Either<ApiResponseModel, CricketFailure>> startInnings({
     required String matchId,
     required StartInningsReq? params,
@@ -104,6 +130,14 @@ class MatchApiService {
     required String matchId,
   }) async {
     return await apiClient.get(endpoint: matchEndpoint.scorecard(matchId));
+  }
+
+  /// verifyJwt, plus a createdBy ownership check server-side, same shape as
+  /// [getScorecard] — a Player belongs to the scorer who created it.
+  Future<Either<ApiResponseModel, CricketFailure>> getCareerStats({
+    required String playerId,
+  }) async {
+    return await apiClient.get(endpoint: matchEndpoint.careerStats(playerId));
   }
 
   /// No token is attached deliberately — not because one is stripped, but
