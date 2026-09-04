@@ -46,49 +46,39 @@ class MatchHistoryCard extends StatelessWidget {
     Get.toNamed<dynamic>(AppRoutes.teamProfilePath(teamId));
   }
 
+  // A team name that opens its profile reads as a link — the app's own
+  // interactive-blue, not the neutral onSurface every other label on this
+  // card uses — wrapped in an InkWell (not a bare GestureDetector) so the
+  // tap gets the same ripple feedback as the card's own outer InkWell.
+  Widget _teamNameLink(BuildContext context, String teamId, String label) {
+    return InkWell(
+      onTap: () => _openTeamProfile(teamId),
+      borderRadius: 4.radius,
+      child: CricketText(
+        text: label,
+        style: context.textTheme.titleSmall?.copyWith(
+          color: context.colorScheme.secondary,
+        ),
+        maxLines: 1,
+        textOverflow: TextOverflow.ellipsis,
+      ),
+    );
+  }
+
   Widget _buildTitle(BuildContext context) {
     final highlight = highlightTeamId;
-    final style = context.textTheme.titleSmall;
 
     if (highlight == item.teamA.id || highlight == item.teamB.id) {
       final opponent = highlight == item.teamA.id ? item.teamB : item.teamA;
-      return GestureDetector(
-        onTap: () => _openTeamProfile(opponent.id),
-        child: CricketText(
-          text: 'vs ${opponent.name}',
-          style: style,
-          maxLines: 1,
-          textOverflow: TextOverflow.ellipsis,
-        ),
-      );
+      return _teamNameLink(context, opponent.id, 'vs ${opponent.name}');
     }
 
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Flexible(
-          child: GestureDetector(
-            onTap: () => _openTeamProfile(item.teamA.id),
-            child: CricketText(
-              text: item.teamA.name,
-              style: style,
-              maxLines: 1,
-              textOverflow: TextOverflow.ellipsis,
-            ),
-          ),
-        ),
-        CricketText(text: ' vs ', style: style),
-        Flexible(
-          child: GestureDetector(
-            onTap: () => _openTeamProfile(item.teamB.id),
-            child: CricketText(
-              text: item.teamB.name,
-              style: style,
-              maxLines: 1,
-              textOverflow: TextOverflow.ellipsis,
-            ),
-          ),
-        ),
+        Flexible(child: _teamNameLink(context, item.teamA.id, item.teamA.name)),
+        CricketText(text: ' vs ', style: context.textTheme.titleSmall),
+        Flexible(child: _teamNameLink(context, item.teamB.id, item.teamB.name)),
       ],
     );
   }

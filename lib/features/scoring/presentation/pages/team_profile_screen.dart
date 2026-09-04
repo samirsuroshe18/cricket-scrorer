@@ -161,32 +161,79 @@ class _TeamHeader extends StatelessWidget {
 
   final TeamProfileRes profile;
 
+  /// `shortName` if the team has one (a club almost always names one for
+  /// exactly this purpose — think "MI", "CSK"), otherwise the initials of
+  /// the first two words of `name`. Purely derived from the team's own
+  /// data, not a decorative flourish.
+  String _monogram() {
+    final short = profile.shortName?.trim();
+    if (short != null && short.isNotEmpty) {
+      return short.substring(0, short.length.clamp(0, 3)).toUpperCase();
+    }
+    final words = profile.name.trim().split(RegExp(r'\s+'));
+    final letters = words.take(2).map((w) => w.isEmpty ? '' : w[0]).join();
+    return letters.isEmpty ? '?' : letters.toUpperCase();
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Column(
+    return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        CricketText(
-          text: profile.shortName == null
-              ? profile.name
-              : '${profile.name} (${profile.shortName})',
-          style: context.textTheme.headlineSmall,
-        ),
-        16.h,
-        CricketText(
-          text: TranslationKeys.roster.tr,
-          style: context.textTheme.bodyMedium?.copyWith(
-            color: context.colorScheme.onSurfaceVariant,
+        CircleAvatar(
+          radius: 28,
+          backgroundColor: context.colors.chipBackground,
+          child: CricketText(
+            text: _monogram(),
+            style: context.textTheme.titleMedium?.copyWith(
+              color: context.colorScheme.primary,
+              fontWeight: FontWeight.bold,
+            ),
           ),
         ),
-        8.h,
-        if (profile.roster.isEmpty)
-          CricketText(text: TranslationKeys.noRosterYet.tr)
-        else
-          for (final player in profile.roster) ...[
-            _RosterRow(player: player),
-            8.h,
-          ],
+        16.w,
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              CricketText(
+                text: profile.name,
+                // headlineSmall carries no explicit color override in this
+                // app's theme (unlike every other TextTheme member it
+                // defines) — it falls back to Google Fonts' default, which
+                // is unreadable on the dark theme's navy surface. Pinning
+                // it to onSurface here rather than relying on the fallback.
+                style: context.textTheme.headlineSmall?.copyWith(
+                  color: context.colorScheme.onSurface,
+                ),
+              ),
+              if (profile.shortName != null) ...[
+                4.h,
+                CricketText(
+                  text: profile.shortName!,
+                  style: context.textTheme.bodyMedium?.copyWith(
+                    color: context.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
+              16.h,
+              CricketText(
+                text: TranslationKeys.roster.tr,
+                style: context.textTheme.bodyMedium?.copyWith(
+                  color: context.colorScheme.onSurfaceVariant,
+                ),
+              ),
+              8.h,
+              if (profile.roster.isEmpty)
+                CricketText(text: TranslationKeys.noRosterYet.tr)
+              else
+                for (final player in profile.roster) ...[
+                  _RosterRow(player: player),
+                  4.h,
+                ],
+            ],
+          ),
+        ),
       ],
     );
   }
@@ -197,43 +244,83 @@ class _RosterRow extends StatelessWidget {
 
   final TeamRosterPlayer player;
 
-  String _roleLabel(String role) => switch (role) {
-    'batsman' => TranslationKeys.roleBatsman.tr,
-    'bowler' => TranslationKeys.roleBowler.tr,
-    'allrounder' => TranslationKeys.roleAllrounder.tr,
-    'wicketkeeper' => TranslationKeys.roleWicketkeeper.tr,
-    _ => TranslationKeys.roleUnknown.tr,
+  (String, Color) _role(BuildContext context) => switch (player.role) {
+    'batsman' => (TranslationKeys.roleBatsman.tr, context.colors.statusInfo),
+    'bowler' => (TranslationKeys.roleBowler.tr, context.colors.statusWarning),
+    'allrounder' => (
+      TranslationKeys.roleAllrounder.tr,
+      context.colors.statusSuccess,
+    ),
+    'wicketkeeper' => (
+      TranslationKeys.roleWicketkeeper.tr,
+      context.colors.statusDanger,
+    ),
+    _ => (TranslationKeys.roleUnknown.tr, context.colorScheme.onSurfaceVariant),
   };
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () =>
-          Get.toNamed<dynamic>(AppRoutes.playerStatsPath(player.playerId)),
-      child: Row(
-        children: [
-          Expanded(
-            child: CricketText(
-              text: player.playerName,
-              style: context.textTheme.bodyMedium,
-            ),
-          ),
-          if (player.jerseyNumber != null) ...[
-            CricketText(
-              text: '#${player.jerseyNumber}',
-              style: context.textTheme.bodySmall?.copyWith(
+    final (roleLabel, roleColor) = _role(context);
+    final isUnknownRole = player.role != 'batsman' &&
+        player.role != 'bowler' &&
+        player.role != 'allrounder' &&
+        player.role != 'wicketkeeper';
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: 8.radius,
+        onTap: () =>
+            Get.toNamed<dynamic>(AppRoutes.playerStatsPath(player.playerId)),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 6),
+          child: Row(
+            children: [
+              Expanded(
+                child: CricketText(
+                  text: player.playerName,
+                  style: context.textTheme.bodyMedium?.copyWith(
+                    color: context.colorScheme.secondary,
+                  ),
+                ),
+              ),
+              if (player.jerseyNumber != null) ...[
+                CricketText(
+                  text: '#${player.jerseyNumber}',
+                  style: context.textTheme.bodySmall?.copyWith(
+                    color: context.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+                8.w,
+              ],
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 8,
+                  vertical: 3,
+                ),
+                decoration: BoxDecoration(
+                  color: isUnknownRole
+                      ? null
+                      : roleColor.withValues(alpha: 0.12),
+                  borderRadius: 8.radius,
+                ),
+                child: CricketText(
+                  text: roleLabel,
+                  style: context.textTheme.labelSmall?.copyWith(
+                    color: roleColor,
+                    fontWeight: isUnknownRole ? null : FontWeight.w600,
+                  ),
+                ),
+              ),
+              4.w,
+              Icon(
+                Icons.chevron_right,
+                size: 18,
                 color: context.colorScheme.onSurfaceVariant,
               ),
-            ),
-            8.w,
-          ],
-          CricketText(
-            text: _roleLabel(player.role),
-            style: context.textTheme.labelSmall?.copyWith(
-              color: context.colorScheme.onSurfaceVariant,
-            ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
