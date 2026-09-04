@@ -21,4 +21,22 @@ void main() {
   test('leaves an ordinary alphanumeric share code untouched', () {
     expect(endpoint.publicMatch('AB12CD'), '/v1/match/public/AB12CD');
   });
+
+  test('myTeams is a fixed path', () {
+    expect(endpoint.myTeams, '/v1/team');
+  });
+
+  test('teamProfile interpolates the team id with no encoding', () {
+    expect(
+      endpoint.teamProfile('665f1a2b3c4d5e6f7a8b9c01'),
+      '/v1/team/665f1a2b3c4d5e6f7a8b9c01',
+    );
+  });
+
+  test('teamMatches interpolates the team id with no encoding', () {
+    expect(
+      endpoint.teamMatches('665f1a2b3c4d5e6f7a8b9c01'),
+      '/v1/team/665f1a2b3c4d5e6f7a8b9c01/matches',
+    );
+  });
 }

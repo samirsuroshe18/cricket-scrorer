@@ -5,6 +5,19 @@ class MatchEndpoint {
 
   final String history = '/v1/match/history';
 
+  /// `GET /v1/team` — the caller's own teams, source for the "reuse this
+  /// team" picker on `CreateMatchScreen`.
+  final String myTeams = '/v1/team';
+
+  /// `GET /v1/team/:teamId` — always a server-generated ObjectId hex string,
+  /// same as `startInnings`/`scoreBall`/etc.'s `matchId` above; no encoding
+  /// needed, unlike `publicMatch`'s user-suppliable `code`.
+  String teamProfile(String teamId) => '/v1/team/$teamId';
+
+  /// `GET /v1/team/:teamId/matches` — byte-for-byte the same response shape
+  /// as [history], scoped to one team.
+  String teamMatches(String teamId) => '/v1/team/$teamId/matches';
+
   String startInnings(String matchId) => '/v1/match/$matchId/start-innings';
 
   String selectBowler(String matchId) => '/v1/match/$matchId/select-bowler';
@@ -16,6 +29,13 @@ class MatchEndpoint {
   String sync(String matchId) => '/v1/match/$matchId/sync';
 
   String scorecard(String matchId) => '/v1/match/$matchId/scorecard';
+
+  // Not match-scoped — Player is scorer-scoped, persistent across matches
+  // (see docs/api.md's player-identity rework) — but reuses this same
+  // client/service/repository rather than a whole parallel vertical slice
+  // for one endpoint, matching how every other scoring-domain read already
+  // shares this one chain.
+  String careerStats(String playerId) => '/v1/player/$playerId/career-stats';
 
   String abandon(String matchId) => '/v1/match/$matchId/abandon';
 
@@ -31,5 +51,6 @@ class MatchEndpoint {
   // property of today's two callers, not of this method, and a future one
   // (e.g. a code pulled straight off an OS share-sheet payload) gets no
   // protection unless the encoding lives here.
-  String publicMatch(String code) => '/v1/match/public/${Uri.encodeComponent(code)}';
+  String publicMatch(String code) =>
+      '/v1/match/public/${Uri.encodeComponent(code)}';
 }
