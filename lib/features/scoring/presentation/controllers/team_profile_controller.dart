@@ -27,17 +27,16 @@ class TeamProfileController extends GetxController {
   final GetTeamMatchesUseCase getTeamMatchesUseCase;
 
   TeamProfileController({
+    required this.teamId,
     required this.getTeamProfileUseCase,
     required this.getTeamMatchesUseCase,
   });
 
   static const int _pageSize = 20;
 
-  String _teamId = '';
-
   /// The id this screen is showing — exposed so `MatchHistoryCard` can be
   /// told which side to omit from its title (`highlightTeamId`).
-  String get teamId => _teamId;
+  final String teamId;
 
   final isLoadingProfile = true.obs;
   final profileError = Rxn<String>();
@@ -56,8 +55,7 @@ class TeamProfileController extends GetxController {
   void onInit() {
     super.onInit();
 
-    final teamId = Get.parameters['teamId']?.trim();
-    if (teamId == null || teamId.isEmpty) {
+    if (teamId.isEmpty) {
       profileError.value = TranslationKeys.somethingWentWrong.tr;
       matchesError.value = TranslationKeys.somethingWentWrong.tr;
       isLoadingProfile.value = false;
@@ -65,7 +63,6 @@ class TeamProfileController extends GetxController {
       return;
     }
 
-    _teamId = teamId;
     unawaited(loadProfile());
     unawaited(loadMatches());
   }
@@ -77,7 +74,7 @@ class TeamProfileController extends GetxController {
     profileError.value = null;
 
     final response = await getTeamProfileUseCase(
-      params: GetTeamProfileParams(teamId: _teamId),
+      params: GetTeamProfileParams(teamId: teamId),
     );
 
     isLoadingProfile.value = false;
@@ -100,7 +97,7 @@ class TeamProfileController extends GetxController {
     _page = 1;
 
     final response = await getTeamMatchesUseCase(
-      params: GetTeamMatchesParams(teamId: _teamId, page: 1, limit: _pageSize),
+      params: GetTeamMatchesParams(teamId: teamId, page: 1, limit: _pageSize),
     );
 
     isLoadingMatches.value = false;
@@ -122,7 +119,7 @@ class TeamProfileController extends GetxController {
 
     final response = await getTeamMatchesUseCase(
       params: GetTeamMatchesParams(
-        teamId: _teamId,
+        teamId: teamId,
         page: _page + 1,
         limit: _pageSize,
       ),

@@ -15,11 +15,13 @@ import 'package:get/get.dart';
 /// on a `MatchHistoryCard` (home's match history, or another team's own
 /// past-results list). Not a stats page: v1 is deliberately roster + past
 /// results only, no aggregate wins/losses/win% — see docs/api.md.
-class TeamProfileScreen extends GetView<TeamProfileController> {
+class TeamProfileScreen extends StatelessWidget {
   const TeamProfileScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final teamId = Get.parameters['teamId'] ?? '';
+    final controller = Get.find<TeamProfileController>(tag: teamId);
     return Scaffold(
       appBar: CustomAppBar(title: TranslationKeys.teamProfile.tr),
       body: SafeArea(
@@ -37,8 +39,10 @@ class TeamProfileScreen extends GetView<TeamProfileController> {
           if (data == null) return const SizedBox.shrink();
 
           return RefreshIndicator(
-            onRefresh: () =>
-                Future.wait([controller.loadProfile(), controller.loadMatches()]),
+            onRefresh: () => Future.wait([
+              controller.loadProfile(),
+              controller.loadMatches(),
+            ]),
             child: NotificationListener<ScrollNotification>(
               onNotification: (notification) {
                 if (notification.metrics.pixels >=

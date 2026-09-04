@@ -169,7 +169,8 @@ class CreateMatchController extends GetxController {
     // explicitly here rather than relying only on the name-equality check
     // below, since that check is on the *displayed* text, not the id.
     final sameTeamSelected = teamAId != null && teamAId == teamBId;
-    if (sameTeamSelected || teamAName.toLowerCase() == teamBName.toLowerCase()) {
+    if (sameTeamSelected ||
+        teamAName.toLowerCase() == teamBName.toLowerCase()) {
       CricketSnackbar.showAlertMessage(TranslationKeys.teamNamesMustDiffer.tr);
       return;
     }

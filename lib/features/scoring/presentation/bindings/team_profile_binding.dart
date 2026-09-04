@@ -6,11 +6,14 @@ import 'package:get/get.dart';
 class TeamProfileBinding extends Bindings {
   @override
   void dependencies() {
+    final teamId = Get.parameters['teamId'] ?? '';
     Get.lazyPut<TeamProfileController>(
       () => TeamProfileController(
+        teamId: teamId,
         getTeamProfileUseCase: Get.find<GetTeamProfileUseCase>(),
         getTeamMatchesUseCase: Get.find<GetTeamMatchesUseCase>(),
       ),
+      tag: teamId,
     );
   }
 }

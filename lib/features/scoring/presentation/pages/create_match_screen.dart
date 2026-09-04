@@ -4,6 +4,7 @@ import 'package:cricket_scorer/core/global/widgets/cricket_text.dart';
 import 'package:cricket_scorer/core/global/widgets/cricket_text_field.dart';
 import 'package:cricket_scorer/core/global/widgets/custom_app_bar.dart';
 import 'package:cricket_scorer/core/translations/translation_keys.dart';
+import 'package:cricket_scorer/features/scoring/data/models/response/my_teams_res.dart';
 import 'package:cricket_scorer/features/scoring/presentation/controllers/create_match_controller.dart';
 import 'package:cricket_scorer/features/scoring/presentation/widget/coin_flip.dart';
 import 'package:flutter/material.dart';
@@ -23,33 +24,12 @@ class CreateMatchScreen extends GetView<CreateMatchController> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Obx(() {
-                if (controller.isLoadingTeams.value || controller.myTeams.isEmpty) {
-                  return const SizedBox.shrink();
-                }
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    CricketText(
-                      text: TranslationKeys.reuseExistingTeam.tr,
-                      style: Theme.of(context).textTheme.bodySmall,
-                    ),
-                    8.h,
-                    Wrap(
-                      spacing: 8,
-                      children: [
-                        for (final team in controller.myTeams)
-                          FilterChip(
-                            label: CricketText(text: team.name),
-                            selected: controller.selectedTeamAId.value == team.id,
-                            onSelected: (_) => controller.selectTeamA(team),
-                          ),
-                      ],
-                    ),
-                    8.h,
-                  ],
-                );
-              }),
+              _TeamChipRow(
+                isLoadingTeams: controller.isLoadingTeams,
+                myTeams: controller.myTeams,
+                selectedTeamId: controller.selectedTeamAId,
+                onSelect: controller.selectTeamA,
+              ),
               CricketTextField(
                 controller: controller.teamAController,
                 hintText: TranslationKeys.enterTeamAName.tr,
@@ -64,33 +44,12 @@ class CreateMatchScreen extends GetView<CreateMatchController> {
                 isRequired: true,
               ),
               16.h,
-              Obx(() {
-                if (controller.isLoadingTeams.value || controller.myTeams.isEmpty) {
-                  return const SizedBox.shrink();
-                }
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    CricketText(
-                      text: TranslationKeys.reuseExistingTeam.tr,
-                      style: Theme.of(context).textTheme.bodySmall,
-                    ),
-                    8.h,
-                    Wrap(
-                      spacing: 8,
-                      children: [
-                        for (final team in controller.myTeams)
-                          FilterChip(
-                            label: CricketText(text: team.name),
-                            selected: controller.selectedTeamBId.value == team.id,
-                            onSelected: (_) => controller.selectTeamB(team),
-                          ),
-                      ],
-                    ),
-                    8.h,
-                  ],
-                );
-              }),
+              _TeamChipRow(
+                isLoadingTeams: controller.isLoadingTeams,
+                myTeams: controller.myTeams,
+                selectedTeamId: controller.selectedTeamBId,
+                onSelect: controller.selectTeamB,
+              ),
               CricketTextField(
                 controller: controller.teamBController,
                 hintText: TranslationKeys.enterTeamBName.tr,
@@ -169,5 +128,53 @@ class CreateMatchScreen extends GetView<CreateMatchController> {
         ),
       ),
     );
+  }
+}
+
+/// The "reuse an existing team" chip picker shown above each side's name
+/// field — identical shape for team A and team B, parameterized by which
+/// selection/callback it drives.
+class _TeamChipRow extends StatelessWidget {
+  const _TeamChipRow({
+    required this.isLoadingTeams,
+    required this.myTeams,
+    required this.selectedTeamId,
+    required this.onSelect,
+  });
+
+  final RxBool isLoadingTeams;
+  final RxList<TeamSummary> myTeams;
+  final Rxn<String> selectedTeamId;
+  final void Function(TeamSummary) onSelect;
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(() {
+      if (isLoadingTeams.value || myTeams.isEmpty) {
+        return const SizedBox.shrink();
+      }
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          CricketText(
+            text: TranslationKeys.reuseExistingTeam.tr,
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
+          8.h,
+          Wrap(
+            spacing: 8,
+            children: [
+              for (final team in myTeams)
+                FilterChip(
+                  label: CricketText(text: team.name),
+                  selected: selectedTeamId.value == team.id,
+                  onSelected: (_) => onSelect(team),
+                ),
+            ],
+          ),
+          8.h,
+        ],
+      );
+    });
   }
 }

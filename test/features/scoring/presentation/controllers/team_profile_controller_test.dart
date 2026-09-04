@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:cricket_scorer/core/error/cricket_failure.dart';
 import 'package:cricket_scorer/core/network/models/cricket_response.dart';
 import 'package:cricket_scorer/core/utils/either_util.dart';
@@ -71,6 +69,7 @@ void main() {
     profileUseCase = _FakeGetTeamProfileUseCase();
     matchesUseCase = _FakeGetTeamMatchesUseCase();
     controller = TeamProfileController(
+      teamId: 'team-1',
       getTeamProfileUseCase: profileUseCase,
       getTeamMatchesUseCase: matchesUseCase,
     );
@@ -82,7 +81,11 @@ void main() {
     profileUseCase.response = Either.result(
       CricketResponse(
         message: 'ok',
-        data: TeamProfileRes(teamId: 'team-1', name: 'Mumbai Indians', roster: const []),
+        data: TeamProfileRes(
+          teamId: 'team-1',
+          name: 'Mumbai Indians',
+          roster: const [],
+        ),
       ),
     );
 
@@ -124,36 +127,89 @@ void main() {
     expect(matchesUseCase.lastPage, 1);
   });
 
-  test('loadMoreMatches appends the next page and advances the cursor', () async {
-    matchesUseCase.response = Either.result(
-      CricketResponse(
-        message: 'ok',
-        data: MatchHistoryRes(
-          matches: [_item('match-1')],
-          page: 1,
-          limit: 1,
-          total: 2,
+  test(
+    'loadMoreMatches appends the next page and advances the cursor',
+    () async {
+      matchesUseCase.response = Either.result(
+        CricketResponse(
+          message: 'ok',
+          data: MatchHistoryRes(
+            matches: [_item('match-1')],
+            page: 1,
+            limit: 1,
+            total: 2,
+          ),
         ),
-      ),
-    );
-    await controller.loadMatches();
-    expect(controller.hasMore.value, isTrue);
+      );
+      await controller.loadMatches();
+      expect(controller.hasMore.value, isTrue);
 
-    matchesUseCase.response = Either.result(
-      CricketResponse(
-        message: 'ok',
-        data: MatchHistoryRes(
-          matches: [_item('match-2')],
-          page: 2,
-          limit: 1,
-          total: 2,
+      matchesUseCase.response = Either.result(
+        CricketResponse(
+          message: 'ok',
+          data: MatchHistoryRes(
+            matches: [_item('match-2')],
+            page: 2,
+            limit: 1,
+            total: 2,
+          ),
         ),
-      ),
-    );
-    await controller.loadMoreMatches();
+      );
+      await controller.loadMoreMatches();
 
-    expect(controller.matches.length, 2);
-    expect(controller.hasMore.value, isFalse);
-    expect(matchesUseCase.lastPage, 2);
-  });
+      expect(controller.matches.length, 2);
+      expect(controller.hasMore.value, isFalse);
+      expect(matchesUseCase.lastPage, 2);
+    },
+  );
+
+  test(
+    'two controllers for different teams keep independent profile state '
+    '(regression for GetX lazyPut singleton reuse across teams)',
+    () async {
+      final profileUseCaseA = _FakeGetTeamProfileUseCase();
+      final matchesUseCaseA = _FakeGetTeamMatchesUseCase();
+      final controllerA = TeamProfileController(
+        teamId: 'team-1',
+        getTeamProfileUseCase: profileUseCaseA,
+        getTeamMatchesUseCase: matchesUseCaseA,
+      );
+      profileUseCaseA.response = Either.result(
+        CricketResponse(
+          message: 'ok',
+          data: TeamProfileRes(
+            teamId: 'team-1',
+            name: 'Mumbai Indians',
+            roster: const [],
+          ),
+        ),
+      );
+
+      final profileUseCaseB = _FakeGetTeamProfileUseCase();
+      final matchesUseCaseB = _FakeGetTeamMatchesUseCase();
+      final controllerB = TeamProfileController(
+        teamId: 'team-2',
+        getTeamProfileUseCase: profileUseCaseB,
+        getTeamMatchesUseCase: matchesUseCaseB,
+      );
+      profileUseCaseB.response = Either.result(
+        CricketResponse(
+          message: 'ok',
+          data: TeamProfileRes(
+            teamId: 'team-2',
+            name: 'Chennai Super Kings',
+            roster: const [],
+          ),
+        ),
+      );
+
+      await controllerA.loadProfile();
+      await controllerB.loadProfile();
+
+      expect(controllerA.teamId, 'team-1');
+      expect(controllerA.profile.value?.name, 'Mumbai Indians');
+      expect(controllerB.teamId, 'team-2');
+      expect(controllerB.profile.value?.name, 'Chennai Super Kings');
+    },
+  );
 }
