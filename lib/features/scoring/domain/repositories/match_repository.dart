@@ -23,6 +23,9 @@ import 'package:cricket_scorer/features/scoring/data/models/response/match_compl
 import 'package:cricket_scorer/features/scoring/data/models/response/public_match_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/score_undo_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/scorecard_res.dart';
+import 'package:cricket_scorer/features/scoring/data/models/response/career_stats_res.dart';
+import 'package:cricket_scorer/features/scoring/data/models/response/my_teams_res.dart';
+import 'package:cricket_scorer/features/scoring/data/models/response/team_profile_res.dart';
 
 abstract class MatchRepository {
   Future<Either<CricketResponse<CreateMatchRes>, CricketFailure>> createMatch({
@@ -125,6 +128,12 @@ abstract class MatchRepository {
     required String matchId,
   });
 
+  /// `GET /v1/player/:playerId/career-stats` — a Player's totals across
+  /// every completed match its scorer has recorded. Not match-scoped; see
+  /// `MatchEndpoint.careerStats`'s own comment on why this lives here anyway.
+  Future<Either<CricketResponse<CareerStatsRes>, CricketFailure>>
+  getCareerStats({required String playerId});
+
   /// The `match:complete` event — see [MatchSocketService.watchMatchComplete].
   Stream<Either<MatchCompleteRes, CricketFailure>> watchMatchComplete({
     required String matchId,
@@ -155,6 +164,21 @@ abstract class MatchRepository {
   /// `DELETE /v1/match/:matchId` — soft-delete, any status. No socket
   /// emission: a spectator on a deleted match just finds the next public
   /// read 404s, same as an unknown code.
-  Future<Either<CricketResponse<DeleteMatchRes>, CricketFailure>>
-  deleteMatch({required String matchId});
+  Future<Either<CricketResponse<DeleteMatchRes>, CricketFailure>> deleteMatch({
+    required String matchId,
+  });
+
+  /// `GET /v1/team` — the caller's own teams, source for the "reuse this
+  /// team" picker on match creation.
+  Future<Either<CricketResponse<MyTeamsRes>, CricketFailure>> getMyTeams();
+
+  /// `GET /v1/team/:teamId` — display name plus the roster accumulated
+  /// across every match this team has been attached to.
+  Future<Either<CricketResponse<TeamProfileRes>, CricketFailure>>
+  getTeamProfile({required String teamId});
+
+  /// `GET /v1/team/:teamId/matches` — byte-for-byte the same response shape
+  /// as [getMatchHistory], scoped to one team instead of the caller.
+  Future<Either<CricketResponse<MatchHistoryRes>, CricketFailure>>
+  getTeamMatches({required String teamId, required int page, required int limit});
 }

@@ -32,14 +32,17 @@ import 'package:cricket_scorer/features/scoring/data/models/response/live_score_
 import 'package:cricket_scorer/features/scoring/data/models/response/match_abandoned_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/match_complete_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/match_history_res.dart';
+import 'package:cricket_scorer/features/scoring/data/models/response/my_teams_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/over_complete_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/public_match_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/score_ball_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/score_undo_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/scorecard_res.dart';
+import 'package:cricket_scorer/features/scoring/data/models/response/career_stats_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/select_bowler_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/start_innings_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/sync_res.dart';
+import 'package:cricket_scorer/features/scoring/data/models/response/team_profile_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/undo_ball_res.dart';
 import 'package:cricket_scorer/features/scoring/domain/repositories/match_repository.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/delete_match.dart';
@@ -291,6 +294,11 @@ class _FakeMatchRepository implements MatchRepository {
   }) => throw UnimplementedError('Not exercised in this test.');
 
   @override
+  Future<Either<CricketResponse<CareerStatsRes>, CricketFailure>>
+  getCareerStats({required String playerId}) =>
+      throw UnimplementedError('Not exercised in this test.');
+
+  @override
   Stream<Either<MatchCompleteRes, CricketFailure>> watchMatchComplete({
     required String matchId,
   }) => const Stream.empty();
@@ -304,6 +312,23 @@ class _FakeMatchRepository implements MatchRepository {
   Future<Either<CricketResponse<AbandonMatchRes>, CricketFailure>>
   abandonMatch({required String matchId}) =>
       throw UnimplementedError('Not exercised in this test.');
+
+  @override
+  Future<Either<CricketResponse<MyTeamsRes>, CricketFailure>> getMyTeams() =>
+      throw UnimplementedError('Not exercised in this test.');
+
+  @override
+  Future<Either<CricketResponse<TeamProfileRes>, CricketFailure>>
+  getTeamProfile({required String teamId}) =>
+      throw UnimplementedError('Not exercised in this test.');
+
+  @override
+  Future<Either<CricketResponse<MatchHistoryRes>, CricketFailure>>
+  getTeamMatches({
+    required String teamId,
+    required int page,
+    required int limit,
+  }) => throw UnimplementedError('Not exercised in this test.');
 }
 
 MatchHistoryItem _item(String matchId, {String status = 'live'}) =>

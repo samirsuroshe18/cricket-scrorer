@@ -21,16 +21,19 @@ import 'package:cricket_scorer/features/scoring/data/models/response/live_score_
 import 'package:cricket_scorer/features/scoring/data/models/response/match_history_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/match_abandoned_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/match_complete_res.dart';
+import 'package:cricket_scorer/features/scoring/data/models/response/my_teams_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/over_complete_res.dart';
 import 'package:cricket_scorer/features/scoring/data/scoring_constants.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/public_match_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/score_ball_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/score_undo_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/scorecard_res.dart';
+import 'package:cricket_scorer/features/scoring/data/models/response/career_stats_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/select_bowler_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/start_innings_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/strike.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/sync_res.dart';
+import 'package:cricket_scorer/features/scoring/data/models/response/team_profile_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/undo_ball_res.dart';
 import 'package:cricket_scorer/features/scoring/domain/offline/pre_event_state.dart';
 import 'package:cricket_scorer/features/scoring/domain/repositories/match_repository.dart';
@@ -147,6 +150,12 @@ class _OfflineMatchRepository implements MatchRepository {
   }
 
   @override
+  Future<Either<CricketResponse<CareerStatsRes>, CricketFailure>>
+  getCareerStats({required String playerId}) async {
+    throw UnimplementedError('Not exercised in this test.');
+  }
+
+  @override
   Stream<Either<MatchCompleteRes, CricketFailure>> watchMatchComplete({
     required String matchId,
   }) => const Stream.empty();
@@ -161,6 +170,23 @@ class _OfflineMatchRepository implements MatchRepository {
   getMatchHistory({required int page, required int limit}) async {
     throw UnimplementedError('Not exercised in this test.');
   }
+
+  @override
+  Future<Either<CricketResponse<MyTeamsRes>, CricketFailure>> getMyTeams() =>
+      throw UnimplementedError('Not exercised in this test.');
+
+  @override
+  Future<Either<CricketResponse<TeamProfileRes>, CricketFailure>>
+  getTeamProfile({required String teamId}) =>
+      throw UnimplementedError('Not exercised in this test.');
+
+  @override
+  Future<Either<CricketResponse<MatchHistoryRes>, CricketFailure>>
+  getTeamMatches({
+    required String teamId,
+    required int page,
+    required int limit,
+  }) => throw UnimplementedError('Not exercised in this test.');
 
   @override
   Future<Either<CricketResponse<AbandonMatchRes>, CricketFailure>>
@@ -211,6 +237,12 @@ class _MixedMatchRepository implements MatchRepository {
   /// response to the very same request can arrive a moment later), and
   /// exactly what [watchScoreUpdatesController] exists to make reproducible.
   Future<void> Function()? onScoreBallInFlight;
+  // Closed by every group that instantiates this class, via
+  // `tearDown(() async => repo.watchScoreUpdatesController.close())` — the
+  // analyzer can't trace a close reached through a field access inside a
+  // different closure (tearDown) than the one that assigned the field
+  // (setUp), so it flags this declaration as unclosed even though it isn't.
+  // ignore: close_sinks
   final watchScoreUpdatesController =
       StreamController<Either<LiveScoreRes, CricketFailure>>.broadcast();
 
@@ -399,6 +431,12 @@ class _MixedMatchRepository implements MatchRepository {
   }
 
   @override
+  Future<Either<CricketResponse<CareerStatsRes>, CricketFailure>>
+  getCareerStats({required String playerId}) async {
+    throw UnimplementedError('Not exercised in this test.');
+  }
+
+  @override
   Stream<Either<MatchCompleteRes, CricketFailure>> watchMatchComplete({
     required String matchId,
   }) => const Stream.empty();
@@ -413,6 +451,23 @@ class _MixedMatchRepository implements MatchRepository {
   getMatchHistory({required int page, required int limit}) async {
     throw UnimplementedError('Not exercised in this test.');
   }
+
+  @override
+  Future<Either<CricketResponse<MyTeamsRes>, CricketFailure>> getMyTeams() =>
+      throw UnimplementedError('Not exercised in this test.');
+
+  @override
+  Future<Either<CricketResponse<TeamProfileRes>, CricketFailure>>
+  getTeamProfile({required String teamId}) =>
+      throw UnimplementedError('Not exercised in this test.');
+
+  @override
+  Future<Either<CricketResponse<MatchHistoryRes>, CricketFailure>>
+  getTeamMatches({
+    required String teamId,
+    required int page,
+    required int limit,
+  }) => throw UnimplementedError('Not exercised in this test.');
 
   @override
   Future<Either<CricketResponse<AbandonMatchRes>, CricketFailure>>
@@ -542,6 +597,12 @@ class _RecordingMatchRepository implements MatchRepository {
   }
 
   @override
+  Future<Either<CricketResponse<CareerStatsRes>, CricketFailure>>
+  getCareerStats({required String playerId}) async {
+    throw UnimplementedError('Not exercised in this test.');
+  }
+
+  @override
   Stream<Either<MatchCompleteRes, CricketFailure>> watchMatchComplete({
     required String matchId,
   }) => const Stream.empty();
@@ -556,6 +617,23 @@ class _RecordingMatchRepository implements MatchRepository {
   getMatchHistory({required int page, required int limit}) async {
     throw UnimplementedError('Not exercised in this test.');
   }
+
+  @override
+  Future<Either<CricketResponse<MyTeamsRes>, CricketFailure>> getMyTeams() =>
+      throw UnimplementedError('Not exercised in this test.');
+
+  @override
+  Future<Either<CricketResponse<TeamProfileRes>, CricketFailure>>
+  getTeamProfile({required String teamId}) =>
+      throw UnimplementedError('Not exercised in this test.');
+
+  @override
+  Future<Either<CricketResponse<MatchHistoryRes>, CricketFailure>>
+  getTeamMatches({
+    required String teamId,
+    required int page,
+    required int limit,
+  }) => throw UnimplementedError('Not exercised in this test.');
 
   @override
   Future<Either<CricketResponse<AbandonMatchRes>, CricketFailure>>
@@ -609,6 +687,13 @@ class _ServerSimulatingMatchRepository implements MatchRepository {
       _innings[inningsNumber] ??
       (throw StateError('innings $inningsNumber was never started'));
 
+  // Closed inline at the end of each test that instantiates this class
+  // (`await repo.watchScoreUpdatesController.close()`) — the analyzer can't
+  // trace a close reached through a field access on a `final` local several
+  // statements after assignment, so it flags this declaration as unclosed
+  // even though it isn't. Same false positive as `_MixedMatchRepository`'s
+  // own field above.
+  // ignore: close_sinks
   final watchScoreUpdatesController =
       StreamController<Either<LiveScoreRes, CricketFailure>>.broadcast();
 
@@ -846,6 +931,12 @@ class _ServerSimulatingMatchRepository implements MatchRepository {
   }
 
   @override
+  Future<Either<CricketResponse<CareerStatsRes>, CricketFailure>>
+  getCareerStats({required String playerId}) async {
+    throw UnimplementedError('Not exercised in this test.');
+  }
+
+  @override
   Stream<Either<MatchCompleteRes, CricketFailure>> watchMatchComplete({
     required String matchId,
   }) => const Stream.empty();
@@ -860,6 +951,23 @@ class _ServerSimulatingMatchRepository implements MatchRepository {
   getMatchHistory({required int page, required int limit}) async {
     throw UnimplementedError('Not exercised in this test.');
   }
+
+  @override
+  Future<Either<CricketResponse<MyTeamsRes>, CricketFailure>> getMyTeams() =>
+      throw UnimplementedError('Not exercised in this test.');
+
+  @override
+  Future<Either<CricketResponse<TeamProfileRes>, CricketFailure>>
+  getTeamProfile({required String teamId}) =>
+      throw UnimplementedError('Not exercised in this test.');
+
+  @override
+  Future<Either<CricketResponse<MatchHistoryRes>, CricketFailure>>
+  getTeamMatches({
+    required String teamId,
+    required int page,
+    required int limit,
+  }) => throw UnimplementedError('Not exercised in this test.');
 
   @override
   Future<Either<CricketResponse<AbandonMatchRes>, CricketFailure>>
@@ -984,6 +1092,12 @@ class _RuleBlockingMatchRepository implements MatchRepository {
   }
 
   @override
+  Future<Either<CricketResponse<CareerStatsRes>, CricketFailure>>
+  getCareerStats({required String playerId}) async {
+    throw UnimplementedError('Not exercised in this test.');
+  }
+
+  @override
   Future<Either<CricketResponse<CreateMatchRes>, CricketFailure>> createMatch({
     required CreateMatchReq? createMatchReq,
   }) async {
@@ -1005,6 +1119,23 @@ class _RuleBlockingMatchRepository implements MatchRepository {
   getMatchHistory({required int page, required int limit}) async {
     throw UnimplementedError('Not exercised in this test.');
   }
+
+  @override
+  Future<Either<CricketResponse<MyTeamsRes>, CricketFailure>> getMyTeams() =>
+      throw UnimplementedError('Not exercised in this test.');
+
+  @override
+  Future<Either<CricketResponse<TeamProfileRes>, CricketFailure>>
+  getTeamProfile({required String teamId}) =>
+      throw UnimplementedError('Not exercised in this test.');
+
+  @override
+  Future<Either<CricketResponse<MatchHistoryRes>, CricketFailure>>
+  getTeamMatches({
+    required String teamId,
+    required int page,
+    required int limit,
+  }) => throw UnimplementedError('Not exercised in this test.');
 
   @override
   Future<Either<CricketResponse<AbandonMatchRes>, CricketFailure>>
@@ -3358,6 +3489,11 @@ class _LockTransitionMatchRepository implements MatchRepository {
   }) => throw UnimplementedError('Not exercised in this test.');
 
   @override
+  Future<Either<CricketResponse<CareerStatsRes>, CricketFailure>>
+  getCareerStats({required String playerId}) =>
+      throw UnimplementedError('Not exercised in this test.');
+
+  @override
   Stream<Either<MatchCompleteRes, CricketFailure>> watchMatchComplete({
     required String matchId,
   }) => const Stream.empty();
@@ -3376,6 +3512,23 @@ class _LockTransitionMatchRepository implements MatchRepository {
   Future<Either<CricketResponse<MatchHistoryRes>, CricketFailure>>
   getMatchHistory({required int page, required int limit}) =>
       throw UnimplementedError('Not exercised in this test.');
+
+  @override
+  Future<Either<CricketResponse<MyTeamsRes>, CricketFailure>> getMyTeams() =>
+      throw UnimplementedError('Not exercised in this test.');
+
+  @override
+  Future<Either<CricketResponse<TeamProfileRes>, CricketFailure>>
+  getTeamProfile({required String teamId}) =>
+      throw UnimplementedError('Not exercised in this test.');
+
+  @override
+  Future<Either<CricketResponse<MatchHistoryRes>, CricketFailure>>
+  getTeamMatches({
+    required String teamId,
+    required int page,
+    required int limit,
+  }) => throw UnimplementedError('Not exercised in this test.');
 
   @override
   Future<Either<CricketResponse<DeleteMatchRes>, CricketFailure>> deleteMatch({

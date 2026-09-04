@@ -26,6 +26,9 @@ import 'package:cricket_scorer/features/scoring/data/models/response/match_compl
 import 'package:cricket_scorer/features/scoring/data/models/response/public_match_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/score_undo_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/scorecard_res.dart';
+import 'package:cricket_scorer/features/scoring/data/models/response/career_stats_res.dart';
+import 'package:cricket_scorer/features/scoring/data/models/response/my_teams_res.dart';
+import 'package:cricket_scorer/features/scoring/data/models/response/team_profile_res.dart';
 import 'package:cricket_scorer/features/scoring/domain/repositories/match_repository.dart';
 
 class MatchRepositoryImpl extends MatchRepository {
@@ -225,6 +228,25 @@ class MatchRepositoryImpl extends MatchRepository {
   }
 
   @override
+  Future<Either<CricketResponse<CareerStatsRes>, CricketFailure>>
+  getCareerStats({required String playerId}) async {
+    Either<ApiResponseModel, CricketFailure> response = await matchApiService
+        .getCareerStats(playerId: playerId);
+    if (response.isResult) {
+      return Either.result(
+        CricketResponse(
+          data: CareerStatsRes.fromJson(
+            response.result.data as Map<String, dynamic>,
+          ),
+          message: response.result.message,
+        ),
+      );
+    } else {
+      return Either.fallback(response.fallback);
+    }
+  }
+
+  @override
   Stream<Either<MatchCompleteRes, CricketFailure>> watchMatchComplete({
     required String matchId,
   }) {
@@ -258,8 +280,9 @@ class MatchRepositoryImpl extends MatchRepository {
   }
 
   @override
-  Future<Either<CricketResponse<DeleteMatchRes>, CricketFailure>>
-  deleteMatch({required String matchId}) async {
+  Future<Either<CricketResponse<DeleteMatchRes>, CricketFailure>> deleteMatch({
+    required String matchId,
+  }) async {
     Either<ApiResponseModel, CricketFailure> response = await matchApiService
         .deleteMatch(matchId: matchId);
     if (response.isResult) {
@@ -281,6 +304,67 @@ class MatchRepositoryImpl extends MatchRepository {
   getMatchHistory({required int page, required int limit}) async {
     Either<ApiResponseModel, CricketFailure> response = await matchApiService
         .getMatchHistory(page: page, limit: limit);
+    if (response.isResult) {
+      return Either.result(
+        CricketResponse(
+          data: MatchHistoryRes.fromJson(
+            response.result.data as Map<String, dynamic>,
+          ),
+          message: response.result.message,
+        ),
+      );
+    } else {
+      return Either.fallback(response.fallback);
+    }
+  }
+
+  @override
+  Future<Either<CricketResponse<MyTeamsRes>, CricketFailure>>
+  getMyTeams() async {
+    Either<ApiResponseModel, CricketFailure> response = await matchApiService
+        .getMyTeams();
+    if (response.isResult) {
+      return Either.result(
+        CricketResponse(
+          data: MyTeamsRes.fromJson(
+            response.result.data as Map<String, dynamic>,
+          ),
+          message: response.result.message,
+        ),
+      );
+    } else {
+      return Either.fallback(response.fallback);
+    }
+  }
+
+  @override
+  Future<Either<CricketResponse<TeamProfileRes>, CricketFailure>>
+  getTeamProfile({required String teamId}) async {
+    Either<ApiResponseModel, CricketFailure> response = await matchApiService
+        .getTeamProfile(teamId: teamId);
+    if (response.isResult) {
+      return Either.result(
+        CricketResponse(
+          data: TeamProfileRes.fromJson(
+            response.result.data as Map<String, dynamic>,
+          ),
+          message: response.result.message,
+        ),
+      );
+    } else {
+      return Either.fallback(response.fallback);
+    }
+  }
+
+  @override
+  Future<Either<CricketResponse<MatchHistoryRes>, CricketFailure>>
+  getTeamMatches({
+    required String teamId,
+    required int page,
+    required int limit,
+  }) async {
+    Either<ApiResponseModel, CricketFailure> response = await matchApiService
+        .getTeamMatches(teamId: teamId, page: page, limit: limit);
     if (response.isResult) {
       return Either.result(
         CricketResponse(
