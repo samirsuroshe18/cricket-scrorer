@@ -6,6 +6,7 @@ import 'package:cricket_scorer/core/global/data/models/response/translation_vers
 import 'package:cricket_scorer/core/global/domain/repositories/language_repository.dart';
 import 'package:cricket_scorer/core/global/domain/usecases/get_language.dart';
 import 'package:cricket_scorer/core/global/domain/usecases/get_version.dart';
+import 'package:cricket_scorer/core/global/domain/usecases/update_language.dart';
 import 'package:cricket_scorer/core/network/models/cricket_response.dart';
 import 'package:cricket_scorer/core/services/language_service.dart';
 import 'package:cricket_scorer/core/services/shared_preference_service.dart';
@@ -14,6 +15,7 @@ import 'package:cricket_scorer/core/utils/either_util.dart';
 import 'package:cricket_scorer/features/auth/data/models/user.dart';
 import 'package:cricket_scorer/features/auth/domain/repositories/auth_repository.dart';
 import 'package:cricket_scorer/features/auth/domain/usecases/get_user.dart';
+import 'package:cricket_scorer/features/auth/domain/usecases/login.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -78,6 +80,17 @@ void main() {
     Get.put(GetUserUseCase(authRepository: authRepository));
     Get.put(GetVersionUseCase(languageRepository: languageRepository));
     Get.put(GetLanguageUseCase(languageRepository: languageRepository));
+
+    // SplashController's animation now starts immediately on a fixed
+    // duration (see splash_screen.dart's _SplashBody) instead of waiting on
+    // Lottie's async composition-load callback, so navigation to
+    // LoginScreen reliably completes inside this test's pump window. That
+    // makes LoginBinding's dependency graph reachable — it wasn't before —
+    // so it needs the same no-op treatment as the splash-only deps above.
+    // Neither usecase is ever invoked (the test never taps the login
+    // button), only resolved, so the no-op repositories are enough.
+    Get.put(LoginUseCase(authRepository: authRepository));
+    Get.put(UpdateLanguageUseCase(languageRepository: languageRepository));
   });
 
   testWidgets('App renders without crashing', (WidgetTester tester) async {
