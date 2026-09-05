@@ -53,4 +53,10 @@ class MatchEndpoint {
   // protection unless the encoding lives here.
   String publicMatch(String code) =>
       '/v1/match/public/${Uri.encodeComponent(code)}';
+
+  /// `PATCH /v1/team/:teamId/organization` — attach/detach. Lives here, not
+  /// on `OrganizationEndpoint`, because the route itself is under `/v1/team`
+  /// — see docs/api.md's `## Organization` section.
+  String updateTeamOrganization(String teamId) =>
+      '/v1/team/$teamId/organization';
 }

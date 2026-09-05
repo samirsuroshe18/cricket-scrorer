@@ -143,6 +143,32 @@ class ApiClient extends GetxService {
     }
   }
 
+  Future<Either<ApiResponseModel, CricketFailure>> patch({
+    required String endpoint,
+    Object? data,
+    Options? options,
+    CancelToken? cancelToken,
+    void Function(int count, int total)? onSendProgress,
+    void Function(int count, int total)? onReceiveProgress,
+  }) async {
+    try {
+      Response<dynamic> response = await _dio.patch(
+        endpoint,
+        data: data,
+        cancelToken: cancelToken ?? _cancelToken,
+        options: options,
+        onReceiveProgress: onReceiveProgress,
+        onSendProgress: onSendProgress,
+      );
+
+      return Either.result(
+        ApiResponseModel.fromJson(response.data as Map<String, dynamic>),
+      );
+    } catch (e) {
+      return Either.fallback(await _handleError(e));
+    }
+  }
+
   Future<Either<ApiResponseModel, CricketFailure>> delete({
     required String endpoint,
     Object? data,
