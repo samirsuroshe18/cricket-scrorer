@@ -43,6 +43,8 @@ import 'package:cricket_scorer/features/scoring/data/models/response/select_bowl
 import 'package:cricket_scorer/features/scoring/data/models/response/start_innings_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/sync_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/team_organization_res.dart';
+import 'package:cricket_scorer/features/scoring/data/models/response/scorer_candidates_res.dart';
+import 'package:cricket_scorer/features/scoring/data/models/response/assign_scorer_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/team_profile_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/undo_ball_res.dart';
 import 'package:cricket_scorer/features/scoring/domain/repositories/match_repository.dart';
@@ -337,6 +339,27 @@ class _FakeMatchRepository implements MatchRepository {
     required String teamId,
     required String? organizationId,
   }) => throw UnimplementedError('Not exercised in this test.');
+
+  Either<CricketResponse<ScorerCandidatesRes>, CricketFailure>?
+  scorerCandidatesResponse;
+  Either<CricketResponse<AssignScorerRes>, CricketFailure>?
+  assignScorerResponse;
+
+  @override
+  Future<Either<CricketResponse<ScorerCandidatesRes>, CricketFailure>>
+  getScorerCandidates({required String matchId}) async {
+    final response = scorerCandidatesResponse;
+    if (response == null) throw UnimplementedError('Not exercised in this test.');
+    return response;
+  }
+
+  @override
+  Future<Either<CricketResponse<AssignScorerRes>, CricketFailure>>
+  assignScorer({required String matchId, required String? scorerId}) async {
+    final response = assignScorerResponse;
+    if (response == null) throw UnimplementedError('Not exercised in this test.');
+    return response;
+  }
 }
 
 MatchHistoryItem _item(String matchId, {String status = 'live'}) =>

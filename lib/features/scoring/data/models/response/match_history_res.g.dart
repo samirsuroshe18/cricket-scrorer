@@ -6,6 +6,12 @@ part of 'match_history_res.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
+MatchUserRef _$MatchUserRefFromJson(Map<String, dynamic> json) =>
+    MatchUserRef(id: json['id'] as String, name: json['name'] as String);
+
+Map<String, dynamic> _$MatchUserRefToJson(MatchUserRef instance) =>
+    <String, dynamic>{'id': instance.id, 'name': instance.name};
+
 MatchHistoryItem _$MatchHistoryItemFromJson(Map<String, dynamic> json) =>
     MatchHistoryItem(
       matchId: json['matchId'] as String,
@@ -19,6 +25,14 @@ MatchHistoryItem _$MatchHistoryItemFromJson(Map<String, dynamic> json) =>
           : MatchResultInfo.fromJson(json['result'] as Map<String, dynamic>),
       tossWinner: json['tossWinner'] as String?,
       tossDecision: json['tossDecision'] as String?,
+      createdBy: json['createdBy'] == null
+          ? null
+          : MatchUserRef.fromJson(json['createdBy'] as Map<String, dynamic>),
+      assignedScorer: json['assignedScorer'] == null
+          ? null
+          : MatchUserRef.fromJson(
+              json['assignedScorer'] as Map<String, dynamic>,
+            ),
       createdAt: json['createdAt'] as String,
     );
 
@@ -33,6 +47,8 @@ Map<String, dynamic> _$MatchHistoryItemToJson(MatchHistoryItem instance) =>
       'result': instance.result?.toJson(),
       'tossWinner': instance.tossWinner,
       'tossDecision': instance.tossDecision,
+      'createdBy': instance.createdBy?.toJson(),
+      'assignedScorer': instance.assignedScorer?.toJson(),
       'createdAt': instance.createdAt,
     };
 

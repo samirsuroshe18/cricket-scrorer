@@ -36,6 +36,8 @@ import 'package:cricket_scorer/features/scoring/data/models/response/sync_res.da
 import 'package:cricket_scorer/features/scoring/data/models/response/team_organization_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/team_profile_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/undo_ball_res.dart';
+import 'package:cricket_scorer/features/scoring/data/models/response/scorer_candidates_res.dart';
+import 'package:cricket_scorer/features/scoring/data/models/response/assign_scorer_res.dart';
 import 'package:cricket_scorer/features/scoring/domain/offline/pre_event_state.dart';
 import 'package:cricket_scorer/features/scoring/domain/repositories/match_repository.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/abandon_match.dart';
@@ -195,6 +197,16 @@ class _OfflineMatchRepository implements MatchRepository {
     required String teamId,
     required String? organizationId,
   }) => throw UnimplementedError('Not exercised in this test.');
+
+  @override
+  Future<Either<CricketResponse<ScorerCandidatesRes>, CricketFailure>>
+  getScorerCandidates({required String matchId}) =>
+      throw UnimplementedError('Not exercised in this test.');
+
+  @override
+  Future<Either<CricketResponse<AssignScorerRes>, CricketFailure>>
+  assignScorer({required String matchId, required String? scorerId}) =>
+      throw UnimplementedError('Not exercised in this test.');
 
   @override
   Future<Either<CricketResponse<AbandonMatchRes>, CricketFailure>>
@@ -485,6 +497,16 @@ class _MixedMatchRepository implements MatchRepository {
   }) => throw UnimplementedError('Not exercised in this test.');
 
   @override
+  Future<Either<CricketResponse<ScorerCandidatesRes>, CricketFailure>>
+  getScorerCandidates({required String matchId}) =>
+      throw UnimplementedError('Not exercised in this test.');
+
+  @override
+  Future<Either<CricketResponse<AssignScorerRes>, CricketFailure>>
+  assignScorer({required String matchId, required String? scorerId}) =>
+      throw UnimplementedError('Not exercised in this test.');
+
+  @override
   Future<Either<CricketResponse<AbandonMatchRes>, CricketFailure>>
   abandonMatch({required String matchId}) async {
     throw UnimplementedError('Not exercised in this test.');
@@ -656,6 +678,16 @@ class _RecordingMatchRepository implements MatchRepository {
     required String teamId,
     required String? organizationId,
   }) => throw UnimplementedError('Not exercised in this test.');
+
+  @override
+  Future<Either<CricketResponse<ScorerCandidatesRes>, CricketFailure>>
+  getScorerCandidates({required String matchId}) =>
+      throw UnimplementedError('Not exercised in this test.');
+
+  @override
+  Future<Either<CricketResponse<AssignScorerRes>, CricketFailure>>
+  assignScorer({required String matchId, required String? scorerId}) =>
+      throw UnimplementedError('Not exercised in this test.');
 
   @override
   Future<Either<CricketResponse<AbandonMatchRes>, CricketFailure>>
@@ -999,6 +1031,16 @@ class _ServerSimulatingMatchRepository implements MatchRepository {
   }) => throw UnimplementedError('Not exercised in this test.');
 
   @override
+  Future<Either<CricketResponse<ScorerCandidatesRes>, CricketFailure>>
+  getScorerCandidates({required String matchId}) =>
+      throw UnimplementedError('Not exercised in this test.');
+
+  @override
+  Future<Either<CricketResponse<AssignScorerRes>, CricketFailure>>
+  assignScorer({required String matchId, required String? scorerId}) =>
+      throw UnimplementedError('Not exercised in this test.');
+
+  @override
   Future<Either<CricketResponse<AbandonMatchRes>, CricketFailure>>
   abandonMatch({required String matchId}) async {
     throw UnimplementedError('Not exercised in this test.');
@@ -1172,6 +1214,16 @@ class _RuleBlockingMatchRepository implements MatchRepository {
     required String teamId,
     required String? organizationId,
   }) => throw UnimplementedError('Not exercised in this test.');
+
+  @override
+  Future<Either<CricketResponse<ScorerCandidatesRes>, CricketFailure>>
+  getScorerCandidates({required String matchId}) =>
+      throw UnimplementedError('Not exercised in this test.');
+
+  @override
+  Future<Either<CricketResponse<AssignScorerRes>, CricketFailure>>
+  assignScorer({required String matchId, required String? scorerId}) =>
+      throw UnimplementedError('Not exercised in this test.');
 
   @override
   Future<Either<CricketResponse<AbandonMatchRes>, CricketFailure>>
@@ -3572,6 +3624,16 @@ class _LockTransitionMatchRepository implements MatchRepository {
     required String teamId,
     required String? organizationId,
   }) => throw UnimplementedError('Not exercised in this test.');
+
+  @override
+  Future<Either<CricketResponse<ScorerCandidatesRes>, CricketFailure>>
+  getScorerCandidates({required String matchId}) =>
+      throw UnimplementedError('Not exercised in this test.');
+
+  @override
+  Future<Either<CricketResponse<AssignScorerRes>, CricketFailure>>
+  assignScorer({required String matchId, required String? scorerId}) =>
+      throw UnimplementedError('Not exercised in this test.');
 
   @override
   Future<Either<CricketResponse<DeleteMatchRes>, CricketFailure>> deleteMatch({

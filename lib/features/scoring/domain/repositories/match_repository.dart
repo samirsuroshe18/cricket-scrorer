@@ -27,6 +27,8 @@ import 'package:cricket_scorer/features/scoring/data/models/response/career_stat
 import 'package:cricket_scorer/features/scoring/data/models/response/my_teams_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/team_organization_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/team_profile_res.dart';
+import 'package:cricket_scorer/features/scoring/data/models/response/scorer_candidates_res.dart';
+import 'package:cricket_scorer/features/scoring/data/models/response/assign_scorer_res.dart';
 
 abstract class MatchRepository {
   Future<Either<CricketResponse<CreateMatchRes>, CricketFailure>> createMatch({
@@ -191,4 +193,16 @@ abstract class MatchRepository {
     required String teamId,
     required String? organizationId,
   });
+
+  /// `GET /v1/match/:matchId/scorer-candidates` — see docs/api.md's
+  /// delegated-scoring contract. Empty when neither team is org-linked;
+  /// `CricketForbiddenErrorFailure` when the caller has no assign-authority
+  /// at all on this match.
+  Future<Either<CricketResponse<ScorerCandidatesRes>, CricketFailure>>
+  getScorerCandidates({required String matchId});
+
+  /// `PATCH /v1/match/:matchId/scorer` — assign/reassign (`scorerId`) or
+  /// clear (`scorerId: null`) the match's delegated scorer.
+  Future<Either<CricketResponse<AssignScorerRes>, CricketFailure>>
+  assignScorer({required String matchId, required String? scorerId});
 }

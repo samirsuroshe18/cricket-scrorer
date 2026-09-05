@@ -4,6 +4,24 @@ import 'package:json_annotation/json_annotation.dart';
 
 part 'match_history_res.g.dart';
 
+/// A `{id, name}` reference to a user — `MatchHistoryItem.createdBy`/
+/// `.assignedScorer`, `ScorerCandidatesRes`, and `AssignScorerRes` all share
+/// this shape since they're the same wire contract from the same feature
+/// slice, unlike `OrganizationRef`/`OrganizationUserRef` (kept distinct
+/// because those two coincidentally match across unrelated features).
+@JsonSerializable()
+class MatchUserRef {
+  final String id;
+  final String name;
+
+  MatchUserRef({required this.id, required this.name});
+
+  factory MatchUserRef.fromJson(Map<String, dynamic> json) =>
+      _$MatchUserRefFromJson(json);
+
+  Map<String, dynamic> toJson() => _$MatchUserRefToJson(this);
+}
+
 /// One row of `GET /v1/match/history`. `result` is only ever populated for a
 /// `completed` match — an `abandoned` one has no winner, and the server sends
 /// `null` for it — so the history/home screen must not assume a non-null
@@ -40,6 +58,16 @@ class MatchHistoryItem {
   /// `bat` / `bowl`. Null exactly when [tossWinner] is null.
   final String? tossDecision;
 
+  /// Who created this match — always present. Lets a client render
+  /// "Assigned by X" when it differs from the viewer's own id (see
+  /// [assignedScorer] below and docs/api.md's delegated-scoring contract).
+  final MatchUserRef? createdBy;
+
+  /// Non-null once the creator (or a qualifying org owner) has delegated
+  /// scoring for this match to someone else. Null for every match created
+  /// before this feature and every ad-hoc match since.
+  final MatchUserRef? assignedScorer;
+
   final String createdAt;
 
   MatchHistoryItem({
@@ -52,8 +80,28 @@ class MatchHistoryItem {
     this.result,
     this.tossWinner,
     this.tossDecision,
+    this.createdBy,
+    this.assignedScorer,
     required this.createdAt,
   });
+
+  /// Used after a successful `PATCH /v1/match/:matchId/scorer` to patch the
+  /// cached list entry in place, so a controller doesn't need a full reload
+  /// just to reflect the new assignment.
+  MatchHistoryItem copyWith({MatchUserRef? assignedScorer}) => MatchHistoryItem(
+    matchId: matchId,
+    teamA: teamA,
+    teamB: teamB,
+    joinCode: joinCode,
+    totalOvers: totalOvers,
+    status: status,
+    result: result,
+    tossWinner: tossWinner,
+    tossDecision: tossDecision,
+    createdBy: createdBy,
+    assignedScorer: assignedScorer,
+    createdAt: createdAt,
+  );
 
   factory MatchHistoryItem.fromJson(Map<String, dynamic> json) =>
       _$MatchHistoryItemFromJson(json);

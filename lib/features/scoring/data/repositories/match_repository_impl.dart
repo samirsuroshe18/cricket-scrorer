@@ -30,6 +30,8 @@ import 'package:cricket_scorer/features/scoring/data/models/response/career_stat
 import 'package:cricket_scorer/features/scoring/data/models/response/my_teams_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/team_organization_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/team_profile_res.dart';
+import 'package:cricket_scorer/features/scoring/data/models/response/scorer_candidates_res.dart';
+import 'package:cricket_scorer/features/scoring/data/models/response/assign_scorer_res.dart';
 import 'package:cricket_scorer/features/scoring/domain/repositories/match_repository.dart';
 
 class MatchRepositoryImpl extends MatchRepository {
@@ -392,6 +394,44 @@ class MatchRepositoryImpl extends MatchRepository {
       return Either.result(
         CricketResponse(
           data: TeamOrganizationRes.fromJson(
+            response.result.data as Map<String, dynamic>,
+          ),
+          message: response.result.message,
+        ),
+      );
+    } else {
+      return Either.fallback(response.fallback);
+    }
+  }
+
+  @override
+  Future<Either<CricketResponse<ScorerCandidatesRes>, CricketFailure>>
+  getScorerCandidates({required String matchId}) async {
+    Either<ApiResponseModel, CricketFailure> response = await matchApiService
+        .getScorerCandidates(matchId: matchId);
+    if (response.isResult) {
+      return Either.result(
+        CricketResponse(
+          data: ScorerCandidatesRes.fromJson(
+            response.result.data as Map<String, dynamic>,
+          ),
+          message: response.result.message,
+        ),
+      );
+    } else {
+      return Either.fallback(response.fallback);
+    }
+  }
+
+  @override
+  Future<Either<CricketResponse<AssignScorerRes>, CricketFailure>>
+  assignScorer({required String matchId, required String? scorerId}) async {
+    Either<ApiResponseModel, CricketFailure> response = await matchApiService
+        .assignScorer(matchId: matchId, scorerId: scorerId);
+    if (response.isResult) {
+      return Either.result(
+        CricketResponse(
+          data: AssignScorerRes.fromJson(
             response.result.data as Map<String, dynamic>,
           ),
           message: response.result.message,

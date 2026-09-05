@@ -23,6 +23,8 @@ import 'package:cricket_scorer/features/scoring/domain/usecases/get_career_stats
 import 'package:cricket_scorer/features/scoring/domain/usecases/get_my_teams.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/get_team_matches.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/get_team_profile.dart';
+import 'package:cricket_scorer/features/scoring/domain/usecases/get_scorer_candidates.dart';
+import 'package:cricket_scorer/features/scoring/domain/usecases/assign_scorer.dart';
 import 'package:get/get.dart';
 
 class ScoringInjection {
@@ -127,6 +129,18 @@ class ScoringInjection {
 
     Get.lazyPut<SyncMatchUseCase>(
       () => SyncMatchUseCase(matchRepository: Get.find<MatchRepository>()),
+      fenix: true,
+    );
+
+    Get.lazyPut<GetScorerCandidatesUseCase>(
+      () => GetScorerCandidatesUseCase(
+        matchRepository: Get.find<MatchRepository>(),
+      ),
+      fenix: true,
+    );
+
+    Get.lazyPut<AssignScorerUseCase>(
+      () => AssignScorerUseCase(matchRepository: Get.find<MatchRepository>()),
       fenix: true,
     );
 

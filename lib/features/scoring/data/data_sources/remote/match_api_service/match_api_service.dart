@@ -161,4 +161,22 @@ class MatchApiService {
   }) async {
     return await apiClient.get(endpoint: matchEndpoint.publicMatch(code));
   }
+
+  Future<Either<ApiResponseModel, CricketFailure>> getScorerCandidates({
+    required String matchId,
+  }) async {
+    return await apiClient.get(
+      endpoint: matchEndpoint.scorerCandidates(matchId),
+    );
+  }
+
+  Future<Either<ApiResponseModel, CricketFailure>> assignScorer({
+    required String matchId,
+    required String? scorerId,
+  }) async {
+    return await apiClient.patch(
+      endpoint: matchEndpoint.assignScorer(matchId),
+      data: {'scorerId': scorerId},
+    );
+  }
 }

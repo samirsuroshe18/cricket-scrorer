@@ -59,4 +59,13 @@ class MatchEndpoint {
   /// — see docs/api.md's `## Organization` section.
   String updateTeamOrganization(String teamId) =>
       '/v1/team/$teamId/organization';
+
+  /// `GET /v1/match/:matchId/scorer-candidates` — who a caller with assign-
+  /// authority can pick from.
+  String scorerCandidates(String matchId) =>
+      '/v1/match/$matchId/scorer-candidates';
+
+  /// `PATCH /v1/match/:matchId/scorer` — assign/reassign (`scorerId`) or
+  /// clear (`scorerId: null`) the delegated scorer on this match.
+  String assignScorer(String matchId) => '/v1/match/$matchId/scorer';
 }
