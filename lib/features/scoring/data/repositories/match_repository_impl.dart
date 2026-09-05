@@ -28,6 +28,7 @@ import 'package:cricket_scorer/features/scoring/data/models/response/score_undo_
 import 'package:cricket_scorer/features/scoring/data/models/response/scorecard_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/career_stats_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/my_teams_res.dart';
+import 'package:cricket_scorer/features/scoring/data/models/response/team_organization_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/team_profile_res.dart';
 import 'package:cricket_scorer/features/scoring/domain/repositories/match_repository.dart';
 
@@ -369,6 +370,28 @@ class MatchRepositoryImpl extends MatchRepository {
       return Either.result(
         CricketResponse(
           data: MatchHistoryRes.fromJson(
+            response.result.data as Map<String, dynamic>,
+          ),
+          message: response.result.message,
+        ),
+      );
+    } else {
+      return Either.fallback(response.fallback);
+    }
+  }
+
+  @override
+  Future<Either<CricketResponse<TeamOrganizationRes>, CricketFailure>>
+  updateTeamOrganization({
+    required String teamId,
+    required String? organizationId,
+  }) async {
+    Either<ApiResponseModel, CricketFailure> response = await matchApiService
+        .updateTeamOrganization(teamId: teamId, organizationId: organizationId);
+    if (response.isResult) {
+      return Either.result(
+        CricketResponse(
+          data: TeamOrganizationRes.fromJson(
             response.result.data as Map<String, dynamic>,
           ),
           message: response.result.message,

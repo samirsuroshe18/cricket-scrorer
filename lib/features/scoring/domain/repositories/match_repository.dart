@@ -25,6 +25,7 @@ import 'package:cricket_scorer/features/scoring/data/models/response/score_undo_
 import 'package:cricket_scorer/features/scoring/data/models/response/scorecard_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/career_stats_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/my_teams_res.dart';
+import 'package:cricket_scorer/features/scoring/data/models/response/team_organization_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/team_profile_res.dart';
 
 abstract class MatchRepository {
@@ -181,4 +182,13 @@ abstract class MatchRepository {
   /// as [getMatchHistory], scoped to one team instead of the caller.
   Future<Either<CricketResponse<MatchHistoryRes>, CricketFailure>>
   getTeamMatches({required String teamId, required int page, required int limit});
+
+  /// `PATCH /v1/team/:teamId/organization` — attach an existing standalone
+  /// team the caller owns to an org the caller owns, or detach (pass
+  /// `organizationId: null`) back to standalone.
+  Future<Either<CricketResponse<TeamOrganizationRes>, CricketFailure>>
+  updateTeamOrganization({
+    required String teamId,
+    required String? organizationId,
+  });
 }

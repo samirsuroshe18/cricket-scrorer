@@ -73,6 +73,16 @@ class MatchApiService {
     );
   }
 
+  Future<Either<ApiResponseModel, CricketFailure>> updateTeamOrganization({
+    required String teamId,
+    required String? organizationId,
+  }) async {
+    return await apiClient.patch(
+      endpoint: matchEndpoint.updateTeamOrganization(teamId),
+      data: {'organizationId': organizationId},
+    );
+  }
+
   Future<Either<ApiResponseModel, CricketFailure>> startInnings({
     required String matchId,
     required StartInningsReq? params,

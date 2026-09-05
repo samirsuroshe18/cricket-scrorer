@@ -42,6 +42,7 @@ import 'package:cricket_scorer/features/scoring/data/models/response/career_stat
 import 'package:cricket_scorer/features/scoring/data/models/response/select_bowler_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/start_innings_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/sync_res.dart';
+import 'package:cricket_scorer/features/scoring/data/models/response/team_organization_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/team_profile_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/undo_ball_res.dart';
 import 'package:cricket_scorer/features/scoring/domain/repositories/match_repository.dart';
@@ -328,6 +329,13 @@ class _FakeMatchRepository implements MatchRepository {
     required String teamId,
     required int page,
     required int limit,
+  }) => throw UnimplementedError('Not exercised in this test.');
+
+  @override
+  Future<Either<CricketResponse<TeamOrganizationRes>, CricketFailure>>
+  updateTeamOrganization({
+    required String teamId,
+    required String? organizationId,
   }) => throw UnimplementedError('Not exercised in this test.');
 }
 
