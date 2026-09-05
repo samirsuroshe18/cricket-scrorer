@@ -6,7 +6,7 @@ import 'package:get/get.dart';
 class TeamProfileBinding extends Bindings {
   @override
   void dependencies() {
-    final teamId = Get.parameters['teamId'] ?? '';
+    final teamId = Get.parameters['teamId']?.trim() ?? '';
     Get.lazyPut<TeamProfileController>(
       () => TeamProfileController(
         teamId: teamId,

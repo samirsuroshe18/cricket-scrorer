@@ -15,13 +15,29 @@ import 'package:get/get.dart';
 /// on a `MatchHistoryCard` (home's match history, or another team's own
 /// past-results list). Not a stats page: v1 is deliberately roster + past
 /// results only, no aggregate wins/losses/win% — see docs/api.md.
-class TeamProfileScreen extends StatelessWidget {
+class TeamProfileScreen extends StatefulWidget {
   const TeamProfileScreen({super.key});
 
   @override
+  State<TeamProfileScreen> createState() => _TeamProfileScreenState();
+}
+
+class _TeamProfileScreenState extends State<TeamProfileScreen> {
+  // Captured once, in State construction — not read from `Get.parameters`
+  // inside build(). Get.parameters is one global, mutated by whichever
+  // route is current, and this widget can rebuild for reasons unrelated to
+  // navigation (a language or theme change force-rebuilds the whole tree —
+  // see LanguageService.changeLanguage/ThemeService.changeThemeMode). A
+  // build()-time read would resolve against whatever route happened to be
+  // current at that rebuild, not the route this screen actually belongs
+  // to — reintroducing the same wrong-team failure the tagged lazyPut here
+  // was added to fix.
+  late final String _teamId = Get.parameters['teamId']?.trim() ?? '';
+  late final TeamProfileController controller =
+      Get.find<TeamProfileController>(tag: _teamId);
+
+  @override
   Widget build(BuildContext context) {
-    final teamId = Get.parameters['teamId'] ?? '';
-    final controller = Get.find<TeamProfileController>(tag: teamId);
     return Scaffold(
       appBar: CustomAppBar(title: TranslationKeys.teamProfile.tr),
       body: SafeArea(
@@ -177,63 +193,72 @@ class _TeamHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
+    return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        CircleAvatar(
-          radius: 28,
-          backgroundColor: context.colors.chipBackground,
-          child: CricketText(
-            text: _monogram(),
-            style: context.textTheme.titleMedium?.copyWith(
-              color: context.colorScheme.primary,
-              fontWeight: FontWeight.bold,
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            CircleAvatar(
+              radius: 28,
+              backgroundColor: context.colors.chipBackground,
+              child: CricketText(
+                text: _monogram(),
+                style: context.textTheme.titleMedium?.copyWith(
+                  color: context.colorScheme.primary,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
             ),
-          ),
-        ),
-        16.w,
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              CricketText(
-                text: profile.name,
-                // headlineSmall carries no explicit color override in this
-                // app's theme (unlike every other TextTheme member it
-                // defines) — it falls back to Google Fonts' default, which
-                // is unreadable on the dark theme's navy surface. Pinning
-                // it to onSurface here rather than relying on the fallback.
-                style: context.textTheme.headlineSmall?.copyWith(
-                  color: context.colorScheme.onSurface,
-                ),
-              ),
-              if (profile.shortName != null) ...[
-                4.h,
-                CricketText(
-                  text: profile.shortName!,
-                  style: context.textTheme.bodyMedium?.copyWith(
-                    color: context.colorScheme.onSurfaceVariant,
+            16.w,
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  CricketText(
+                    text: profile.name,
+                    // headlineSmall carries no explicit color override in
+                    // this app's theme (unlike every other TextTheme member
+                    // it defines) — it falls back to Google Fonts' default,
+                    // which is unreadable on the dark theme's navy surface.
+                    // Pinning it to onSurface here rather than relying on
+                    // the fallback.
+                    style: context.textTheme.headlineSmall?.copyWith(
+                      color: context.colorScheme.onSurface,
+                    ),
                   ),
-                ),
-              ],
-              16.h,
-              CricketText(
-                text: TranslationKeys.roster.tr,
-                style: context.textTheme.bodyMedium?.copyWith(
-                  color: context.colorScheme.onSurfaceVariant,
-                ),
-              ),
-              8.h,
-              if (profile.roster.isEmpty)
-                CricketText(text: TranslationKeys.noRosterYet.tr)
-              else
-                for (final player in profile.roster) ...[
-                  _RosterRow(player: player),
-                  4.h,
+                  if (profile.shortName != null) ...[
+                    4.h,
+                    CricketText(
+                      text: profile.shortName!,
+                      style: context.textTheme.bodyMedium?.copyWith(
+                        color: context.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
                 ],
-            ],
+              ),
+            ),
+          ],
+        ),
+        16.h,
+        CricketText(
+          text: TranslationKeys.roster.tr,
+          style: context.textTheme.bodyMedium?.copyWith(
+            color: context.colorScheme.onSurfaceVariant,
           ),
         ),
+        8.h,
+        // Full width, a sibling of the header row rather than nested inside
+        // it — a roster row previously sat under the avatar+gap indent and
+        // rendered narrower than the past-results cards directly below it.
+        if (profile.roster.isEmpty)
+          CricketText(text: TranslationKeys.noRosterYet.tr)
+        else
+          for (final player in profile.roster) ...[
+            _RosterRow(player: player),
+            4.h,
+          ],
       ],
     );
   }
@@ -244,6 +269,15 @@ class _RosterRow extends StatelessWidget {
 
   final TeamRosterPlayer player;
 
+  // batsman/bowler/allrounder reuse the app's status-color family — plenty
+  // distinct from each other, and none of the three read as an alarm.
+  // Wicketkeeper deliberately does NOT reuse statusDanger: that's the same
+  // red `_StatusBadge` uses for "abandoned" two inches away on the results
+  // list below, and a red pill next to a player's own name reads as a
+  // problem indicator rather than a fielding position. `onSurface` (used
+  // here as both the pill's tint source and its text color, same as the
+  // other three roles) gives a neutral, still-legible pill in both themes
+  // without borrowing a semantic status color.
   (String, Color) _role(BuildContext context) => switch (player.role) {
     'batsman' => (TranslationKeys.roleBatsman.tr, context.colors.statusInfo),
     'bowler' => (TranslationKeys.roleBowler.tr, context.colors.statusWarning),
@@ -253,7 +287,7 @@ class _RosterRow extends StatelessWidget {
     ),
     'wicketkeeper' => (
       TranslationKeys.roleWicketkeeper.tr,
-      context.colors.statusDanger,
+      context.colorScheme.onSurface,
     ),
     _ => (TranslationKeys.roleUnknown.tr, context.colorScheme.onSurfaceVariant),
   };
