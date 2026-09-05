@@ -290,4 +290,6 @@ Map<String, String> en = {
   TranslationKeys.scorerUnassigned: 'Scorer unassigned',
   TranslationKeys.assignedByName: 'Assigned by @name',
   TranslationKeys.assignedToName: 'Assigned to @name',
+  TranslationKeys.tapToHandOffScoring: 'Tap a name to hand off scoring',
+  TranslationKeys.currentScorer: 'Current',
 };

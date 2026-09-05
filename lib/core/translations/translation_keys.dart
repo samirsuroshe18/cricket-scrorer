@@ -333,4 +333,6 @@ class TranslationKeys {
   static const String scorerUnassigned = 'scorer_unassigned';
   static const String assignedByName = 'assigned_by_name';
   static const String assignedToName = 'assigned_to_name';
+  static const String tapToHandOffScoring = 'tap_to_hand_off_scoring';
+  static const String currentScorer = 'current_scorer';
 }

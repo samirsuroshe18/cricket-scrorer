@@ -290,4 +290,6 @@ Map<String, String> mr = {
   TranslationKeys.scorerUnassigned: 'स्कोअरर काढला',
   TranslationKeys.assignedByName: '@name यांनी नेमले',
   TranslationKeys.assignedToName: '@name कडे सोपवले',
+  TranslationKeys.tapToHandOffScoring: 'स्कोअरिंग सोपवण्यासाठी एक नाव टॅप करा',
+  TranslationKeys.currentScorer: 'सध्याचा',
 };
