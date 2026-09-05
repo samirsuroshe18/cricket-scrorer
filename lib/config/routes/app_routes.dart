@@ -47,4 +47,14 @@ class AppRoutes {
   static const String teamProfile = '/team/:teamId/profile';
 
   static String teamProfilePath(String teamId) => '/team/$teamId/profile';
+
+  static const String organizations = '/organizations';
+
+  /// Registered with a GetX path parameter, same shape as [teamProfile].
+  /// Never navigate with this constant directly — use
+  /// [organizationDetailPath].
+  static const String organizationDetail = '/organization/:orgId';
+
+  static String organizationDetailPath(String orgId) =>
+      '/organization/$orgId';
 }

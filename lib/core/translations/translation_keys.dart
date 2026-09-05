@@ -290,4 +290,38 @@ class TranslationKeys {
   static const String roleAllrounder = 'role_allrounder';
   static const String roleWicketkeeper = 'role_wicketkeeper';
   static const String roleUnknown = 'role_unknown';
+
+  // Organizations
+  static const String organizations = 'organizations';
+  static const String organizationDetail = 'organization_detail';
+  static const String createOrganization = 'create_organization';
+  static const String organizationName = 'organization_name';
+  static const String organizationCreated = 'organization_created';
+  static const String noOrganizationsYet = 'no_organizations_yet';
+  static const String members = 'members';
+  static const String addMember = 'add_member';
+  static const String memberEmail = 'member_email';
+  static const String memberAdded = 'member_added';
+  static const String teams = 'teams';
+  static const String addTeam = 'add_team';
+  static const String teamName = 'team_name';
+  static const String teamShortName = 'team_short_name';
+  static const String teamAdded = 'team_added';
+  static const String noTeamsYet = 'no_teams_yet';
+  static const String add = 'add';
+  static const String leaveOrganization = 'leave_organization';
+  static const String leaveOrganizationConfirmTitle =
+      'leave_organization_confirm_title';
+  static const String leaveOrganizationConfirmMessage =
+      'leave_organization_confirm_message';
+  static const String removeMember = 'remove_member';
+  static const String removeMemberConfirmTitle = 'remove_member_confirm_title';
+  static const String removeMemberConfirmMessage =
+      'remove_member_confirm_message';
+  static const String deleteOrganization = 'delete_organization';
+  static const String deleteOrganizationConfirmTitle =
+      'delete_organization_confirm_title';
+  static const String deleteOrganizationConfirmMessage =
+      'delete_organization_confirm_message';
+  static const String create = 'create';
 }

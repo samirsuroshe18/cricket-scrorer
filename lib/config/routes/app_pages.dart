@@ -31,6 +31,10 @@ import 'package:cricket_scorer/features/scoring/presentation/pages/player_stats_
 import 'package:cricket_scorer/features/scoring/presentation/pages/score_ball_screen.dart';
 import 'package:cricket_scorer/features/scoring/presentation/pages/spectator_screen.dart';
 import 'package:cricket_scorer/features/scoring/presentation/pages/team_profile_screen.dart';
+import 'package:cricket_scorer/features/organization/presentation/bindings/organization_detail_binding.dart';
+import 'package:cricket_scorer/features/organization/presentation/bindings/organizations_list_binding.dart';
+import 'package:cricket_scorer/features/organization/presentation/pages/organization_detail_screen.dart';
+import 'package:cricket_scorer/features/organization/presentation/pages/organizations_list_screen.dart';
 import 'package:get/get.dart';
 
 abstract class AppPages {
@@ -114,6 +118,16 @@ abstract class AppPages {
       name: AppRoutes.teamProfile,
       page: () => const TeamProfileScreen(),
       binding: TeamProfileBinding(),
+    ),
+    GetPage(
+      name: AppRoutes.organizations,
+      page: () => const OrganizationsListScreen(),
+      binding: OrganizationsListBinding(),
+    ),
+    GetPage(
+      name: AppRoutes.organizationDetail,
+      page: () => const OrganizationDetailScreen(),
+      binding: OrganizationDetailBinding(),
     ),
   ];
 }
