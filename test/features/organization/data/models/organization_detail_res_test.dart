@@ -14,6 +14,7 @@ void main() {
       'teams': [
         {'id': 'team-1', 'name': 'Riverside U19', 'shortName': 'RU19'},
       ],
+      'tournaments': <Map<String, dynamic>>[],
     };
 
     final res = OrganizationDetailRes.fromJson(json);
@@ -35,10 +36,35 @@ void main() {
       'teams': [
         {'id': 'team-1', 'name': 'Riverside U19', 'shortName': null},
       ],
+      'tournaments': <Map<String, dynamic>>[],
     };
 
     final res = OrganizationDetailRes.fromJson(json);
 
     expect(res.teams.single.shortName, isNull);
+  });
+
+  test('OrganizationDetailRes.fromJson parses tournaments', () {
+    final json = {
+      'id': 'org-1',
+      'name': 'Riverside Cricket Club',
+      'owner': {'id': 'user-1', 'name': 'Asha'},
+      'members': <Map<String, dynamic>>[],
+      'teams': <Map<String, dynamic>>[],
+      'tournaments': [
+        {
+          'id': 'tournament-1',
+          'name': 'Summer T20',
+          'format': 'knockout',
+          'status': 'upcoming',
+          'teamCount': 2,
+        },
+      ],
+    };
+
+    final res = OrganizationDetailRes.fromJson(json);
+
+    expect(res.tournaments.single.name, 'Summer T20');
+    expect(res.tournaments.single.teamCount, 2);
   });
 }

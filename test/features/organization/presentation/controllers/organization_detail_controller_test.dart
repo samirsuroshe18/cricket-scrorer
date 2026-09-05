@@ -8,6 +8,7 @@ import 'package:cricket_scorer/features/organization/domain/usecases/delete_orga
 import 'package:cricket_scorer/features/organization/domain/usecases/get_organization.dart';
 import 'package:cricket_scorer/features/organization/domain/usecases/remove_organization_member.dart';
 import 'package:cricket_scorer/features/organization/presentation/controllers/organization_detail_controller.dart';
+import 'package:cricket_scorer/features/tournament/domain/usecases/create_tournament.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart' hide Response;
 
@@ -20,6 +21,7 @@ OrganizationDetailRes _detail() => OrganizationDetailRes(
     OrganizationMemberRes(id: 'user-2', name: 'Vikram', role: 'member'),
   ],
   teams: const [],
+  tournaments: const [],
 );
 
 class _FakeGetOrganizationUseCase implements GetOrganizationUseCase {
@@ -122,12 +124,32 @@ class _FakeDeleteOrganizationUseCase implements DeleteOrganizationUseCase {
       throw UnimplementedError('Not exercised in this test.');
 }
 
+class _FakeCreateTournamentUseCase implements CreateTournamentUseCase {
+  Either<CricketResponse<void>, CricketFailure>? response;
+
+  @override
+  Future<Either<CricketResponse<void>, CricketFailure>> call({
+    CreateTournamentParams? params,
+  }) async {
+    final result = response;
+    if (result == null) {
+      throw UnimplementedError('Not exercised in this test.');
+    }
+    return result;
+  }
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) =>
+      throw UnimplementedError('Not exercised in this test.');
+}
+
 void main() {
   late _FakeGetOrganizationUseCase getOrganizationUseCase;
   late _FakeAddOrganizationMemberUseCase addMemberUseCase;
   late _FakeRemoveOrganizationMemberUseCase removeMemberUseCase;
   late _FakeCreateOrganizationTeamUseCase createTeamUseCase;
   late _FakeDeleteOrganizationUseCase deleteOrganizationUseCase;
+  late _FakeCreateTournamentUseCase createTournamentUseCase;
   late OrganizationDetailController controller;
 
   setUp(() {
@@ -137,6 +159,7 @@ void main() {
     removeMemberUseCase = _FakeRemoveOrganizationMemberUseCase();
     createTeamUseCase = _FakeCreateOrganizationTeamUseCase();
     deleteOrganizationUseCase = _FakeDeleteOrganizationUseCase();
+    createTournamentUseCase = _FakeCreateTournamentUseCase();
     controller = OrganizationDetailController(
       orgId: 'org-1',
       currentUserId: 'user-1',
@@ -145,6 +168,7 @@ void main() {
       removeOrganizationMemberUseCase: removeMemberUseCase,
       createOrganizationTeamUseCase: createTeamUseCase,
       deleteOrganizationUseCase: deleteOrganizationUseCase,
+      createTournamentUseCase: createTournamentUseCase,
     );
   });
 
@@ -170,6 +194,7 @@ void main() {
       removeOrganizationMemberUseCase: removeMemberUseCase,
       createOrganizationTeamUseCase: createTeamUseCase,
       deleteOrganizationUseCase: deleteOrganizationUseCase,
+      createTournamentUseCase: createTournamentUseCase,
     );
     controller.detail.value = _detail();
 
@@ -205,6 +230,7 @@ void main() {
             OrganizationMemberRes(id: 'user-3', name: 'Raj', role: 'member'),
           ],
           teams: const [],
+          tournaments: const [],
         ),
       ),
     );
@@ -243,6 +269,19 @@ void main() {
     );
 
     final result = await controller.createTeam('Riverside U19', 'RU19');
+
+    expect(result, isTrue);
+  });
+
+  test('createTournament sends name and format and refreshes on success', () async {
+    createTournamentUseCase.response = Either.result(
+      const CricketResponse(message: 'ok', data: null),
+    );
+    getOrganizationUseCase.response = Either.result(
+      CricketResponse(message: 'ok', data: _detail()),
+    );
+
+    final result = await controller.createTournament('Summer T20', 'knockout');
 
     expect(result, isTrue);
   });

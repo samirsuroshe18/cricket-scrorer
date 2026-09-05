@@ -118,6 +118,7 @@ void main() {
               OrganizationMemberRes(id: 'user-1', name: 'Asha', role: 'owner'),
             ],
             teams: const [],
+            tournaments: const [],
           ),
         ),
       );

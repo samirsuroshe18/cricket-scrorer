@@ -6,6 +6,8 @@ import 'package:cricket_scorer/features/organization/domain/usecases/create_orga
 import 'package:cricket_scorer/features/organization/domain/usecases/delete_organization.dart';
 import 'package:cricket_scorer/features/organization/domain/usecases/get_organization.dart';
 import 'package:cricket_scorer/features/organization/domain/usecases/remove_organization_member.dart';
+import 'package:cricket_scorer/features/tournament/data/models/request/create_tournament_req.dart';
+import 'package:cricket_scorer/features/tournament/domain/usecases/create_tournament.dart';
 import 'package:get/get.dart';
 
 class OrganizationDetailController extends GetxController {
@@ -22,6 +24,7 @@ class OrganizationDetailController extends GetxController {
   final RemoveOrganizationMemberUseCase removeOrganizationMemberUseCase;
   final CreateOrganizationTeamUseCase createOrganizationTeamUseCase;
   final DeleteOrganizationUseCase deleteOrganizationUseCase;
+  final CreateTournamentUseCase createTournamentUseCase;
 
   OrganizationDetailController({
     required this.orgId,
@@ -31,6 +34,7 @@ class OrganizationDetailController extends GetxController {
     required this.removeOrganizationMemberUseCase,
     required this.createOrganizationTeamUseCase,
     required this.deleteOrganizationUseCase,
+    required this.createTournamentUseCase,
   });
 
   final detail = Rxn<OrganizationDetailRes>();
@@ -103,5 +107,18 @@ class OrganizationDetailController extends GetxController {
       params: DeleteOrganizationParams(orgId: orgId),
     );
     return response.isResult;
+  }
+
+  Future<bool> createTournament(String name, String format) async {
+    final response = await createTournamentUseCase(
+      params: CreateTournamentParams(
+        orgId: orgId,
+        req: CreateTournamentReq(name: name, format: format),
+      ),
+    );
+
+    if (!response.isResult) return false;
+    await loadDetail();
+    return true;
   }
 }

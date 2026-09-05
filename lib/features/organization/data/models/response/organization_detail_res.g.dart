@@ -44,6 +44,26 @@ Map<String, dynamic> _$OrganizationTeamRefToJson(
   'shortName': instance.shortName,
 };
 
+OrganizationTournamentRef _$OrganizationTournamentRefFromJson(
+  Map<String, dynamic> json,
+) => OrganizationTournamentRef(
+  id: json['id'] as String,
+  name: json['name'] as String,
+  format: json['format'] as String,
+  status: json['status'] as String,
+  teamCount: (json['teamCount'] as num).toInt(),
+);
+
+Map<String, dynamic> _$OrganizationTournamentRefToJson(
+  OrganizationTournamentRef instance,
+) => <String, dynamic>{
+  'id': instance.id,
+  'name': instance.name,
+  'format': instance.format,
+  'status': instance.status,
+  'teamCount': instance.teamCount,
+};
+
 OrganizationDetailRes _$OrganizationDetailResFromJson(
   Map<String, dynamic> json,
 ) => OrganizationDetailRes(
@@ -56,6 +76,14 @@ OrganizationDetailRes _$OrganizationDetailResFromJson(
   teams: (json['teams'] as List<dynamic>)
       .map((e) => OrganizationTeamRef.fromJson(e as Map<String, dynamic>))
       .toList(),
+  tournaments:
+      (json['tournaments'] as List<dynamic>?)
+          ?.map(
+            (e) =>
+                OrganizationTournamentRef.fromJson(e as Map<String, dynamic>),
+          )
+          .toList() ??
+      [],
 );
 
 Map<String, dynamic> _$OrganizationDetailResToJson(
@@ -66,4 +94,5 @@ Map<String, dynamic> _$OrganizationDetailResToJson(
   'owner': instance.owner.toJson(),
   'members': instance.members.map((e) => e.toJson()).toList(),
   'teams': instance.teams.map((e) => e.toJson()).toList(),
+  'tournaments': instance.tournaments.map((e) => e.toJson()).toList(),
 };
