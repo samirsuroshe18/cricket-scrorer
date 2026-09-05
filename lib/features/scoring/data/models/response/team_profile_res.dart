@@ -1,3 +1,5 @@
+import 'package:cricket_scorer/features/scoring/data/models/response/my_teams_res.dart'
+    show OrganizationRef;
 import 'package:json_annotation/json_annotation.dart';
 
 part 'team_profile_res.g.dart';
@@ -35,18 +37,23 @@ class TeamRosterPlayer {
 /// (directly, or via `teamAId`/`teamBId` reuse on match creation).
 /// `roster` is `[]`, not an error, for a team no one has been rostered onto
 /// yet. Deliberately carries no aggregate stats (wins/losses/win%) — v1 is
-/// roster + past results only, see docs/api.md.
+/// roster + past results only, see docs/api.md. `organization` is non-null
+/// when this team belongs to one — see `TeamSummary.organization`'s own
+/// comment for why this reuses [OrganizationRef] rather than a second
+/// identical type.
 @JsonSerializable(explicitToJson: true)
 class TeamProfileRes {
   final String teamId;
   final String name;
   final String? shortName;
+  final OrganizationRef? organization;
   final List<TeamRosterPlayer> roster;
 
   TeamProfileRes({
     required this.teamId,
     required this.name,
     this.shortName,
+    this.organization,
     required this.roster,
   });
 
