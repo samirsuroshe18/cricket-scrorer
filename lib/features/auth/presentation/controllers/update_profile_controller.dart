@@ -12,6 +12,7 @@ import 'package:cricket_scorer/core/services/compression_service.dart';
 import 'package:cricket_scorer/core/translations/translation_keys.dart';
 import 'package:cricket_scorer/core/utils/either_util.dart';
 import 'package:cricket_scorer/features/auth/data/models/request/update_profile_req.dart';
+import 'package:cricket_scorer/features/auth/domain/usecases/get_user.dart';
 import 'package:cricket_scorer/features/auth/domain/usecases/update_profile.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -19,16 +20,61 @@ import 'package:image_picker/image_picker.dart';
 
 class UpdateProfileController extends GetxController {
   final UpdateProfileUseCase updateProfileUseCase;
+  final GetUserUseCase getUserUseCase;
 
-  UpdateProfileController({required this.updateProfileUseCase});
+  UpdateProfileController({
+    required this.updateProfileUseCase,
+    required this.getUserUseCase,
+  });
 
   final formKey = GlobalKey<FormState>();
   final usernameController = TextEditingController();
   final bioController = TextEditingController();
 
   final selectedImage = Rx<File?>(null);
+  final existingPhotoUrl = Rx<String?>(null);
+
+  // Both optional, no default — mirrors the backend contract exactly.
+  final battingStyle = Rx<String?>(null);
+  final bowlingStyle = Rx<String?>(null);
+
+  void toggleBattingStyle(String style) =>
+      battingStyle.value = battingStyle.value == style ? null : style;
+
+  void toggleBowlingStyle(String style) =>
+      bowlingStyle.value = bowlingStyle.value == style ? null : style;
+
+  // Set once from the route arguments the home screen's Profile entry point
+  // passes; the three onboarding call sites (login/splash/onboarding
+  // controllers) navigate with no arguments, so this stays false there and
+  // the screen renders exactly as it did before this field existed.
+  late final bool isEditing;
+  final isLoadingProfile = false.obs;
 
   final ImagePicker _picker = ImagePicker();
+
+  @override
+  void onInit() {
+    super.onInit();
+    isEditing = (Get.arguments as Map?)?['isEditing'] == true;
+    if (isEditing) {
+      unawaited(_loadExistingProfile());
+    }
+  }
+
+  Future<void> _loadExistingProfile() async {
+    isLoadingProfile.value = true;
+    final response = await getUserUseCase();
+    if (response.isResult) {
+      final user = response.result.data;
+      usernameController.text = user?.userName ?? '';
+      bioController.text = user?.bio ?? '';
+      battingStyle.value = user?.battingStyle;
+      bowlingStyle.value = user?.bowlingStyle;
+      existingPhotoUrl.value = user?.photoUrl;
+    }
+    isLoadingProfile.value = false;
+  }
 
   Future<XFile?> pickImage({
     required ImageSource imageSource,
@@ -96,6 +142,8 @@ class UpdateProfileController extends GetxController {
           params: UpdateProfileReq(
             userName: usernameController.text,
             bio: bioController.text,
+            battingStyle: battingStyle.value,
+            bowlingStyle: bowlingStyle.value,
           ),
           file: selectedImage.value,
         );

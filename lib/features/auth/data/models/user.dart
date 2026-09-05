@@ -21,8 +21,18 @@ class User {
   final String? email;
   @JsonKey(name: 'isEmailVerified')
   final bool? isEmailVerified;
+  @JsonKey(name: 'fullName')
+  final String? fullName;
   @JsonKey(name: 'userName')
   final String? userName;
+  @JsonKey(name: 'photoUrl')
+  final String? photoUrl;
+  @JsonKey(name: 'bio')
+  final String? bio;
+  @JsonKey(name: 'battingStyle')
+  final String? battingStyle;
+  @JsonKey(name: 'bowlingStyle')
+  final String? bowlingStyle;
   @JsonKey(name: 'profileCompleted')
   final bool? profileCompleted;
   @JsonKey(name: 'accountStatus')
@@ -41,7 +51,12 @@ class User {
     this.id,
     this.email,
     this.isEmailVerified,
+    this.fullName,
     this.userName,
+    this.photoUrl,
+    this.bio,
+    this.battingStyle,
+    this.bowlingStyle,
     this.profileCompleted,
     this.accountStatus,
     this.language,
@@ -55,7 +70,12 @@ class User {
     String? id,
     String? email,
     bool? isEmailVerified,
+    String? fullName,
     String? userName,
+    String? photoUrl,
+    String? bio,
+    String? battingStyle,
+    String? bowlingStyle,
     bool? profileCompleted,
     String? accountStatus,
     String? language,
@@ -67,7 +87,12 @@ class User {
     id: id ?? this.id,
     email: email ?? this.email,
     isEmailVerified: isEmailVerified ?? this.isEmailVerified,
+    fullName: fullName ?? this.fullName,
     userName: userName ?? this.userName,
+    photoUrl: photoUrl ?? this.photoUrl,
+    bio: bio ?? this.bio,
+    battingStyle: battingStyle ?? this.battingStyle,
+    bowlingStyle: bowlingStyle ?? this.bowlingStyle,
     profileCompleted: profileCompleted ?? this.profileCompleted,
     accountStatus: accountStatus ?? this.accountStatus,
     language: language ?? this.language,

@@ -80,7 +80,6 @@ flutter:
   uses-material-design: true
 
   assets:
-    - assets/gif/
     - assets/images/
     - assets/svg/
     - assets/json/

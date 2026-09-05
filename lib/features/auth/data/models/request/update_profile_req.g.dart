@@ -10,7 +10,14 @@ UpdateProfileReq _$UpdateProfileReqFromJson(Map<String, dynamic> json) =>
     UpdateProfileReq(
       userName: json['userName'] as String,
       bio: json['bio'] as String?,
+      battingStyle: json['battingStyle'] as String?,
+      bowlingStyle: json['bowlingStyle'] as String?,
     );
 
 Map<String, dynamic> _$UpdateProfileReqToJson(UpdateProfileReq instance) =>
-    <String, dynamic>{'userName': instance.userName, 'bio': instance.bio};
+    <String, dynamic>{
+      'userName': instance.userName,
+      'bio': instance.bio,
+      'battingStyle': ?instance.battingStyle,
+      'bowlingStyle': ?instance.bowlingStyle,
+    };
