@@ -1,3 +1,4 @@
+import 'package:cricket_scorer/core/extensions/space_extension.dart';
 import 'package:cricket_scorer/core/extensions/theme_x.dart';
 import 'package:cricket_scorer/core/global/widgets/cricket_text.dart';
 import 'package:cricket_scorer/core/translations/translation_keys.dart';
@@ -36,6 +37,57 @@ Color tournamentStatusColor(BuildContext context, String status) =>
       _ => context.colorScheme.onSurfaceVariant,
     };
 
+/// A single tappable pill, shared by [FormatChoiceChips] and
+/// [StatusChoiceChips]. Deliberately not a Material `ChoiceChip` — this
+/// app's own pills (the member/team role badges on `OrganizationDetailScreen`,
+/// the status badge on `_TournamentRow`) are flat, borderless, alpha-tinted
+/// containers with bold colored text, not the default outlined-with-checkmark
+/// Material chip. Reusing that exact shape here keeps the picker looking
+/// like it belongs to this app rather than a generic Material form control.
+class _SelectablePill extends StatelessWidget {
+  const _SelectablePill({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = selected
+        ? context.colorScheme.primary
+        : context.colorScheme.onSurfaceVariant;
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: 20.radius,
+        onTap: onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 150),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+          decoration: BoxDecoration(
+            color: selected
+                ? context.colorScheme.primary.withValues(alpha: 0.12)
+                : context.colors.chipBackground,
+            borderRadius: 20.radius,
+          ),
+          child: CricketText(
+            text: label,
+            style: context.textTheme.labelMedium?.copyWith(
+              color: color,
+              fontWeight: selected ? FontWeight.w600 : null,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 /// A row of tappable format pills — used at both creation (no initial
 /// selection required beyond the caller's own default) and in the edit
 /// sheet (pre-selected to the tournament's current format).
@@ -56,12 +108,10 @@ class FormatChoiceChips extends StatelessWidget {
       runSpacing: 8,
       children: [
         for (final format in tournamentFormats)
-          ChoiceChip(
-            label: CricketText(text: tournamentFormatLabel(format)),
+          _SelectablePill(
+            label: tournamentFormatLabel(format),
             selected: selected == format,
-            selectedColor: context.colors.chipSelected,
-            backgroundColor: context.colors.chipBackground,
-            onSelected: (_) => onSelected(format),
+            onTap: () => onSelected(format),
           ),
       ],
     );
@@ -87,12 +137,10 @@ class StatusChoiceChips extends StatelessWidget {
       runSpacing: 8,
       children: [
         for (final status in tournamentStatuses)
-          ChoiceChip(
-            label: CricketText(text: tournamentStatusLabel(status)),
+          _SelectablePill(
+            label: tournamentStatusLabel(status),
             selected: selected == status,
-            selectedColor: context.colors.chipSelected,
-            backgroundColor: context.colors.chipBackground,
-            onSelected: (_) => onSelected(status),
+            onTap: () => onSelected(status),
           ),
       ],
     );

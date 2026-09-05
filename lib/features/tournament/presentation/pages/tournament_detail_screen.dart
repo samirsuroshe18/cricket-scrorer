@@ -129,13 +129,48 @@ class _TournamentDetailScreenState extends State<TournamentDetailScreen> {
             child: ListView(
               padding: 16.p,
               children: [
-                CricketText(
-                  text: data.name,
-                  style: context.textTheme.headlineSmall?.copyWith(
-                    color: context.colorScheme.onSurface,
-                  ),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // A tournament isn't a person or a team, so it gets no
+                    // monogram — unlike OrganizationDetailScreen's and
+                    // TeamProfileScreen's initials avatars, this circle
+                    // carries a representative icon instead. Same size and
+                    // background token as those avatars, so the header still
+                    // reads as the same family of screen.
+                    CircleAvatar(
+                      radius: 28,
+                      backgroundColor: context.colors.chipBackground,
+                      child: Icon(
+                        Icons.emoji_events_outlined,
+                        color: context.colorScheme.primary,
+                        size: 26,
+                      ),
+                    ),
+                    16.w,
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          CricketText(
+                            text: data.name,
+                            style: context.textTheme.headlineSmall?.copyWith(
+                              color: context.colorScheme.onSurface,
+                            ),
+                          ),
+                          4.h,
+                          CricketText(
+                            text: data.organization.name,
+                            style: context.textTheme.bodyMedium?.copyWith(
+                              color: context.colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
-                8.h,
+                12.h,
                 Row(
                   children: [
                     Container(
@@ -174,13 +209,6 @@ class _TournamentDetailScreenState extends State<TournamentDetailScreen> {
                       ),
                     ),
                   ],
-                ),
-                4.h,
-                CricketText(
-                  text: data.organization.name,
-                  style: context.textTheme.bodyMedium?.copyWith(
-                    color: context.colorScheme.onSurfaceVariant,
-                  ),
                 ),
                 24.h,
                 Row(

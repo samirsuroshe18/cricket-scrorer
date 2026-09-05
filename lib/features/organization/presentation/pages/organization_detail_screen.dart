@@ -540,15 +540,28 @@ class _TournamentRow extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 6),
           child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Expanded(
-                child: CricketText(
-                  text: tournament.name,
-                  style: context.textTheme.bodyMedium?.copyWith(
-                    color: context.colorScheme.secondary,
-                  ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    CricketText(
+                      text: tournament.name,
+                      style: context.textTheme.bodyMedium?.copyWith(
+                        color: context.colorScheme.secondary,
+                      ),
+                    ),
+                    CricketText(
+                      text: tournamentFormatLabel(tournament.format),
+                      style: context.textTheme.bodySmall?.copyWith(
+                        color: context.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
                 ),
               ),
+              8.w,
               Container(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 8,

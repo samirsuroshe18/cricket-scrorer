@@ -51,6 +51,19 @@ class _EligibleTeamRow extends StatelessWidget {
   final OrganizationTeamRef team;
   final VoidCallback onTap;
 
+  /// `shortName` if the team has one, else initials of `name` — the same
+  /// derivation `TeamProfileScreen`'s own `_TeamHeader._monogram()` uses,
+  /// so a team reads the same way here as it does on its own profile.
+  String _monogram() {
+    final short = team.shortName?.trim();
+    if (short != null && short.isNotEmpty) {
+      return short.substring(0, short.length.clamp(0, 3)).toUpperCase();
+    }
+    final words = team.name.trim().split(RegExp(r'\s+'));
+    final letters = words.take(2).map((w) => w.isEmpty ? '' : w[0]).join();
+    return letters.isEmpty ? '?' : letters.toUpperCase();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Material(
@@ -62,6 +75,18 @@ class _EligibleTeamRow extends StatelessWidget {
           padding: const EdgeInsets.symmetric(vertical: 8),
           child: Row(
             children: [
+              CircleAvatar(
+                radius: 16,
+                backgroundColor: context.colors.chipBackground,
+                child: CricketText(
+                  text: _monogram(),
+                  style: context.textTheme.labelSmall?.copyWith(
+                    color: context.colorScheme.primary,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              12.w,
               Expanded(
                 child: CricketText(
                   text: team.name,
