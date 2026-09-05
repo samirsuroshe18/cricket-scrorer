@@ -1,3 +1,6 @@
+import 'package:cricket_scorer/config/routes/app_routes.dart';
+import 'package:cricket_scorer/core/extensions/space_extension.dart';
+import 'package:cricket_scorer/core/extensions/theme_x.dart';
 import 'package:cricket_scorer/core/global/widgets/bootom_sheets/custom_bottomsheet.dart';
 import 'package:cricket_scorer/core/global/widgets/cricket_button.dart';
 import 'package:cricket_scorer/core/global/widgets/cricket_text.dart';
@@ -10,6 +13,10 @@ import 'package:cricket_scorer/features/organization/presentation/controllers/or
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+/// An organization's members and teams, and the owner-only actions to
+/// manage both — reached by tapping a row on `OrganizationsListScreen`.
+/// Shares `TeamProfileScreen`'s monogram-header and role-pill vocabulary so
+/// the two feel like one continuous surface.
 class OrganizationDetailScreen extends StatefulWidget {
   const OrganizationDetailScreen({super.key});
 
@@ -34,10 +41,11 @@ class _OrganizationDetailScreenState extends State<OrganizationDetailScreen> {
             controller: emailController,
             hintText: TranslationKeys.memberEmail.tr,
             labelText: TranslationKeys.memberEmail.tr,
+            prefixIcon: const Icon(Icons.alternate_email),
             keyboardType: TextInputType.emailAddress,
             isRequired: true,
           ),
-          const SizedBox(height: 20),
+          20.h,
           CricketButton(
             buttonText: TranslationKeys.add.tr,
             onPressed: () async {
@@ -73,15 +81,17 @@ class _OrganizationDetailScreenState extends State<OrganizationDetailScreen> {
             controller: nameController,
             hintText: TranslationKeys.teamName.tr,
             labelText: TranslationKeys.teamName.tr,
+            prefixIcon: const Icon(Icons.shield_outlined),
             isRequired: true,
           ),
-          const SizedBox(height: 12),
+          12.h,
           CricketTextField(
             controller: shortNameController,
             hintText: TranslationKeys.teamShortName.tr,
             labelText: TranslationKeys.teamShortName.tr,
+            prefixIcon: const Icon(Icons.short_text),
           ),
-          const SizedBox(height: 20),
+          20.h,
           CricketButton(
             buttonText: TranslationKeys.add.tr,
             onPressed: () async {
@@ -148,6 +158,12 @@ class _OrganizationDetailScreenState extends State<OrganizationDetailScreen> {
     }
   }
 
+  String _monogram(String name) {
+    final words = name.trim().split(RegExp(r'\s+'));
+    final letters = words.take(2).map((w) => w.isEmpty ? '' : w[0]).join();
+    return letters.isEmpty ? '?' : letters.toUpperCase();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -174,17 +190,26 @@ class _OrganizationDetailScreenState extends State<OrganizationDetailScreen> {
           }
           if (error != null && detail == null) {
             return Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  CricketText(text: error, textAlign: TextAlign.center),
-                  const SizedBox(height: 16),
-                  CricketButton(
-                    buttonText: TranslationKeys.retry.tr,
-                    onPressed: controller.loadDetail,
-                    width: 160,
-                  ),
-                ],
+              child: Padding(
+                padding: 24.p,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.error_outline,
+                      size: 56,
+                      color: context.colorScheme.onSurfaceVariant,
+                    ),
+                    16.h,
+                    CricketText(text: error, textAlign: TextAlign.center),
+                    24.h,
+                    CricketButton(
+                      buttonText: TranslationKeys.retry.tr,
+                      onPressed: controller.loadDetail,
+                      width: 160,
+                    ),
+                  ],
+                ),
               ),
             );
           }
@@ -193,74 +218,229 @@ class _OrganizationDetailScreenState extends State<OrganizationDetailScreen> {
           return RefreshIndicator(
             onRefresh: controller.loadDetail,
             child: ListView(
-              padding: const EdgeInsets.all(16),
+              padding: 16.p,
               children: [
-                CricketText(
-                  text: detail.name,
-                  style: Theme.of(context).textTheme.headlineSmall,
-                ),
-                const SizedBox(height: 24),
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    CricketText(
-                      text: TranslationKeys.members.tr,
-                      style: Theme.of(context).textTheme.titleSmall,
-                    ),
-                    if (controller.isOwner)
-                      TextButton(
-                        onPressed: _showAddMemberSheet,
-                        child: CricketText(text: TranslationKeys.addMember.tr),
+                    CircleAvatar(
+                      radius: 28,
+                      backgroundColor: context.colors.chipBackground,
+                      child: CricketText(
+                        text: _monogram(detail.name),
+                        style: context.textTheme.titleMedium?.copyWith(
+                          color: context.colorScheme.primary,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
+                    ),
+                    16.w,
+                    Expanded(
+                      child: CricketText(
+                        text: detail.name,
+                        style: context.textTheme.headlineSmall?.copyWith(
+                          color: context.colorScheme.onSurface,
+                        ),
+                      ),
+                    ),
                   ],
                 ),
-                for (final member in detail.members)
-                  ListTile(
-                    title: CricketText(text: member.name),
-                    subtitle: CricketText(text: member.role),
-                    trailing:
+                24.h,
+                _SectionHeader(
+                  title: TranslationKeys.members.tr,
+                  actionLabel: controller.isOwner
+                      ? TranslationKeys.addMember.tr
+                      : null,
+                  onAction: _showAddMemberSheet,
+                ),
+                8.h,
+                for (final member in detail.members) ...[
+                  _MemberRow(
+                    member: member,
+                    canAct:
                         controller.isOwner ||
-                            member.id == controller.currentUserId
-                        ? IconButton(
-                            icon: const Icon(Icons.close),
-                            onPressed: member.role == 'owner'
-                                ? null
-                                : () => _confirmRemoveMember(
-                                    member,
-                                    member.id == controller.currentUserId,
-                                  ),
-                          )
-                        : null,
+                        member.id == controller.currentUserId,
+                    onRemove: member.role == 'owner'
+                        ? null
+                        : () => _confirmRemoveMember(
+                            member,
+                            member.id == controller.currentUserId,
+                          ),
                   ),
-                const SizedBox(height: 24),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    CricketText(
-                      text: TranslationKeys.teams.tr,
-                      style: Theme.of(context).textTheme.titleSmall,
-                    ),
-                    if (controller.isOwner)
-                      TextButton(
-                        onPressed: _showAddTeamSheet,
-                        child: CricketText(text: TranslationKeys.addTeam.tr),
-                      ),
-                  ],
+                  4.h,
+                ],
+                24.h,
+                _SectionHeader(
+                  title: TranslationKeys.teams.tr,
+                  actionLabel: controller.isOwner
+                      ? TranslationKeys.addTeam.tr
+                      : null,
+                  onAction: _showAddTeamSheet,
                 ),
+                8.h,
                 if (detail.teams.isEmpty)
-                  CricketText(text: TranslationKeys.noTeamsYet.tr)
-                else
-                  for (final team in detail.teams)
-                    ListTile(
-                      title: CricketText(text: team.name),
-                      subtitle: team.shortName != null
-                          ? CricketText(text: team.shortName!)
-                          : null,
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    child: CricketText(
+                      text: TranslationKeys.noTeamsYet.tr,
+                      style: context.textTheme.bodyMedium?.copyWith(
+                        color: context.colorScheme.onSurfaceVariant,
+                      ),
                     ),
+                  )
+                else
+                  for (final team in detail.teams) ...[
+                    _TeamRow(team: team),
+                    4.h,
+                  ],
               ],
             ),
           );
         }),
+      ),
+    );
+  }
+}
+
+class _SectionHeader extends StatelessWidget {
+  const _SectionHeader({
+    required this.title,
+    this.actionLabel,
+    this.onAction,
+  });
+
+  final String title;
+  final String? actionLabel;
+  final VoidCallback? onAction;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        CricketText(text: title, style: context.textTheme.titleSmall),
+        if (actionLabel != null)
+          TextButton.icon(
+            onPressed: onAction,
+            icon: const Icon(Icons.add, size: 18),
+            label: CricketText(text: actionLabel!),
+          ),
+      ],
+    );
+  }
+}
+
+class _MemberRow extends StatelessWidget {
+  const _MemberRow({
+    required this.member,
+    required this.canAct,
+    required this.onRemove,
+  });
+
+  final OrganizationMemberRes member;
+  final bool canAct;
+
+  /// Null when this row can't be acted on at all (viewer is neither the
+  /// owner nor this row), or when this row is the owner (never removable
+  /// through this action) — in the second case the close icon still shows,
+  /// disabled, so the owner row visually matches its neighbours instead of
+  /// looking like a rendering gap.
+  final VoidCallback? onRemove;
+
+  @override
+  Widget build(BuildContext context) {
+    final isOwnerRow = member.role == 'owner';
+    final (roleLabel, roleColor) = isOwnerRow
+        ? ('owner', context.colors.statusInfo)
+        : ('member', context.colorScheme.onSurfaceVariant);
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Row(
+        children: [
+          Expanded(
+            child: CricketText(
+              text: member.name,
+              style: context.textTheme.bodyMedium?.copyWith(
+                color: context.colorScheme.secondary,
+              ),
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+            decoration: BoxDecoration(
+              color: isOwnerRow
+                  ? roleColor.withValues(alpha: 0.12)
+                  : null,
+              borderRadius: 8.radius,
+            ),
+            child: CricketText(
+              text: roleLabel,
+              style: context.textTheme.labelSmall?.copyWith(
+                color: roleColor,
+                fontWeight: isOwnerRow ? FontWeight.w600 : null,
+              ),
+            ),
+          ),
+          if (canAct) ...[
+            4.w,
+            IconButton(
+              visualDensity: VisualDensity.compact,
+              icon: Icon(
+                Icons.close,
+                size: 18,
+                color: context.colorScheme.onSurfaceVariant,
+              ),
+              onPressed: onRemove,
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _TeamRow extends StatelessWidget {
+  const _TeamRow({required this.team});
+
+  final OrganizationTeamRef team;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: 8.radius,
+        onTap: () =>
+            Get.toNamed<dynamic>(AppRoutes.teamProfilePath(team.id)),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 6),
+          child: Row(
+            children: [
+              Expanded(
+                child: CricketText(
+                  text: team.name,
+                  style: context.textTheme.bodyMedium?.copyWith(
+                    color: context.colorScheme.secondary,
+                  ),
+                ),
+              ),
+              if (team.shortName != null) ...[
+                CricketText(
+                  text: team.shortName!,
+                  style: context.textTheme.bodySmall?.copyWith(
+                    color: context.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+                8.w,
+              ],
+              Icon(
+                Icons.chevron_right,
+                size: 18,
+                color: context.colorScheme.onSurfaceVariant,
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
