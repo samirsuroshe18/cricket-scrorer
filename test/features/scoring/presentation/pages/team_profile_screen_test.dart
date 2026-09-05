@@ -9,6 +9,8 @@ import 'package:cricket_scorer/features/scoring/data/models/response/match_histo
 import 'package:cricket_scorer/features/scoring/data/models/response/team_profile_res.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/get_team_matches.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/get_team_profile.dart';
+import 'package:cricket_scorer/features/scoring/domain/usecases/get_scorer_candidates.dart';
+import 'package:cricket_scorer/features/scoring/domain/usecases/assign_scorer.dart';
 import 'package:cricket_scorer/features/scoring/presentation/bindings/team_profile_binding.dart';
 import 'package:cricket_scorer/features/scoring/presentation/pages/team_profile_screen.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -60,6 +62,21 @@ class _EmptyMatchesUseCase implements GetTeamMatchesUseCase {
       throw UnimplementedError('Not exercised in this test.');
 }
 
+/// This test never opens the assign-scorer sheet — TeamProfileBinding just
+/// needs both use cases resolvable via Get.find() for TeamProfileController
+/// to construct at all.
+class _UnusedGetScorerCandidatesUseCase implements GetScorerCandidatesUseCase {
+  @override
+  dynamic noSuchMethod(Invocation invocation) =>
+      throw UnimplementedError('Not exercised in this test.');
+}
+
+class _UnusedAssignScorerUseCase implements AssignScorerUseCase {
+  @override
+  dynamic noSuchMethod(Invocation invocation) =>
+      throw UnimplementedError('Not exercised in this test.');
+}
+
 void main() {
   setUp(() {
     Get.testMode = true;
@@ -95,6 +112,8 @@ void main() {
         }),
       );
       Get.put<GetTeamMatchesUseCase>(_EmptyMatchesUseCase());
+      Get.put<GetScorerCandidatesUseCase>(_UnusedGetScorerCandidatesUseCase());
+      Get.put<AssignScorerUseCase>(_UnusedAssignScorerUseCase());
 
       await tester.pumpWidget(
         GetMaterialApp(

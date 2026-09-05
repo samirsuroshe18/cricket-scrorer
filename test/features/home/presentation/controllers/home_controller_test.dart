@@ -50,6 +50,8 @@ import 'package:cricket_scorer/features/scoring/data/models/response/undo_ball_r
 import 'package:cricket_scorer/features/scoring/domain/repositories/match_repository.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/delete_match.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/get_match_history.dart';
+import 'package:cricket_scorer/features/scoring/domain/usecases/get_scorer_candidates.dart';
+import 'package:cricket_scorer/features/scoring/domain/usecases/assign_scorer.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart' hide Response;
@@ -382,6 +384,10 @@ void main() {
       logoutUseCase: LogoutUseCase(authRepository: _UnusedAuthRepository()),
       getMatchHistoryUseCase: GetMatchHistoryUseCase(matchRepository: repo),
       deleteMatchUseCase: DeleteMatchUseCase(matchRepository: repo),
+      getScorerCandidatesUseCase: GetScorerCandidatesUseCase(
+        matchRepository: repo,
+      ),
+      assignScorerUseCase: AssignScorerUseCase(matchRepository: repo),
     );
   });
 
@@ -557,6 +563,51 @@ void main() {
     },
   );
 
+  test('loadScorerCandidates returns the candidate list on success', () async {
+    repo.scorerCandidatesResponse = Either.result(
+      CricketResponse(
+        message: 'ok',
+        data: ScorerCandidatesRes(
+          candidates: [MatchUserRef(id: 'user-1', name: 'Raj')],
+        ),
+      ),
+    );
+
+    final candidates = await controller.loadScorerCandidates('match-1');
+
+    expect(candidates?.length, 1);
+    expect(candidates?.first.name, 'Raj');
+  });
+
+  test('assignScorer updates the cached match on success', () async {
+    repo.historyResponse = Either.result(
+      CricketResponse(
+        message: 'ok',
+        data: MatchHistoryRes(
+          matches: [_item('match-1')],
+          page: 1,
+          limit: 20,
+          total: 1,
+        ),
+      ),
+    );
+    await controller.loadHistory();
+    repo.assignScorerResponse = Either.result(
+      CricketResponse(
+        message: 'ok',
+        data: AssignScorerRes(
+          matchId: 'match-1',
+          assignedScorer: MatchUserRef(id: 'user-1', name: 'Raj'),
+        ),
+      ),
+    );
+
+    final success = await controller.assignScorer('match-1', 'user-1');
+
+    expect(success, isTrue);
+    expect(controller.matches.first.assignedScorer?.name, 'Raj');
+  });
+
   // logout used to only clear the local session and navigate to login on a
   // *successful* server response — a network hiccup, a server error, or the
   // call throwing outright all left the console apparently still signed in,
@@ -589,6 +640,12 @@ void main() {
           matchRepository: _FakeMatchRepository(),
         ),
         deleteMatchUseCase: DeleteMatchUseCase(
+          matchRepository: _FakeMatchRepository(),
+        ),
+        getScorerCandidatesUseCase: GetScorerCandidatesUseCase(
+          matchRepository: _FakeMatchRepository(),
+        ),
+        assignScorerUseCase: AssignScorerUseCase(
           matchRepository: _FakeMatchRepository(),
         ),
       );

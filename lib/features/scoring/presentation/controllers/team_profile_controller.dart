@@ -8,6 +8,8 @@ import 'package:cricket_scorer/features/scoring/data/models/response/match_histo
 import 'package:cricket_scorer/features/scoring/data/models/response/team_profile_res.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/get_team_matches.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/get_team_profile.dart';
+import 'package:cricket_scorer/features/scoring/domain/usecases/get_scorer_candidates.dart';
+import 'package:cricket_scorer/features/scoring/domain/usecases/assign_scorer.dart';
 import 'package:get/get.dart';
 
 /// The same still-live/terminal split `HomeController.openMatch` routes on —
@@ -25,11 +27,15 @@ const _liveStatuses = {'upcoming', 'live', 'innings_break'};
 class TeamProfileController extends GetxController {
   final GetTeamProfileUseCase getTeamProfileUseCase;
   final GetTeamMatchesUseCase getTeamMatchesUseCase;
+  final GetScorerCandidatesUseCase getScorerCandidatesUseCase;
+  final AssignScorerUseCase assignScorerUseCase;
 
   TeamProfileController({
     required this.teamId,
     required this.getTeamProfileUseCase,
     required this.getTeamMatchesUseCase,
+    required this.getScorerCandidatesUseCase,
+    required this.assignScorerUseCase,
   });
 
   static const int _pageSize = 20;
@@ -137,6 +143,41 @@ class TeamProfileController extends GetxController {
     } else {
       CricketSnackbar.showErrorMessage(response.fallback.message);
     }
+  }
+
+  /// The picker source for the assign-scorer sheet. Returns `null` (with
+  /// the server's own error already shown) on failure — a 403 here means
+  /// the viewer has no assign-authority on this match at all, which the
+  /// sheet caller treats the same as any other failure: don't open it.
+  Future<List<MatchUserRef>?> loadScorerCandidates(String matchId) async {
+    final response = await getScorerCandidatesUseCase(
+      params: GetScorerCandidatesParams(matchId: matchId),
+    );
+    if (response.isResult) {
+      return response.result.data?.candidates ?? [];
+    }
+    CricketSnackbar.showErrorMessage(response.fallback.message);
+    return null;
+  }
+
+  /// Assigns/reassigns (`scorerId`) or clears (`null`) the delegated
+  /// scorer, and patches the cached list entry in place so the card's
+  /// label updates without a full reload.
+  Future<bool> assignScorer(String matchId, String? scorerId) async {
+    final response = await assignScorerUseCase(
+      params: AssignScorerParams(matchId: matchId, scorerId: scorerId),
+    );
+    if (!response.isResult) {
+      CricketSnackbar.showErrorMessage(response.fallback.message);
+      return false;
+    }
+    final index = matches.indexWhere((item) => item.matchId == matchId);
+    if (index != -1) {
+      matches[index] = matches[index].copyWith(
+        assignedScorer: response.result.data?.assignedScorer,
+      );
+    }
+    return true;
   }
 
   /// Same routing rule as `HomeController.openMatch`: still-live states
