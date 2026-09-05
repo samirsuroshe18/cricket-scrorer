@@ -335,4 +335,35 @@ class TranslationKeys {
   static const String assignedToName = 'assigned_to_name';
   static const String tapToHandOffScoring = 'tap_to_hand_off_scoring';
   static const String currentScorer = 'current_scorer';
+
+  // Tournaments
+  static const String tournaments = 'tournaments';
+  static const String tournamentDetail = 'tournament_detail';
+  static const String addTournament = 'add_tournament';
+  static const String tournamentName = 'tournament_name';
+  static const String tournamentCreated = 'tournament_created';
+  static const String noTournamentsYet = 'no_tournaments_yet';
+  static const String formatKnockout = 'format_knockout';
+  static const String formatRoundRobin = 'format_round_robin';
+  static const String formatLeague = 'format_league';
+  static const String statusOngoing = 'status_ongoing';
+  static const String format = 'format';
+  static const String status = 'status';
+  static const String save = 'save';
+  static const String editTournament = 'edit_tournament';
+  static const String tournamentUpdated = 'tournament_updated';
+  static const String deleteTournament = 'delete_tournament';
+  static const String deleteTournamentConfirmTitle =
+      'delete_tournament_confirm_title';
+  static const String deleteTournamentConfirmMessage =
+      'delete_tournament_confirm_message';
+  static const String enrollTeam = 'enroll_team';
+  static const String noEligibleTeams = 'no_eligible_teams';
+  static const String teamEnrolled = 'team_enrolled';
+  static const String noTeamsInTournament = 'no_teams_in_tournament';
+  static const String removeTeam = 'remove_team';
+  static const String removeTeamConfirmTitle = 'remove_team_confirm_title';
+  static const String removeTeamConfirmMessage = 'remove_team_confirm_message';
+  static const String teamRemovedFromTournament =
+      'team_removed_from_tournament';
 }

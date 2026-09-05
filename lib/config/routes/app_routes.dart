@@ -57,4 +57,12 @@ class AppRoutes {
 
   static String organizationDetailPath(String orgId) =>
       '/organization/$orgId';
+
+  /// Registered with a GetX path parameter, same shape as
+  /// [organizationDetail]. Never navigate with this constant directly —
+  /// use [tournamentDetailPath].
+  static const String tournamentDetail = '/tournament/:tournamentId';
+
+  static String tournamentDetailPath(String tournamentId) =>
+      '/tournament/$tournamentId';
 }

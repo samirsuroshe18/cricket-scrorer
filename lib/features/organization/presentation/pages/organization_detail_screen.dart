@@ -10,6 +10,7 @@ import 'package:cricket_scorer/core/global/widgets/snackbars/cricket_snackbar.da
 import 'package:cricket_scorer/core/translations/translation_keys.dart';
 import 'package:cricket_scorer/features/organization/data/models/response/organization_detail_res.dart';
 import 'package:cricket_scorer/features/organization/presentation/controllers/organization_detail_controller.dart';
+import 'package:cricket_scorer/features/tournament/presentation/widget/format_status_chips.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -116,6 +117,58 @@ class _OrganizationDetailScreenState extends State<OrganizationDetailScreen> {
     );
     if (added == true) {
       CricketSnackbar.showSuccessMessage(TranslationKeys.teamAdded.tr);
+    }
+  }
+
+  Future<void> _showAddTournamentSheet() async {
+    final nameController = TextEditingController();
+    var selectedFormat = tournamentFormats.first;
+
+    final created = await CustomBottomSheet.wrapBottomSheet<bool>(
+      headlineText: TranslationKeys.addTournament.tr,
+      child: StatefulBuilder(
+        builder: (context, setSheetState) => Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            CricketTextField(
+              controller: nameController,
+              hintText: TranslationKeys.tournamentName.tr,
+              labelText: TranslationKeys.tournamentName.tr,
+              prefixIcon: const Icon(Icons.emoji_events_outlined),
+              isRequired: true,
+            ),
+            16.h,
+            FormatChoiceChips(
+              selected: selectedFormat,
+              onSelected: (format) =>
+                  setSheetState(() => selectedFormat = format),
+            ),
+            20.h,
+            CricketButton(
+              buttonText: TranslationKeys.create.tr,
+              onPressed: () async {
+                final name = nameController.text.trim();
+                if (name.isEmpty) return;
+                final success = await controller.createTournament(
+                  name,
+                  selectedFormat,
+                );
+                if (success) {
+                  Get.back<bool>(result: true);
+                } else {
+                  CricketSnackbar.showErrorMessage(
+                    TranslationKeys.somethingWentWrong.tr,
+                  );
+                }
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+    if (created == true) {
+      CricketSnackbar.showSuccessMessage(TranslationKeys.tournamentCreated.tr);
     }
   }
 
@@ -292,6 +345,30 @@ class _OrganizationDetailScreenState extends State<OrganizationDetailScreen> {
                     _TeamRow(team: team),
                     4.h,
                   ],
+                24.h,
+                _SectionHeader(
+                  title: TranslationKeys.tournaments.tr,
+                  actionLabel: controller.isOwner
+                      ? TranslationKeys.addTournament.tr
+                      : null,
+                  onAction: _showAddTournamentSheet,
+                ),
+                8.h,
+                if (detail.tournaments.isEmpty)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    child: CricketText(
+                      text: TranslationKeys.noTournamentsYet.tr,
+                      style: context.textTheme.bodyMedium?.copyWith(
+                        color: context.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  )
+                else
+                  for (final tournament in detail.tournaments) ...[
+                    _TournamentRow(tournament: tournament),
+                    4.h,
+                  ],
               ],
             ),
           );
@@ -433,6 +510,66 @@ class _TeamRow extends StatelessWidget {
                 ),
                 8.w,
               ],
+              Icon(
+                Icons.chevron_right,
+                size: 18,
+                color: context.colorScheme.onSurfaceVariant,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _TournamentRow extends StatelessWidget {
+  const _TournamentRow({required this.tournament});
+
+  final OrganizationTournamentRef tournament;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: 8.radius,
+        onTap: () => Get.toNamed<dynamic>(
+          AppRoutes.tournamentDetailPath(tournament.id),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 6),
+          child: Row(
+            children: [
+              Expanded(
+                child: CricketText(
+                  text: tournament.name,
+                  style: context.textTheme.bodyMedium?.copyWith(
+                    color: context.colorScheme.secondary,
+                  ),
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 8,
+                  vertical: 3,
+                ),
+                decoration: BoxDecoration(
+                  color: tournamentStatusColor(
+                    context,
+                    tournament.status,
+                  ).withValues(alpha: 0.12),
+                  borderRadius: 8.radius,
+                ),
+                child: CricketText(
+                  text: tournamentStatusLabel(tournament.status),
+                  style: context.textTheme.labelSmall?.copyWith(
+                    color: tournamentStatusColor(context, tournament.status),
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+              8.w,
               Icon(
                 Icons.chevron_right,
                 size: 18,
