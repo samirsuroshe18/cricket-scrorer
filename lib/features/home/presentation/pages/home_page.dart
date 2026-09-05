@@ -92,6 +92,11 @@ class HomePage extends GetView<HomeController> {
             return const _EmptyState();
           }
 
+          // Read once per rebuild of this list, not once per card — a plain
+          // synchronous SharedPreferences read/decode, but no reason to
+          // repeat it `matches.length` times over.
+          final uid = currentUserId();
+
           return RefreshIndicator(
             onRefresh: controller.loadHistory,
             child: NotificationListener<ScrollNotification>(
@@ -124,7 +129,7 @@ class HomePage extends GetView<HomeController> {
                   final item = controller.matches[index];
                   return MatchHistoryCard(
                     item: item,
-                    currentUserId: currentUserId(),
+                    currentUserId: uid,
                     onTap: () => controller.openMatch(item),
                     onDelete: () => unawaited(_confirmDelete(controller, item)),
                     onAssignScorer: () => unawaited(

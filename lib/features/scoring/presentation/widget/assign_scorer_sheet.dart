@@ -20,8 +20,7 @@ import 'package:get/get.dart';
 /// the match has no organization-linked team to draw candidates from.
 Future<void> showAssignScorerSheet({
   required MatchHistoryItem item,
-  required Future<List<MatchUserRef>?> Function(String matchId)
-  loadCandidates,
+  required Future<List<MatchUserRef>?> Function(String matchId) loadCandidates,
   required Future<bool> Function(String matchId, String? scorerId) onAssign,
 }) async {
   final candidates = await loadCandidates(item.matchId);
@@ -30,6 +29,11 @@ Future<void> showAssignScorerSheet({
     CricketSnackbar.showErrorMessage(TranslationKeys.noScorerCandidates.tr);
     return;
   }
+
+  // Tracks which action actually succeeded so the closing snackbar says the
+  // right thing — "Scorer assigned" and "Scorer unassigned" are genuinely
+  // different outcomes for the person reading it.
+  bool wasCleared = false;
 
   final assigned = await CustomBottomSheet.wrapBottomSheet<bool>(
     headlineText: TranslationKeys.assignScorer.tr,
@@ -57,13 +61,18 @@ Future<void> showAssignScorerSheet({
               ),
             if (item.assignedScorer != null) ...[
               12.h,
-              Divider(color: context.colorScheme.outline.withValues(alpha: 0.2)),
+              Divider(
+                color: context.colorScheme.outline.withValues(alpha: 0.2),
+              ),
               12.h,
               CricketOutlinedButton(
                 buttonName: TranslationKeys.removeAssignment.tr,
                 onPressed: () async {
                   final success = await onAssign(item.matchId, null);
-                  if (success) Get.back<bool>(result: true);
+                  if (success) {
+                    wasCleared = true;
+                    Get.back<bool>(result: true);
+                  }
                 },
               ),
             ],
@@ -74,7 +83,11 @@ Future<void> showAssignScorerSheet({
   );
 
   if (assigned == true) {
-    CricketSnackbar.showSuccessMessage(TranslationKeys.scorerAssigned.tr);
+    CricketSnackbar.showSuccessMessage(
+      wasCleared
+          ? TranslationKeys.scorerUnassigned.tr
+          : TranslationKeys.scorerAssigned.tr,
+    );
   }
 }
 
