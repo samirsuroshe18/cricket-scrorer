@@ -366,7 +366,10 @@ class _OrganizationDetailScreenState extends State<OrganizationDetailScreen> {
                   )
                 else
                   for (final tournament in detail.tournaments) ...[
-                    _TournamentRow(tournament: tournament),
+                    _TournamentRow(
+                      tournament: tournament,
+                      onReturn: controller.loadDetail,
+                    ),
                     4.h,
                   ],
               ],
@@ -524,9 +527,16 @@ class _TeamRow extends StatelessWidget {
 }
 
 class _TournamentRow extends StatelessWidget {
-  const _TournamentRow({required this.tournament});
+  const _TournamentRow({required this.tournament, required this.onReturn});
 
   final OrganizationTournamentRef tournament;
+
+  /// Called after popping back from the tournament's detail screen —
+  /// renaming, re-statusing, or deleting a tournament there doesn't
+  /// otherwise propagate back to this screen's own cached list (found via
+  /// on-device testing: a deleted tournament stayed visible here until a
+  /// manual pull-to-refresh).
+  final VoidCallback onReturn;
 
   @override
   Widget build(BuildContext context) {
@@ -534,9 +544,12 @@ class _TournamentRow extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         borderRadius: 8.radius,
-        onTap: () => Get.toNamed<dynamic>(
-          AppRoutes.tournamentDetailPath(tournament.id),
-        ),
+        onTap: () async {
+          await Get.toNamed<dynamic>(
+            AppRoutes.tournamentDetailPath(tournament.id),
+          );
+          onReturn();
+        },
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 6),
           child: Row(
