@@ -12,10 +12,10 @@ void main() {
     tester,
   ) async {
     await tester.pumpWidget(
-      MaterialApp(
+      const MaterialApp(
         home: Scaffold(
           body: CricketTextField(
-            autofillHints: const [AutofillHints.email, AutofillHints.username],
+            autofillHints: [AutofillHints.email, AutofillHints.username],
           ),
         ),
       ),

@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:cricket_scorer/config/routes/app_routes.dart';
 import 'package:cricket_scorer/core/extensions/space_extension.dart';
 import 'package:cricket_scorer/core/extensions/theme_x.dart';
 import 'package:cricket_scorer/core/global/widgets/cricket_button.dart';
@@ -263,11 +264,16 @@ class _InningsScorecard extends StatelessWidget {
                 DataRow(
                   cells: [
                     DataCell(
-                      CricketText(
-                        text: line.isNotOut
-                            ? line.playerName
-                            : '${line.playerName} '
-                                  '(${_dismissalLabel(line.dismissalType)})',
+                      GestureDetector(
+                        onTap: () => Get.toNamed<dynamic>(
+                          AppRoutes.playerStatsPath(line.playerId),
+                        ),
+                        child: CricketText(
+                          text: line.isNotOut
+                              ? line.playerName
+                              : '${line.playerName} '
+                                    '(${_dismissalLabel(line.dismissalType)})',
+                        ),
                       ),
                     ),
                     DataCell(CricketText(text: '${line.runs}')),
@@ -321,7 +327,14 @@ class _InningsScorecard extends StatelessWidget {
               for (final line in innings.bowlingScores)
                 DataRow(
                   cells: [
-                    DataCell(CricketText(text: line.playerName)),
+                    DataCell(
+                      GestureDetector(
+                        onTap: () => Get.toNamed<dynamic>(
+                          AppRoutes.playerStatsPath(line.playerId),
+                        ),
+                        child: CricketText(text: line.playerName),
+                      ),
+                    ),
                     DataCell(CricketText(text: line.overs)),
                     DataCell(CricketText(text: '${line.maidens}')),
                     DataCell(CricketText(text: '${line.runs}')),
