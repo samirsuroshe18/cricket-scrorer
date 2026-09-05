@@ -12,8 +12,10 @@ import 'package:cricket_scorer/core/global/widgets/cricket_text.dart';
 import 'package:cricket_scorer/core/global/widgets/custom_app_bar.dart';
 import 'package:cricket_scorer/core/services/language_service.dart';
 import 'package:cricket_scorer/core/translations/translation_keys.dart';
+import 'package:cricket_scorer/core/utils/current_user.dart';
 import 'package:cricket_scorer/features/home/presentation/controllers/home_controller.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/match_history_res.dart';
+import 'package:cricket_scorer/features/scoring/presentation/widget/assign_scorer_sheet.dart';
 import 'package:cricket_scorer/features/scoring/presentation/widget/match_history_card.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -122,8 +124,16 @@ class HomePage extends GetView<HomeController> {
                   final item = controller.matches[index];
                   return MatchHistoryCard(
                     item: item,
+                    currentUserId: currentUserId(),
                     onTap: () => controller.openMatch(item),
                     onDelete: () => unawaited(_confirmDelete(controller, item)),
+                    onAssignScorer: () => unawaited(
+                      showAssignScorerSheet(
+                        item: item,
+                        loadCandidates: controller.loadScorerCandidates,
+                        onAssign: controller.assignScorer,
+                      ),
+                    ),
                     isDeleting: () =>
                         controller.deletingMatchIds.contains(item.matchId),
                   );

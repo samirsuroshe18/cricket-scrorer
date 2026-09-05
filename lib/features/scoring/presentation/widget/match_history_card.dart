@@ -17,7 +17,9 @@ class MatchHistoryCard extends StatelessWidget {
     super.key,
     required this.item,
     required this.onTap,
+    required this.currentUserId,
     this.onDelete,
+    this.onAssignScorer,
     this.isDeleting,
     this.highlightTeamId,
   });
@@ -25,9 +27,19 @@ class MatchHistoryCard extends StatelessWidget {
   final MatchHistoryItem item;
   final VoidCallback onTap;
 
+  /// Needed to tell "assigned by someone else" apart from "assigned by me"
+  /// for [_delegationLabel] — see docs/api.md's delegated-scoring contract.
+  final String currentUserId;
+
   /// Null on `TeamProfileScreen`'s list — that screen offers no delete
   /// affordance, only `HomePage`'s own history does.
   final VoidCallback? onDelete;
+
+  /// Null hides the assign-scorer icon entirely — neither screen that uses
+  /// this card should pass null in practice (both wire it up), but keeping
+  /// it optional matches [onDelete]'s own nullable shape rather than
+  /// forcing every future caller of this widget to have an opinion.
+  final VoidCallback? onAssignScorer;
 
   /// A callback rather than a plain `bool`, same reason as before: the
   /// caller's `deletingMatchIds` is reactive and this card needs to read it
@@ -83,10 +95,23 @@ class MatchHistoryCard extends StatelessWidget {
     );
   }
 
+  String? _delegationLabel() {
+    final creator = item.createdBy;
+    if (creator != null && creator.id != currentUserId) {
+      return TranslationKeys.assignedByName.trParams({'name': creator.name});
+    }
+    final scorer = item.assignedScorer;
+    if (scorer != null) {
+      return TranslationKeys.assignedToName.trParams({'name': scorer.name});
+    }
+    return null;
+  }
+
   @override
   Widget build(BuildContext context) {
     final delete = onDelete;
     final deleting = isDeleting;
+    final delegationLabel = _delegationLabel();
 
     return Material(
       color: context.colorScheme.surfaceContainerHighest,
@@ -105,6 +130,17 @@ class MatchHistoryCard extends StatelessWidget {
                   Expanded(child: _buildTitle(context)),
                   8.w,
                   _StatusBadge(status: item.status),
+                  if (onAssignScorer != null)
+                    IconButton(
+                      tooltip: TranslationKeys.assignScorer.tr,
+                      visualDensity: VisualDensity.compact,
+                      icon: Icon(
+                        Icons.person_add_alt,
+                        size: 20,
+                        color: context.colorScheme.onSurfaceVariant,
+                      ),
+                      onPressed: onAssignScorer,
+                    ),
                   if (delete != null)
                     Obx(
                       () => (deleting?.call() ?? false)
@@ -140,6 +176,15 @@ class MatchHistoryCard extends StatelessWidget {
                   color: context.colorScheme.onSurfaceVariant,
                 ),
               ),
+              if (delegationLabel != null) ...[
+                4.h,
+                CricketText(
+                  text: delegationLabel,
+                  style: context.textTheme.bodySmall?.copyWith(
+                    color: context.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
             ],
           ),
         ),

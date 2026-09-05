@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cricket_scorer/config/routes/app_routes.dart';
 import 'package:cricket_scorer/core/extensions/space_extension.dart';
 import 'package:cricket_scorer/core/extensions/theme_x.dart';
@@ -5,8 +7,10 @@ import 'package:cricket_scorer/core/global/widgets/cricket_button.dart';
 import 'package:cricket_scorer/core/global/widgets/cricket_text.dart';
 import 'package:cricket_scorer/core/global/widgets/custom_app_bar.dart';
 import 'package:cricket_scorer/core/translations/translation_keys.dart';
+import 'package:cricket_scorer/core/utils/current_user.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/team_profile_res.dart';
 import 'package:cricket_scorer/features/scoring/presentation/controllers/team_profile_controller.dart';
+import 'package:cricket_scorer/features/scoring/presentation/widget/assign_scorer_sheet.dart';
 import 'package:cricket_scorer/features/scoring/presentation/widget/match_history_card.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -35,6 +39,7 @@ class _TeamProfileScreenState extends State<TeamProfileScreen> {
   late final String _teamId = Get.parameters['teamId']?.trim() ?? '';
   late final TeamProfileController controller =
       Get.find<TeamProfileController>(tag: _teamId);
+  late final String _currentUserId = currentUserId();
 
   @override
   Widget build(BuildContext context) {
@@ -109,7 +114,15 @@ class _TeamProfileScreenState extends State<TeamProfileScreen> {
                         for (final item in controller.matches) ...[
                           MatchHistoryCard(
                             item: item,
+                            currentUserId: _currentUserId,
                             onTap: () => controller.openMatch(item),
+                            onAssignScorer: () => unawaited(
+                              showAssignScorerSheet(
+                                item: item,
+                                loadCandidates: controller.loadScorerCandidates,
+                                onAssign: controller.assignScorer,
+                              ),
+                            ),
                             highlightTeamId: controller.teamId,
                           ),
                           12.h,

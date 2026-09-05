@@ -282,4 +282,12 @@ Map<String, String> hi = {
   TranslationKeys.roleAllrounder: 'ऑलराउंडर',
   TranslationKeys.roleWicketkeeper: 'विकेटकीपर',
   TranslationKeys.roleUnknown: 'भूमिका अज्ञात',
+
+  TranslationKeys.assignScorer: 'स्कोरर नियुक्त करें',
+  TranslationKeys.removeAssignment: 'नियुक्ति हटाएं',
+  TranslationKeys.noScorerCandidates: 'इस मैच में कोई संगठन-लिंक्ड टीम नहीं है',
+  TranslationKeys.scorerAssigned: 'स्कोरर नियुक्त किया गया',
+  TranslationKeys.scorerUnassigned: 'स्कोरर हटाया गया',
+  TranslationKeys.assignedByName: '@name द्वारा नियुक्त',
+  TranslationKeys.assignedToName: '@name को सौंपा गया',
 };

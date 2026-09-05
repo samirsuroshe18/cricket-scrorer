@@ -324,4 +324,13 @@ class TranslationKeys {
   static const String deleteOrganizationConfirmMessage =
       'delete_organization_confirm_message';
   static const String create = 'create';
+
+  // Delegated scoring
+  static const String assignScorer = 'assign_scorer';
+  static const String removeAssignment = 'remove_assignment';
+  static const String noScorerCandidates = 'no_scorer_candidates';
+  static const String scorerAssigned = 'scorer_assigned';
+  static const String scorerUnassigned = 'scorer_unassigned';
+  static const String assignedByName = 'assigned_by_name';
+  static const String assignedToName = 'assigned_to_name';
 }

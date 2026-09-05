@@ -282,4 +282,12 @@ Map<String, String> mr = {
   TranslationKeys.roleAllrounder: 'अष्टपैलू',
   TranslationKeys.roleWicketkeeper: 'यष्टिरक्षक',
   TranslationKeys.roleUnknown: 'भूमिका अज्ञात',
+
+  TranslationKeys.assignScorer: 'स्कोअरर नेमा',
+  TranslationKeys.removeAssignment: 'नेमणूक काढा',
+  TranslationKeys.noScorerCandidates: 'या सामन्यात कोणताही संस्था-लिंक्ड संघ नाही',
+  TranslationKeys.scorerAssigned: 'स्कोअरर नेमला',
+  TranslationKeys.scorerUnassigned: 'स्कोअरर काढला',
+  TranslationKeys.assignedByName: '@name यांनी नेमले',
+  TranslationKeys.assignedToName: '@name कडे सोपवले',
 };

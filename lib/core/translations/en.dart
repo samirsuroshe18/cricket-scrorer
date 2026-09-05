@@ -281,4 +281,13 @@ Map<String, String> en = {
   TranslationKeys.roleAllrounder: 'All-rounder',
   TranslationKeys.roleWicketkeeper: 'Wicketkeeper',
   TranslationKeys.roleUnknown: 'Role unknown',
+
+  TranslationKeys.assignScorer: 'Assign scorer',
+  TranslationKeys.removeAssignment: 'Remove assignment',
+  TranslationKeys.noScorerCandidates:
+      'No organization-linked team on this match',
+  TranslationKeys.scorerAssigned: 'Scorer assigned',
+  TranslationKeys.scorerUnassigned: 'Scorer unassigned',
+  TranslationKeys.assignedByName: 'Assigned by @name',
+  TranslationKeys.assignedToName: 'Assigned to @name',
 };

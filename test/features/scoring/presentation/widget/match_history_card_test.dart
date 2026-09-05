@@ -31,6 +31,7 @@ void main() {
             name: '/home',
             page: () => MatchHistoryCard(
               item: _item(),
+              currentUserId: 'viewer-1',
               onTap: () => cardTapped = true,
             ),
           ),
@@ -57,6 +58,7 @@ void main() {
         theme: AppTheme.lightTheme,
         home: MatchHistoryCard(
           item: _item(),
+          currentUserId: 'viewer-1',
           onTap: () {},
           highlightTeamId: 'team-a',
         ),
