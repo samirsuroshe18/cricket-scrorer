@@ -5,6 +5,7 @@ import 'package:cricket_scorer/features/tournament/domain/usecases/delete_tourna
 import 'package:cricket_scorer/features/tournament/domain/usecases/enroll_tournament_team.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/generate_fixtures.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/get_fixtures.dart';
+import 'package:cricket_scorer/features/tournament/domain/usecases/get_standings.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/get_tournament.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/remove_tournament_team.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/resolve_fixture.dart';
@@ -36,6 +37,7 @@ class _FakeTournamentDetailController extends TournamentDetailController {
         generateFixturesUseCase: _UnusedGenerateFixturesUseCase(),
         startFixtureMatchUseCase: _UnusedStartFixtureMatchUseCase(),
         resolveFixtureUseCase: _UnusedResolveFixtureUseCase(),
+        getStandingsUseCase: _UnusedGetStandingsUseCase(),
       ) {
     detail.value = TournamentDetailRes(
       id: 'tournament-1',
@@ -110,6 +112,11 @@ class _UnusedStartFixtureMatchUseCase implements StartFixtureMatchUseCase {
 }
 
 class _UnusedResolveFixtureUseCase implements ResolveFixtureUseCase {
+  @override
+  dynamic noSuchMethod(Invocation invocation) => throw UnimplementedError();
+}
+
+class _UnusedGetStandingsUseCase implements GetStandingsUseCase {
   @override
   dynamic noSuchMethod(Invocation invocation) => throw UnimplementedError();
 }

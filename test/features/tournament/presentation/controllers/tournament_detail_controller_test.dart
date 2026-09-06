@@ -5,11 +5,13 @@ import 'package:cricket_scorer/features/organization/data/models/response/organi
 import 'package:cricket_scorer/features/organization/domain/usecases/get_organization.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/create_match_res.dart';
 import 'package:cricket_scorer/features/tournament/data/models/response/fixture_res.dart';
+import 'package:cricket_scorer/features/tournament/data/models/response/standings_row_res.dart';
 import 'package:cricket_scorer/features/tournament/data/models/response/tournament_detail_res.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/delete_tournament.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/enroll_tournament_team.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/generate_fixtures.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/get_fixtures.dart';
+import 'package:cricket_scorer/features/tournament/domain/usecases/get_standings.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/get_tournament.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/remove_tournament_team.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/resolve_fixture.dart';
@@ -214,6 +216,23 @@ class _FakeResolveFixtureUseCase implements ResolveFixtureUseCase {
       throw UnimplementedError('Not exercised in this test.');
 }
 
+class _FakeGetStandingsUseCase implements GetStandingsUseCase {
+  Either<CricketResponse<List<StandingsRowRes>>, CricketFailure>? response;
+
+  @override
+  Future<Either<CricketResponse<List<StandingsRowRes>>, CricketFailure>> call({
+    GetStandingsParams? params,
+  }) async {
+    final result = response;
+    if (result == null) throw UnimplementedError('Not exercised in this test.');
+    return result;
+  }
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) =>
+      throw UnimplementedError('Not exercised in this test.');
+}
+
 void main() {
   late _FakeGetTournamentUseCase getTournamentUseCase;
   late _FakeGetOrganizationUseCase getOrganizationUseCase;
@@ -225,6 +244,7 @@ void main() {
   late _FakeGenerateFixturesUseCase generateFixturesUseCase;
   late _FakeStartFixtureMatchUseCase startFixtureMatchUseCase;
   late _FakeResolveFixtureUseCase resolveFixtureUseCase;
+  late _FakeGetStandingsUseCase getStandingsUseCase;
   late TournamentDetailController controller;
 
   TournamentDetailController build(String userId) => TournamentDetailController(
@@ -240,6 +260,7 @@ void main() {
     generateFixturesUseCase: generateFixturesUseCase,
     startFixtureMatchUseCase: startFixtureMatchUseCase,
     resolveFixtureUseCase: resolveFixtureUseCase,
+    getStandingsUseCase: getStandingsUseCase,
   );
 
   setUp(() {
@@ -260,6 +281,7 @@ void main() {
     generateFixturesUseCase = _FakeGenerateFixturesUseCase();
     startFixtureMatchUseCase = _FakeStartFixtureMatchUseCase();
     resolveFixtureUseCase = _FakeResolveFixtureUseCase();
+    getStandingsUseCase = _FakeGetStandingsUseCase();
     controller = build('owner-1');
   });
 
@@ -521,5 +543,42 @@ void main() {
     final errorMessage = await controller.resolveFixture('fixture-1', 'team-1');
 
     expect(errorMessage, isNull);
+  });
+
+  test('loadStandings populates standings, sorted as the backend returned them', () async {
+    getStandingsUseCase.response = Either.result(
+      CricketResponse(
+        message: 'ok',
+        data: [
+          StandingsRowRes(
+            teamId: 'team-1', teamName: 'Harbor CC',
+            played: 2, won: 2, lost: 0, tied: 0, noResult: 0, points: 4, nrr: 1.5,
+          ),
+          StandingsRowRes(
+            teamId: 'team-2', teamName: 'Lakeside XI',
+            played: 2, won: 0, lost: 2, tied: 0, noResult: 0, points: 0, nrr: -1.5,
+          ),
+        ],
+      ),
+    );
+
+    await controller.loadStandings();
+
+    expect(controller.standingsLoading.value, isFalse);
+    expect(controller.standingsError.value, isNull);
+    expect(controller.standings.map((r) => r.teamId), ['team-1', 'team-2']);
+    expect(controller.standings.first.points, 4);
+  });
+
+  test('loadStandings sets the backend error message on failure, leaves standings empty', () async {
+    getStandingsUseCase.response = Either.fallback(
+      CricketBadRequestFailure(statusCode: 400, message: "Standings aren't available for a knockout tournament"),
+    );
+
+    await controller.loadStandings();
+
+    expect(controller.standingsLoading.value, isFalse);
+    expect(controller.standingsError.value, "Standings aren't available for a knockout tournament");
+    expect(controller.standings, isEmpty);
   });
 }

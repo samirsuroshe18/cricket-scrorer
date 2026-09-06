@@ -187,42 +187,56 @@ class _TournamentDetailScreenState extends State<TournamentDetailScreen> {
                 ),
                 12.h,
                 Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 3,
-                      ),
-                      decoration: BoxDecoration(
-                        color: context.colors.chipBackground,
-                        borderRadius: 8.radius,
-                      ),
-                      child: CricketText(
-                        text: tournamentFormatLabel(data.format),
-                        style: context.textTheme.labelSmall,
-                      ),
-                    ),
-                    8.w,
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 3,
-                      ),
-                      decoration: BoxDecoration(
-                        color: tournamentStatusColor(
-                          context,
-                          data.status,
-                        ).withValues(alpha: 0.12),
-                        borderRadius: 8.radius,
-                      ),
-                      child: CricketText(
-                        text: tournamentStatusLabel(data.status),
-                        style: context.textTheme.labelSmall?.copyWith(
-                          color: tournamentStatusColor(context, data.status),
-                          fontWeight: FontWeight.w600,
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 3,
+                          ),
+                          decoration: BoxDecoration(
+                            color: context.colors.chipBackground,
+                            borderRadius: 8.radius,
+                          ),
+                          child: CricketText(
+                            text: tournamentFormatLabel(data.format),
+                            style: context.textTheme.labelSmall,
+                          ),
                         ),
-                      ),
+                        8.w,
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 3,
+                          ),
+                          decoration: BoxDecoration(
+                            color: tournamentStatusColor(
+                              context,
+                              data.status,
+                            ).withValues(alpha: 0.12),
+                            borderRadius: 8.radius,
+                          ),
+                          child: CricketText(
+                            text: tournamentStatusLabel(data.status),
+                            style: context.textTheme.labelSmall?.copyWith(
+                              color: tournamentStatusColor(context, data.status),
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
+                    // Knockout is a bracket, not a table — there's no
+                    // standings screen to link to for it.
+                    if (data.format != 'knockout')
+                      TextButton(
+                        onPressed: () => Get.toNamed<dynamic>(
+                          AppRoutes.tournamentStandingsPath(_tournamentId),
+                        ),
+                        child: CricketText(text: TranslationKeys.standings.tr),
+                      ),
                   ],
                 ),
                 24.h,

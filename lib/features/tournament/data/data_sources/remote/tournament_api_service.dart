@@ -103,4 +103,12 @@ class TournamentApiService {
       data: params.toJson(),
     );
   }
+
+  Future<Either<ApiResponseModel, CricketFailure>> getStandings({
+    required String tournamentId,
+  }) async {
+    return await apiClient.get(
+      endpoint: tournamentEndpoint.standings(tournamentId),
+    );
+  }
 }

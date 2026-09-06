@@ -9,6 +9,7 @@ import 'package:cricket_scorer/features/tournament/data/models/request/start_fix
 import 'package:cricket_scorer/features/tournament/data/models/request/resolve_fixture_req.dart';
 import 'package:cricket_scorer/features/tournament/data/models/request/update_tournament_req.dart';
 import 'package:cricket_scorer/features/tournament/data/models/response/fixture_res.dart';
+import 'package:cricket_scorer/features/tournament/data/models/response/standings_row_res.dart';
 import 'package:cricket_scorer/features/tournament/data/models/response/tournament_detail_res.dart';
 import 'package:cricket_scorer/features/tournament/domain/repositories/tournament_repository.dart';
 
@@ -194,6 +195,27 @@ class TournamentRepositoryImpl implements TournamentRepository {
     if (response.isResult) {
       return Either.result(
         CricketResponse(data: null, message: response.result.message),
+      );
+    }
+    return Either.fallback(response.fallback);
+  }
+
+  @override
+  Future<Either<CricketResponse<List<StandingsRowRes>>, CricketFailure>>
+  getStandings({required String tournamentId}) async {
+    final response = await tournamentApiService.getStandings(
+      tournamentId: tournamentId,
+    );
+    if (response.isResult) {
+      final data = response.result.data as Map<String, dynamic>;
+      final standingsJson = data['standings'] as List<dynamic>;
+      return Either.result(
+        CricketResponse(
+          data: standingsJson
+              .map((json) => StandingsRowRes.fromJson(json as Map<String, dynamic>))
+              .toList(),
+          message: response.result.message,
+        ),
       );
     }
     return Either.fallback(response.fallback);

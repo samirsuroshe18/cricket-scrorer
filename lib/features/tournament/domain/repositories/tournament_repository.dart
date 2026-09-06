@@ -8,6 +8,7 @@ import 'package:cricket_scorer/features/tournament/data/models/request/resolve_f
 import 'package:cricket_scorer/features/tournament/data/models/request/start_fixture_match_req.dart';
 import 'package:cricket_scorer/features/tournament/data/models/request/update_tournament_req.dart';
 import 'package:cricket_scorer/features/tournament/data/models/response/fixture_res.dart';
+import 'package:cricket_scorer/features/tournament/data/models/response/standings_row_res.dart';
 import 'package:cricket_scorer/features/tournament/data/models/response/tournament_detail_res.dart';
 
 abstract class TournamentRepository {
@@ -70,4 +71,10 @@ abstract class TournamentRepository {
     required String fixtureId,
     required ResolveFixtureReq params,
   });
+
+  /// `GET /v1/tournament/:tournamentId/standings` — any org member.
+  /// round_robin/league only; a knockout tournament fails with
+  /// `STANDINGS_NOT_APPLICABLE`.
+  Future<Either<CricketResponse<List<StandingsRowRes>>, CricketFailure>>
+  getStandings({required String tournamentId});
 }

@@ -22,4 +22,7 @@ class TournamentEndpoint {
 
   String startFixtureMatch(String tournamentId, String fixtureId) =>
       '/v1/tournament/$tournamentId/fixtures/$fixtureId/start-match';
+
+  String standings(String tournamentId) =>
+      '/v1/tournament/$tournamentId/standings';
 }

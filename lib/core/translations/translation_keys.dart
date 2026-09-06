@@ -379,4 +379,15 @@ class TranslationKeys {
   static const String fixturesGenerated = 'fixtures_generated';
   static const String fixtureResolved = 'fixture_resolved';
   static const String wonLabel = 'won_label';
+
+  static const String standings = 'standings';
+  static const String noStandingsYet = 'no_standings_yet';
+  static const String rankShort = 'rank_short';
+  static const String playedShort = 'played_short';
+  static const String wonShort = 'won_short';
+  static const String lostShort = 'lost_short';
+  static const String tiedShort = 'tied_short';
+  static const String noResultShort = 'no_result_short';
+  static const String pointsShort = 'points_short';
+  static const String nrrShort = 'nrr_short';
 }
