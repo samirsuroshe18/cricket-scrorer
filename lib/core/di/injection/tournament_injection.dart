@@ -6,8 +6,12 @@ import 'package:cricket_scorer/features/tournament/domain/repositories/tournamen
 import 'package:cricket_scorer/features/tournament/domain/usecases/create_tournament.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/delete_tournament.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/enroll_tournament_team.dart';
+import 'package:cricket_scorer/features/tournament/domain/usecases/generate_fixtures.dart';
+import 'package:cricket_scorer/features/tournament/domain/usecases/get_fixtures.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/get_tournament.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/remove_tournament_team.dart';
+import 'package:cricket_scorer/features/tournament/domain/usecases/resolve_fixture.dart';
+import 'package:cricket_scorer/features/tournament/domain/usecases/start_fixture_match.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/update_tournament.dart';
 import 'package:get/get.dart';
 
@@ -69,6 +73,34 @@ class TournamentInjection {
 
     Get.lazyPut<RemoveTournamentTeamUseCase>(
       () => RemoveTournamentTeamUseCase(
+        tournamentRepository: Get.find<TournamentRepository>(),
+      ),
+      fenix: true,
+    );
+
+    Get.lazyPut<GenerateFixturesUseCase>(
+      () => GenerateFixturesUseCase(
+        tournamentRepository: Get.find<TournamentRepository>(),
+      ),
+      fenix: true,
+    );
+
+    Get.lazyPut<GetFixturesUseCase>(
+      () => GetFixturesUseCase(
+        tournamentRepository: Get.find<TournamentRepository>(),
+      ),
+      fenix: true,
+    );
+
+    Get.lazyPut<StartFixtureMatchUseCase>(
+      () => StartFixtureMatchUseCase(
+        tournamentRepository: Get.find<TournamentRepository>(),
+      ),
+      fenix: true,
+    );
+
+    Get.lazyPut<ResolveFixtureUseCase>(
+      () => ResolveFixtureUseCase(
         tournamentRepository: Get.find<TournamentRepository>(),
       ),
       fenix: true,
