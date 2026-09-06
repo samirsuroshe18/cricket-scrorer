@@ -9,6 +9,7 @@ import 'package:cricket_scorer/features/scoring/data/models/request/select_bowle
 import 'package:cricket_scorer/features/scoring/data/models/request/start_innings_req.dart';
 import 'package:cricket_scorer/features/scoring/data/models/request/sync_req.dart';
 import 'package:cricket_scorer/features/scoring/data/models/request/undo_ball_req.dart';
+import 'package:cricket_scorer/features/scoring/data/models/request/update_player_req.dart';
 
 class MatchApiService {
   final ApiClient apiClient;
@@ -148,6 +149,17 @@ class MatchApiService {
     required String playerId,
   }) async {
     return await apiClient.get(endpoint: matchEndpoint.careerStats(playerId));
+  }
+
+  /// Same ownership shape as [getCareerStats].
+  Future<Either<ApiResponseModel, CricketFailure>> updatePlayer({
+    required String playerId,
+    required UpdatePlayerReq params,
+  }) async {
+    return await apiClient.patch(
+      endpoint: matchEndpoint.playerProfile(playerId),
+      data: params.toJson(),
+    );
   }
 
   /// No token is attached deliberately — not because one is stripped, but

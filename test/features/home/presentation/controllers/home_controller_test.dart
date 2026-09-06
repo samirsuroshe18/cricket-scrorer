@@ -39,6 +39,8 @@ import 'package:cricket_scorer/features/scoring/data/models/response/score_ball_
 import 'package:cricket_scorer/features/scoring/data/models/response/score_undo_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/scorecard_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/career_stats_res.dart';
+import 'package:cricket_scorer/features/scoring/data/models/request/update_player_req.dart';
+import 'package:cricket_scorer/features/scoring/data/models/response/player_profile_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/select_bowler_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/start_innings_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/sync_res.dart';
@@ -301,6 +303,11 @@ class _FakeMatchRepository implements MatchRepository {
   @override
   Future<Either<CricketResponse<CareerStatsRes>, CricketFailure>>
   getCareerStats({required String playerId}) =>
+      throw UnimplementedError('Not exercised in this test.');
+
+  @override
+  Future<Either<CricketResponse<PlayerProfileRes>, CricketFailure>>
+  updatePlayer({required String playerId, required UpdatePlayerReq params}) =>
       throw UnimplementedError('Not exercised in this test.');
 
   @override

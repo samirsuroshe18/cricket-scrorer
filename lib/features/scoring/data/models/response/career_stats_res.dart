@@ -113,6 +113,16 @@ class BowlingCareerStats {
 class CareerStatsRes {
   final String playerId;
   final String playerName;
+
+  /// Profile fields `PATCH /v1/player/:playerId` writes — `null` for any
+  /// field nobody has ever set, same as [HighScore]/[BestBowling]. [role]
+  /// defaults to `'unknown'` rather than null, matching the schema.
+  final String role;
+  final int? jerseyNumber;
+  final String? bio;
+  final String? battingStyle;
+  final String? bowlingStyle;
+
   final int matchesPlayed;
   final BattingCareerStats batting;
   final BowlingCareerStats bowling;
@@ -120,6 +130,11 @@ class CareerStatsRes {
   CareerStatsRes({
     required this.playerId,
     required this.playerName,
+    required this.role,
+    required this.jerseyNumber,
+    required this.bio,
+    required this.battingStyle,
+    required this.bowlingStyle,
     required this.matchesPlayed,
     required this.batting,
     required this.bowling,

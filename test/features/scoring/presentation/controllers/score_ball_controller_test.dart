@@ -29,6 +29,8 @@ import 'package:cricket_scorer/features/scoring/data/models/response/score_ball_
 import 'package:cricket_scorer/features/scoring/data/models/response/score_undo_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/scorecard_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/career_stats_res.dart';
+import 'package:cricket_scorer/features/scoring/data/models/request/update_player_req.dart';
+import 'package:cricket_scorer/features/scoring/data/models/response/player_profile_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/select_bowler_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/start_innings_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/strike.dart';
@@ -155,6 +157,15 @@ class _OfflineMatchRepository implements MatchRepository {
   @override
   Future<Either<CricketResponse<CareerStatsRes>, CricketFailure>>
   getCareerStats({required String playerId}) async {
+    throw UnimplementedError('Not exercised in this test.');
+  }
+
+  @override
+  Future<Either<CricketResponse<PlayerProfileRes>, CricketFailure>>
+  updatePlayer({
+    required String playerId,
+    required UpdatePlayerReq params,
+  }) async {
     throw UnimplementedError('Not exercised in this test.');
   }
 
@@ -457,6 +468,15 @@ class _MixedMatchRepository implements MatchRepository {
   }
 
   @override
+  Future<Either<CricketResponse<PlayerProfileRes>, CricketFailure>>
+  updatePlayer({
+    required String playerId,
+    required UpdatePlayerReq params,
+  }) async {
+    throw UnimplementedError('Not exercised in this test.');
+  }
+
+  @override
   Stream<Either<MatchCompleteRes, CricketFailure>> watchMatchComplete({
     required String matchId,
   }) => const Stream.empty();
@@ -636,6 +656,15 @@ class _RecordingMatchRepository implements MatchRepository {
   @override
   Future<Either<CricketResponse<CareerStatsRes>, CricketFailure>>
   getCareerStats({required String playerId}) async {
+    throw UnimplementedError('Not exercised in this test.');
+  }
+
+  @override
+  Future<Either<CricketResponse<PlayerProfileRes>, CricketFailure>>
+  updatePlayer({
+    required String playerId,
+    required UpdatePlayerReq params,
+  }) async {
     throw UnimplementedError('Not exercised in this test.');
   }
 
@@ -991,6 +1020,15 @@ class _ServerSimulatingMatchRepository implements MatchRepository {
   }
 
   @override
+  Future<Either<CricketResponse<PlayerProfileRes>, CricketFailure>>
+  updatePlayer({
+    required String playerId,
+    required UpdatePlayerReq params,
+  }) async {
+    throw UnimplementedError('Not exercised in this test.');
+  }
+
+  @override
   Stream<Either<MatchCompleteRes, CricketFailure>> watchMatchComplete({
     required String matchId,
   }) => const Stream.empty();
@@ -1165,6 +1203,15 @@ class _RuleBlockingMatchRepository implements MatchRepository {
   @override
   Future<Either<CricketResponse<CareerStatsRes>, CricketFailure>>
   getCareerStats({required String playerId}) async {
+    throw UnimplementedError('Not exercised in this test.');
+  }
+
+  @override
+  Future<Either<CricketResponse<PlayerProfileRes>, CricketFailure>>
+  updatePlayer({
+    required String playerId,
+    required UpdatePlayerReq params,
+  }) async {
     throw UnimplementedError('Not exercised in this test.');
   }
 
@@ -3579,6 +3626,11 @@ class _LockTransitionMatchRepository implements MatchRepository {
   @override
   Future<Either<CricketResponse<CareerStatsRes>, CricketFailure>>
   getCareerStats({required String playerId}) =>
+      throw UnimplementedError('Not exercised in this test.');
+
+  @override
+  Future<Either<CricketResponse<PlayerProfileRes>, CricketFailure>>
+  updatePlayer({required String playerId, required UpdatePlayerReq params}) =>
       throw UnimplementedError('Not exercised in this test.');
 
   @override
