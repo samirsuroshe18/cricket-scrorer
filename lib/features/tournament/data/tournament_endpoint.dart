@@ -13,4 +13,13 @@ class TournamentEndpoint {
 
   String removeTeam(String tournamentId, String teamId) =>
       '/v1/tournament/$tournamentId/teams/$teamId';
+
+  String fixtures(String tournamentId) =>
+      '/v1/tournament/$tournamentId/fixtures';
+
+  String resolveFixture(String tournamentId, String fixtureId) =>
+      '/v1/tournament/$tournamentId/fixtures/$fixtureId';
+
+  String startFixtureMatch(String tournamentId, String fixtureId) =>
+      '/v1/tournament/$tournamentId/fixtures/$fixtureId/start-match';
 }

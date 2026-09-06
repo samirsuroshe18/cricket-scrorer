@@ -1,9 +1,13 @@
 import 'package:cricket_scorer/core/error/cricket_failure.dart';
 import 'package:cricket_scorer/core/network/models/cricket_response.dart';
 import 'package:cricket_scorer/core/utils/either_util.dart';
+import 'package:cricket_scorer/features/scoring/data/models/response/create_match_res.dart';
 import 'package:cricket_scorer/features/tournament/data/models/request/create_tournament_req.dart';
 import 'package:cricket_scorer/features/tournament/data/models/request/enroll_tournament_team_req.dart';
+import 'package:cricket_scorer/features/tournament/data/models/request/resolve_fixture_req.dart';
+import 'package:cricket_scorer/features/tournament/data/models/request/start_fixture_match_req.dart';
 import 'package:cricket_scorer/features/tournament/data/models/request/update_tournament_req.dart';
+import 'package:cricket_scorer/features/tournament/data/models/response/fixture_res.dart';
 import 'package:cricket_scorer/features/tournament/data/models/response/tournament_detail_res.dart';
 
 abstract class TournamentRepository {
@@ -39,5 +43,31 @@ abstract class TournamentRepository {
   Future<Either<CricketResponse<void>, CricketFailure>> removeTeam({
     required String tournamentId,
     required String teamId,
+  });
+
+  /// `POST /v1/tournament/:tournamentId/fixtures` — owner-only. Generates
+  /// the full schedule (round_robin/league) or the next round (knockout).
+  Future<Either<CricketResponse<void>, CricketFailure>> generateFixtures({
+    required String tournamentId,
+  });
+
+  /// `GET /v1/tournament/:tournamentId/fixtures` — any org member.
+  Future<Either<CricketResponse<List<FixtureRes>>, CricketFailure>>
+  getFixtures({required String tournamentId});
+
+  /// `POST /v1/tournament/:tournamentId/fixtures/:fixtureId/start-match` —
+  /// any org member. Returns the same shape `POST /v1/match` does.
+  Future<Either<CricketResponse<CreateMatchRes>, CricketFailure>>
+  startFixtureMatch({
+    required String tournamentId,
+    required String fixtureId,
+    required StartFixtureMatchReq params,
+  });
+
+  /// `PATCH /v1/tournament/:tournamentId/fixtures/:fixtureId` — owner-only.
+  Future<Either<CricketResponse<void>, CricketFailure>> resolveFixture({
+    required String tournamentId,
+    required String fixtureId,
+    required ResolveFixtureReq params,
   });
 }
