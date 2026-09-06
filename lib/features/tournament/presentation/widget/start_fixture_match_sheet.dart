@@ -60,8 +60,8 @@ Future<void> showStartFixtureMatchSheet({
             CoinFlip(
               onResult: (winner) => setSheetState(() => tossWinner = winner),
             ),
-            16.h,
             if (tossWinner != null) ...[
+              16.h,
               CricketText(
                 text: TranslationKeys.tossDecision.tr,
                 style: Theme.of(context).textTheme.bodySmall,
@@ -83,8 +83,8 @@ Future<void> showStartFixtureMatchSheet({
                   ),
                 ],
               ),
-              16.h,
             ],
+            20.h,
             CricketButton(
               buttonText: TranslationKeys.startMatch.tr,
               onPressed: () async {

@@ -27,6 +27,7 @@ Future<void> showResolveFixtureSheet({
         children: [
           _CandidateRow(
             name: fixture.teamA.name,
+            shortName: fixture.teamA.shortName,
             onTap: () async {
               final errorMessage = await controller.resolveFixture(
                 fixture.id,
@@ -41,6 +42,7 @@ Future<void> showResolveFixtureSheet({
           ),
           _CandidateRow(
             name: teamB.name,
+            shortName: teamB.shortName,
             onTap: () async {
               final errorMessage = await controller.resolveFixture(
                 fixture.id,
@@ -63,11 +65,29 @@ Future<void> showResolveFixtureSheet({
   }
 }
 
+// A monogram avatar, not a trophy — this app's own "pick a name" sheets
+// (assign_scorer_sheet, enroll_team_sheet) already lead with initials, and
+// an identical trophy icon on both rows here didn't distinguish the two
+// choices any better than the sheet's own "Declare winner" headline
+// already does.
 class _CandidateRow extends StatelessWidget {
-  const _CandidateRow({required this.name, required this.onTap});
+  const _CandidateRow({required this.name, this.shortName, required this.onTap});
 
   final String name;
+  final String? shortName;
   final VoidCallback onTap;
+
+  /// Same derivation as `enroll_team_sheet.dart`'s `_EligibleTeamRow`, so a
+  /// team reads identically wherever this app asks "pick a team."
+  String _monogram() {
+    final short = shortName?.trim();
+    if (short != null && short.isNotEmpty) {
+      return short.substring(0, short.length.clamp(0, 3)).toUpperCase();
+    }
+    final words = name.trim().split(RegExp(r'\s+'));
+    final letters = words.take(2).map((w) => w.isEmpty ? '' : w[0]).join();
+    return letters.isEmpty ? '?' : letters.toUpperCase();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -77,13 +97,19 @@ class _CandidateRow extends StatelessWidget {
         borderRadius: 8.radius,
         onTap: onTap,
         child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 10),
+          padding: const EdgeInsets.symmetric(vertical: 8),
           child: Row(
             children: [
-              Icon(
-                Icons.emoji_events_outlined,
-                size: 20,
-                color: context.colorScheme.onSurfaceVariant,
+              CircleAvatar(
+                radius: 16,
+                backgroundColor: context.colors.chipBackground,
+                child: CricketText(
+                  text: _monogram(),
+                  style: context.textTheme.labelSmall?.copyWith(
+                    color: context.colorScheme.primary,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ),
               12.w,
               Expanded(

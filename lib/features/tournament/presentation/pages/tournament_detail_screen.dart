@@ -294,6 +294,15 @@ class _TournamentDetailScreenState extends State<TournamentDetailScreen> {
                   )
                 else
                   for (final round in _roundsInOrder(controller.fixtures)) ...[
+                    // A round genuinely is a sequence — unlike an arbitrary
+                    // numbered-marker default, this divider separates real
+                    // matchdays, not decoration. Skipped before round 1: the
+                    // 24.h gap above the "Fixtures" header already provides
+                    // that separation once.
+                    if (round != _roundsInOrder(controller.fixtures).first) ...[
+                      Divider(height: 1, thickness: 1, color: context.colors.chipBackground),
+                      12.h,
+                    ],
                     CricketText(
                       text: '${TranslationKeys.round.tr} $round',
                       style: context.textTheme.labelMedium?.copyWith(
@@ -418,8 +427,12 @@ class _FixtureRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // A bye fixture shows just the advancing team's name — the status pill
+    // to its right already says "Bye", so repeating that here (especially
+    // as a dashed "Name — Bye" label) would be both redundant and read as
+    // templated chrome rather than this app's own plain vocabulary.
     final matchupText = fixture.isBye
-        ? '${fixture.teamA.name} — ${TranslationKeys.byeLabel.tr}'
+        ? fixture.teamA.name
         : '${fixture.teamA.name} ${TranslationKeys.vsLabel.tr} ${fixture.teamB?.name ?? ''}';
 
     Widget? action;
