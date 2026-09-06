@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:cricket_scorer/config/routes/app_routes.dart';
 import 'package:cricket_scorer/core/extensions/space_extension.dart';
 import 'package:cricket_scorer/core/global/widgets/bootom_sheets/custom_bottomsheet.dart';
@@ -107,12 +105,17 @@ Future<void> showStartFixtureMatchSheet({
 
                 if (outcome.match != null) {
                   Get.back<void>();
-                  unawaited(
-                    Get.toNamed<dynamic>(
-                      AppRoutes.scoreBall,
-                      arguments: outcome.match,
-                    ),
+                  await Get.toNamed<dynamic>(
+                    AppRoutes.scoreBall,
+                    arguments: outcome.match,
                   );
+                  // The live-scoring screen resolves the fixture (status,
+                  // winner) server-side as the match completes; this
+                  // screen's own cached fixtures list only reflects that
+                  // once we reload after popping back — found on-device,
+                  // the same class of gap `loadDetail`'s org-list
+                  // counterpart was fixed for.
+                  await controller.loadDetail();
                 } else {
                   CricketSnackbar.showAlertMessage(
                     outcome.errorMessage ?? TranslationKeys.somethingWentWrong.tr,
