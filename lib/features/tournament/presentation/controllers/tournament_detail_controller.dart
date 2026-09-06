@@ -3,11 +3,13 @@ import 'package:cricket_scorer/features/organization/domain/usecases/get_organiz
 import 'package:cricket_scorer/features/scoring/data/models/response/create_match_res.dart';
 import 'package:cricket_scorer/features/tournament/data/models/request/update_tournament_req.dart';
 import 'package:cricket_scorer/features/tournament/data/models/response/fixture_res.dart';
+import 'package:cricket_scorer/features/tournament/data/models/response/standings_row_res.dart';
 import 'package:cricket_scorer/features/tournament/data/models/response/tournament_detail_res.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/delete_tournament.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/enroll_tournament_team.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/generate_fixtures.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/get_fixtures.dart';
+import 'package:cricket_scorer/features/tournament/domain/usecases/get_standings.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/get_tournament.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/remove_tournament_team.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/resolve_fixture.dart';
@@ -52,6 +54,7 @@ class TournamentDetailController extends GetxController {
   final GenerateFixturesUseCase generateFixturesUseCase;
   final StartFixtureMatchUseCase startFixtureMatchUseCase;
   final ResolveFixtureUseCase resolveFixtureUseCase;
+  final GetStandingsUseCase getStandingsUseCase;
 
   TournamentDetailController({
     required this.tournamentId,
@@ -66,6 +69,7 @@ class TournamentDetailController extends GetxController {
     required this.generateFixturesUseCase,
     required this.startFixtureMatchUseCase,
     required this.resolveFixtureUseCase,
+    required this.getStandingsUseCase,
   });
 
   final detail = Rxn<TournamentDetailRes>();
@@ -73,6 +77,14 @@ class TournamentDetailController extends GetxController {
   final isLoading = true.obs;
   final loadError = Rxn<String>();
   final fixtures = <FixtureRes>[].obs;
+
+  // Standings are fetched only when the standings screen is actually opened
+  // (see loadStandings below) — every other screen that uses this
+  // controller has no use for them, so loading eagerly in loadDetail would
+  // be an extra network call most visits never need.
+  final standings = <StandingsRowRes>[].obs;
+  final standingsLoading = false.obs;
+  final standingsError = Rxn<String>();
 
   bool get isOwner => organizationDetail.value?.owner.id == currentUserId;
 
@@ -250,5 +262,23 @@ class TournamentDetailController extends GetxController {
     if (!response.isResult) return response.fallback.message;
     await _loadFixtures();
     return null;
+  }
+
+  Future<void> loadStandings() async {
+    standingsLoading.value = true;
+    standingsError.value = null;
+
+    final response = await getStandingsUseCase(
+      params: GetStandingsParams(tournamentId: tournamentId),
+    );
+
+    if (!response.isResult) {
+      standingsError.value = response.fallback.message;
+      standingsLoading.value = false;
+      return;
+    }
+
+    standings.assignAll(response.result.data!);
+    standingsLoading.value = false;
   }
 }

@@ -65,4 +65,16 @@ class AppRoutes {
 
   static String tournamentDetailPath(String tournamentId) =>
       '/tournament/$tournamentId';
+
+  /// Registered with a GetX path parameter, same shape as
+  /// [tournamentDetail]. Never navigate with this constant directly — use
+  /// [tournamentStandingsPath]. No binding of its own: the screen finds the
+  /// same tag-registered `TournamentDetailController` the detail screen
+  /// already created, rather than standing up a second controller for one
+  /// GET call.
+  static const String tournamentStandings =
+      '/tournament/:tournamentId/standings';
+
+  static String tournamentStandingsPath(String tournamentId) =>
+      '/tournament/$tournamentId/standings';
 }
