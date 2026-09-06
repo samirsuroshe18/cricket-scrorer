@@ -348,4 +348,7 @@ Map<String, String> en = {
   TranslationKeys.leaderboards: 'Leaderboards',
   TranslationKeys.noLeaderboardsYet: 'No leaderboard data yet',
   TranslationKeys.player: 'Player',
+  TranslationKeys.search: 'Search',
+  TranslationKeys.searchHint: 'Search organizations and tournaments',
+  TranslationKeys.noSearchResultsFound: 'No results found',
 };

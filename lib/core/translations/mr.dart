@@ -346,4 +346,7 @@ Map<String, String> mr = {
   TranslationKeys.leaderboards: 'लीडरबोर्ड',
   TranslationKeys.noLeaderboardsYet: 'अजून लीडरबोर्ड डेटा नाही',
   TranslationKeys.player: 'खेळाडू',
+  TranslationKeys.search: 'शोधा',
+  TranslationKeys.searchHint: 'संस्था आणि स्पर्धा शोधा',
+  TranslationKeys.noSearchResultsFound: 'कोणतेही निकाल आढळले नाहीत',
 };

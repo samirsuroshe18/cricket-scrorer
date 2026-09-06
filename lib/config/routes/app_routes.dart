@@ -50,6 +50,8 @@ class AppRoutes {
 
   static const String organizations = '/organizations';
 
+  static const String search = '/search';
+
   /// Registered with a GetX path parameter, same shape as [teamProfile].
   /// Never navigate with this constant directly — use
   /// [organizationDetailPath].

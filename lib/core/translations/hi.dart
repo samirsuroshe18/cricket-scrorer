@@ -347,4 +347,7 @@ Map<String, String> hi = {
   TranslationKeys.leaderboards: 'लीडरबोर्ड',
   TranslationKeys.noLeaderboardsYet: 'अभी तक कोई लीडरबोर्ड डेटा नहीं',
   TranslationKeys.player: 'खिलाड़ी',
+  TranslationKeys.search: 'खोजें',
+  TranslationKeys.searchHint: 'संगठन और टूर्नामेंट खोजें',
+  TranslationKeys.noSearchResultsFound: 'कोई परिणाम नहीं मिला',
 };
