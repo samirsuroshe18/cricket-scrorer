@@ -107,6 +107,7 @@ class _TournamentDetailScreenState extends State<TournamentDetailScreen> {
           final loading = controller.isLoading.value;
           final error = controller.loadError.value;
           final data = controller.detail.value;
+          final fixtureRounds = _roundsInOrder(controller.fixtures);
 
           if (loading && data == null) {
             return const Center(child: CircularProgressIndicator());
@@ -293,13 +294,13 @@ class _TournamentDetailScreenState extends State<TournamentDetailScreen> {
                     ),
                   )
                 else
-                  for (final round in _roundsInOrder(controller.fixtures)) ...[
+                  for (final round in fixtureRounds) ...[
                     // A round genuinely is a sequence — unlike an arbitrary
                     // numbered-marker default, this divider separates real
                     // matchdays, not decoration. Skipped before round 1: the
                     // 24.h gap above the "Fixtures" header already provides
                     // that separation once.
-                    if (round != _roundsInOrder(controller.fixtures).first) ...[
+                    if (round != fixtureRounds.first) ...[
                       Divider(height: 1, thickness: 1, color: context.colors.chipBackground),
                       12.h,
                     ],
@@ -430,10 +431,20 @@ class _FixtureRow extends StatelessWidget {
     // A bye fixture shows just the advancing team's name — the status pill
     // to its right already says "Bye", so repeating that here (especially
     // as a dashed "Name — Bye" label) would be both redundant and read as
-    // templated chrome rather than this app's own plain vocabulary.
-    final matchupText = fixture.isBye
+    // templated chrome rather than this app's own plain vocabulary. Keyed
+    // off teamB rather than isBye so a (should-never-happen) non-bye
+    // fixture with no teamB yet can't render a trailing "vs ".
+    final matchupText = fixture.teamB == null
         ? fixture.teamA.name
-        : '${fixture.teamA.name} ${TranslationKeys.vsLabel.tr} ${fixture.teamB?.name ?? ''}';
+        : '${fixture.teamA.name} ${TranslationKeys.vsLabel.tr} ${fixture.teamB!.name}';
+
+    // A completed knockout round is a bracket — which team advanced is the
+    // one thing it exists to show, so a plain "Completed" pill isn't enough
+    // on its own. Bye fixtures skip this: the pill already says "Bye" for
+    // the same team named in matchupText above.
+    final winnerText = fixture.status == 'completed' && !fixture.isBye && fixture.winner != null
+        ? '${fixture.winner!.name} ${TranslationKeys.wonLabel.tr}'
+        : null;
 
     Widget? action;
     if (fixture.status == 'scheduled') {
@@ -453,11 +464,23 @@ class _FixtureRow extends StatelessWidget {
       child: Row(
         children: [
           Expanded(
-            child: CricketText(
-              text: matchupText,
-              style: context.textTheme.bodyMedium?.copyWith(
-                color: context.colorScheme.secondary,
-              ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                CricketText(
+                  text: matchupText,
+                  style: context.textTheme.bodyMedium?.copyWith(
+                    color: context.colorScheme.secondary,
+                  ),
+                ),
+                if (winnerText != null)
+                  CricketText(
+                    text: winnerText,
+                    style: context.textTheme.bodySmall?.copyWith(
+                      color: context.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+              ],
             ),
           ),
           Container(

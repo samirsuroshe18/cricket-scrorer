@@ -332,4 +332,5 @@ Map<String, String> mr = {
   TranslationKeys.vsLabel: 'विरुद्ध',
   TranslationKeys.fixturesGenerated: 'फिक्स्चर तयार झाले',
   TranslationKeys.fixtureResolved: 'फिक्स्चर निकाली काढला',
+  TranslationKeys.wonLabel: 'जिंकले',
 };

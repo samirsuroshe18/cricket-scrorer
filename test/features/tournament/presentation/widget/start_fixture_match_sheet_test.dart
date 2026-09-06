@@ -2,6 +2,7 @@ import 'package:cricket_scorer/config/routes/app_routes.dart';
 import 'package:cricket_scorer/config/theme/app_theme.dart';
 import 'package:cricket_scorer/features/organization/domain/usecases/get_organization.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/create_match_res.dart';
+import 'package:cricket_scorer/features/scoring/presentation/widget/coin_flip.dart';
 import 'package:cricket_scorer/features/tournament/data/models/response/fixture_res.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/delete_tournament.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/enroll_tournament_team.dart';
@@ -200,6 +201,41 @@ void main() {
       expect(controller.lastFixtureId, 'fixture-1');
       expect(controller.lastTotalOvers, 20);
       expect(find.text('score ball'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    're-flipping the coin clears a previously picked toss decision',
+    (tester) async {
+      await pumpOpenButton(tester);
+
+      // First flip: settle the animation, then pick "Bat".
+      await tester.tap(find.byType(CoinFlip));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('bat'));
+      await tester.pump();
+      expect(tester.widget<FilterChip>(find.widgetWithText(FilterChip, 'bat')).selected, isTrue);
+
+      // Re-flip without picking a decision again.
+      await tester.tap(find.byType(CoinFlip));
+      await tester.pumpAndSettle();
+
+      // The stale "Bat" pick must not survive the re-flip — neither chip
+      // reads as selected until the scorer picks again.
+      expect(tester.widget<FilterChip>(find.widgetWithText(FilterChip, 'bat')).selected, isFalse);
+      expect(tester.widget<FilterChip>(find.widgetWithText(FilterChip, 'bowl')).selected, isFalse);
+
+      // Submitting now (winner set, decision cleared) must be treated as
+      // an incomplete toss, not silently sent with the stale decision —
+      // this is the end-to-end proof: before the fix, this would instead
+      // call startFixtureMatch with the old 'bat' decision paired against
+      // the new winner.
+      await tester.enterText(find.byType(TextField), '20');
+      await tapAndSettleFrames(tester, find.text('start_match').last);
+
+      expect(controller.lastFixtureId, isNull);
+      expect(find.text('toss_incomplete'), findsOneWidget);
+      await drainSnackbar(tester);
     },
   );
 

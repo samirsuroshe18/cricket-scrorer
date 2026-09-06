@@ -56,7 +56,13 @@ Future<void> showStartFixtureMatchSheet({
             ),
             8.h,
             CoinFlip(
-              onResult: (winner) => setSheetState(() => tossWinner = winner),
+              // A re-flip clears the previous decision too — a decision
+              // picked for the old winner has no meaning for the new one.
+              // Mirrors CreateMatchController.recordTossWinner.
+              onResult: (winner) => setSheetState(() {
+                tossWinner = winner;
+                tossDecision = null;
+              }),
             ),
             if (tossWinner != null) ...[
               16.h,
@@ -88,7 +94,7 @@ Future<void> showStartFixtureMatchSheet({
               onPressed: () async {
                 final overs = int.tryParse(oversController.text.trim());
                 if (overs == null || overs < 1 || overs > 50) {
-                  CricketSnackbar.showAlertMessage(TranslationKeys.enterOvers.tr);
+                  CricketSnackbar.showAlertMessage(TranslationKeys.invalidOvers.tr);
                   return;
                 }
                 if ((tossWinner == null) != (tossDecision == null)) {
@@ -114,8 +120,17 @@ Future<void> showStartFixtureMatchSheet({
                   // screen's own cached fixtures list only reflects that
                   // once we reload after popping back — found on-device,
                   // the same class of gap `loadDetail`'s org-list
-                  // counterpart was fixed for.
-                  await controller.loadDetail();
+                  // counterpart was fixed for. A match that *completes*
+                  // (rather than a manual back-out) pops all the way to
+                  // home via offNamedUntil, which can tear this
+                  // tag-registered controller down first — reloading a
+                  // torn-down controller is dead work, not a crash, but
+                  // there's no point doing it.
+                  if (Get.isRegistered<TournamentDetailController>(
+                    tag: controller.tournamentId,
+                  )) {
+                    await controller.loadDetail();
+                  }
                 } else {
                   CricketSnackbar.showAlertMessage(
                     outcome.errorMessage ?? TranslationKeys.somethingWentWrong.tr,

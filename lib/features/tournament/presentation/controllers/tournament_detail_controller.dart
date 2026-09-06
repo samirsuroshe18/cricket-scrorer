@@ -227,8 +227,16 @@ class TournamentDetailController extends GetxController {
     if (!response.isResult) {
       return StartFixtureMatchOutcome.failure(response.fallback.message);
     }
+    final match = response.result.data;
+    // A 2xx with no match body shouldn't happen per the API contract, but
+    // treating it as success would hand the sheet a null match to navigate
+    // on — surface it as a failure instead (the sheet falls back to a
+    // generic message for a null errorMessage).
+    if (match == null) {
+      return const StartFixtureMatchOutcome.failure(null);
+    }
     await _loadFixtures();
-    return StartFixtureMatchOutcome.success(response.result.data);
+    return StartFixtureMatchOutcome.success(match);
   }
 
   Future<String?> resolveFixture(String fixtureId, String winnerTeamId) async {

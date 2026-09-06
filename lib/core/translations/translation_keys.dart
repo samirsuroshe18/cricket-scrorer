@@ -378,4 +378,5 @@ class TranslationKeys {
   static const String vsLabel = 'vs_label';
   static const String fixturesGenerated = 'fixtures_generated';
   static const String fixtureResolved = 'fixture_resolved';
+  static const String wonLabel = 'won_label';
 }

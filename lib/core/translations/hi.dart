@@ -333,4 +333,5 @@ Map<String, String> hi = {
   TranslationKeys.vsLabel: 'बनाम',
   TranslationKeys.fixturesGenerated: 'फिक्स्चर बनाए गए',
   TranslationKeys.fixtureResolved: 'फिक्स्चर तय किया गया',
+  TranslationKeys.wonLabel: 'जीता',
 };

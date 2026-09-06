@@ -334,4 +334,5 @@ Map<String, String> en = {
   TranslationKeys.vsLabel: 'vs',
   TranslationKeys.fixturesGenerated: 'Fixtures generated',
   TranslationKeys.fixtureResolved: 'Fixture resolved',
+  TranslationKeys.wonLabel: 'won',
 };
