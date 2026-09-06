@@ -94,6 +94,11 @@ CareerStatsRes _$CareerStatsResFromJson(
 ) => CareerStatsRes(
   playerId: json['playerId'] as String,
   playerName: json['playerName'] as String,
+  role: json['role'] as String,
+  jerseyNumber: (json['jerseyNumber'] as num?)?.toInt(),
+  bio: json['bio'] as String?,
+  battingStyle: json['battingStyle'] as String?,
+  bowlingStyle: json['bowlingStyle'] as String?,
   matchesPlayed: (json['matchesPlayed'] as num).toInt(),
   batting: BattingCareerStats.fromJson(json['batting'] as Map<String, dynamic>),
   bowling: BowlingCareerStats.fromJson(json['bowling'] as Map<String, dynamic>),
@@ -103,6 +108,11 @@ Map<String, dynamic> _$CareerStatsResToJson(CareerStatsRes instance) =>
     <String, dynamic>{
       'playerId': instance.playerId,
       'playerName': instance.playerName,
+      'role': instance.role,
+      'jerseyNumber': instance.jerseyNumber,
+      'bio': instance.bio,
+      'battingStyle': instance.battingStyle,
+      'bowlingStyle': instance.bowlingStyle,
       'matchesPlayed': instance.matchesPlayed,
       'batting': instance.batting.toJson(),
       'bowling': instance.bowling.toJson(),

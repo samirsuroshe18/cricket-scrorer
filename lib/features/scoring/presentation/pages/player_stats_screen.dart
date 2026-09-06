@@ -7,8 +7,29 @@ import 'package:cricket_scorer/core/translations/translation_keys.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/career_stats_res.dart';
 import 'package:cricket_scorer/features/scoring/presentation/controllers/player_stats_controller.dart';
 import 'package:cricket_scorer/features/scoring/presentation/utils/career_stats_format.dart';
+import 'package:cricket_scorer/features/scoring/presentation/widget/edit_player_profile_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+
+const Map<String, String> _roleLabels = <String, String>{
+  'batsman': TranslationKeys.roleBatsman,
+  'bowler': TranslationKeys.roleBowler,
+  'allrounder': TranslationKeys.roleAllrounder,
+  'wicketkeeper': TranslationKeys.roleWicketkeeper,
+  'unknown': TranslationKeys.roleUnknown,
+};
+
+const Map<String, String> _battingStyleLabels = <String, String>{
+  'right_handed': TranslationKeys.rightHanded,
+  'left_handed': TranslationKeys.leftHanded,
+};
+
+const Map<String, String> _bowlingStyleLabels = <String, String>{
+  'right_arm_pace': TranslationKeys.rightArmPace,
+  'left_arm_pace': TranslationKeys.leftArmPace,
+  'right_arm_spin': TranslationKeys.rightArmSpin,
+  'left_arm_spin': TranslationKeys.leftArmSpin,
+};
 
 /// One player's totals across every completed match their scorer has
 /// recorded — reached by tapping a name in a completed match's scorecard
@@ -22,7 +43,22 @@ class PlayerStatsScreen extends GetView<PlayerStatsController> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: CustomAppBar(title: TranslationKeys.playerStats.tr),
+      appBar: CustomAppBar(
+        title: TranslationKeys.playerStats.tr,
+        actions: [
+          Obx(() {
+            final data = controller.careerStats.value;
+            if (data == null) return const SizedBox.shrink();
+            return IconButton(
+              icon: const Icon(Icons.edit_outlined),
+              onPressed: () => showEditPlayerProfileSheet(
+                controller: controller,
+                stats: data,
+              ),
+            );
+          }),
+        ],
+      ),
       body: SafeArea(
         child: Obx(() {
           if (controller.isLoading.value) {
@@ -107,6 +143,28 @@ class _CareerStatsView extends StatelessWidget {
             ),
             textAlign: TextAlign.center,
           ),
+          24.h,
+          _StatSection(
+            title: TranslationKeys.profile.tr,
+            rows: [
+              _StatRowData(TranslationKeys.role.tr, _roleLabels[data.role]!.tr),
+              if (data.jerseyNumber != null)
+                _StatRowData(TranslationKeys.jerseyNumber.tr, '${data.jerseyNumber}'),
+              if (data.battingStyle != null)
+                _StatRowData(TranslationKeys.battingStyle.tr, _battingStyleLabels[data.battingStyle]!.tr),
+              if (data.bowlingStyle != null)
+                _StatRowData(TranslationKeys.bowlingStyle.tr, _bowlingStyleLabels[data.bowlingStyle]!.tr),
+            ],
+          ),
+          if (data.bio != null && data.bio!.isNotEmpty) ...[
+            8.h,
+            CricketText(
+              text: data.bio!,
+              style: context.textTheme.bodyMedium?.copyWith(
+                color: context.colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ],
           24.h,
           _StatSection(
             title: TranslationKeys.battingFigures.tr,

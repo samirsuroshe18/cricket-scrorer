@@ -37,6 +37,8 @@ class MatchEndpoint {
   // shares this one chain.
   String careerStats(String playerId) => '/v1/player/$playerId/career-stats';
 
+  String playerProfile(String playerId) => '/v1/player/$playerId';
+
   String abandon(String matchId) => '/v1/match/$matchId/abandon';
 
   String delete(String matchId) => '/v1/match/$matchId';

@@ -29,6 +29,8 @@ import 'package:cricket_scorer/features/scoring/data/models/response/team_organi
 import 'package:cricket_scorer/features/scoring/data/models/response/team_profile_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/scorer_candidates_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/assign_scorer_res.dart';
+import 'package:cricket_scorer/features/scoring/data/models/request/update_player_req.dart';
+import 'package:cricket_scorer/features/scoring/data/models/response/player_profile_res.dart';
 
 abstract class MatchRepository {
   Future<Either<CricketResponse<CreateMatchRes>, CricketFailure>> createMatch({
@@ -136,6 +138,10 @@ abstract class MatchRepository {
   /// `MatchEndpoint.careerStats`'s own comment on why this lives here anyway.
   Future<Either<CricketResponse<CareerStatsRes>, CricketFailure>>
   getCareerStats({required String playerId});
+
+  /// `PATCH /v1/player/:playerId` — same ownership shape as [getCareerStats].
+  Future<Either<CricketResponse<PlayerProfileRes>, CricketFailure>>
+  updatePlayer({required String playerId, required UpdatePlayerReq params});
 
   /// The `match:complete` event — see [MatchSocketService.watchMatchComplete].
   Stream<Either<MatchCompleteRes, CricketFailure>> watchMatchComplete({

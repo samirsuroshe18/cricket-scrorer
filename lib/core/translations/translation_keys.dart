@@ -100,6 +100,11 @@ class TranslationKeys {
   static const String fifties = 'fifties';
   static const String hundreds = 'hundreds';
   static const String bestBowling = 'best_bowling';
+  static const String profile = 'profile';
+  static const String editPlayer = 'edit_player';
+  static const String role = 'role';
+  static const String jerseyNumber = 'jersey_number';
+  static const String playerUpdated = 'player_updated';
 
   static const String cricketMatch = 'cricket_match';
   static const String passwordWeak = 'password_weak';

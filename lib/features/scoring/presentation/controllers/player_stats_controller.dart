@@ -1,8 +1,10 @@
 import 'dart:async';
 
 import 'package:cricket_scorer/core/translations/translation_keys.dart';
+import 'package:cricket_scorer/features/scoring/data/models/request/update_player_req.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/career_stats_res.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/get_career_stats.dart';
+import 'package:cricket_scorer/features/scoring/domain/usecases/update_player.dart';
 import 'package:get/get.dart';
 
 /// A plain online read — unlike [ResultController], there is no offline
@@ -10,8 +12,12 @@ import 'package:get/get.dart';
 /// exist server-side, computed after a match already completed.
 class PlayerStatsController extends GetxController {
   final GetCareerStatsUseCase getCareerStatsUseCase;
+  final UpdatePlayerUseCase updatePlayerUseCase;
 
-  PlayerStatsController({required this.getCareerStatsUseCase});
+  PlayerStatsController({
+    required this.getCareerStatsUseCase,
+    required this.updatePlayerUseCase,
+  });
 
   late final String _playerId;
 
@@ -63,5 +69,33 @@ class PlayerStatsController extends GetxController {
     } finally {
       _isLoadingStats = false;
     }
+  }
+
+  /// Returns `true` on success, having already refreshed [careerStats] so
+  /// the screen reflects the edit immediately — the sheet that calls this
+  /// closes itself on `true`, same as every other "edit sheet" in this app.
+  Future<bool> updateProfile({
+    String? role,
+    int? jerseyNumber,
+    String? bio,
+    String? battingStyle,
+    String? bowlingStyle,
+  }) async {
+    final response = await updatePlayerUseCase(
+      params: UpdatePlayerParams(
+        playerId: _playerId,
+        req: UpdatePlayerReq(
+          role: role,
+          jerseyNumber: jerseyNumber,
+          bio: bio,
+          battingStyle: battingStyle,
+          bowlingStyle: bowlingStyle,
+        ),
+      ),
+    );
+
+    if (!response.isResult) return false;
+    await _load();
+    return true;
   }
 }
