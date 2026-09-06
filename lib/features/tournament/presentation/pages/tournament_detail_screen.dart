@@ -228,15 +228,28 @@ class _TournamentDetailScreenState extends State<TournamentDetailScreen> {
                         ),
                       ],
                     ),
-                    // Knockout is a bracket, not a table — there's no
-                    // standings screen to link to for it.
-                    if (data.format != 'knockout')
-                      TextButton(
-                        onPressed: () => Get.toNamed<dynamic>(
-                          AppRoutes.tournamentStandingsPath(_tournamentId),
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        // Knockout is a bracket, not a table — there's no
+                        // standings screen to link to for it. Leaderboards
+                        // are player-level, so they're shown for every
+                        // format, including knockout.
+                        if (data.format != 'knockout')
+                          TextButton(
+                            onPressed: () => Get.toNamed<dynamic>(
+                              AppRoutes.tournamentStandingsPath(_tournamentId),
+                            ),
+                            child: CricketText(text: TranslationKeys.standings.tr),
+                          ),
+                        TextButton(
+                          onPressed: () => Get.toNamed<dynamic>(
+                            AppRoutes.tournamentLeaderboardsPath(_tournamentId),
+                          ),
+                          child: CricketText(text: TranslationKeys.leaderboards.tr),
                         ),
-                        child: CricketText(text: TranslationKeys.standings.tr),
-                      ),
+                      ],
+                    ),
                   ],
                 ),
                 24.h,

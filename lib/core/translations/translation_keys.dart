@@ -390,4 +390,7 @@ class TranslationKeys {
   static const String noResultShort = 'no_result_short';
   static const String pointsShort = 'points_short';
   static const String nrrShort = 'nrr_short';
+  static const String leaderboards = 'leaderboards';
+  static const String noLeaderboardsYet = 'no_leaderboards_yet';
+  static const String player = 'player';
 }

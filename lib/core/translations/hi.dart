@@ -344,4 +344,7 @@ Map<String, String> hi = {
   TranslationKeys.noResultShort: 'NR',
   TranslationKeys.pointsShort: 'Pts',
   TranslationKeys.nrrShort: 'NRR',
+  TranslationKeys.leaderboards: 'लीडरबोर्ड',
+  TranslationKeys.noLeaderboardsYet: 'अभी तक कोई लीडरबोर्ड डेटा नहीं',
+  TranslationKeys.player: 'खिलाड़ी',
 };
