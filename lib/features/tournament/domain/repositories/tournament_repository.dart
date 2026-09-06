@@ -8,6 +8,7 @@ import 'package:cricket_scorer/features/tournament/data/models/request/resolve_f
 import 'package:cricket_scorer/features/tournament/data/models/request/start_fixture_match_req.dart';
 import 'package:cricket_scorer/features/tournament/data/models/request/update_tournament_req.dart';
 import 'package:cricket_scorer/features/tournament/data/models/response/fixture_res.dart';
+import 'package:cricket_scorer/features/tournament/data/models/response/leaderboard_row_res.dart';
 import 'package:cricket_scorer/features/tournament/data/models/response/standings_row_res.dart';
 import 'package:cricket_scorer/features/tournament/data/models/response/tournament_detail_res.dart';
 
@@ -77,4 +78,9 @@ abstract class TournamentRepository {
   /// `STANDINGS_NOT_APPLICABLE`.
   Future<Either<CricketResponse<List<StandingsRowRes>>, CricketFailure>>
   getStandings({required String tournamentId});
+
+  /// `GET /v1/tournament/:tournamentId/leaderboards` — any org member, every
+  /// tournament format.
+  Future<Either<CricketResponse<TournamentLeaderboardsRes>, CricketFailure>>
+  getLeaderboards({required String tournamentId});
 }

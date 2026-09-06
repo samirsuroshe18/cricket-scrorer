@@ -6,7 +6,7 @@ import 'package:cricket_scorer/core/utils/either_util.dart';
 import 'package:cricket_scorer/features/organization/data/models/response/organization_detail_res.dart';
 import 'package:cricket_scorer/features/organization/domain/usecases/get_organization.dart';
 import 'package:cricket_scorer/features/tournament/data/models/response/fixture_res.dart';
-import 'package:cricket_scorer/features/tournament/data/models/response/standings_row_res.dart';
+import 'package:cricket_scorer/features/tournament/data/models/response/leaderboard_row_res.dart';
 import 'package:cricket_scorer/features/tournament/data/models/response/tournament_detail_res.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/delete_tournament.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/enroll_tournament_team.dart';
@@ -20,16 +20,16 @@ import 'package:cricket_scorer/features/tournament/domain/usecases/resolve_fixtu
 import 'package:cricket_scorer/features/tournament/domain/usecases/start_fixture_match.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/update_tournament.dart';
 import 'package:cricket_scorer/features/tournament/presentation/controllers/tournament_detail_controller.dart';
-import 'package:cricket_scorer/features/tournament/presentation/pages/tournament_standings_screen.dart';
+import 'package:cricket_scorer/features/tournament/presentation/pages/tournament_leaderboards_screen.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart' hide Response;
 
-class _GetStandingsUseCase implements GetStandingsUseCase {
-  Either<CricketResponse<List<StandingsRowRes>>, CricketFailure>? response;
+class _GetLeaderboardsUseCase implements GetLeaderboardsUseCase {
+  Either<CricketResponse<TournamentLeaderboardsRes>, CricketFailure>? response;
 
   @override
-  Future<Either<CricketResponse<List<StandingsRowRes>>, CricketFailure>> call({
-    GetStandingsParams? params,
+  Future<Either<CricketResponse<TournamentLeaderboardsRes>, CricketFailure>> call({
+    GetLeaderboardsParams? params,
   }) async {
     final result = response;
     if (result == null) throw UnimplementedError('Not exercised in this test.');
@@ -41,8 +41,9 @@ class _GetStandingsUseCase implements GetStandingsUseCase {
 }
 
 // TournamentDetailController.onInit() always calls loadDetail(), even
-// though this screen only cares about standings — these two need a working
-// (not throwing) response so that automatic call succeeds harmlessly.
+// though this screen only cares about leaderboards — these three need a
+// working (not throwing) response so that automatic call succeeds
+// harmlessly. Same reasoning as tournament_standings_screen_test.dart.
 class _StubGetTournamentUseCase implements GetTournamentUseCase {
   @override
   Future<Either<CricketResponse<TournamentDetailRes>, CricketFailure>> call({
@@ -92,6 +93,20 @@ class _StubGetOrganizationUseCase implements GetOrganizationUseCase {
   dynamic noSuchMethod(Invocation invocation) => throw UnimplementedError();
 }
 
+class _StubGetFixturesUseCase implements GetFixturesUseCase {
+  @override
+  Future<Either<CricketResponse<List<FixtureRes>>, CricketFailure>> call({
+    GetFixturesParams? params,
+  }) async {
+    return Either.result(
+      const CricketResponse(message: 'ok', data: <FixtureRes>[]),
+    );
+  }
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => throw UnimplementedError();
+}
+
 class _UnusedUpdateTournamentUseCase implements UpdateTournamentUseCase {
   @override
   dynamic noSuchMethod(Invocation invocation) => throw UnimplementedError();
@@ -112,20 +127,6 @@ class _UnusedRemoveTournamentTeamUseCase implements RemoveTournamentTeamUseCase 
   dynamic noSuchMethod(Invocation invocation) => throw UnimplementedError();
 }
 
-class _StubGetFixturesUseCase implements GetFixturesUseCase {
-  @override
-  Future<Either<CricketResponse<List<FixtureRes>>, CricketFailure>> call({
-    GetFixturesParams? params,
-  }) async {
-    return Either.result(
-      const CricketResponse(message: 'ok', data: <FixtureRes>[]),
-    );
-  }
-
-  @override
-  dynamic noSuchMethod(Invocation invocation) => throw UnimplementedError();
-}
-
 class _UnusedGenerateFixturesUseCase implements GenerateFixturesUseCase {
   @override
   dynamic noSuchMethod(Invocation invocation) => throw UnimplementedError();
@@ -141,17 +142,17 @@ class _UnusedResolveFixtureUseCase implements ResolveFixtureUseCase {
   dynamic noSuchMethod(Invocation invocation) => throw UnimplementedError();
 }
 
-class _UnusedGetLeaderboardsUseCase implements GetLeaderboardsUseCase {
+class _UnusedGetStandingsUseCase implements GetStandingsUseCase {
   @override
   dynamic noSuchMethod(Invocation invocation) => throw UnimplementedError();
 }
 
 void main() {
-  late _GetStandingsUseCase getStandingsUseCase;
+  late _GetLeaderboardsUseCase getLeaderboardsUseCase;
 
   setUp(() {
     Get.testMode = true;
-    getStandingsUseCase = _GetStandingsUseCase();
+    getLeaderboardsUseCase = _GetLeaderboardsUseCase();
     Get.put<TournamentDetailController>(
       TournamentDetailController(
         tournamentId: 'tournament-1',
@@ -166,8 +167,8 @@ void main() {
         generateFixturesUseCase: _UnusedGenerateFixturesUseCase(),
         startFixtureMatchUseCase: _UnusedStartFixtureMatchUseCase(),
         resolveFixtureUseCase: _UnusedResolveFixtureUseCase(),
-        getStandingsUseCase: getStandingsUseCase,
-        getLeaderboardsUseCase: _UnusedGetLeaderboardsUseCase(),
+        getStandingsUseCase: _UnusedGetStandingsUseCase(),
+        getLeaderboardsUseCase: getLeaderboardsUseCase,
       ),
       tag: 'tournament-1',
     );
@@ -179,11 +180,11 @@ void main() {
     await tester.pumpWidget(
       GetMaterialApp(
         theme: AppTheme.lightTheme,
-        initialRoute: AppRoutes.tournamentStandingsPath('tournament-1'),
+        initialRoute: AppRoutes.tournamentLeaderboardsPath('tournament-1'),
         getPages: [
           GetPage(
-            name: AppRoutes.tournamentStandings,
-            page: () => const TournamentStandingsScreen(),
+            name: AppRoutes.tournamentLeaderboards,
+            page: () => const TournamentLeaderboardsScreen(),
           ),
         ],
       ),
@@ -191,60 +192,87 @@ void main() {
     await tester.pumpAndSettle();
   }
 
+  BattingLeaderboardRowRes battingRow({
+    required String playerId,
+    required String playerName,
+    required int runs,
+  }) => BattingLeaderboardRowRes(
+    playerId: playerId, playerName: playerName,
+    inningsBatted: 2, runs: runs, ballsFaced: 70, timesOut: 1, notOuts: 1,
+    average: null, strikeRate: 142.86,
+    fours: 10, sixes: 3, fifties: 1, hundreds: 0, highScore: null,
+  );
+
+  BowlingLeaderboardRowRes bowlingRow({
+    required String playerId,
+    required String playerName,
+    required int wickets,
+  }) => BowlingLeaderboardRowRes(
+    playerId: playerId, playerName: playerName,
+    inningsBowled: 2, legalDeliveries: 42, runsConceded: 36, wickets: wickets, maidens: 0,
+    economy: 5.14, bestBowling: null,
+  );
+
   testWidgets(
-    'renders every row in the order the backend returned, with points and NRR shown',
+    'shows the batting tab by default, and switches to bowling on tab tap',
     (tester) async {
-      getStandingsUseCase.response = Either.result(
+      getLeaderboardsUseCase.response = Either.result(
         CricketResponse(
           message: 'ok',
-          data: [
-            StandingsRowRes(
-              teamId: 'team-1', teamName: 'Harbor CC',
-              played: 3, won: 2, lost: 1, tied: 0, noResult: 0, points: 4, nrr: 0.85,
-            ),
-            StandingsRowRes(
-              teamId: 'team-2', teamName: 'Lakeside XI',
-              played: 3, won: 1, lost: 2, tied: 0, noResult: 0, points: 2, nrr: -0.85,
-            ),
-          ],
+          data: TournamentLeaderboardsRes(
+            tournamentId: 'tournament-1',
+            battingLeaderboard: [
+              battingRow(playerId: 'p1', playerName: 'Rahul', runs: 100),
+            ],
+            bowlingLeaderboard: [
+              bowlingRow(playerId: 'p2', playerName: 'Vijay', wickets: 3),
+            ],
+          ),
         ),
       );
 
       await pumpScreen(tester);
 
-      expect(find.text('Harbor CC'), findsOneWidget);
-      expect(find.text('Lakeside XI'), findsOneWidget);
-      expect(find.text('4'), findsOneWidget);
-      expect(find.text('2'), findsWidgets); // played=2 for row 2's "lost" plus points=2, harmless duplication
-      expect(find.text('+0.850'), findsOneWidget);
-      expect(find.text('-0.850'), findsOneWidget);
+      expect(find.text('Rahul'), findsOneWidget);
+      expect(find.text('Vijay'), findsNothing);
 
-      // Row order follows the backend's sort exactly — the higher-points
-      // team's name appears above the other's.
-      final harborY = tester.getTopLeft(find.text('Harbor CC')).dy;
-      final lakesideY = tester.getTopLeft(find.text('Lakeside XI')).dy;
-      expect(harborY, lessThan(lakesideY));
+      await tester.tap(find.text('bowling_figures'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Vijay'), findsOneWidget);
     },
   );
 
-  testWidgets('shows the empty state when no teams are enrolled', (tester) async {
-    getStandingsUseCase.response = Either.result(
-      const CricketResponse(message: 'ok', data: <StandingsRowRes>[]),
+  testWidgets('shows the empty state on both tabs when no one has played yet', (tester) async {
+    getLeaderboardsUseCase.response = Either.result(
+      CricketResponse(
+        message: 'ok',
+        data: TournamentLeaderboardsRes(
+          tournamentId: 'tournament-1',
+          battingLeaderboard: const [],
+          bowlingLeaderboard: const [],
+        ),
+      ),
     );
 
     await pumpScreen(tester);
 
-    expect(find.text('no_standings_yet'), findsOneWidget);
+    expect(find.text('no_leaderboards_yet'), findsOneWidget);
+
+    await tester.tap(find.text('bowling_figures'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('no_leaderboards_yet'), findsOneWidget);
   });
 
   testWidgets('shows the backend error message and a retry button on failure', (tester) async {
-    getStandingsUseCase.response = Either.fallback(
-      CricketBadRequestFailure(statusCode: 400, message: "Standings aren't available for a knockout tournament"),
+    getLeaderboardsUseCase.response = Either.fallback(
+      CricketNotFoundErrorFailure(statusCode: 404, message: 'Tournament not found'),
     );
 
     await pumpScreen(tester);
 
-    expect(find.text("Standings aren't available for a knockout tournament"), findsOneWidget);
+    expect(find.text('Tournament not found'), findsOneWidget);
     expect(find.text('retry'), findsOneWidget);
   });
 }

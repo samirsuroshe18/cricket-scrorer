@@ -343,4 +343,7 @@ Map<String, String> mr = {
   TranslationKeys.noResultShort: 'NR',
   TranslationKeys.pointsShort: 'Pts',
   TranslationKeys.nrrShort: 'NRR',
+  TranslationKeys.leaderboards: 'लीडरबोर्ड',
+  TranslationKeys.noLeaderboardsYet: 'अजून लीडरबोर्ड डेटा नाही',
+  TranslationKeys.player: 'खेळाडू',
 };

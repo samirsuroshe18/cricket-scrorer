@@ -345,4 +345,7 @@ Map<String, String> en = {
   TranslationKeys.noResultShort: 'NR',
   TranslationKeys.pointsShort: 'Pts',
   TranslationKeys.nrrShort: 'NRR',
+  TranslationKeys.leaderboards: 'Leaderboards',
+  TranslationKeys.noLeaderboardsYet: 'No leaderboard data yet',
+  TranslationKeys.player: 'Player',
 };

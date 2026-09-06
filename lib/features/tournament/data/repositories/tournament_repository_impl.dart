@@ -9,6 +9,7 @@ import 'package:cricket_scorer/features/tournament/data/models/request/start_fix
 import 'package:cricket_scorer/features/tournament/data/models/request/resolve_fixture_req.dart';
 import 'package:cricket_scorer/features/tournament/data/models/request/update_tournament_req.dart';
 import 'package:cricket_scorer/features/tournament/data/models/response/fixture_res.dart';
+import 'package:cricket_scorer/features/tournament/data/models/response/leaderboard_row_res.dart';
 import 'package:cricket_scorer/features/tournament/data/models/response/standings_row_res.dart';
 import 'package:cricket_scorer/features/tournament/data/models/response/tournament_detail_res.dart';
 import 'package:cricket_scorer/features/tournament/domain/repositories/tournament_repository.dart';
@@ -214,6 +215,25 @@ class TournamentRepositoryImpl implements TournamentRepository {
           data: standingsJson
               .map((json) => StandingsRowRes.fromJson(json as Map<String, dynamic>))
               .toList(),
+          message: response.result.message,
+        ),
+      );
+    }
+    return Either.fallback(response.fallback);
+  }
+
+  @override
+  Future<Either<CricketResponse<TournamentLeaderboardsRes>, CricketFailure>>
+  getLeaderboards({required String tournamentId}) async {
+    final response = await tournamentApiService.getLeaderboards(
+      tournamentId: tournamentId,
+    );
+    if (response.isResult) {
+      return Either.result(
+        CricketResponse(
+          data: TournamentLeaderboardsRes.fromJson(
+            response.result.data as Map<String, dynamic>,
+          ),
           message: response.result.message,
         ),
       );
