@@ -322,4 +322,17 @@ Map<String, String> en = {
   TranslationKeys.removeTeamConfirmMessage:
       'The team can be enrolled again later.',
   TranslationKeys.teamRemovedFromTournament: 'Team removed from tournament',
+  TranslationKeys.fixtures: 'Fixtures',
+  TranslationKeys.generateFixtures: 'Generate fixtures',
+  TranslationKeys.generateNextRound: 'Generate next round',
+  TranslationKeys.noFixturesYet: 'No fixtures yet',
+  TranslationKeys.round: 'Round',
+  TranslationKeys.byeLabel: 'Bye',
+  TranslationKeys.fixtureStatusScheduled: 'Scheduled',
+  TranslationKeys.fixtureStatusUnresolved: 'Unresolved',
+  TranslationKeys.declareWinner: 'Declare winner',
+  TranslationKeys.vsLabel: 'vs',
+  TranslationKeys.fixturesGenerated: 'Fixtures generated',
+  TranslationKeys.fixtureResolved: 'Fixture resolved',
+  TranslationKeys.wonLabel: 'won',
 };
