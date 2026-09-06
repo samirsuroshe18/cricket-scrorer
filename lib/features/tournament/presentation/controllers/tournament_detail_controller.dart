@@ -3,12 +3,14 @@ import 'package:cricket_scorer/features/organization/domain/usecases/get_organiz
 import 'package:cricket_scorer/features/scoring/data/models/response/create_match_res.dart';
 import 'package:cricket_scorer/features/tournament/data/models/request/update_tournament_req.dart';
 import 'package:cricket_scorer/features/tournament/data/models/response/fixture_res.dart';
+import 'package:cricket_scorer/features/tournament/data/models/response/leaderboard_row_res.dart';
 import 'package:cricket_scorer/features/tournament/data/models/response/standings_row_res.dart';
 import 'package:cricket_scorer/features/tournament/data/models/response/tournament_detail_res.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/delete_tournament.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/enroll_tournament_team.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/generate_fixtures.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/get_fixtures.dart';
+import 'package:cricket_scorer/features/tournament/domain/usecases/get_leaderboards.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/get_standings.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/get_tournament.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/remove_tournament_team.dart';
@@ -55,6 +57,7 @@ class TournamentDetailController extends GetxController {
   final StartFixtureMatchUseCase startFixtureMatchUseCase;
   final ResolveFixtureUseCase resolveFixtureUseCase;
   final GetStandingsUseCase getStandingsUseCase;
+  final GetLeaderboardsUseCase getLeaderboardsUseCase;
 
   TournamentDetailController({
     required this.tournamentId,
@@ -70,6 +73,7 @@ class TournamentDetailController extends GetxController {
     required this.startFixtureMatchUseCase,
     required this.resolveFixtureUseCase,
     required this.getStandingsUseCase,
+    required this.getLeaderboardsUseCase,
   });
 
   final detail = Rxn<TournamentDetailRes>();
@@ -85,6 +89,12 @@ class TournamentDetailController extends GetxController {
   final standings = <StandingsRowRes>[].obs;
   final standingsLoading = false.obs;
   final standingsError = Rxn<String>();
+
+  // Same lazy-load reasoning as standings above.
+  final battingLeaderboard = <BattingLeaderboardRowRes>[].obs;
+  final bowlingLeaderboard = <BowlingLeaderboardRowRes>[].obs;
+  final leaderboardsLoading = false.obs;
+  final leaderboardsError = Rxn<String>();
 
   bool get isOwner => organizationDetail.value?.owner.id == currentUserId;
 
@@ -280,5 +290,24 @@ class TournamentDetailController extends GetxController {
 
     standings.assignAll(response.result.data!);
     standingsLoading.value = false;
+  }
+
+  Future<void> loadLeaderboards() async {
+    leaderboardsLoading.value = true;
+    leaderboardsError.value = null;
+
+    final response = await getLeaderboardsUseCase(
+      params: GetLeaderboardsParams(tournamentId: tournamentId),
+    );
+
+    if (!response.isResult) {
+      leaderboardsError.value = response.fallback.message;
+      leaderboardsLoading.value = false;
+      return;
+    }
+
+    battingLeaderboard.assignAll(response.result.data!.battingLeaderboard);
+    bowlingLeaderboard.assignAll(response.result.data!.bowlingLeaderboard);
+    leaderboardsLoading.value = false;
   }
 }

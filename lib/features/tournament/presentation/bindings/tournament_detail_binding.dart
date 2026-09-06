@@ -4,6 +4,7 @@ import 'package:cricket_scorer/features/tournament/domain/usecases/delete_tourna
 import 'package:cricket_scorer/features/tournament/domain/usecases/enroll_tournament_team.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/generate_fixtures.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/get_fixtures.dart';
+import 'package:cricket_scorer/features/tournament/domain/usecases/get_leaderboards.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/get_standings.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/get_tournament.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/remove_tournament_team.dart';
@@ -32,6 +33,7 @@ class TournamentDetailBinding extends Bindings {
         startFixtureMatchUseCase: Get.find<StartFixtureMatchUseCase>(),
         resolveFixtureUseCase: Get.find<ResolveFixtureUseCase>(),
         getStandingsUseCase: Get.find<GetStandingsUseCase>(),
+        getLeaderboardsUseCase: Get.find<GetLeaderboardsUseCase>(),
       ),
       tag: tournamentId,
     );

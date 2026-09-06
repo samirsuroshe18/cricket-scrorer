@@ -12,6 +12,7 @@ import 'package:cricket_scorer/features/tournament/domain/usecases/delete_tourna
 import 'package:cricket_scorer/features/tournament/domain/usecases/enroll_tournament_team.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/generate_fixtures.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/get_fixtures.dart';
+import 'package:cricket_scorer/features/tournament/domain/usecases/get_leaderboards.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/get_standings.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/get_tournament.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/remove_tournament_team.dart';
@@ -140,6 +141,11 @@ class _UnusedResolveFixtureUseCase implements ResolveFixtureUseCase {
   dynamic noSuchMethod(Invocation invocation) => throw UnimplementedError();
 }
 
+class _UnusedGetLeaderboardsUseCase implements GetLeaderboardsUseCase {
+  @override
+  dynamic noSuchMethod(Invocation invocation) => throw UnimplementedError();
+}
+
 void main() {
   late _GetStandingsUseCase getStandingsUseCase;
 
@@ -161,6 +167,7 @@ void main() {
         startFixtureMatchUseCase: _UnusedStartFixtureMatchUseCase(),
         resolveFixtureUseCase: _UnusedResolveFixtureUseCase(),
         getStandingsUseCase: getStandingsUseCase,
+        getLeaderboardsUseCase: _UnusedGetLeaderboardsUseCase(),
       ),
       tag: 'tournament-1',
     );

@@ -5,12 +5,14 @@ import 'package:cricket_scorer/features/organization/data/models/response/organi
 import 'package:cricket_scorer/features/organization/domain/usecases/get_organization.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/create_match_res.dart';
 import 'package:cricket_scorer/features/tournament/data/models/response/fixture_res.dart';
+import 'package:cricket_scorer/features/tournament/data/models/response/leaderboard_row_res.dart';
 import 'package:cricket_scorer/features/tournament/data/models/response/standings_row_res.dart';
 import 'package:cricket_scorer/features/tournament/data/models/response/tournament_detail_res.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/delete_tournament.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/enroll_tournament_team.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/generate_fixtures.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/get_fixtures.dart';
+import 'package:cricket_scorer/features/tournament/domain/usecases/get_leaderboards.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/get_standings.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/get_tournament.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/remove_tournament_team.dart';
@@ -233,6 +235,23 @@ class _FakeGetStandingsUseCase implements GetStandingsUseCase {
       throw UnimplementedError('Not exercised in this test.');
 }
 
+class _FakeGetLeaderboardsUseCase implements GetLeaderboardsUseCase {
+  Either<CricketResponse<TournamentLeaderboardsRes>, CricketFailure>? response;
+
+  @override
+  Future<Either<CricketResponse<TournamentLeaderboardsRes>, CricketFailure>> call({
+    GetLeaderboardsParams? params,
+  }) async {
+    final result = response;
+    if (result == null) throw UnimplementedError('Not exercised in this test.');
+    return result;
+  }
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) =>
+      throw UnimplementedError('Not exercised in this test.');
+}
+
 void main() {
   late _FakeGetTournamentUseCase getTournamentUseCase;
   late _FakeGetOrganizationUseCase getOrganizationUseCase;
@@ -245,6 +264,7 @@ void main() {
   late _FakeStartFixtureMatchUseCase startFixtureMatchUseCase;
   late _FakeResolveFixtureUseCase resolveFixtureUseCase;
   late _FakeGetStandingsUseCase getStandingsUseCase;
+  late _FakeGetLeaderboardsUseCase getLeaderboardsUseCase;
   late TournamentDetailController controller;
 
   TournamentDetailController build(String userId) => TournamentDetailController(
@@ -261,6 +281,7 @@ void main() {
     startFixtureMatchUseCase: startFixtureMatchUseCase,
     resolveFixtureUseCase: resolveFixtureUseCase,
     getStandingsUseCase: getStandingsUseCase,
+    getLeaderboardsUseCase: getLeaderboardsUseCase,
   );
 
   setUp(() {
@@ -282,6 +303,7 @@ void main() {
     startFixtureMatchUseCase = _FakeStartFixtureMatchUseCase();
     resolveFixtureUseCase = _FakeResolveFixtureUseCase();
     getStandingsUseCase = _FakeGetStandingsUseCase();
+    getLeaderboardsUseCase = _FakeGetLeaderboardsUseCase();
     controller = build('owner-1');
   });
 
@@ -580,5 +602,53 @@ void main() {
     expect(controller.standingsLoading.value, isFalse);
     expect(controller.standingsError.value, "Standings aren't available for a knockout tournament");
     expect(controller.standings, isEmpty);
+  });
+
+  test('loadLeaderboards populates both leaderboards as the backend returned them', () async {
+    getLeaderboardsUseCase.response = Either.result(
+      CricketResponse(
+        message: 'ok',
+        data: TournamentLeaderboardsRes(
+          tournamentId: 'tournament-1',
+          battingLeaderboard: [
+            BattingLeaderboardRowRes(
+              playerId: 'p1', playerName: 'Rahul',
+              inningsBatted: 2, runs: 100, ballsFaced: 70, timesOut: 1, notOuts: 1,
+              average: 100, strikeRate: 142.86,
+              fours: 10, sixes: 3, fifties: 1, hundreds: 0,
+              highScore: null,
+            ),
+          ],
+          bowlingLeaderboard: [
+            BowlingLeaderboardRowRes(
+              playerId: 'p2', playerName: 'Vijay',
+              inningsBowled: 2, legalDeliveries: 42, runsConceded: 36, wickets: 3, maidens: 0,
+              economy: 5.14,
+              bestBowling: null,
+            ),
+          ],
+        ),
+      ),
+    );
+
+    await controller.loadLeaderboards();
+
+    expect(controller.leaderboardsLoading.value, isFalse);
+    expect(controller.leaderboardsError.value, isNull);
+    expect(controller.battingLeaderboard.map((r) => r.playerName), ['Rahul']);
+    expect(controller.bowlingLeaderboard.map((r) => r.playerName), ['Vijay']);
+  });
+
+  test('loadLeaderboards sets the backend error message on failure, leaves both lists empty', () async {
+    getLeaderboardsUseCase.response = Either.fallback(
+      CricketBadRequestFailure(statusCode: 404, message: 'Tournament not found'),
+    );
+
+    await controller.loadLeaderboards();
+
+    expect(controller.leaderboardsLoading.value, isFalse);
+    expect(controller.leaderboardsError.value, 'Tournament not found');
+    expect(controller.battingLeaderboard, isEmpty);
+    expect(controller.bowlingLeaderboard, isEmpty);
   });
 }
