@@ -366,4 +366,16 @@ class TranslationKeys {
   static const String removeTeamConfirmMessage = 'remove_team_confirm_message';
   static const String teamRemovedFromTournament =
       'team_removed_from_tournament';
+  static const String fixtures = 'fixtures';
+  static const String generateFixtures = 'generate_fixtures';
+  static const String generateNextRound = 'generate_next_round';
+  static const String noFixturesYet = 'no_fixtures_yet';
+  static const String round = 'round';
+  static const String byeLabel = 'bye_label';
+  static const String fixtureStatusScheduled = 'fixture_status_scheduled';
+  static const String fixtureStatusUnresolved = 'fixture_status_unresolved';
+  static const String declareWinner = 'declare_winner';
+  static const String vsLabel = 'vs_label';
+  static const String fixturesGenerated = 'fixtures_generated';
+  static const String fixtureResolved = 'fixture_resolved';
 }
