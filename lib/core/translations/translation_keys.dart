@@ -393,4 +393,7 @@ class TranslationKeys {
   static const String leaderboards = 'leaderboards';
   static const String noLeaderboardsYet = 'no_leaderboards_yet';
   static const String player = 'player';
+  static const String search = 'search';
+  static const String searchHint = 'search_hint';
+  static const String noSearchResultsFound = 'no_search_results_found';
 }

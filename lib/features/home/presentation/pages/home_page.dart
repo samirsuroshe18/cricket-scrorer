@@ -48,6 +48,10 @@ class HomePage extends GetView<HomeController> {
         title: TranslationKeys.matchHistory.tr,
         actions: [
           IconButton(
+            icon: const Icon(Icons.search),
+            onPressed: () => Get.toNamed<dynamic>(AppRoutes.search),
+          ),
+          IconButton(
             icon: const Icon(Icons.groups_outlined),
             onPressed: () => Get.toNamed<dynamic>(AppRoutes.organizations),
           ),

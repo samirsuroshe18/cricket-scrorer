@@ -35,6 +35,8 @@ import 'package:cricket_scorer/features/organization/presentation/bindings/organ
 import 'package:cricket_scorer/features/organization/presentation/bindings/organizations_list_binding.dart';
 import 'package:cricket_scorer/features/organization/presentation/pages/organization_detail_screen.dart';
 import 'package:cricket_scorer/features/organization/presentation/pages/organizations_list_screen.dart';
+import 'package:cricket_scorer/features/search/presentation/bindings/search_binding.dart';
+import 'package:cricket_scorer/features/search/presentation/pages/search_screen.dart';
 import 'package:cricket_scorer/features/tournament/presentation/bindings/tournament_detail_binding.dart';
 import 'package:cricket_scorer/features/tournament/presentation/pages/tournament_detail_screen.dart';
 import 'package:cricket_scorer/features/tournament/presentation/pages/tournament_leaderboards_screen.dart';
@@ -127,6 +129,11 @@ abstract class AppPages {
       name: AppRoutes.organizations,
       page: () => const OrganizationsListScreen(),
       binding: OrganizationsListBinding(),
+    ),
+    GetPage(
+      name: AppRoutes.search,
+      page: () => const SearchScreen(),
+      binding: SearchBinding(),
     ),
     GetPage(
       name: AppRoutes.organizationDetail,
