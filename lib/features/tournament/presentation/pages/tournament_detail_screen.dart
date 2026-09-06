@@ -7,17 +7,22 @@ import 'package:cricket_scorer/core/global/widgets/cricket_text.dart';
 import 'package:cricket_scorer/core/global/widgets/custom_app_bar.dart';
 import 'package:cricket_scorer/core/global/widgets/snackbars/cricket_snackbar.dart';
 import 'package:cricket_scorer/core/translations/translation_keys.dart';
+import 'package:cricket_scorer/features/tournament/data/models/response/fixture_res.dart';
 import 'package:cricket_scorer/features/tournament/data/models/response/tournament_detail_res.dart';
 import 'package:cricket_scorer/features/tournament/presentation/controllers/tournament_detail_controller.dart';
 import 'package:cricket_scorer/features/tournament/presentation/widget/enroll_team_sheet.dart';
 import 'package:cricket_scorer/features/tournament/presentation/widget/edit_tournament_sheet.dart';
 import 'package:cricket_scorer/features/tournament/presentation/widget/format_status_chips.dart';
+import 'package:cricket_scorer/features/tournament/presentation/widget/fixture_status_chip.dart';
+import 'package:cricket_scorer/features/tournament/presentation/widget/resolve_fixture_sheet.dart';
+import 'package:cricket_scorer/features/tournament/presentation/widget/start_fixture_match_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-/// A tournament's detail plus its enrolled-team roster — reached by
-/// tapping a tournament row on `OrganizationDetailScreen`. Shares that
-/// screen's and `TeamProfileScreen`'s section/row vocabulary.
+/// A tournament's detail plus its enrolled-team roster and fixture
+/// schedule — reached by tapping a tournament row on
+/// `OrganizationDetailScreen`. Shares that screen's and `TeamProfileScreen`'s
+/// section/row vocabulary.
 class TournamentDetailScreen extends StatefulWidget {
   const TournamentDetailScreen({super.key});
 
@@ -61,6 +66,15 @@ class _TournamentDetailScreenState extends State<TournamentDetailScreen> {
       Get.back<dynamic>();
     } else {
       CricketSnackbar.showErrorMessage(TranslationKeys.somethingWentWrong.tr);
+    }
+  }
+
+  Future<void> _generateFixtures() async {
+    final errorMessage = await controller.generateFixtures();
+    if (errorMessage == null) {
+      CricketSnackbar.showSuccessMessage(TranslationKeys.fixturesGenerated.tr);
+    } else {
+      CricketSnackbar.showErrorMessage(errorMessage);
     }
   }
 
@@ -218,7 +232,7 @@ class _TournamentDetailScreenState extends State<TournamentDetailScreen> {
                       text: TranslationKeys.teams.tr,
                       style: context.textTheme.titleSmall,
                     ),
-                    if (controller.isOwner)
+                    if (controller.isOwner && !controller.fixturesGenerated)
                       TextButton.icon(
                         onPressed: () =>
                             showEnrollTeamSheet(controller: controller),
@@ -242,10 +256,68 @@ class _TournamentDetailScreenState extends State<TournamentDetailScreen> {
                   for (final team in data.teams) ...[
                     _EnrolledTeamRow(
                       team: team,
-                      canRemove: controller.isOwner,
+                      canRemove: controller.isOwner && !controller.fixturesGenerated,
                       onRemove: () => _confirmRemoveTeam(team),
                     ),
                     4.h,
+                  ],
+                24.h,
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    CricketText(
+                      text: TranslationKeys.fixtures.tr,
+                      style: context.textTheme.titleSmall,
+                    ),
+                    if (controller.isOwner &&
+                        (!controller.fixturesGenerated || controller.canGenerateNextRound))
+                      TextButton(
+                        onPressed: _generateFixtures,
+                        child: CricketText(
+                          text: controller.fixturesGenerated
+                              ? TranslationKeys.generateNextRound.tr
+                              : TranslationKeys.generateFixtures.tr,
+                        ),
+                      ),
+                  ],
+                ),
+                8.h,
+                if (controller.fixtures.isEmpty)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    child: CricketText(
+                      text: TranslationKeys.noFixturesYet.tr,
+                      style: context.textTheme.bodyMedium?.copyWith(
+                        color: context.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  )
+                else
+                  for (final round in _roundsInOrder(controller.fixtures)) ...[
+                    CricketText(
+                      text: '${TranslationKeys.round.tr} $round',
+                      style: context.textTheme.labelMedium?.copyWith(
+                        color: context.colorScheme.onSurfaceVariant,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    8.h,
+                    for (final fixture in controller.fixtures.where((f) => f.round == round)) ...[
+                      _FixtureRow(
+                        fixture: fixture,
+                        isOwner: controller.isOwner,
+                        onStart: () => showStartFixtureMatchSheet(
+                          controller: controller,
+                          fixture: fixture,
+                        ),
+                        onResolve: () => showResolveFixtureSheet(
+                          controller: controller,
+                          fixture: fixture,
+                        ),
+                      ),
+                      4.h,
+                    ],
+                    12.h,
                   ],
               ],
             ),
@@ -254,6 +326,14 @@ class _TournamentDetailScreenState extends State<TournamentDetailScreen> {
       ),
     );
   }
+}
+
+/// Every round number present in [fixtures], ascending, de-duplicated —
+/// drives the round-header grouping in the Fixtures section above.
+List<int> _roundsInOrder(List<FixtureRes> fixtures) {
+  final rounds = fixtures.map((f) => f.round).toSet().toList();
+  rounds.sort();
+  return rounds;
 }
 
 class _EnrolledTeamRow extends StatelessWidget {
@@ -314,6 +394,75 @@ class _EnrolledTeamRow extends StatelessWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// One fixture: the matchup (or "TeamA — Bye"), a status pill, and — when
+/// applicable — a trailing action. `scheduled` gets "Start match" (any
+/// member); `unresolved` gets owner-only "Declare winner"; `bye`/`completed`
+/// get no action, just the pill.
+class _FixtureRow extends StatelessWidget {
+  const _FixtureRow({
+    required this.fixture,
+    required this.isOwner,
+    required this.onStart,
+    required this.onResolve,
+  });
+
+  final FixtureRes fixture;
+  final bool isOwner;
+  final VoidCallback onStart;
+  final VoidCallback onResolve;
+
+  @override
+  Widget build(BuildContext context) {
+    final matchupText = fixture.isBye
+        ? '${fixture.teamA.name} — ${TranslationKeys.byeLabel.tr}'
+        : '${fixture.teamA.name} ${TranslationKeys.vsLabel.tr} ${fixture.teamB?.name ?? ''}';
+
+    Widget? action;
+    if (fixture.status == 'scheduled') {
+      action = TextButton(
+        onPressed: onStart,
+        child: CricketText(text: TranslationKeys.startMatch.tr),
+      );
+    } else if (fixture.status == 'unresolved' && isOwner) {
+      action = TextButton(
+        onPressed: onResolve,
+        child: CricketText(text: TranslationKeys.declareWinner.tr),
+      );
+    }
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Row(
+        children: [
+          Expanded(
+            child: CricketText(
+              text: matchupText,
+              style: context.textTheme.bodyMedium?.copyWith(
+                color: context.colorScheme.secondary,
+              ),
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+            decoration: BoxDecoration(
+              color: fixtureStatusColor(context, fixture.status).withValues(alpha: 0.12),
+              borderRadius: 8.radius,
+            ),
+            child: CricketText(
+              text: fixtureStatusLabel(fixture.status),
+              style: context.textTheme.labelSmall?.copyWith(
+                color: fixtureStatusColor(context, fixture.status),
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+          if (action != null) ...[8.w, action],
+        ],
       ),
     );
   }
