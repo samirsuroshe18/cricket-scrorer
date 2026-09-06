@@ -25,4 +25,7 @@ class TournamentEndpoint {
 
   String standings(String tournamentId) =>
       '/v1/tournament/$tournamentId/standings';
+
+  String leaderboards(String tournamentId) =>
+      '/v1/tournament/$tournamentId/leaderboards';
 }

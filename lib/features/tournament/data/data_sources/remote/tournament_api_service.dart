@@ -111,4 +111,12 @@ class TournamentApiService {
       endpoint: tournamentEndpoint.standings(tournamentId),
     );
   }
+
+  Future<Either<ApiResponseModel, CricketFailure>> getLeaderboards({
+    required String tournamentId,
+  }) async {
+    return await apiClient.get(
+      endpoint: tournamentEndpoint.leaderboards(tournamentId),
+    );
+  }
 }

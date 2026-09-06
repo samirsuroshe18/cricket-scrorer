@@ -8,6 +8,7 @@ import 'package:cricket_scorer/features/tournament/domain/usecases/delete_tourna
 import 'package:cricket_scorer/features/tournament/domain/usecases/enroll_tournament_team.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/generate_fixtures.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/get_fixtures.dart';
+import 'package:cricket_scorer/features/tournament/domain/usecases/get_leaderboards.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/get_standings.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/get_tournament.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/remove_tournament_team.dart';
@@ -109,6 +110,13 @@ class TournamentInjection {
 
     Get.lazyPut<GetStandingsUseCase>(
       () => GetStandingsUseCase(
+        tournamentRepository: Get.find<TournamentRepository>(),
+      ),
+      fenix: true,
+    );
+
+    Get.lazyPut<GetLeaderboardsUseCase>(
+      () => GetLeaderboardsUseCase(
         tournamentRepository: Get.find<TournamentRepository>(),
       ),
       fenix: true,
