@@ -3,8 +3,12 @@ import 'package:cricket_scorer/features/organization/data/models/response/organi
 import 'package:cricket_scorer/features/organization/domain/usecases/get_organization.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/delete_tournament.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/enroll_tournament_team.dart';
+import 'package:cricket_scorer/features/tournament/domain/usecases/generate_fixtures.dart';
+import 'package:cricket_scorer/features/tournament/domain/usecases/get_fixtures.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/get_tournament.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/remove_tournament_team.dart';
+import 'package:cricket_scorer/features/tournament/domain/usecases/resolve_fixture.dart';
+import 'package:cricket_scorer/features/tournament/domain/usecases/start_fixture_match.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/update_tournament.dart';
 import 'package:cricket_scorer/features/tournament/presentation/controllers/tournament_detail_controller.dart';
 import 'package:cricket_scorer/features/tournament/presentation/widget/enroll_team_sheet.dart';
@@ -25,6 +29,10 @@ class _FakeTournamentDetailController extends TournamentDetailController {
         deleteTournamentUseCase: _UnusedDeleteTournamentUseCase(),
         enrollTournamentTeamUseCase: _UnusedEnrollTournamentTeamUseCase(),
         removeTournamentTeamUseCase: _UnusedRemoveTournamentTeamUseCase(),
+        getFixturesUseCase: _UnusedGetFixturesUseCase(),
+        generateFixturesUseCase: _UnusedGenerateFixturesUseCase(),
+        startFixtureMatchUseCase: _UnusedStartFixtureMatchUseCase(),
+        resolveFixtureUseCase: _UnusedResolveFixtureUseCase(),
       );
 
   final List<OrganizationTeamRef> _eligible;
@@ -68,6 +76,26 @@ class _UnusedEnrollTournamentTeamUseCase implements EnrollTournamentTeamUseCase 
 }
 
 class _UnusedRemoveTournamentTeamUseCase implements RemoveTournamentTeamUseCase {
+  @override
+  dynamic noSuchMethod(Invocation invocation) => throw UnimplementedError();
+}
+
+class _UnusedGetFixturesUseCase implements GetFixturesUseCase {
+  @override
+  dynamic noSuchMethod(Invocation invocation) => throw UnimplementedError();
+}
+
+class _UnusedGenerateFixturesUseCase implements GenerateFixturesUseCase {
+  @override
+  dynamic noSuchMethod(Invocation invocation) => throw UnimplementedError();
+}
+
+class _UnusedStartFixtureMatchUseCase implements StartFixtureMatchUseCase {
+  @override
+  dynamic noSuchMethod(Invocation invocation) => throw UnimplementedError();
+}
+
+class _UnusedResolveFixtureUseCase implements ResolveFixtureUseCase {
   @override
   dynamic noSuchMethod(Invocation invocation) => throw UnimplementedError();
 }

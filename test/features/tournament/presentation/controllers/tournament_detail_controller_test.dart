@@ -3,11 +3,17 @@ import 'package:cricket_scorer/core/network/models/cricket_response.dart';
 import 'package:cricket_scorer/core/utils/either_util.dart';
 import 'package:cricket_scorer/features/organization/data/models/response/organization_detail_res.dart';
 import 'package:cricket_scorer/features/organization/domain/usecases/get_organization.dart';
+import 'package:cricket_scorer/features/scoring/data/models/response/create_match_res.dart';
+import 'package:cricket_scorer/features/tournament/data/models/response/fixture_res.dart';
 import 'package:cricket_scorer/features/tournament/data/models/response/tournament_detail_res.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/delete_tournament.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/enroll_tournament_team.dart';
+import 'package:cricket_scorer/features/tournament/domain/usecases/generate_fixtures.dart';
+import 'package:cricket_scorer/features/tournament/domain/usecases/get_fixtures.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/get_tournament.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/remove_tournament_team.dart';
+import 'package:cricket_scorer/features/tournament/domain/usecases/resolve_fixture.dart';
+import 'package:cricket_scorer/features/tournament/domain/usecases/start_fixture_match.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/update_tournament.dart';
 import 'package:cricket_scorer/features/tournament/presentation/controllers/tournament_detail_controller.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -140,6 +146,74 @@ class _FakeRemoveTournamentTeamUseCase implements RemoveTournamentTeamUseCase {
       throw UnimplementedError('Not exercised in this test.');
 }
 
+class _FakeGetFixturesUseCase implements GetFixturesUseCase {
+  Either<CricketResponse<List<FixtureRes>>, CricketFailure>? response;
+
+  @override
+  Future<Either<CricketResponse<List<FixtureRes>>, CricketFailure>> call({
+    GetFixturesParams? params,
+  }) async {
+    final result = response;
+    if (result == null) throw UnimplementedError('Not exercised in this test.');
+    return result;
+  }
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) =>
+      throw UnimplementedError('Not exercised in this test.');
+}
+
+class _FakeGenerateFixturesUseCase implements GenerateFixturesUseCase {
+  Either<CricketResponse<void>, CricketFailure>? response;
+
+  @override
+  Future<Either<CricketResponse<void>, CricketFailure>> call({
+    GenerateFixturesParams? params,
+  }) async {
+    final result = response;
+    if (result == null) throw UnimplementedError('Not exercised in this test.');
+    return result;
+  }
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) =>
+      throw UnimplementedError('Not exercised in this test.');
+}
+
+class _FakeStartFixtureMatchUseCase implements StartFixtureMatchUseCase {
+  Either<CricketResponse<CreateMatchRes>, CricketFailure>? response;
+
+  @override
+  Future<Either<CricketResponse<CreateMatchRes>, CricketFailure>> call({
+    StartFixtureMatchParams? params,
+  }) async {
+    final result = response;
+    if (result == null) throw UnimplementedError('Not exercised in this test.');
+    return result;
+  }
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) =>
+      throw UnimplementedError('Not exercised in this test.');
+}
+
+class _FakeResolveFixtureUseCase implements ResolveFixtureUseCase {
+  Either<CricketResponse<void>, CricketFailure>? response;
+
+  @override
+  Future<Either<CricketResponse<void>, CricketFailure>> call({
+    ResolveFixtureParams? params,
+  }) async {
+    final result = response;
+    if (result == null) throw UnimplementedError('Not exercised in this test.');
+    return result;
+  }
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) =>
+      throw UnimplementedError('Not exercised in this test.');
+}
+
 void main() {
   late _FakeGetTournamentUseCase getTournamentUseCase;
   late _FakeGetOrganizationUseCase getOrganizationUseCase;
@@ -147,6 +221,10 @@ void main() {
   late _FakeDeleteTournamentUseCase deleteTournamentUseCase;
   late _FakeEnrollTournamentTeamUseCase enrollTeamUseCase;
   late _FakeRemoveTournamentTeamUseCase removeTeamUseCase;
+  late _FakeGetFixturesUseCase getFixturesUseCase;
+  late _FakeGenerateFixturesUseCase generateFixturesUseCase;
+  late _FakeStartFixtureMatchUseCase startFixtureMatchUseCase;
+  late _FakeResolveFixtureUseCase resolveFixtureUseCase;
   late TournamentDetailController controller;
 
   TournamentDetailController build(String userId) => TournamentDetailController(
@@ -158,6 +236,10 @@ void main() {
     deleteTournamentUseCase: deleteTournamentUseCase,
     enrollTournamentTeamUseCase: enrollTeamUseCase,
     removeTournamentTeamUseCase: removeTeamUseCase,
+    getFixturesUseCase: getFixturesUseCase,
+    generateFixturesUseCase: generateFixturesUseCase,
+    startFixtureMatchUseCase: startFixtureMatchUseCase,
+    resolveFixtureUseCase: resolveFixtureUseCase,
   );
 
   setUp(() {
@@ -168,6 +250,16 @@ void main() {
     deleteTournamentUseCase = _FakeDeleteTournamentUseCase();
     enrollTeamUseCase = _FakeEnrollTournamentTeamUseCase();
     removeTeamUseCase = _FakeRemoveTournamentTeamUseCase();
+    // A default empty-list response so every existing test's loadDetail()
+    // call — which now also calls the private _loadFixtures() — keeps
+    // working unchanged; tests that care about fixtures override this.
+    getFixturesUseCase = _FakeGetFixturesUseCase()
+      ..response = Either.result(
+        const CricketResponse(message: 'ok', data: <FixtureRes>[]),
+      );
+    generateFixturesUseCase = _FakeGenerateFixturesUseCase();
+    startFixtureMatchUseCase = _FakeStartFixtureMatchUseCase();
+    resolveFixtureUseCase = _FakeResolveFixtureUseCase();
     controller = build('owner-1');
   });
 
@@ -294,5 +386,140 @@ void main() {
     final result = await controller.removeTeam('team-1');
 
     expect(result, isFalse);
+  });
+
+  test('loadDetail also populates fixtures', () async {
+    getTournamentUseCase.response = Either.result(
+      CricketResponse(message: 'ok', data: _tournament()),
+    );
+    getOrganizationUseCase.response = Either.result(
+      CricketResponse(message: 'ok', data: _org()),
+    );
+    getFixturesUseCase.response = Either.result(
+      CricketResponse(
+        message: 'ok',
+        data: [
+          FixtureRes(
+            id: 'fixture-1',
+            round: 1,
+            order: 0,
+            teamA: FixtureTeamRef(id: 'team-1', name: 'Harbor CC'),
+            teamB: FixtureTeamRef(id: 'team-2', name: 'Lakeside XI'),
+            isBye: false,
+            status: 'scheduled',
+          ),
+        ],
+      ),
+    );
+
+    await controller.loadDetail();
+
+    expect(controller.fixtures.length, 1);
+    expect(controller.fixturesGenerated, isTrue);
+  });
+
+  test('generateFixtures returns null and refreshes fixtures on success', () async {
+    getTournamentUseCase.response = Either.result(
+      CricketResponse(message: 'ok', data: _tournament()),
+    );
+    getOrganizationUseCase.response = Either.result(
+      CricketResponse(message: 'ok', data: _org()),
+    );
+    await controller.loadDetail();
+
+    generateFixturesUseCase.response = Either.result(
+      const CricketResponse(message: 'ok', data: null),
+    );
+    getFixturesUseCase.response = Either.result(
+      CricketResponse(
+        message: 'ok',
+        data: [
+          FixtureRes(
+            id: 'fixture-1',
+            round: 1,
+            order: 0,
+            teamA: FixtureTeamRef(id: 'team-1', name: 'Harbor CC'),
+            teamB: FixtureTeamRef(id: 'team-2', name: 'Lakeside XI'),
+            isBye: false,
+            status: 'scheduled',
+          ),
+        ],
+      ),
+    );
+
+    final errorMessage = await controller.generateFixtures();
+
+    expect(errorMessage, isNull);
+    expect(controller.fixtures.length, 1);
+  });
+
+  test('generateFixtures returns the backend message on failure', () async {
+    generateFixturesUseCase.response = Either.fallback(
+      CricketBadRequestFailure(
+        statusCode: 400,
+        message: 'Not enough teams enrolled for this tournament\'s format',
+      ),
+    );
+
+    final errorMessage = await controller.generateFixtures();
+
+    expect(errorMessage, 'Not enough teams enrolled for this tournament\'s format');
+    expect(controller.fixtures, isEmpty);
+  });
+
+  test('startFixtureMatch returns a success outcome with the created match', () async {
+    startFixtureMatchUseCase.response = Either.result(
+      CricketResponse(
+        message: 'ok',
+        data: CreateMatchRes(
+          matchId: 'match-1',
+          joinCode: 'ABC123',
+          teamA: TeamRef(id: 'team-1', name: 'Harbor CC'),
+          teamB: TeamRef(id: 'team-2', name: 'Lakeside XI'),
+          totalOvers: 20,
+          status: 'upcoming',
+          syncStatus: 'local',
+          createdAt: '2026-09-06T10:00:00.000Z',
+        ),
+      ),
+    );
+    getFixturesUseCase.response = Either.result(
+      const CricketResponse(message: 'ok', data: <FixtureRes>[]),
+    );
+
+    final outcome = await controller.startFixtureMatch(
+      'fixture-1',
+      totalOvers: 20,
+    );
+
+    expect(outcome.errorMessage, isNull);
+    expect(outcome.match?.matchId, 'match-1');
+  });
+
+  test('startFixtureMatch returns a failure outcome with the backend message', () async {
+    startFixtureMatchUseCase.response = Either.fallback(
+      CricketConflictFailure(statusCode: 409, message: 'This fixture already has a match'),
+    );
+
+    final outcome = await controller.startFixtureMatch(
+      'fixture-1',
+      totalOvers: 20,
+    );
+
+    expect(outcome.match, isNull);
+    expect(outcome.errorMessage, 'This fixture already has a match');
+  });
+
+  test('resolveFixture returns null and refreshes fixtures on success', () async {
+    resolveFixtureUseCase.response = Either.result(
+      const CricketResponse(message: 'ok', data: null),
+    );
+    getFixturesUseCase.response = Either.result(
+      const CricketResponse(message: 'ok', data: <FixtureRes>[]),
+    );
+
+    final errorMessage = await controller.resolveFixture('fixture-1', 'team-1');
+
+    expect(errorMessage, isNull);
   });
 }
