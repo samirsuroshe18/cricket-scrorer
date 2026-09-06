@@ -5,8 +5,10 @@ import 'package:cricket_scorer/features/organization/domain/usecases/add_organiz
 import 'package:cricket_scorer/features/organization/domain/usecases/create_organization_team.dart';
 import 'package:cricket_scorer/features/organization/domain/usecases/delete_organization.dart';
 import 'package:cricket_scorer/features/organization/domain/usecases/get_organization.dart';
+import 'package:cricket_scorer/features/organization/domain/usecases/get_organization_leaderboards.dart';
 import 'package:cricket_scorer/features/organization/domain/usecases/remove_organization_member.dart';
 import 'package:cricket_scorer/features/tournament/data/models/request/create_tournament_req.dart';
+import 'package:cricket_scorer/features/tournament/data/models/response/leaderboard_row_res.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/create_tournament.dart';
 import 'package:get/get.dart';
 
@@ -25,6 +27,7 @@ class OrganizationDetailController extends GetxController {
   final CreateOrganizationTeamUseCase createOrganizationTeamUseCase;
   final DeleteOrganizationUseCase deleteOrganizationUseCase;
   final CreateTournamentUseCase createTournamentUseCase;
+  final GetOrganizationLeaderboardsUseCase getOrganizationLeaderboardsUseCase;
 
   OrganizationDetailController({
     required this.orgId,
@@ -35,11 +38,20 @@ class OrganizationDetailController extends GetxController {
     required this.createOrganizationTeamUseCase,
     required this.deleteOrganizationUseCase,
     required this.createTournamentUseCase,
+    required this.getOrganizationLeaderboardsUseCase,
   });
 
   final detail = Rxn<OrganizationDetailRes>();
   final isLoading = true.obs;
   final loadError = Rxn<String>();
+
+  // Leaderboards are fetched only when the leaderboards screen is actually
+  // opened — same lazy-load reasoning as TournamentDetailController's own
+  // standings/leaderboards state.
+  final battingLeaderboard = <BattingLeaderboardRowRes>[].obs;
+  final bowlingLeaderboard = <BowlingLeaderboardRowRes>[].obs;
+  final leaderboardsLoading = false.obs;
+  final leaderboardsError = Rxn<String>();
 
   bool get isOwner => detail.value?.owner.id == currentUserId;
 
@@ -120,5 +132,24 @@ class OrganizationDetailController extends GetxController {
     if (!response.isResult) return false;
     await loadDetail();
     return true;
+  }
+
+  Future<void> loadLeaderboards() async {
+    leaderboardsLoading.value = true;
+    leaderboardsError.value = null;
+
+    final response = await getOrganizationLeaderboardsUseCase(
+      params: GetOrganizationLeaderboardsParams(orgId: orgId),
+    );
+
+    if (!response.isResult) {
+      leaderboardsError.value = response.fallback.message;
+      leaderboardsLoading.value = false;
+      return;
+    }
+
+    battingLeaderboard.assignAll(response.result.data!.battingLeaderboard);
+    bowlingLeaderboard.assignAll(response.result.data!.bowlingLeaderboard);
+    leaderboardsLoading.value = false;
   }
 }

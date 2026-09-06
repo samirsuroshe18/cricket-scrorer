@@ -62,6 +62,18 @@ class AppRoutes {
 
   /// Registered with a GetX path parameter, same shape as
   /// [organizationDetail]. Never navigate with this constant directly —
+  /// use [organizationLeaderboardsPath]. No binding of its own: reuses the
+  /// same tag-registered `OrganizationDetailController` the detail screen
+  /// already created, same pattern as the tournament-scoped leaderboards
+  /// screen.
+  static const String organizationLeaderboards =
+      '/organization/:orgId/leaderboards';
+
+  static String organizationLeaderboardsPath(String orgId) =>
+      '/organization/$orgId/leaderboards';
+
+  /// Registered with a GetX path parameter, same shape as
+  /// [organizationDetail]. Never navigate with this constant directly —
   /// use [tournamentDetailPath].
   static const String tournamentDetail = '/tournament/:tournamentId';
 

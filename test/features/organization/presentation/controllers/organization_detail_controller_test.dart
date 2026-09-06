@@ -2,11 +2,14 @@ import 'package:cricket_scorer/core/error/cricket_failure.dart';
 import 'package:cricket_scorer/core/network/models/cricket_response.dart';
 import 'package:cricket_scorer/core/utils/either_util.dart';
 import 'package:cricket_scorer/features/organization/data/models/response/organization_detail_res.dart';
+import 'package:cricket_scorer/features/organization/data/models/response/organization_leaderboards_res.dart';
 import 'package:cricket_scorer/features/organization/domain/usecases/add_organization_member.dart';
 import 'package:cricket_scorer/features/organization/domain/usecases/create_organization_team.dart';
 import 'package:cricket_scorer/features/organization/domain/usecases/delete_organization.dart';
 import 'package:cricket_scorer/features/organization/domain/usecases/get_organization.dart';
+import 'package:cricket_scorer/features/organization/domain/usecases/get_organization_leaderboards.dart';
 import 'package:cricket_scorer/features/organization/domain/usecases/remove_organization_member.dart';
+import 'package:cricket_scorer/features/tournament/data/models/response/leaderboard_row_res.dart';
 import 'package:cricket_scorer/features/organization/presentation/controllers/organization_detail_controller.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/create_tournament.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -143,6 +146,25 @@ class _FakeCreateTournamentUseCase implements CreateTournamentUseCase {
       throw UnimplementedError('Not exercised in this test.');
 }
 
+class _FakeGetOrganizationLeaderboardsUseCase
+    implements GetOrganizationLeaderboardsUseCase {
+  Either<CricketResponse<OrganizationLeaderboardsRes>, CricketFailure>? response;
+
+  @override
+  Future<Either<CricketResponse<OrganizationLeaderboardsRes>, CricketFailure>>
+  call({GetOrganizationLeaderboardsParams? params}) async {
+    final result = response;
+    if (result == null) {
+      throw UnimplementedError('Not exercised in this test.');
+    }
+    return result;
+  }
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) =>
+      throw UnimplementedError('Not exercised in this test.');
+}
+
 void main() {
   late _FakeGetOrganizationUseCase getOrganizationUseCase;
   late _FakeAddOrganizationMemberUseCase addMemberUseCase;
@@ -150,6 +172,7 @@ void main() {
   late _FakeCreateOrganizationTeamUseCase createTeamUseCase;
   late _FakeDeleteOrganizationUseCase deleteOrganizationUseCase;
   late _FakeCreateTournamentUseCase createTournamentUseCase;
+  late _FakeGetOrganizationLeaderboardsUseCase getOrganizationLeaderboardsUseCase;
   late OrganizationDetailController controller;
 
   setUp(() {
@@ -160,6 +183,7 @@ void main() {
     createTeamUseCase = _FakeCreateOrganizationTeamUseCase();
     deleteOrganizationUseCase = _FakeDeleteOrganizationUseCase();
     createTournamentUseCase = _FakeCreateTournamentUseCase();
+    getOrganizationLeaderboardsUseCase = _FakeGetOrganizationLeaderboardsUseCase();
     controller = OrganizationDetailController(
       orgId: 'org-1',
       currentUserId: 'user-1',
@@ -169,6 +193,7 @@ void main() {
       createOrganizationTeamUseCase: createTeamUseCase,
       deleteOrganizationUseCase: deleteOrganizationUseCase,
       createTournamentUseCase: createTournamentUseCase,
+      getOrganizationLeaderboardsUseCase: getOrganizationLeaderboardsUseCase,
     );
   });
 
@@ -195,6 +220,7 @@ void main() {
       createOrganizationTeamUseCase: createTeamUseCase,
       deleteOrganizationUseCase: deleteOrganizationUseCase,
       createTournamentUseCase: createTournamentUseCase,
+      getOrganizationLeaderboardsUseCase: getOrganizationLeaderboardsUseCase,
     );
     controller.detail.value = _detail();
 
@@ -284,5 +310,44 @@ void main() {
     final result = await controller.createTournament('Summer T20', 'knockout');
 
     expect(result, isTrue);
+  });
+
+  test('loadLeaderboards populates both leaderboards as the backend returned them', () async {
+    getOrganizationLeaderboardsUseCase.response = Either.result(
+      CricketResponse(
+        message: 'ok',
+        data: OrganizationLeaderboardsRes(
+          organizationId: 'org-1',
+          battingLeaderboard: [
+            BattingLeaderboardRowRes(
+              playerId: 'p1', playerName: 'Rahul',
+              inningsBatted: 2, runs: 36, ballsFaced: 12, timesOut: 0, notOuts: 2,
+              average: null, strikeRate: 300,
+              fours: 0, sixes: 6, fifties: 0, hundreds: 0, highScore: null,
+            ),
+          ],
+          bowlingLeaderboard: const [],
+        ),
+      ),
+    );
+
+    await controller.loadLeaderboards();
+
+    expect(controller.leaderboardsLoading.value, isFalse);
+    expect(controller.leaderboardsError.value, isNull);
+    expect(controller.battingLeaderboard.map((r) => r.playerName), ['Rahul']);
+  });
+
+  test('loadLeaderboards sets the backend error message on failure, leaves both lists empty', () async {
+    getOrganizationLeaderboardsUseCase.response = Either.fallback(
+      CricketNotFoundErrorFailure(statusCode: 404, message: 'Organization not found'),
+    );
+
+    await controller.loadLeaderboards();
+
+    expect(controller.leaderboardsLoading.value, isFalse);
+    expect(controller.leaderboardsError.value, 'Organization not found');
+    expect(controller.battingLeaderboard, isEmpty);
+    expect(controller.bowlingLeaderboard, isEmpty);
   });
 }
