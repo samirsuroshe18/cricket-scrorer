@@ -6,6 +6,7 @@ import 'package:cricket_scorer/features/organization/data/models/request/add_org
 import 'package:cricket_scorer/features/organization/data/models/request/create_organization_req.dart';
 import 'package:cricket_scorer/features/organization/data/models/request/create_organization_team_req.dart';
 import 'package:cricket_scorer/features/organization/data/models/response/organization_detail_res.dart';
+import 'package:cricket_scorer/features/organization/data/models/response/organization_leaderboards_res.dart';
 import 'package:cricket_scorer/features/organization/data/models/response/organization_summary_res.dart';
 import 'package:cricket_scorer/features/organization/domain/repositories/organization_repository.dart';
 
@@ -148,6 +149,24 @@ class OrganizationRepositoryImpl implements OrganizationRepository {
     if (response.isResult) {
       return Either.result(
         CricketResponse(data: null, message: response.result.message),
+      );
+    } else {
+      return Either.fallback(response.fallback);
+    }
+  }
+
+  @override
+  Future<Either<CricketResponse<OrganizationLeaderboardsRes>, CricketFailure>>
+  getLeaderboards({required String orgId}) async {
+    final response = await organizationApiService.getLeaderboards(orgId: orgId);
+    if (response.isResult) {
+      return Either.result(
+        CricketResponse(
+          data: OrganizationLeaderboardsRes.fromJson(
+            response.result.data as Map<String, dynamic>,
+          ),
+          message: response.result.message,
+        ),
       );
     } else {
       return Either.fallback(response.fallback);

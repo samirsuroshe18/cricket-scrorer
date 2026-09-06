@@ -71,4 +71,12 @@ class OrganizationApiService {
       endpoint: organizationEndpoint.delete(orgId),
     );
   }
+
+  Future<Either<ApiResponseModel, CricketFailure>> getLeaderboards({
+    required String orgId,
+  }) async {
+    return await apiClient.get(
+      endpoint: organizationEndpoint.leaderboards(orgId),
+    );
+  }
 }

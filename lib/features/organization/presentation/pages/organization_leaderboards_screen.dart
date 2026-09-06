@@ -4,29 +4,31 @@ import 'package:cricket_scorer/core/global/widgets/cricket_button.dart';
 import 'package:cricket_scorer/core/global/widgets/cricket_text.dart';
 import 'package:cricket_scorer/core/global/widgets/custom_app_bar.dart';
 import 'package:cricket_scorer/core/translations/translation_keys.dart';
-import 'package:cricket_scorer/features/tournament/presentation/controllers/tournament_detail_controller.dart';
+import 'package:cricket_scorer/features/organization/presentation/controllers/organization_detail_controller.dart';
 import 'package:cricket_scorer/features/tournament/presentation/widget/leaderboard_tables.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-/// Batting + bowling leaderboards for one tournament — reached from
-/// `TournamentDetailScreen`'s "Leaderboards" action, shown for every
-/// tournament format (unlike Standings, which hides for knockout). Reuses
-/// that screen's own tag-registered `TournamentDetailController`, fetched
-/// lazily via `loadLeaderboards()` only when this screen actually opens.
-class TournamentLeaderboardsScreen extends StatefulWidget {
-  const TournamentLeaderboardsScreen({super.key});
+/// Batting + bowling leaderboards aggregated across every tournament one
+/// organization runs — reached from `OrganizationDetailScreen`'s
+/// "Leaderboards" action. Reuses that screen's own tag-registered
+/// `OrganizationDetailController`, fetched lazily via `loadLeaderboards()`
+/// only when this screen actually opens. Renders with the exact same
+/// `BattingLeaderboardTable`/`BowlingLeaderboardTable` widgets the
+/// tournament-scoped screen uses — only the data behind them differs.
+class OrganizationLeaderboardsScreen extends StatefulWidget {
+  const OrganizationLeaderboardsScreen({super.key});
 
   @override
-  State<TournamentLeaderboardsScreen> createState() =>
-      _TournamentLeaderboardsScreenState();
+  State<OrganizationLeaderboardsScreen> createState() =>
+      _OrganizationLeaderboardsScreenState();
 }
 
-class _TournamentLeaderboardsScreenState
-    extends State<TournamentLeaderboardsScreen> {
-  late final String _tournamentId = Get.parameters['tournamentId']?.trim() ?? '';
-  late final TournamentDetailController controller =
-      Get.find<TournamentDetailController>(tag: _tournamentId);
+class _OrganizationLeaderboardsScreenState
+    extends State<OrganizationLeaderboardsScreen> {
+  late final String _orgId = Get.parameters['orgId']?.trim() ?? '';
+  late final OrganizationDetailController controller =
+      Get.find<OrganizationDetailController>(tag: _orgId);
 
   @override
   void initState() {

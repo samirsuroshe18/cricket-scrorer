@@ -223,6 +223,12 @@ class _OrganizationDetailScreenState extends State<OrganizationDetailScreen> {
       appBar: CustomAppBar(
         title: TranslationKeys.organizationDetail.tr,
         actions: [
+          IconButton(
+            icon: const Icon(Icons.leaderboard_outlined),
+            onPressed: () => Get.toNamed<dynamic>(
+              AppRoutes.organizationLeaderboardsPath(_orgId),
+            ),
+          ),
           Obx(() {
             if (!controller.isOwner) return const SizedBox.shrink();
             return IconButton(

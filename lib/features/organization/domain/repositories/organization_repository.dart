@@ -5,6 +5,7 @@ import 'package:cricket_scorer/features/organization/data/models/request/add_org
 import 'package:cricket_scorer/features/organization/data/models/request/create_organization_req.dart';
 import 'package:cricket_scorer/features/organization/data/models/request/create_organization_team_req.dart';
 import 'package:cricket_scorer/features/organization/data/models/response/organization_detail_res.dart';
+import 'package:cricket_scorer/features/organization/data/models/response/organization_leaderboards_res.dart';
 import 'package:cricket_scorer/features/organization/data/models/response/organization_summary_res.dart';
 
 abstract class OrganizationRepository {
@@ -46,4 +47,9 @@ abstract class OrganizationRepository {
   Future<Either<CricketResponse<void>, CricketFailure>> deleteOrganization({
     required String orgId,
   });
+
+  /// `GET /v1/organization/:orgId/leaderboards` — any org member. Aggregates
+  /// across every tournament this org runs.
+  Future<Either<CricketResponse<OrganizationLeaderboardsRes>, CricketFailure>>
+  getLeaderboards({required String orgId});
 }
