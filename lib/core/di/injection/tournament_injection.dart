@@ -9,10 +9,14 @@ import 'package:cricket_scorer/features/tournament/domain/usecases/enroll_tourna
 import 'package:cricket_scorer/features/tournament/domain/usecases/generate_fixtures.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/get_fixtures.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/get_leaderboards.dart';
+import 'package:cricket_scorer/features/tournament/domain/usecases/get_pool.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/get_standings.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/get_tournament.dart';
+import 'package:cricket_scorer/features/tournament/domain/usecases/register_pool_player.dart';
+import 'package:cricket_scorer/features/tournament/domain/usecases/remove_pool_entry.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/remove_tournament_team.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/resolve_fixture.dart';
+import 'package:cricket_scorer/features/tournament/domain/usecases/update_pool_entry.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/start_fixture_match.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/update_tournament.dart';
 import 'package:get/get.dart';
@@ -117,6 +121,34 @@ class TournamentInjection {
 
     Get.lazyPut<GetLeaderboardsUseCase>(
       () => GetLeaderboardsUseCase(
+        tournamentRepository: Get.find<TournamentRepository>(),
+      ),
+      fenix: true,
+    );
+
+    Get.lazyPut<RegisterPoolPlayerUseCase>(
+      () => RegisterPoolPlayerUseCase(
+        tournamentRepository: Get.find<TournamentRepository>(),
+      ),
+      fenix: true,
+    );
+
+    Get.lazyPut<GetPoolUseCase>(
+      () => GetPoolUseCase(
+        tournamentRepository: Get.find<TournamentRepository>(),
+      ),
+      fenix: true,
+    );
+
+    Get.lazyPut<UpdatePoolEntryUseCase>(
+      () => UpdatePoolEntryUseCase(
+        tournamentRepository: Get.find<TournamentRepository>(),
+      ),
+      fenix: true,
+    );
+
+    Get.lazyPut<RemovePoolEntryUseCase>(
+      () => RemovePoolEntryUseCase(
         tournamentRepository: Get.find<TournamentRepository>(),
       ),
       fenix: true,
