@@ -101,4 +101,15 @@ class AppRoutes {
 
   static String tournamentLeaderboardsPath(String tournamentId) =>
       '/tournament/$tournamentId/leaderboards';
+
+  /// Registered with a GetX path parameter, same shape as
+  /// [tournamentLeaderboards]. Never navigate with this constant directly —
+  /// use [tournamentPoolPath]. No binding of its own, same reasoning as
+  /// standings/leaderboards: reuses the tag-registered
+  /// `TournamentDetailController`.
+  static const String tournamentPool =
+      '/tournament/:tournamentId/pool';
+
+  static String tournamentPoolPath(String tournamentId) =>
+      '/tournament/$tournamentId/pool';
 }
