@@ -15,7 +15,14 @@ class BowlerRef {
   final String? id;
   final String name;
 
-  const BowlerRef({required this.id, required this.name});
+  /// Legal deliveries bowled this innings, as of the last `GET
+  /// .../bowlers` fetch — null for a name learned only from a live event
+  /// (which carries no figures), which is exactly the case where showing a
+  /// stale or fabricated count would be worse than showing none. Never
+  /// updated by a live event afterward; see `_rememberBowler`'s doc comment.
+  final int? legalDeliveries;
+
+  const BowlerRef({required this.id, required this.name, this.legalDeliveries});
 
   bool sameName(String other) => name.trim().toLowerCase() == other.trim().toLowerCase();
 }

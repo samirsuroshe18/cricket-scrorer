@@ -30,6 +30,11 @@ class MatchEndpoint {
 
   String scorecard(String matchId) => '/v1/match/$matchId/scorecard';
 
+  /// `GET /v1/match/:matchId/bowlers` — the bowling side's full roster with
+  /// each player's figures for the current innings, feeding the bowler
+  /// picker's chips independent of what this session has seen bowl.
+  String bowlers(String matchId) => '/v1/match/$matchId/bowlers';
+
   // Not match-scoped — Player is scorer-scoped, persistent across matches
   // (see docs/api.md's player-identity rework) — but reuses this same
   // client/service/repository rather than a whole parallel vertical slice

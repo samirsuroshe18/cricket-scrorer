@@ -143,6 +143,14 @@ class MatchApiService {
     return await apiClient.get(endpoint: matchEndpoint.scorecard(matchId));
   }
 
+  /// Same ownership shape as [getScorecard] — `createdBy` or
+  /// `assignedScorer`.
+  Future<Either<ApiResponseModel, CricketFailure>> getBowlers({
+    required String matchId,
+  }) async {
+    return await apiClient.get(endpoint: matchEndpoint.bowlers(matchId));
+  }
+
   /// verifyJwt, plus a createdBy ownership check server-side, same shape as
   /// [getScorecard] — a Player belongs to the scorer who created it.
   Future<Either<ApiResponseModel, CricketFailure>> getCareerStats({
