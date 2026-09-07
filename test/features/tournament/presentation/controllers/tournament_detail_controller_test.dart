@@ -6,6 +6,7 @@ import 'package:cricket_scorer/features/organization/domain/usecases/get_organiz
 import 'package:cricket_scorer/features/scoring/data/models/response/create_match_res.dart';
 import 'package:cricket_scorer/features/tournament/data/models/response/fixture_res.dart';
 import 'package:cricket_scorer/features/tournament/data/models/response/leaderboard_row_res.dart';
+import 'package:cricket_scorer/features/tournament/data/models/response/pool_entry_res.dart';
 import 'package:cricket_scorer/features/tournament/data/models/response/standings_row_res.dart';
 import 'package:cricket_scorer/features/tournament/data/models/response/tournament_detail_res.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/delete_tournament.dart';
@@ -13,11 +14,15 @@ import 'package:cricket_scorer/features/tournament/domain/usecases/enroll_tourna
 import 'package:cricket_scorer/features/tournament/domain/usecases/generate_fixtures.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/get_fixtures.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/get_leaderboards.dart';
+import 'package:cricket_scorer/features/tournament/domain/usecases/get_pool.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/get_standings.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/get_tournament.dart';
+import 'package:cricket_scorer/features/tournament/domain/usecases/register_pool_player.dart';
+import 'package:cricket_scorer/features/tournament/domain/usecases/remove_pool_entry.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/remove_tournament_team.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/resolve_fixture.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/start_fixture_match.dart';
+import 'package:cricket_scorer/features/tournament/domain/usecases/update_pool_entry.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/update_tournament.dart';
 import 'package:cricket_scorer/features/tournament/presentation/controllers/tournament_detail_controller.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -252,6 +257,80 @@ class _FakeGetLeaderboardsUseCase implements GetLeaderboardsUseCase {
       throw UnimplementedError('Not exercised in this test.');
 }
 
+class _FakeRegisterPoolPlayerUseCase implements RegisterPoolPlayerUseCase {
+  Either<CricketResponse<PoolEntryRes>, CricketFailure>? response;
+  RegisterPoolPlayerParams? lastParams;
+
+  @override
+  Future<Either<CricketResponse<PoolEntryRes>, CricketFailure>> call({
+    RegisterPoolPlayerParams? params,
+  }) async {
+    lastParams = params;
+    final result = response;
+    if (result == null) throw UnimplementedError('Not exercised in this test.');
+    return result;
+  }
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) =>
+      throw UnimplementedError('Not exercised in this test.');
+}
+
+class _FakeGetPoolUseCase implements GetPoolUseCase {
+  Either<CricketResponse<List<PoolEntryRes>>, CricketFailure>? response;
+
+  @override
+  Future<Either<CricketResponse<List<PoolEntryRes>>, CricketFailure>> call({
+    GetPoolParams? params,
+  }) async {
+    final result = response;
+    if (result == null) throw UnimplementedError('Not exercised in this test.');
+    return result;
+  }
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) =>
+      throw UnimplementedError('Not exercised in this test.');
+}
+
+class _FakeUpdatePoolEntryUseCase implements UpdatePoolEntryUseCase {
+  Either<CricketResponse<PoolEntryRes>, CricketFailure>? response;
+  UpdatePoolEntryParams? lastParams;
+
+  @override
+  Future<Either<CricketResponse<PoolEntryRes>, CricketFailure>> call({
+    UpdatePoolEntryParams? params,
+  }) async {
+    lastParams = params;
+    final result = response;
+    if (result == null) throw UnimplementedError('Not exercised in this test.');
+    return result;
+  }
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) =>
+      throw UnimplementedError('Not exercised in this test.');
+}
+
+class _FakeRemovePoolEntryUseCase implements RemovePoolEntryUseCase {
+  Either<CricketResponse<void>, CricketFailure>? response;
+  RemovePoolEntryParams? lastParams;
+
+  @override
+  Future<Either<CricketResponse<void>, CricketFailure>> call({
+    RemovePoolEntryParams? params,
+  }) async {
+    lastParams = params;
+    final result = response;
+    if (result == null) throw UnimplementedError('Not exercised in this test.');
+    return result;
+  }
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) =>
+      throw UnimplementedError('Not exercised in this test.');
+}
+
 void main() {
   late _FakeGetTournamentUseCase getTournamentUseCase;
   late _FakeGetOrganizationUseCase getOrganizationUseCase;
@@ -265,6 +344,10 @@ void main() {
   late _FakeResolveFixtureUseCase resolveFixtureUseCase;
   late _FakeGetStandingsUseCase getStandingsUseCase;
   late _FakeGetLeaderboardsUseCase getLeaderboardsUseCase;
+  late _FakeRegisterPoolPlayerUseCase registerPoolPlayerUseCase;
+  late _FakeGetPoolUseCase getPoolUseCase;
+  late _FakeUpdatePoolEntryUseCase updatePoolEntryUseCase;
+  late _FakeRemovePoolEntryUseCase removePoolEntryUseCase;
   late TournamentDetailController controller;
 
   TournamentDetailController build(String userId) => TournamentDetailController(
@@ -282,6 +365,10 @@ void main() {
     resolveFixtureUseCase: resolveFixtureUseCase,
     getStandingsUseCase: getStandingsUseCase,
     getLeaderboardsUseCase: getLeaderboardsUseCase,
+    registerPoolPlayerUseCase: registerPoolPlayerUseCase,
+    getPoolUseCase: getPoolUseCase,
+    updatePoolEntryUseCase: updatePoolEntryUseCase,
+    removePoolEntryUseCase: removePoolEntryUseCase,
   );
 
   setUp(() {
@@ -304,6 +391,10 @@ void main() {
     resolveFixtureUseCase = _FakeResolveFixtureUseCase();
     getStandingsUseCase = _FakeGetStandingsUseCase();
     getLeaderboardsUseCase = _FakeGetLeaderboardsUseCase();
+    registerPoolPlayerUseCase = _FakeRegisterPoolPlayerUseCase();
+    getPoolUseCase = _FakeGetPoolUseCase();
+    updatePoolEntryUseCase = _FakeUpdatePoolEntryUseCase();
+    removePoolEntryUseCase = _FakeRemovePoolEntryUseCase();
     controller = build('owner-1');
   });
 
@@ -650,5 +741,113 @@ void main() {
     expect(controller.leaderboardsError.value, 'Tournament not found');
     expect(controller.battingLeaderboard, isEmpty);
     expect(controller.bowlingLeaderboard, isEmpty);
+  });
+
+  PoolEntryRes poolEntry({String playerId = 'p1', String playerName = 'Rohit Sharma', int basePrice = 5000}) =>
+      PoolEntryRes(
+        playerId: playerId,
+        playerName: playerName,
+        role: 'batsman',
+        basePrice: basePrice,
+        registeredAt: '2026-09-07T10:00:00.000Z',
+      );
+
+  test('loadPool populates poolEntries on success', () async {
+    getPoolUseCase.response = Either.result(
+      CricketResponse(message: 'ok', data: [poolEntry()]),
+    );
+
+    await controller.loadPool();
+
+    expect(controller.poolEntries.length, 1);
+    expect(controller.poolEntries.first.playerName, 'Rohit Sharma');
+    expect(controller.poolLoading.value, isFalse);
+    expect(controller.poolError.value, isNull);
+  });
+
+  test('loadPool sets the backend error message on failure, leaves the pool empty', () async {
+    getPoolUseCase.response = Either.fallback(
+      CricketBadRequestFailure(statusCode: 404, message: 'Tournament not found'),
+    );
+
+    await controller.loadPool();
+
+    expect(controller.poolLoading.value, isFalse);
+    expect(controller.poolError.value, 'Tournament not found');
+    expect(controller.poolEntries, isEmpty);
+  });
+
+  test('registerPoolPlayer sends the given fields and reloads the pool on success', () async {
+    registerPoolPlayerUseCase.response = Either.result(
+      CricketResponse(message: 'ok', data: poolEntry()),
+    );
+    getPoolUseCase.response = Either.result(
+      CricketResponse(message: 'ok', data: [poolEntry()]),
+    );
+
+    final result = await controller.registerPoolPlayer(
+      playerName: 'Rohit Sharma',
+      basePrice: 5000,
+    );
+
+    expect(result, isTrue);
+    expect(registerPoolPlayerUseCase.lastParams?.playerName, 'Rohit Sharma');
+    expect(registerPoolPlayerUseCase.lastParams?.basePrice, 5000);
+    expect(controller.poolEntries.length, 1);
+  });
+
+  test('registerPoolPlayer returns false on failure without reloading the pool', () async {
+    registerPoolPlayerUseCase.response = Either.fallback(
+      CricketConflictFailure(statusCode: 409, message: 'This player is already registered in this tournament\'s pool'),
+    );
+
+    final result = await controller.registerPoolPlayer(
+      playerName: 'Rohit Sharma',
+      basePrice: 5000,
+    );
+
+    expect(result, isFalse);
+    expect(controller.poolEntries, isEmpty);
+  });
+
+  test('updatePoolEntry sends the new basePrice and reloads the pool on success', () async {
+    updatePoolEntryUseCase.response = Either.result(
+      CricketResponse(message: 'ok', data: poolEntry(basePrice: 8000)),
+    );
+    getPoolUseCase.response = Either.result(
+      CricketResponse(message: 'ok', data: [poolEntry(basePrice: 8000)]),
+    );
+
+    final result = await controller.updatePoolEntry(playerId: 'p1', basePrice: 8000);
+
+    expect(result, isTrue);
+    expect(updatePoolEntryUseCase.lastParams?.playerId, 'p1');
+    expect(updatePoolEntryUseCase.lastParams?.basePrice, 8000);
+    expect(controller.poolEntries.first.basePrice, 8000);
+  });
+
+  test('removePoolEntry sends playerId and reloads the pool on success', () async {
+    removePoolEntryUseCase.response = Either.result(
+      const CricketResponse(message: 'ok', data: null),
+    );
+    getPoolUseCase.response = Either.result(
+      const CricketResponse(message: 'ok', data: <PoolEntryRes>[]),
+    );
+
+    final result = await controller.removePoolEntry('p1');
+
+    expect(result, isTrue);
+    expect(removePoolEntryUseCase.lastParams?.playerId, 'p1');
+    expect(controller.poolEntries, isEmpty);
+  });
+
+  test('removePoolEntry returns false on failure without reloading the pool', () async {
+    removePoolEntryUseCase.response = Either.fallback(
+      CricketServerErrorFailure(statusCode: 500, message: 'Server error'),
+    );
+
+    final result = await controller.removePoolEntry('p1');
+
+    expect(result, isFalse);
   });
 }

@@ -4,6 +4,7 @@ import 'package:cricket_scorer/features/scoring/data/models/response/create_matc
 import 'package:cricket_scorer/features/tournament/data/models/request/update_tournament_req.dart';
 import 'package:cricket_scorer/features/tournament/data/models/response/fixture_res.dart';
 import 'package:cricket_scorer/features/tournament/data/models/response/leaderboard_row_res.dart';
+import 'package:cricket_scorer/features/tournament/data/models/response/pool_entry_res.dart';
 import 'package:cricket_scorer/features/tournament/data/models/response/standings_row_res.dart';
 import 'package:cricket_scorer/features/tournament/data/models/response/tournament_detail_res.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/delete_tournament.dart';
@@ -11,11 +12,15 @@ import 'package:cricket_scorer/features/tournament/domain/usecases/enroll_tourna
 import 'package:cricket_scorer/features/tournament/domain/usecases/generate_fixtures.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/get_fixtures.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/get_leaderboards.dart';
+import 'package:cricket_scorer/features/tournament/domain/usecases/get_pool.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/get_standings.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/get_tournament.dart';
+import 'package:cricket_scorer/features/tournament/domain/usecases/register_pool_player.dart';
+import 'package:cricket_scorer/features/tournament/domain/usecases/remove_pool_entry.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/remove_tournament_team.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/resolve_fixture.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/start_fixture_match.dart';
+import 'package:cricket_scorer/features/tournament/domain/usecases/update_pool_entry.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/update_tournament.dart';
 import 'package:get/get.dart';
 
@@ -58,6 +63,10 @@ class TournamentDetailController extends GetxController {
   final ResolveFixtureUseCase resolveFixtureUseCase;
   final GetStandingsUseCase getStandingsUseCase;
   final GetLeaderboardsUseCase getLeaderboardsUseCase;
+  final RegisterPoolPlayerUseCase registerPoolPlayerUseCase;
+  final GetPoolUseCase getPoolUseCase;
+  final UpdatePoolEntryUseCase updatePoolEntryUseCase;
+  final RemovePoolEntryUseCase removePoolEntryUseCase;
 
   TournamentDetailController({
     required this.tournamentId,
@@ -74,6 +83,10 @@ class TournamentDetailController extends GetxController {
     required this.resolveFixtureUseCase,
     required this.getStandingsUseCase,
     required this.getLeaderboardsUseCase,
+    required this.registerPoolPlayerUseCase,
+    required this.getPoolUseCase,
+    required this.updatePoolEntryUseCase,
+    required this.removePoolEntryUseCase,
   });
 
   final detail = Rxn<TournamentDetailRes>();
@@ -309,5 +322,82 @@ class TournamentDetailController extends GetxController {
     battingLeaderboard.assignAll(response.result.data!.battingLeaderboard);
     bowlingLeaderboard.assignAll(response.result.data!.bowlingLeaderboard);
     leaderboardsLoading.value = false;
+  }
+
+  // Same lazy-load reasoning as standings/leaderboards above — fetched only
+  // when the pool screen actually opens.
+  final poolEntries = <PoolEntryRes>[].obs;
+  final poolLoading = false.obs;
+  final poolError = Rxn<String>();
+
+  Future<void> loadPool() async {
+    poolLoading.value = true;
+    poolError.value = null;
+
+    final response = await getPoolUseCase(
+      params: GetPoolParams(tournamentId: tournamentId),
+    );
+
+    if (!response.isResult) {
+      poolError.value = response.fallback.message;
+      poolLoading.value = false;
+      return;
+    }
+
+    poolEntries.assignAll(response.result.data!);
+    poolLoading.value = false;
+  }
+
+  /// Returns true on success (and reloads the pool), false otherwise —
+  /// mirrors updateTournament/enrollTeam's own boolean-result shape. The
+  /// sheet that calls this shows its own error on false; this controller
+  /// method never calls CricketSnackbar directly (see the class doc).
+  Future<bool> registerPoolPlayer({
+    String? playerName,
+    String? playerId,
+    required int basePrice,
+  }) async {
+    final response = await registerPoolPlayerUseCase(
+      params: RegisterPoolPlayerParams(
+        tournamentId: tournamentId,
+        playerName: playerName,
+        playerId: playerId,
+        basePrice: basePrice,
+      ),
+    );
+
+    if (!response.isResult) return false;
+    await loadPool();
+    return true;
+  }
+
+  Future<bool> updatePoolEntry({
+    required String playerId,
+    required int basePrice,
+  }) async {
+    final response = await updatePoolEntryUseCase(
+      params: UpdatePoolEntryParams(
+        tournamentId: tournamentId,
+        playerId: playerId,
+        basePrice: basePrice,
+      ),
+    );
+
+    if (!response.isResult) return false;
+    await loadPool();
+    return true;
+  }
+
+  Future<bool> removePoolEntry(String playerId) async {
+    final response = await removePoolEntryUseCase(
+      params: RemovePoolEntryParams(
+        tournamentId: tournamentId,
+        playerId: playerId,
+      ),
+    );
+
+    if (!response.isResult) return false;
+    await loadPool();
+    return true;
   }
 }
