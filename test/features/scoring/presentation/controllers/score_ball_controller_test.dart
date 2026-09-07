@@ -28,6 +28,7 @@ import 'package:cricket_scorer/features/scoring/data/models/response/public_matc
 import 'package:cricket_scorer/features/scoring/data/models/response/score_ball_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/score_undo_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/scorecard_res.dart';
+import 'package:cricket_scorer/features/scoring/data/models/response/match_bowlers_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/career_stats_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/request/update_player_req.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/player_profile_res.dart';
@@ -58,6 +59,10 @@ import 'package:get/get.dart';
 /// meant to queue offline, never to actually reach a network.
 class _OfflineMatchRepository implements MatchRepository {
   StartInningsRes? startInningsResponse;
+
+  /// Settable per test — null falls back to an empty roster, the harmless
+  /// default every test that never sets it relies on.
+  MatchBowlersRes? bowlersResponse;
 
   /// Settable per test — null means "not exercised", matching every other
   /// unset field on this fake.
@@ -153,6 +158,15 @@ class _OfflineMatchRepository implements MatchRepository {
   }) async {
     throw UnimplementedError('Not exercised in this test.');
   }
+
+  @override
+  Future<Either<CricketResponse<MatchBowlersRes>, CricketFailure>>
+  getBowlers({required String matchId}) async => Either.result(
+    CricketResponse(
+      message: 'ok',
+      data: bowlersResponse ?? MatchBowlersRes(bowlers: const []),
+    ),
+  );
 
   @override
   Future<Either<CricketResponse<CareerStatsRes>, CricketFailure>>
@@ -253,6 +267,10 @@ class _OfflineMatchRepository implements MatchRepository {
 class _MixedMatchRepository implements MatchRepository {
   StartInningsRes? startInningsResponse;
   bool online = true;
+
+  /// Settable per test — null falls back to an empty roster, the harmless
+  /// default every test that never sets it relies on.
+  MatchBowlersRes? bowlersResponse;
 
   final List<String> _ballIds = [];
   // Runs credited by each ball still on the server, in the same order as
@@ -462,6 +480,15 @@ class _MixedMatchRepository implements MatchRepository {
   }
 
   @override
+  Future<Either<CricketResponse<MatchBowlersRes>, CricketFailure>>
+  getBowlers({required String matchId}) async => Either.result(
+    CricketResponse(
+      message: 'ok',
+      data: bowlersResponse ?? MatchBowlersRes(bowlers: const []),
+    ),
+  );
+
+  @override
   Future<Either<CricketResponse<CareerStatsRes>, CricketFailure>>
   getCareerStats({required String playerId}) async {
     throw UnimplementedError('Not exercised in this test.');
@@ -652,6 +679,12 @@ class _RecordingMatchRepository implements MatchRepository {
   }) async {
     throw UnimplementedError('Not exercised in this test.');
   }
+
+  @override
+  Future<Either<CricketResponse<MatchBowlersRes>, CricketFailure>>
+  getBowlers({required String matchId}) async => Either.result(
+    CricketResponse(message: 'ok', data: MatchBowlersRes(bowlers: const [])),
+  );
 
   @override
   Future<Either<CricketResponse<CareerStatsRes>, CricketFailure>>
@@ -1014,6 +1047,12 @@ class _ServerSimulatingMatchRepository implements MatchRepository {
   }
 
   @override
+  Future<Either<CricketResponse<MatchBowlersRes>, CricketFailure>>
+  getBowlers({required String matchId}) async => Either.result(
+    CricketResponse(message: 'ok', data: MatchBowlersRes(bowlers: const [])),
+  );
+
+  @override
   Future<Either<CricketResponse<CareerStatsRes>, CricketFailure>>
   getCareerStats({required String playerId}) async {
     throw UnimplementedError('Not exercised in this test.');
@@ -1199,6 +1238,12 @@ class _RuleBlockingMatchRepository implements MatchRepository {
   }) async {
     throw UnimplementedError('Not exercised in this test.');
   }
+
+  @override
+  Future<Either<CricketResponse<MatchBowlersRes>, CricketFailure>>
+  getBowlers({required String matchId}) async => Either.result(
+    CricketResponse(message: 'ok', data: MatchBowlersRes(bowlers: const [])),
+  );
 
   @override
   Future<Either<CricketResponse<CareerStatsRes>, CricketFailure>>
@@ -1604,6 +1649,143 @@ void main() {
 
         expect(resumeController.partnershipRuns.value, 0);
         expect(resumeController.partnershipBalls.value, 0);
+      },
+    );
+  });
+
+  group('seeding the bowler picker roster from GET .../bowlers on launch', () {
+    late _MixedMatchRepository rosterRepo;
+    late ScoringQueueDatabase rosterDb;
+    late ScoreBallController rosterController;
+
+    setUp(() {
+      rosterRepo = _MixedMatchRepository();
+      rosterDb = ScoringQueueDatabase.forTesting(NativeDatabase.memory());
+      final dao = ScoringQueueDao(rosterDb);
+      final offlineSyncService = OfflineSyncService(
+        dao: dao,
+        syncMatchUseCase: SyncMatchUseCase(matchRepository: rosterRepo),
+        startInningsUseCase: StartInningsUseCase(matchRepository: rosterRepo),
+      );
+
+      rosterController = ScoreBallController(
+        scoreBallUseCase: ScoreBallUseCase(matchRepository: rosterRepo),
+        startInningsUseCase: StartInningsUseCase(matchRepository: rosterRepo),
+        selectBowlerUseCase: SelectBowlerUseCase(matchRepository: rosterRepo),
+        undoBallUseCase: UndoBallUseCase(matchRepository: rosterRepo),
+        abandonMatchUseCase: AbandonMatchUseCase(matchRepository: rosterRepo),
+        matchRepository: rosterRepo,
+        offlineSyncService: offlineSyncService,
+      );
+
+      Get.testMode = true;
+      Get.routing.args = CreateMatchRes(
+        matchId: 'match-1',
+        joinCode: null,
+        teamA: TeamRef(id: 'team-a', name: 'Team A'),
+        teamB: TeamRef(id: 'team-b', name: 'Team B'),
+        totalOvers: 2,
+        status: 'live',
+        syncStatus: 'synced',
+        createdAt: '2026-01-01T00:00:00.000Z',
+      );
+    });
+
+    tearDown(() async {
+      await rosterRepo.watchScoreUpdatesController.close();
+      await rosterDb.close();
+    });
+
+    test(
+      'a fresh launch mid-match seeds bowlersSeen with the full bowling-side '
+      'roster, overs-bowled figures included, before match:state names only '
+      'one or two of them',
+      () async {
+        rosterRepo.bowlersResponse = MatchBowlersRes(
+          bowlers: [
+            BowlerFigureRes(
+              id: 'bowler-1',
+              name: 'Bumrah',
+              legalDeliveries: 12,
+              runsConceded: 18,
+              wickets: 2,
+            ),
+            BowlerFigureRes(
+              id: 'bowler-2',
+              name: 'Suresh',
+              legalDeliveries: 0,
+              runsConceded: 0,
+              wickets: 0,
+            ),
+          ],
+        );
+
+        rosterController.onInit();
+        await pumpEventQueue();
+
+        final byName = {
+          for (final bowler in rosterController.bowlersSeen) bowler.name: bowler,
+        };
+        expect(byName.keys, {'Bumrah', 'Suresh'});
+        expect(byName['Bumrah']!.id, 'bowler-1');
+        expect(byName['Bumrah']!.legalDeliveries, 12);
+        expect(byName['Suresh']!.legalDeliveries, 0);
+      },
+    );
+
+    test(
+      'a bowler already known from a live event keeps its id once the '
+      'roster fetch resolves for the same name, and gains that fetch\'s '
+      'overs-bowled figure',
+      () async {
+        rosterRepo.bowlersResponse = MatchBowlersRes(
+          bowlers: [
+            BowlerFigureRes(
+              id: 'bowler-1',
+              name: 'Bumrah',
+              legalDeliveries: 12,
+              runsConceded: 18,
+              wickets: 2,
+            ),
+          ],
+        );
+
+        rosterController.onInit();
+        // The join ack names the current bowler before the roster fetch's
+        // response can possibly land — exactly the ordering a real socket
+        // connect racing a REST call produces.
+        rosterRepo.watchScoreUpdatesController.add(
+          Either.result(
+            LiveScoreRes(
+              matchId: 'match-1',
+              inningsNumber: 1,
+              totalRuns: 0,
+              wickets: 0,
+              overs: '0.0',
+              strike: Strike(
+                strikerName: 'Striker',
+                nonStrikerName: 'Non-Striker',
+              ),
+              bowler: BowlerState(
+                currentBowlerId: 'bowler-1',
+                currentBowlerName: 'Bumrah',
+              ),
+            ),
+          ),
+        );
+        await pumpEventQueue();
+
+        expect(rosterController.bowlersSeen.length, 1);
+        final bumrah = rosterController.bowlersSeen.single;
+        expect(bumrah.id, 'bowler-1');
+        expect(
+          bumrah.legalDeliveries,
+          12,
+          reason:
+              'the live event never carries figures — only the roster '
+              'fetch does, and it must not be dropped just because this '
+              'name was already known',
+        );
       },
     );
   });
@@ -3622,6 +3804,12 @@ class _LockTransitionMatchRepository implements MatchRepository {
   Future<Either<CricketResponse<ScorecardRes>, CricketFailure>> getScorecard({
     required String matchId,
   }) => throw UnimplementedError('Not exercised in this test.');
+
+  @override
+  Future<Either<CricketResponse<MatchBowlersRes>, CricketFailure>>
+  getBowlers({required String matchId}) async => Either.result(
+    CricketResponse(message: 'ok', data: MatchBowlersRes(bowlers: const [])),
+  );
 
   @override
   Future<Either<CricketResponse<CareerStatsRes>, CricketFailure>>

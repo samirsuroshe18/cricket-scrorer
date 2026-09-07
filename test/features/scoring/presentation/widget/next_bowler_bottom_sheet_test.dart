@@ -9,8 +9,11 @@ import 'package:get/get.dart';
 void main() {
   Future<void> pumpSheet(
     WidgetTester tester,
-    Future<bool> Function(String bowlerName, {String? bowlerId}) onSubmit,
-  ) async {
+    Future<bool> Function(String bowlerName, {String? bowlerId}) onSubmit, {
+    List<BowlerRef> knownBowlers = const [
+      BowlerRef(id: 'bowler-rahul', name: 'Rahul'),
+    ],
+  }) async {
     // A real reactive read, not a hardcoded `false` — the sheet's undo-link
     // Obx wraps `canUndo()` and, when it short-circuits false, never reaches
     // `isUndoing.value` either. With no Rx access at all, GetX flags the Obx
@@ -26,9 +29,7 @@ void main() {
             builder: (context) => ElevatedButton(
               onPressed: () => NextBowlerBottomSheet.show(
                 excludedBowlerName: null,
-                knownBowlers: [
-                  const BowlerRef(id: 'bowler-rahul', name: 'Rahul'),
-                ],
+                knownBowlers: knownBowlers,
                 isSubmitting: false.obs,
                 onSubmit: onSubmit,
                 canUndo: () => canUndo.value,
@@ -45,6 +46,24 @@ void main() {
     await tester.tap(find.text('open'));
     await tester.pumpAndSettle();
   }
+
+  testWidgets(
+    'a chip for a bowler with overs already bowled shows the overs badge, '
+    'and a bowler with none stays a plain name',
+    (WidgetTester tester) async {
+      await pumpSheet(
+        tester,
+        (name, {bowlerId}) async => true,
+        knownBowlers: [
+          const BowlerRef(id: 'bowler-rahul', name: 'Rahul', legalDeliveries: 14),
+          const BowlerRef(id: 'bowler-amit', name: 'Amit', legalDeliveries: 0),
+        ],
+      );
+
+      expect(find.text('Rahul (2.2 ov)'), findsOneWidget);
+      expect(find.text('Amit'), findsOneWidget);
+    },
+  );
 
   testWidgets(
     'tapping a known bowler chip sends its id, not just the name',

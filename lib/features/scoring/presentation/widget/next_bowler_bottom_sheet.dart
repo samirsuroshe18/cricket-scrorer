@@ -24,11 +24,15 @@ import 'package:get/get.dart';
 /// dismissal types that are impossible off the armed delivery.
 ///
 /// **The name field is not a convenience — it is what stops this being a dead
-/// end.** Nothing but `start-innings` and `select-bowler` ever creates a Player
-/// on the bowling side, so there is no roster to list: [knownBowlers] holds
-/// only bowlers seen this innings, and on a fresh app launch mid-match that can
-/// be a single name — the greyed one. The field is always present and always
-/// enabled.
+/// end.** [knownBowlers] is seeded from `GET .../bowlers` on launch (the
+/// bowling side's full team roster, each with overs bowled this innings —
+/// see `ScoreBallController._seedBowlerRosterFromServer`), on top of whichever
+/// bowlers a live selection event has named. But that seed is a one-time,
+/// best-effort fetch: it can come back empty (no innings yet when this fired,
+/// or the fetch simply failed) and is never retried or refreshed afterward,
+/// so overs-bowled figures on an old chip can fall behind what the server now
+/// knows. The field is always present and always enabled precisely because of
+/// that: nothing here is ever treated as a closed or fully current list.
 class NextBowlerBottomSheet extends StatefulWidget {
   const NextBowlerBottomSheet({
     required this.excludedBowlerName,
@@ -45,7 +49,8 @@ class NextBowlerBottomSheet extends StatefulWidget {
   /// Null only if the server sent no exclusion, in which case nothing is greyed.
   final String? excludedBowlerName;
 
-  /// Bowlers seen this innings. A shortcut, not a roster — see the class doc.
+  /// The bowling side's roster, plus anyone since seen bowl — see the class
+  /// doc for how current this actually is.
   final List<BowlerRef> knownBowlers;
 
   /// Button-level loading, owned by the controller.
@@ -112,6 +117,17 @@ class _NextBowlerBottomSheetState extends State<NextBowlerBottomSheet> {
   /// text listener: editing the field away from the picked name doesn't
   /// need its own handler, `_submit` simply stops finding a match.
   BowlerRef? _picked;
+
+  /// The bare name for a bowler with nothing bowled yet — a "(0.0 ov)" badge
+  /// on every batter in a full-roster chip list would be noise, not
+  /// information. Once at least one legal delivery is on record, the badge
+  /// is what tells "already established this innings" apart from "hasn't
+  /// bowled a ball", which the name alone can't.
+  String _chipLabel(BowlerRef bowler) {
+    final deliveries = bowler.legalDeliveries;
+    if (deliveries == null || deliveries <= 0) return bowler.name;
+    return '${bowler.name} (${deliveries ~/ 6}.${deliveries % 6} ov)';
+  }
 
   bool _isExcluded(String name) {
     final excluded = widget.excludedBowlerName?.trim().toLowerCase();
@@ -229,7 +245,7 @@ class _NextBowlerBottomSheetState extends State<NextBowlerBottomSheet> {
                 children: widget.knownBowlers.map((BowlerRef bowler) {
                   final blocked = _isExcluded(bowler.name);
                   return ChoiceChip(
-                    label: CricketText(text: bowler.name),
+                    label: CricketText(text: _chipLabel(bowler)),
                     selected: _controller.text.trim() == bowler.name,
                     // Greyed, not removed. `onSelected: null` is what disables a
                     // chip in Material; the reason line below says why.

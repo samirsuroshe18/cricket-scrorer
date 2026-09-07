@@ -28,6 +28,7 @@ import 'package:cricket_scorer/features/scoring/data/models/response/my_teams_re
 import 'package:cricket_scorer/features/scoring/data/models/response/team_organization_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/team_profile_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/scorer_candidates_res.dart';
+import 'package:cricket_scorer/features/scoring/data/models/response/match_bowlers_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/assign_scorer_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/request/update_player_req.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/player_profile_res.dart';
@@ -132,6 +133,13 @@ abstract class MatchRepository {
   Future<Either<CricketResponse<ScorecardRes>, CricketFailure>> getScorecard({
     required String matchId,
   });
+
+  /// `GET /v1/match/:matchId/bowlers` — the current innings' bowling side's
+  /// full roster with each player's figures so far this innings, batters who
+  /// have never bowled included with zero figures. Feeds the bowler picker's
+  /// chips independent of what this session has seen bowl; see docs/api.md.
+  Future<Either<CricketResponse<MatchBowlersRes>, CricketFailure>>
+  getBowlers({required String matchId});
 
   /// `GET /v1/player/:playerId/career-stats` — a Player's totals across
   /// every completed match its scorer has recorded. Not match-scoped; see

@@ -16,6 +16,7 @@ import 'package:cricket_scorer/features/scoring/data/models/request/undo_ball_re
 import 'package:cricket_scorer/features/scoring/data/models/response/bowler_state.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/create_match_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/live_score_res.dart';
+import 'package:cricket_scorer/features/scoring/data/models/response/match_bowlers_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/match_complete_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/over_complete_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/score_ball_res.dart';
@@ -513,6 +514,33 @@ class ScoreBallController extends GetxController {
           }
           _navigateToResult();
         });
+
+    unawaited(_seedBowlerRosterFromServer());
+  }
+
+  /// Fills [bowlersSeen] with the bowling side's full roster on launch, so a
+  /// fresh app open mid-match offers every plausible next bowler rather than
+  /// just whoever `match:state` happens to name as current/previous — see
+  /// [bowlersSeen]'s own doc comment on that gap.
+  ///
+  /// Deliberately best-effort and silent: this only ever adds convenience
+  /// data to a picker that already works without it (a name field is always
+  /// present), so a failure here — no innings yet, a stale/offline read — is
+  /// not worth a snackbar. Never overwrites a name [_rememberBowler] has
+  /// already recorded from a live event, since that entry can be more
+  /// current than this one-time fetch.
+  Future<void> _seedBowlerRosterFromServer() async {
+    final response = await matchRepository.getBowlers(matchId: match.matchId);
+    if (!response.isResult) return;
+
+    for (final bowler
+        in response.result.data?.bowlers ?? const <BowlerFigureRes>[]) {
+      _rememberBowler(
+        bowler.id,
+        bowler.name,
+        legalDeliveries: bowler.legalDeliveries,
+      );
+    }
   }
 
   /// The single place the console leaves this screen. Idempotent against
@@ -830,18 +858,32 @@ class ScoreBallController extends GetxController {
   /// see [BowlerRef]. An existing name-only entry is upgraded in place the
   /// first time a real id shows up for it, never the reverse: a later payload
   /// with no id is never taken to mean the bowler stopped having one.
-  void _rememberBowler(String? id, String? name) {
+  void _rememberBowler(String? id, String? name, {int? legalDeliveries}) {
     final trimmed = name?.trim();
     if (trimmed == null || trimmed.isEmpty) return;
 
     final index = bowlersSeen.indexWhere((b) => b.sameName(trimmed));
     if (index == -1) {
-      bowlersSeen.add(BowlerRef(id: id, name: trimmed));
+      bowlersSeen.add(
+        BowlerRef(id: id, name: trimmed, legalDeliveries: legalDeliveries),
+      );
       return;
     }
 
-    if (id != null && bowlersSeen[index].id == null) {
-      bowlersSeen[index] = BowlerRef(id: id, name: trimmed);
+    // Upgrades an id the same way the original logic did — never backward —
+    // and separately lets a roster fetch's figures fill in an entry a live
+    // event already created id-first with none. A live event never passes
+    // `legalDeliveries` at all, so it can never blow away figures the
+    // roster fetch already recorded here.
+    final existing = bowlersSeen[index];
+    final upgradedId = (id != null && existing.id == null) ? id : existing.id;
+    final upgradedFigures = legalDeliveries ?? existing.legalDeliveries;
+    if (upgradedId != existing.id || upgradedFigures != existing.legalDeliveries) {
+      bowlersSeen[index] = BowlerRef(
+        id: upgradedId,
+        name: trimmed,
+        legalDeliveries: upgradedFigures,
+      );
     }
   }
 
