@@ -5,11 +5,14 @@ import 'package:cricket_scorer/features/scoring/data/models/response/create_matc
 import 'package:cricket_scorer/features/tournament/data/data_sources/remote/tournament_api_service.dart';
 import 'package:cricket_scorer/features/tournament/data/models/request/create_tournament_req.dart';
 import 'package:cricket_scorer/features/tournament/data/models/request/enroll_tournament_team_req.dart';
+import 'package:cricket_scorer/features/tournament/data/models/request/register_pool_player_req.dart';
 import 'package:cricket_scorer/features/tournament/data/models/request/start_fixture_match_req.dart';
 import 'package:cricket_scorer/features/tournament/data/models/request/resolve_fixture_req.dart';
+import 'package:cricket_scorer/features/tournament/data/models/request/update_pool_entry_req.dart';
 import 'package:cricket_scorer/features/tournament/data/models/request/update_tournament_req.dart';
 import 'package:cricket_scorer/features/tournament/data/models/response/fixture_res.dart';
 import 'package:cricket_scorer/features/tournament/data/models/response/leaderboard_row_res.dart';
+import 'package:cricket_scorer/features/tournament/data/models/response/pool_entry_res.dart';
 import 'package:cricket_scorer/features/tournament/data/models/response/standings_row_res.dart';
 import 'package:cricket_scorer/features/tournament/data/models/response/tournament_detail_res.dart';
 import 'package:cricket_scorer/features/tournament/domain/repositories/tournament_repository.dart';
@@ -236,6 +239,92 @@ class TournamentRepositoryImpl implements TournamentRepository {
           ),
           message: response.result.message,
         ),
+      );
+    }
+    return Either.fallback(response.fallback);
+  }
+
+  @override
+  Future<Either<CricketResponse<PoolEntryRes>, CricketFailure>>
+  registerPoolPlayer({
+    required String tournamentId,
+    required RegisterPoolPlayerReq params,
+  }) async {
+    final response = await tournamentApiService.registerPoolPlayer(
+      tournamentId: tournamentId,
+      params: params,
+    );
+    if (response.isResult) {
+      return Either.result(
+        CricketResponse(
+          data: PoolEntryRes.fromJson(
+            response.result.data as Map<String, dynamic>,
+          ),
+          message: response.result.message,
+        ),
+      );
+    }
+    return Either.fallback(response.fallback);
+  }
+
+  @override
+  Future<Either<CricketResponse<List<PoolEntryRes>>, CricketFailure>>
+  getPool({required String tournamentId}) async {
+    final response = await tournamentApiService.getPool(
+      tournamentId: tournamentId,
+    );
+    if (response.isResult) {
+      final data = response.result.data as Map<String, dynamic>;
+      final entriesJson = data['entries'] as List<dynamic>;
+      return Either.result(
+        CricketResponse(
+          data: entriesJson
+              .map((json) => PoolEntryRes.fromJson(json as Map<String, dynamic>))
+              .toList(),
+          message: response.result.message,
+        ),
+      );
+    }
+    return Either.fallback(response.fallback);
+  }
+
+  @override
+  Future<Either<CricketResponse<PoolEntryRes>, CricketFailure>>
+  updatePoolEntry({
+    required String tournamentId,
+    required String playerId,
+    required UpdatePoolEntryReq params,
+  }) async {
+    final response = await tournamentApiService.updatePoolEntry(
+      tournamentId: tournamentId,
+      playerId: playerId,
+      params: params,
+    );
+    if (response.isResult) {
+      return Either.result(
+        CricketResponse(
+          data: PoolEntryRes.fromJson(
+            response.result.data as Map<String, dynamic>,
+          ),
+          message: response.result.message,
+        ),
+      );
+    }
+    return Either.fallback(response.fallback);
+  }
+
+  @override
+  Future<Either<CricketResponse<void>, CricketFailure>> removePoolEntry({
+    required String tournamentId,
+    required String playerId,
+  }) async {
+    final response = await tournamentApiService.removePoolEntry(
+      tournamentId: tournamentId,
+      playerId: playerId,
+    );
+    if (response.isResult) {
+      return Either.result(
+        CricketResponse(data: null, message: response.result.message),
       );
     }
     return Either.fallback(response.fallback);
