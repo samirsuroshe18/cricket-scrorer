@@ -176,9 +176,33 @@ The server contract this client implements against is `POST /v1/match/:matchId/s
 
 ## Testing
 
-Only `test/widget_test.dart` exists and **it currently fails** — it pumps `CricketScorerApp` without running `InjectionContainer.init()`, so `Get.find<LanguageService>()` throws `"LanguageService" not found`. Any widget test that mounts the app must initialize DI first (or stub the services it resolves); a plain `pumpWidget` cannot work. This failure is pre-existing, not a regression.
+This section previously said only `test/widget_test.dart` existed and that it
+failed — both stale. A real suite exists across `test/`, mirroring `lib/`'s
+path structure, and it passes in full (`flutter test`). Unit tests cover
+usecases and repositories (pass a fake collaborator via constructor
+injection, assert on the returned `Either`); controller tests construct the
+controller directly when it takes its route param as a constructor field
+(most of them), or go through real GetX routing plus its `Binding` when the
+controller reads `Get.parameters` itself in `onInit()` (e.g.
+`PlayerStatsController`, `SpectatorController`); widget tests pump the
+specific screen under test with fake use cases, not the whole app.
 
-New usecases, controllers, and repositories should get unit tests going forward; don't treat the current gap as license to skip tests. Mirror the `lib/` path under `test/`. Usecases and repositories are the cheapest to test — they take their collaborators via constructor injection, so pass a fake and assert on the returned `Either`.
+`test/widget_test.dart` is the one exception that *does* mount the whole
+app (`CricketScorerApp`) — a smoke test, not a feature test. Since
+`CricketScorerApp.build` resolves `LanguageService`/`ThemeService` directly
+and its initial route drives `SplashController` → (after a fixed-duration
+animation) `LoginScreen`, a plain `pumpWidget` can't work; the test's
+`setUpAll` stubs just enough of the DI graph by hand (`SharedPreferenceService`,
+`ThemeService`, `LanguageService`, and the handful of usecases `Splash`/
+`LoginBinding` resolve, backed by no-op fake repositories) rather than
+running the full `InjectionContainer.init()`, which would also need
+Firebase and live platform channels this one assertion has no use for. Keep
+mirroring that pattern if `CricketScorerApp`'s initial route ever resolves
+a dependency this test doesn't already stub — the failure mode is `Get.find`
+throwing `"X" not found`, not a normal test assertion failure.
+
+New usecases, controllers, and repositories should keep getting unit tests
+going forward — this is an established convention here, not a gap to fill.
 
 ## Security Notes
 
