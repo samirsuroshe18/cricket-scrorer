@@ -397,6 +397,15 @@ class TranslationKeys {
   static const String nrrShort = 'nrr_short';
   static const String leaderboards = 'leaderboards';
   static const String noLeaderboardsYet = 'no_leaderboards_yet';
+  static const String playerPool = 'player_pool';
+  static const String noPlayersInPoolYet = 'no_players_in_pool_yet';
+  static const String registerPlayer = 'register_player';
+  static const String editBasePrice = 'edit_base_price';
+  static const String playerName = 'player_name';
+  static const String basePrice = 'base_price';
+  static const String playerRegisteredInPool = 'player_registered_in_pool';
+  static const String poolEntryUpdated = 'pool_entry_updated';
+  static const String invalidBasePrice = 'invalid_base_price';
   static const String player = 'player';
   static const String search = 'search';
   static const String searchHint = 'search_hint';

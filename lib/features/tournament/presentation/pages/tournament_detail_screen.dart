@@ -248,6 +248,12 @@ class _TournamentDetailScreenState extends State<TournamentDetailScreen> {
                           ),
                           child: CricketText(text: TranslationKeys.leaderboards.tr),
                         ),
+                        TextButton(
+                          onPressed: () => Get.toNamed<dynamic>(
+                            AppRoutes.tournamentPoolPath(_tournamentId),
+                          ),
+                          child: CricketText(text: TranslationKeys.playerPool.tr),
+                        ),
                       ],
                     ),
                   ],
