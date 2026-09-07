@@ -4,7 +4,9 @@ import 'package:cricket_scorer/core/network/models/api_response_model.dart';
 import 'package:cricket_scorer/core/utils/either_util.dart';
 import 'package:cricket_scorer/features/tournament/data/models/request/create_tournament_req.dart';
 import 'package:cricket_scorer/features/tournament/data/models/request/enroll_tournament_team_req.dart';
+import 'package:cricket_scorer/features/tournament/data/models/request/register_pool_player_req.dart';
 import 'package:cricket_scorer/features/tournament/data/models/request/resolve_fixture_req.dart';
+import 'package:cricket_scorer/features/tournament/data/models/request/update_pool_entry_req.dart';
 import 'package:cricket_scorer/features/tournament/data/models/request/start_fixture_match_req.dart';
 import 'package:cricket_scorer/features/tournament/data/models/request/update_tournament_req.dart';
 import 'package:cricket_scorer/features/tournament/data/tournament_endpoint.dart';
@@ -117,6 +119,42 @@ class TournamentApiService {
   }) async {
     return await apiClient.get(
       endpoint: tournamentEndpoint.leaderboards(tournamentId),
+    );
+  }
+
+  Future<Either<ApiResponseModel, CricketFailure>> registerPoolPlayer({
+    required String tournamentId,
+    required RegisterPoolPlayerReq params,
+  }) async {
+    return await apiClient.post(
+      endpoint: tournamentEndpoint.pool(tournamentId),
+      data: params.toJson(),
+    );
+  }
+
+  Future<Either<ApiResponseModel, CricketFailure>> getPool({
+    required String tournamentId,
+  }) async {
+    return await apiClient.get(endpoint: tournamentEndpoint.pool(tournamentId));
+  }
+
+  Future<Either<ApiResponseModel, CricketFailure>> updatePoolEntry({
+    required String tournamentId,
+    required String playerId,
+    required UpdatePoolEntryReq params,
+  }) async {
+    return await apiClient.patch(
+      endpoint: tournamentEndpoint.poolEntry(tournamentId, playerId),
+      data: params.toJson(),
+    );
+  }
+
+  Future<Either<ApiResponseModel, CricketFailure>> removePoolEntry({
+    required String tournamentId,
+    required String playerId,
+  }) async {
+    return await apiClient.delete(
+      endpoint: tournamentEndpoint.poolEntry(tournamentId, playerId),
     );
   }
 }
