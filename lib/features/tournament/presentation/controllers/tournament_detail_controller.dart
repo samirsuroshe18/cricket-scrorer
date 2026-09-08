@@ -1,7 +1,9 @@
 import 'package:cricket_scorer/features/organization/data/models/response/organization_detail_res.dart';
 import 'package:cricket_scorer/features/organization/domain/usecases/get_organization.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/create_match_res.dart';
+import 'package:cricket_scorer/features/tournament/data/models/request/update_auction_setup_req.dart';
 import 'package:cricket_scorer/features/tournament/data/models/request/update_tournament_req.dart';
+import 'package:cricket_scorer/features/tournament/data/models/response/auction_setup_res.dart';
 import 'package:cricket_scorer/features/tournament/data/models/response/fixture_res.dart';
 import 'package:cricket_scorer/features/tournament/data/models/response/leaderboard_row_res.dart';
 import 'package:cricket_scorer/features/tournament/data/models/response/standings_row_res.dart';
@@ -9,12 +11,14 @@ import 'package:cricket_scorer/features/tournament/data/models/response/tourname
 import 'package:cricket_scorer/features/tournament/domain/usecases/delete_tournament.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/enroll_tournament_team.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/generate_fixtures.dart';
+import 'package:cricket_scorer/features/tournament/domain/usecases/get_auction_setup.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/get_fixtures.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/get_leaderboards.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/get_standings.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/get_tournament.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/remove_tournament_team.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/resolve_fixture.dart';
+import 'package:cricket_scorer/features/tournament/domain/usecases/set_auction_setup.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/start_fixture_match.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/update_tournament.dart';
 import 'package:get/get.dart';
@@ -58,6 +62,8 @@ class TournamentDetailController extends GetxController {
   final ResolveFixtureUseCase resolveFixtureUseCase;
   final GetStandingsUseCase getStandingsUseCase;
   final GetLeaderboardsUseCase getLeaderboardsUseCase;
+  final SetAuctionSetupUseCase setAuctionSetupUseCase;
+  final GetAuctionSetupUseCase getAuctionSetupUseCase;
 
   TournamentDetailController({
     required this.tournamentId,
@@ -74,6 +80,8 @@ class TournamentDetailController extends GetxController {
     required this.resolveFixtureUseCase,
     required this.getStandingsUseCase,
     required this.getLeaderboardsUseCase,
+    required this.setAuctionSetupUseCase,
+    required this.getAuctionSetupUseCase,
   });
 
   final detail = Rxn<TournamentDetailRes>();
@@ -309,5 +317,53 @@ class TournamentDetailController extends GetxController {
     battingLeaderboard.assignAll(response.result.data!.battingLeaderboard);
     bowlingLeaderboard.assignAll(response.result.data!.bowlingLeaderboard);
     leaderboardsLoading.value = false;
+  }
+
+  // Same lazy-load reasoning as standings/leaderboards/pool above.
+  final auctionSetup = Rxn<AuctionSetupRes>();
+  final auctionSetupLoading = false.obs;
+  final auctionSetupError = Rxn<String>();
+
+  Future<void> loadAuctionSetup() async {
+    auctionSetupLoading.value = true;
+    auctionSetupError.value = null;
+
+    final response = await getAuctionSetupUseCase(
+      params: GetAuctionSetupParams(tournamentId: tournamentId),
+    );
+
+    if (!response.isResult) {
+      auctionSetupError.value = response.fallback.message;
+      auctionSetupLoading.value = false;
+      return;
+    }
+
+    auctionSetup.value = response.result.data;
+    auctionSetupLoading.value = false;
+  }
+
+  /// Returns true on success (and reloads), false otherwise — same
+  /// boolean-result shape as updateTournament/registerPoolPlayer. The
+  /// screen shows its own error on false; this controller never calls
+  /// CricketSnackbar directly (see the class doc).
+  Future<bool> updateAuctionSetup({
+    int? minSquadSize,
+    int? maxSquadSize,
+    Map<String, int>? categoryCaps,
+    List<AuctionOwnerInput>? owners,
+  }) async {
+    final response = await setAuctionSetupUseCase(
+      params: SetAuctionSetupParams(
+        tournamentId: tournamentId,
+        minSquadSize: minSquadSize,
+        maxSquadSize: maxSquadSize,
+        categoryCaps: categoryCaps,
+        owners: owners,
+      ),
+    );
+
+    if (!response.isResult) return false;
+    await loadAuctionSetup();
+    return true;
   }
 }
