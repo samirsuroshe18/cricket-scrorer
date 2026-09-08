@@ -28,4 +28,7 @@ class TournamentEndpoint {
 
   String leaderboards(String tournamentId) =>
       '/v1/tournament/$tournamentId/leaderboards';
+
+  String auctionSetup(String tournamentId) =>
+      '/v1/tournament/$tournamentId/auction-setup';
 }

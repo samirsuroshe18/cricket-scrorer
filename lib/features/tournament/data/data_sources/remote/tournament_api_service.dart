@@ -6,6 +6,7 @@ import 'package:cricket_scorer/features/tournament/data/models/request/create_to
 import 'package:cricket_scorer/features/tournament/data/models/request/enroll_tournament_team_req.dart';
 import 'package:cricket_scorer/features/tournament/data/models/request/resolve_fixture_req.dart';
 import 'package:cricket_scorer/features/tournament/data/models/request/start_fixture_match_req.dart';
+import 'package:cricket_scorer/features/tournament/data/models/request/update_auction_setup_req.dart';
 import 'package:cricket_scorer/features/tournament/data/models/request/update_tournament_req.dart';
 import 'package:cricket_scorer/features/tournament/data/tournament_endpoint.dart';
 
@@ -118,5 +119,21 @@ class TournamentApiService {
     return await apiClient.get(
       endpoint: tournamentEndpoint.leaderboards(tournamentId),
     );
+  }
+
+  Future<Either<ApiResponseModel, CricketFailure>> setAuctionSetup({
+    required String tournamentId,
+    required UpdateAuctionSetupReq params,
+  }) async {
+    return await apiClient.patch(
+      endpoint: tournamentEndpoint.auctionSetup(tournamentId),
+      data: params.toJson(),
+    );
+  }
+
+  Future<Either<ApiResponseModel, CricketFailure>> getAuctionSetup({
+    required String tournamentId,
+  }) async {
+    return await apiClient.get(endpoint: tournamentEndpoint.auctionSetup(tournamentId));
   }
 }
