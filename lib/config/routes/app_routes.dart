@@ -123,4 +123,15 @@ class AppRoutes {
 
   static String tournamentAuctionSetupPath(String tournamentId) =>
       '/tournament/$tournamentId/auction-setup';
+
+  /// Registered with a GetX path parameter, same shape as
+  /// [tournamentAuctionSetup]. Reuses no other binding's controller — see
+  /// [AuctionRoomBinding]; this screen's lifecycle (continuously live via
+  /// sockets, not fetch-once-per-visit) doesn't fit the tag-registered
+  /// `TournamentDetailController` pattern the other tabs share.
+  static const String tournamentAuctionRoom =
+      '/tournament/:tournamentId/auction-room';
+
+  static String tournamentAuctionRoomPath(String tournamentId) =>
+      '/tournament/$tournamentId/auction-room';
 }
