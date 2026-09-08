@@ -1,4 +1,6 @@
 import 'package:cricket_scorer/core/network/api_client_service.dart';
+import 'package:cricket_scorer/core/network/socket_client_service.dart';
+import 'package:cricket_scorer/features/tournament/data/data_sources/remote/auction_socket_service/auction_socket_service.dart';
 import 'package:cricket_scorer/features/tournament/data/data_sources/remote/tournament_api_service.dart';
 import 'package:cricket_scorer/features/tournament/data/tournament_endpoint.dart';
 import 'package:cricket_scorer/features/tournament/data/repositories/tournament_repository_impl.dart';
@@ -7,6 +9,10 @@ import 'package:cricket_scorer/features/tournament/domain/usecases/create_tourna
 import 'package:cricket_scorer/features/tournament/domain/usecases/delete_tournament.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/enroll_tournament_team.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/generate_fixtures.dart';
+import 'package:cricket_scorer/features/tournament/domain/usecases/next_auction_lot.dart';
+import 'package:cricket_scorer/features/tournament/domain/usecases/pause_auction.dart';
+import 'package:cricket_scorer/features/tournament/domain/usecases/resume_auction.dart';
+import 'package:cricket_scorer/features/tournament/domain/usecases/start_auction.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/get_auction_setup.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/get_fixtures.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/get_leaderboards.dart';
@@ -37,9 +43,17 @@ class TournamentInjection {
       fenix: true,
     );
 
+    Get.lazyPut<AuctionSocketService>(
+      () => AuctionSocketService(
+        socketClientService: Get.find<SocketClientService>(),
+      ),
+      fenix: true,
+    );
+
     Get.lazyPut<TournamentRepository>(
       () => TournamentRepositoryImpl(
         tournamentApiService: Get.find<TournamentApiService>(),
+        auctionSocketService: Get.find<AuctionSocketService>(),
       ),
       fenix: true,
     );
@@ -167,6 +181,26 @@ class TournamentInjection {
       () => GetAuctionSetupUseCase(
         tournamentRepository: Get.find<TournamentRepository>(),
       ),
+      fenix: true,
+    );
+
+    Get.lazyPut<StartAuctionUseCase>(
+      () => StartAuctionUseCase(tournamentRepository: Get.find<TournamentRepository>()),
+      fenix: true,
+    );
+
+    Get.lazyPut<PauseAuctionUseCase>(
+      () => PauseAuctionUseCase(tournamentRepository: Get.find<TournamentRepository>()),
+      fenix: true,
+    );
+
+    Get.lazyPut<ResumeAuctionUseCase>(
+      () => ResumeAuctionUseCase(tournamentRepository: Get.find<TournamentRepository>()),
+      fenix: true,
+    );
+
+    Get.lazyPut<NextAuctionLotUseCase>(
+      () => NextAuctionLotUseCase(tournamentRepository: Get.find<TournamentRepository>()),
       fenix: true,
     );
   }
