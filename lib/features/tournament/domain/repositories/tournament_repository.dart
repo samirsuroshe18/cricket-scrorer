@@ -12,6 +12,7 @@ import 'package:cricket_scorer/features/tournament/data/models/request/start_fix
 import 'package:cricket_scorer/features/tournament/data/models/request/update_auction_setup_req.dart';
 import 'package:cricket_scorer/features/tournament/data/models/request/update_tournament_req.dart';
 import 'package:cricket_scorer/features/tournament/data/models/response/auction_setup_res.dart';
+import 'package:cricket_scorer/features/tournament/data/models/response/auction_event_res.dart';
 import 'package:cricket_scorer/features/tournament/data/models/response/auction_state_res.dart';
 import 'package:cricket_scorer/features/tournament/data/models/response/fixture_res.dart';
 import 'package:cricket_scorer/features/tournament/data/models/response/leaderboard_row_res.dart';
@@ -146,4 +147,19 @@ abstract class TournamentRepository {
   /// `POST /v1/tournament/:tournamentId/auction/next` — owner-only.
   Future<Either<CricketResponse<AuctionNextLotRes>, CricketFailure>>
   nextAuctionLot({required String tournamentId});
+
+  /// The auction room's live half — see [AuctionSocketService]. Every
+  /// stream here (except [watchAuctionState], which owns room join/leave)
+  /// assumes the room is already joined.
+  Stream<Either<AuctionStateRes, CricketFailure>> watchAuctionState({required String tournamentId});
+  Stream<AuctionLotRes> watchAuctionLotOnBlock({required String tournamentId});
+  Stream<AuctionBidAcceptedRes> watchAuctionBidAccepted({required String tournamentId});
+  Stream<AuctionBidRejectedRes> watchAuctionBidRejected({required String tournamentId});
+  Stream<AuctionLotResolvedRes> watchAuctionLotResolved({required String tournamentId});
+  Stream<void> watchAuctionPaused({required String tournamentId});
+  Stream<DateTime?> watchAuctionResumed({required String tournamentId});
+  Stream<void> watchAuctionSessionCompleted({required String tournamentId});
+
+  /// Fire-and-forget — see [AuctionSocketService.bid].
+  Future<void> bidOnAuctionLot({required String tournamentId, required String lotId});
 }

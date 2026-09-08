@@ -12,6 +12,8 @@ import 'package:cricket_scorer/features/tournament/data/models/request/update_au
 import 'package:cricket_scorer/features/tournament/data/models/request/update_pool_entry_req.dart';
 import 'package:cricket_scorer/features/tournament/data/models/request/update_tournament_req.dart';
 import 'package:cricket_scorer/features/tournament/data/models/response/auction_setup_res.dart';
+import 'package:cricket_scorer/features/tournament/data/data_sources/remote/auction_socket_service/auction_socket_service.dart';
+import 'package:cricket_scorer/features/tournament/data/models/response/auction_event_res.dart';
 import 'package:cricket_scorer/features/tournament/data/models/response/auction_state_res.dart';
 import 'package:cricket_scorer/features/tournament/data/models/response/fixture_res.dart';
 import 'package:cricket_scorer/features/tournament/data/models/response/leaderboard_row_res.dart';
@@ -22,8 +24,12 @@ import 'package:cricket_scorer/features/tournament/domain/repositories/tournamen
 
 class TournamentRepositoryImpl implements TournamentRepository {
   final TournamentApiService tournamentApiService;
+  final AuctionSocketService auctionSocketService;
 
-  TournamentRepositoryImpl({required this.tournamentApiService});
+  TournamentRepositoryImpl({
+    required this.tournamentApiService,
+    required this.auctionSocketService,
+  });
 
   @override
   Future<Either<CricketResponse<void>, CricketFailure>> createTournament({
@@ -449,5 +455,50 @@ class TournamentRepositoryImpl implements TournamentRepository {
       );
     }
     return Either.fallback(response.fallback);
+  }
+
+  @override
+  Stream<Either<AuctionStateRes, CricketFailure>> watchAuctionState({required String tournamentId}) {
+    return auctionSocketService.watchState(tournamentId);
+  }
+
+  @override
+  Stream<AuctionLotRes> watchAuctionLotOnBlock({required String tournamentId}) {
+    return auctionSocketService.watchLotOnBlock(tournamentId);
+  }
+
+  @override
+  Stream<AuctionBidAcceptedRes> watchAuctionBidAccepted({required String tournamentId}) {
+    return auctionSocketService.watchBidAccepted(tournamentId);
+  }
+
+  @override
+  Stream<AuctionBidRejectedRes> watchAuctionBidRejected({required String tournamentId}) {
+    return auctionSocketService.watchBidRejected(tournamentId);
+  }
+
+  @override
+  Stream<AuctionLotResolvedRes> watchAuctionLotResolved({required String tournamentId}) {
+    return auctionSocketService.watchLotResolved(tournamentId);
+  }
+
+  @override
+  Stream<void> watchAuctionPaused({required String tournamentId}) {
+    return auctionSocketService.watchPaused(tournamentId);
+  }
+
+  @override
+  Stream<DateTime?> watchAuctionResumed({required String tournamentId}) {
+    return auctionSocketService.watchResumed(tournamentId);
+  }
+
+  @override
+  Stream<void> watchAuctionSessionCompleted({required String tournamentId}) {
+    return auctionSocketService.watchSessionCompleted(tournamentId);
+  }
+
+  @override
+  Future<void> bidOnAuctionLot({required String tournamentId, required String lotId}) {
+    return auctionSocketService.bid(tournamentId: tournamentId, lotId: lotId);
   }
 }
