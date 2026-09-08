@@ -401,4 +401,13 @@ class TranslationKeys {
   static const String search = 'search';
   static const String searchHint = 'search_hint';
   static const String noSearchResultsFound = 'no_search_results_found';
+
+  static const String auctionSetup = 'auction_setup';
+  static const String squadRules = 'squad_rules';
+  static const String minSquadSize = 'min_squad_size';
+  static const String maxSquadSize = 'max_squad_size';
+  static const String teamOwner = 'team_owner';
+  static const String budget = 'budget';
+  static const String noOwnerAssigned = 'no_owner_assigned';
+  static const String auctionSetupSaved = 'auction_setup_saved';
 }

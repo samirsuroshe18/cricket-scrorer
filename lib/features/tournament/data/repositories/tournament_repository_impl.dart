@@ -7,7 +7,9 @@ import 'package:cricket_scorer/features/tournament/data/models/request/create_to
 import 'package:cricket_scorer/features/tournament/data/models/request/enroll_tournament_team_req.dart';
 import 'package:cricket_scorer/features/tournament/data/models/request/start_fixture_match_req.dart';
 import 'package:cricket_scorer/features/tournament/data/models/request/resolve_fixture_req.dart';
+import 'package:cricket_scorer/features/tournament/data/models/request/update_auction_setup_req.dart';
 import 'package:cricket_scorer/features/tournament/data/models/request/update_tournament_req.dart';
+import 'package:cricket_scorer/features/tournament/data/models/response/auction_setup_res.dart';
 import 'package:cricket_scorer/features/tournament/data/models/response/fixture_res.dart';
 import 'package:cricket_scorer/features/tournament/data/models/response/leaderboard_row_res.dart';
 import 'package:cricket_scorer/features/tournament/data/models/response/standings_row_res.dart';
@@ -232,6 +234,48 @@ class TournamentRepositoryImpl implements TournamentRepository {
       return Either.result(
         CricketResponse(
           data: TournamentLeaderboardsRes.fromJson(
+            response.result.data as Map<String, dynamic>,
+          ),
+          message: response.result.message,
+        ),
+      );
+    }
+    return Either.fallback(response.fallback);
+  }
+
+  @override
+  Future<Either<CricketResponse<AuctionSetupRes>, CricketFailure>>
+  setAuctionSetup({
+    required String tournamentId,
+    required UpdateAuctionSetupReq params,
+  }) async {
+    final response = await tournamentApiService.setAuctionSetup(
+      tournamentId: tournamentId,
+      params: params,
+    );
+    if (response.isResult) {
+      return Either.result(
+        CricketResponse(
+          data: AuctionSetupRes.fromJson(
+            response.result.data as Map<String, dynamic>,
+          ),
+          message: response.result.message,
+        ),
+      );
+    }
+    return Either.fallback(response.fallback);
+  }
+
+  @override
+  Future<Either<CricketResponse<AuctionSetupRes>, CricketFailure>>
+  getAuctionSetup({required String tournamentId}) async {
+    final response = await tournamentApiService.getAuctionSetup(
+      tournamentId: tournamentId,
+    );
+    if (response.isResult) {
+      return Either.result(
+        CricketResponse(
+          data: AuctionSetupRes.fromJson(
             response.result.data as Map<String, dynamic>,
           ),
           message: response.result.message,

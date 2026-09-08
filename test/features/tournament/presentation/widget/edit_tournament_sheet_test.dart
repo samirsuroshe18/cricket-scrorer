@@ -4,12 +4,14 @@ import 'package:cricket_scorer/features/tournament/data/models/response/tourname
 import 'package:cricket_scorer/features/tournament/domain/usecases/delete_tournament.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/enroll_tournament_team.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/generate_fixtures.dart';
+import 'package:cricket_scorer/features/tournament/domain/usecases/get_auction_setup.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/get_fixtures.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/get_leaderboards.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/get_standings.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/get_tournament.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/remove_tournament_team.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/resolve_fixture.dart';
+import 'package:cricket_scorer/features/tournament/domain/usecases/set_auction_setup.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/start_fixture_match.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/update_tournament.dart';
 import 'package:cricket_scorer/features/tournament/presentation/controllers/tournament_detail_controller.dart';
@@ -40,6 +42,8 @@ class _FakeTournamentDetailController extends TournamentDetailController {
         resolveFixtureUseCase: _UnusedResolveFixtureUseCase(),
         getStandingsUseCase: _UnusedGetStandingsUseCase(),
         getLeaderboardsUseCase: _UnusedGetLeaderboardsUseCase(),
+        setAuctionSetupUseCase: _UnusedSetAuctionSetupUseCase(),
+        getAuctionSetupUseCase: _UnusedGetAuctionSetupUseCase(),
       ) {
     detail.value = TournamentDetailRes(
       id: 'tournament-1',
@@ -124,6 +128,16 @@ class _UnusedGetStandingsUseCase implements GetStandingsUseCase {
 }
 
 class _UnusedGetLeaderboardsUseCase implements GetLeaderboardsUseCase {
+  @override
+  dynamic noSuchMethod(Invocation invocation) => throw UnimplementedError();
+}
+
+class _UnusedSetAuctionSetupUseCase implements SetAuctionSetupUseCase {
+  @override
+  dynamic noSuchMethod(Invocation invocation) => throw UnimplementedError();
+}
+
+class _UnusedGetAuctionSetupUseCase implements GetAuctionSetupUseCase {
   @override
   dynamic noSuchMethod(Invocation invocation) => throw UnimplementedError();
 }
