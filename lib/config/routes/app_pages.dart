@@ -39,6 +39,7 @@ import 'package:cricket_scorer/features/organization/presentation/pages/organiza
 import 'package:cricket_scorer/features/search/presentation/bindings/search_binding.dart';
 import 'package:cricket_scorer/features/search/presentation/pages/search_screen.dart';
 import 'package:cricket_scorer/features/tournament/presentation/bindings/tournament_detail_binding.dart';
+import 'package:cricket_scorer/features/tournament/presentation/pages/tournament_auction_setup_screen.dart';
 import 'package:cricket_scorer/features/tournament/presentation/pages/tournament_detail_screen.dart';
 import 'package:cricket_scorer/features/tournament/presentation/pages/tournament_leaderboards_screen.dart';
 import 'package:cricket_scorer/features/tournament/presentation/pages/tournament_player_pool_screen.dart';
@@ -162,6 +163,10 @@ abstract class AppPages {
     GetPage(
       name: AppRoutes.tournamentPool,
       page: () => const TournamentPlayerPoolScreen(),
+    ),
+    GetPage(
+      name: AppRoutes.tournamentAuctionSetup,
+      page: () => const TournamentAuctionSetupScreen(),
     ),
   ];
 }

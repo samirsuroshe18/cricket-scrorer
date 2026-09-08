@@ -5,8 +5,8 @@ import 'package:cricket_scorer/core/network/models/cricket_response.dart';
 import 'package:cricket_scorer/core/utils/either_util.dart';
 import 'package:cricket_scorer/features/organization/data/models/response/organization_detail_res.dart';
 import 'package:cricket_scorer/features/organization/domain/usecases/get_organization.dart';
+import 'package:cricket_scorer/features/tournament/data/models/response/auction_setup_res.dart';
 import 'package:cricket_scorer/features/tournament/data/models/response/fixture_res.dart';
-import 'package:cricket_scorer/features/tournament/data/models/response/standings_row_res.dart';
 import 'package:cricket_scorer/features/tournament/data/models/response/tournament_detail_res.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/delete_tournament.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/enroll_tournament_team.dart';
@@ -26,16 +26,17 @@ import 'package:cricket_scorer/features/tournament/domain/usecases/start_fixture
 import 'package:cricket_scorer/features/tournament/domain/usecases/update_pool_entry.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/update_tournament.dart';
 import 'package:cricket_scorer/features/tournament/presentation/controllers/tournament_detail_controller.dart';
-import 'package:cricket_scorer/features/tournament/presentation/pages/tournament_standings_screen.dart';
+import 'package:cricket_scorer/features/tournament/presentation/pages/tournament_auction_setup_screen.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart' hide Response;
 
-class _GetStandingsUseCase implements GetStandingsUseCase {
-  Either<CricketResponse<List<StandingsRowRes>>, CricketFailure>? response;
+class _GetAuctionSetupUseCase implements GetAuctionSetupUseCase {
+  Either<CricketResponse<AuctionSetupRes>, CricketFailure>? response;
 
   @override
-  Future<Either<CricketResponse<List<StandingsRowRes>>, CricketFailure>> call({
-    GetStandingsParams? params,
+  Future<Either<CricketResponse<AuctionSetupRes>, CricketFailure>> call({
+    GetAuctionSetupParams? params,
   }) async {
     final result = response;
     if (result == null) throw UnimplementedError('Not exercised in this test.');
@@ -46,9 +47,28 @@ class _GetStandingsUseCase implements GetStandingsUseCase {
   dynamic noSuchMethod(Invocation invocation) => throw UnimplementedError();
 }
 
+class _SetAuctionSetupUseCase implements SetAuctionSetupUseCase {
+  Either<CricketResponse<AuctionSetupRes>, CricketFailure>? response;
+  SetAuctionSetupParams? lastParams;
+
+  @override
+  Future<Either<CricketResponse<AuctionSetupRes>, CricketFailure>> call({
+    SetAuctionSetupParams? params,
+  }) async {
+    lastParams = params;
+    final result = response;
+    if (result == null) throw UnimplementedError('Not exercised in this test.');
+    return result;
+  }
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => throw UnimplementedError();
+}
+
 // TournamentDetailController.onInit() always calls loadDetail(), even
-// though this screen only cares about standings — these two need a working
-// (not throwing) response so that automatic call succeeds harmlessly.
+// though this screen only cares about auction setup — these two need a
+// working (not throwing) response so that automatic call succeeds
+// harmlessly. Same reasoning as the standings/leaderboards screen tests.
 class _StubGetTournamentUseCase implements GetTournamentUseCase {
   @override
   Future<Either<CricketResponse<TournamentDetailRes>, CricketFailure>> call({
@@ -60,10 +80,13 @@ class _StubGetTournamentUseCase implements GetTournamentUseCase {
         data: TournamentDetailRes(
           id: 'tournament-1',
           name: 'Summer Cup',
-          format: 'round_robin',
-          status: 'ongoing',
+          format: 'league',
+          status: 'upcoming',
           organization: TournamentOrganizationRef(id: 'org-1', name: 'Riverside CC'),
-          teams: const [],
+          teams: [
+            TournamentTeamRef(id: 'team-1', name: 'Harbor CC', joinedAt: DateTime.now()),
+            TournamentTeamRef(id: 'team-2', name: 'Lakeside XI', joinedAt: DateTime.now()),
+          ],
           createdAt: DateTime.parse('2026-09-06T10:00:00.000Z'),
         ),
       ),
@@ -86,11 +109,28 @@ class _StubGetOrganizationUseCase implements GetOrganizationUseCase {
           id: 'org-1',
           name: 'Riverside CC',
           owner: OrganizationUserRef(id: 'owner-1', name: 'Owner'),
-          members: const [],
+          members: [
+            OrganizationMemberRes(id: 'owner-1', name: 'Asha', role: 'owner'),
+            OrganizationMemberRes(id: 'member-1', name: 'Vijay', role: 'member'),
+          ],
           teams: const [],
           tournaments: const [],
         ),
       ),
+    );
+  }
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => throw UnimplementedError();
+}
+
+class _StubGetFixturesUseCase implements GetFixturesUseCase {
+  @override
+  Future<Either<CricketResponse<List<FixtureRes>>, CricketFailure>> call({
+    GetFixturesParams? params,
+  }) async {
+    return Either.result(
+      const CricketResponse(message: 'ok', data: <FixtureRes>[]),
     );
   }
 
@@ -118,20 +158,6 @@ class _UnusedRemoveTournamentTeamUseCase implements RemoveTournamentTeamUseCase 
   dynamic noSuchMethod(Invocation invocation) => throw UnimplementedError();
 }
 
-class _StubGetFixturesUseCase implements GetFixturesUseCase {
-  @override
-  Future<Either<CricketResponse<List<FixtureRes>>, CricketFailure>> call({
-    GetFixturesParams? params,
-  }) async {
-    return Either.result(
-      const CricketResponse(message: 'ok', data: <FixtureRes>[]),
-    );
-  }
-
-  @override
-  dynamic noSuchMethod(Invocation invocation) => throw UnimplementedError();
-}
-
 class _UnusedGenerateFixturesUseCase implements GenerateFixturesUseCase {
   @override
   dynamic noSuchMethod(Invocation invocation) => throw UnimplementedError();
@@ -143,6 +169,11 @@ class _UnusedStartFixtureMatchUseCase implements StartFixtureMatchUseCase {
 }
 
 class _UnusedResolveFixtureUseCase implements ResolveFixtureUseCase {
+  @override
+  dynamic noSuchMethod(Invocation invocation) => throw UnimplementedError();
+}
+
+class _UnusedGetStandingsUseCase implements GetStandingsUseCase {
   @override
   dynamic noSuchMethod(Invocation invocation) => throw UnimplementedError();
 }
@@ -172,22 +203,14 @@ class _UnusedRemovePoolEntryUseCase implements RemovePoolEntryUseCase {
   dynamic noSuchMethod(Invocation invocation) => throw UnimplementedError();
 }
 
-class _UnusedSetAuctionSetupUseCase implements SetAuctionSetupUseCase {
-  @override
-  dynamic noSuchMethod(Invocation invocation) => throw UnimplementedError();
-}
-
-class _UnusedGetAuctionSetupUseCase implements GetAuctionSetupUseCase {
-  @override
-  dynamic noSuchMethod(Invocation invocation) => throw UnimplementedError();
-}
-
 void main() {
-  late _GetStandingsUseCase getStandingsUseCase;
+  late _GetAuctionSetupUseCase getAuctionSetupUseCase;
+  late _SetAuctionSetupUseCase setAuctionSetupUseCase;
 
   setUp(() {
     Get.testMode = true;
-    getStandingsUseCase = _GetStandingsUseCase();
+    getAuctionSetupUseCase = _GetAuctionSetupUseCase();
+    setAuctionSetupUseCase = _SetAuctionSetupUseCase();
     Get.put<TournamentDetailController>(
       TournamentDetailController(
         tournamentId: 'tournament-1',
@@ -202,14 +225,14 @@ void main() {
         generateFixturesUseCase: _UnusedGenerateFixturesUseCase(),
         startFixtureMatchUseCase: _UnusedStartFixtureMatchUseCase(),
         resolveFixtureUseCase: _UnusedResolveFixtureUseCase(),
-        getStandingsUseCase: getStandingsUseCase,
+        getStandingsUseCase: _UnusedGetStandingsUseCase(),
         getLeaderboardsUseCase: _UnusedGetLeaderboardsUseCase(),
         registerPoolPlayerUseCase: _UnusedRegisterPoolPlayerUseCase(),
         getPoolUseCase: _UnusedGetPoolUseCase(),
         updatePoolEntryUseCase: _UnusedUpdatePoolEntryUseCase(),
         removePoolEntryUseCase: _UnusedRemovePoolEntryUseCase(),
-        setAuctionSetupUseCase: _UnusedSetAuctionSetupUseCase(),
-        getAuctionSetupUseCase: _UnusedGetAuctionSetupUseCase(),
+        setAuctionSetupUseCase: setAuctionSetupUseCase,
+        getAuctionSetupUseCase: getAuctionSetupUseCase,
       ),
       tag: 'tournament-1',
     );
@@ -221,11 +244,11 @@ void main() {
     await tester.pumpWidget(
       GetMaterialApp(
         theme: AppTheme.lightTheme,
-        initialRoute: AppRoutes.tournamentStandingsPath('tournament-1'),
+        initialRoute: AppRoutes.tournamentAuctionSetupPath('tournament-1'),
         getPages: [
           GetPage(
-            name: AppRoutes.tournamentStandings,
-            page: () => const TournamentStandingsScreen(),
+            name: AppRoutes.tournamentAuctionSetup,
+            page: () => const TournamentAuctionSetupScreen(),
           ),
         ],
       ),
@@ -234,21 +257,24 @@ void main() {
   }
 
   testWidgets(
-    'renders every row in the order the backend returned, with points and NRR shown',
+    'shows a row for every enrolled team with the current owner and budget prefilled',
     (tester) async {
-      getStandingsUseCase.response = Either.result(
+      getAuctionSetupUseCase.response = Either.result(
         CricketResponse(
           message: 'ok',
-          data: [
-            StandingsRowRes(
-              teamId: 'team-1', teamName: 'Harbor CC',
-              played: 3, won: 2, lost: 1, tied: 0, noResult: 0, points: 4, nrr: 0.85,
-            ),
-            StandingsRowRes(
-              teamId: 'team-2', teamName: 'Lakeside XI',
-              played: 3, won: 1, lost: 2, tied: 0, noResult: 0, points: 2, nrr: -0.85,
-            ),
-          ],
+          data: AuctionSetupRes(
+            tournamentId: 'tournament-1',
+            minSquadSize: null,
+            maxSquadSize: null,
+            categoryCaps: null,
+            owners: [
+              AuctionOwnerRes(
+                teamId: 'team-1', teamName: 'Harbor CC',
+                userId: 'member-1', userName: 'Vijay',
+                budget: 100000,
+              ),
+            ],
+          ),
         ),
       );
 
@@ -256,37 +282,84 @@ void main() {
 
       expect(find.text('Harbor CC'), findsOneWidget);
       expect(find.text('Lakeside XI'), findsOneWidget);
-      expect(find.text('4'), findsOneWidget);
-      expect(find.text('2'), findsWidgets); // played=2 for row 2's "lost" plus points=2, harmless duplication
-      expect(find.text('+0.850'), findsOneWidget);
-      expect(find.text('-0.850'), findsOneWidget);
-
-      // Row order follows the backend's sort exactly — the higher-points
-      // team's name appears above the other's.
-      final harborY = tester.getTopLeft(find.text('Harbor CC')).dy;
-      final lakesideY = tester.getTopLeft(find.text('Lakeside XI')).dy;
-      expect(harborY, lessThan(lakesideY));
+      expect(find.text('100000'), findsOneWidget);
     },
   );
 
-  testWidgets('shows the empty state when no teams are enrolled', (tester) async {
-    getStandingsUseCase.response = Either.result(
-      const CricketResponse(message: 'ok', data: <StandingsRowRes>[]),
+  testWidgets('shows the squad-rules fields prefilled from the loaded setup', (tester) async {
+    getAuctionSetupUseCase.response = Either.result(
+      CricketResponse(
+        message: 'ok',
+        data: AuctionSetupRes(
+          tournamentId: 'tournament-1',
+          minSquadSize: 15,
+          maxSquadSize: 20,
+          categoryCaps: null,
+          owners: const [],
+        ),
+      ),
     );
 
     await pumpScreen(tester);
 
-    expect(find.text('no_standings_yet'), findsOneWidget);
+    expect(find.text('15'), findsOneWidget);
+    expect(find.text('20'), findsOneWidget);
+  });
+
+  testWidgets('saving submits squad rules and the owners built from the visible rows', (tester) async {
+    getAuctionSetupUseCase.response = Either.result(
+      CricketResponse(
+        message: 'ok',
+        data: AuctionSetupRes(
+          tournamentId: 'tournament-1',
+          minSquadSize: null,
+          maxSquadSize: null,
+          categoryCaps: null,
+          owners: const [],
+        ),
+      ),
+    );
+    setAuctionSetupUseCase.response = Either.result(
+      CricketResponse(
+        message: 'ok',
+        data: AuctionSetupRes(
+          tournamentId: 'tournament-1',
+          minSquadSize: 15,
+          maxSquadSize: null,
+          categoryCaps: null,
+          owners: const [],
+        ),
+      ),
+    );
+
+    await pumpScreen(tester);
+
+    await tester.enterText(find.byKey(const Key('minSquadSizeField')), '15');
+    await tester.tap(find.byKey(const Key('ownerDropdown_team-1')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Vijay').last);
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byKey(const Key('budgetField_team-1')), '50000');
+    await tester.drag(find.byType(SingleChildScrollView), const Offset(0, -400));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('save'));
+    await tester.pumpAndSettle();
+
+    expect(setAuctionSetupUseCase.lastParams?.minSquadSize, 15);
+    expect(setAuctionSetupUseCase.lastParams?.owners?.length, 1);
+    expect(setAuctionSetupUseCase.lastParams?.owners?.first.teamId, 'team-1');
+    expect(setAuctionSetupUseCase.lastParams?.owners?.first.userId, 'member-1');
+    expect(setAuctionSetupUseCase.lastParams?.owners?.first.budget, 50000);
   });
 
   testWidgets('shows the backend error message and a retry button on failure', (tester) async {
-    getStandingsUseCase.response = Either.fallback(
-      CricketBadRequestFailure(statusCode: 400, message: "Standings aren't available for a knockout tournament"),
+    getAuctionSetupUseCase.response = Either.fallback(
+      CricketBadRequestFailure(statusCode: 404, message: 'Tournament not found'),
     );
 
     await pumpScreen(tester);
 
-    expect(find.text("Standings aren't available for a knockout tournament"), findsOneWidget);
+    expect(find.text('Tournament not found'), findsOneWidget);
     expect(find.text('retry'), findsOneWidget);
   });
 }

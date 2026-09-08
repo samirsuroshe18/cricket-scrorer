@@ -363,4 +363,12 @@ Map<String, String> mr = {
   TranslationKeys.search: 'शोधा',
   TranslationKeys.searchHint: 'संस्था आणि स्पर्धा शोधा',
   TranslationKeys.noSearchResultsFound: 'कोणतेही निकाल आढळले नाहीत',
+  TranslationKeys.auctionSetup: 'लिलाव सेटअप',
+  TranslationKeys.squadRules: 'संघ नियम',
+  TranslationKeys.minSquadSize: 'किमान संघ आकार',
+  TranslationKeys.maxSquadSize: 'कमाल संघ आकार',
+  TranslationKeys.teamOwner: 'संघ मालक',
+  TranslationKeys.budget: 'बजेट',
+  TranslationKeys.noOwnerAssigned: 'कोणताही मालक नियुक्त नाही',
+  TranslationKeys.auctionSetupSaved: 'लिलाव सेटअप जतन केले',
 };

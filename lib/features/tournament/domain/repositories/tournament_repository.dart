@@ -9,7 +9,9 @@ import 'package:cricket_scorer/features/tournament/data/models/request/resolve_f
 import 'package:cricket_scorer/features/tournament/data/models/request/update_pool_entry_req.dart';
 import 'package:cricket_scorer/features/tournament/data/models/response/pool_entry_res.dart';
 import 'package:cricket_scorer/features/tournament/data/models/request/start_fixture_match_req.dart';
+import 'package:cricket_scorer/features/tournament/data/models/request/update_auction_setup_req.dart';
 import 'package:cricket_scorer/features/tournament/data/models/request/update_tournament_req.dart';
+import 'package:cricket_scorer/features/tournament/data/models/response/auction_setup_res.dart';
 import 'package:cricket_scorer/features/tournament/data/models/response/fixture_res.dart';
 import 'package:cricket_scorer/features/tournament/data/models/response/leaderboard_row_res.dart';
 import 'package:cricket_scorer/features/tournament/data/models/response/standings_row_res.dart';
@@ -114,4 +116,17 @@ abstract class TournamentRepository {
     required String tournamentId,
     required String playerId,
   });
+
+  /// `PATCH /v1/tournament/:tournamentId/auction-setup` — owner-only. Each
+  /// field applied only if present; `owners` fully replaces the current set
+  /// when present. No code path from career stats to any field here.
+  Future<Either<CricketResponse<AuctionSetupRes>, CricketFailure>>
+  setAuctionSetup({
+    required String tournamentId,
+    required UpdateAuctionSetupReq params,
+  });
+
+  /// `GET /v1/tournament/:tournamentId/auction-setup` — any org member.
+  Future<Either<CricketResponse<AuctionSetupRes>, CricketFailure>>
+  getAuctionSetup({required String tournamentId});
 }

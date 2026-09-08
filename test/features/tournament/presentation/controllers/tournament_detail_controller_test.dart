@@ -4,6 +4,7 @@ import 'package:cricket_scorer/core/utils/either_util.dart';
 import 'package:cricket_scorer/features/organization/data/models/response/organization_detail_res.dart';
 import 'package:cricket_scorer/features/organization/domain/usecases/get_organization.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/create_match_res.dart';
+import 'package:cricket_scorer/features/tournament/data/models/response/auction_setup_res.dart';
 import 'package:cricket_scorer/features/tournament/data/models/response/fixture_res.dart';
 import 'package:cricket_scorer/features/tournament/data/models/response/leaderboard_row_res.dart';
 import 'package:cricket_scorer/features/tournament/data/models/response/pool_entry_res.dart';
@@ -12,6 +13,7 @@ import 'package:cricket_scorer/features/tournament/data/models/response/tourname
 import 'package:cricket_scorer/features/tournament/domain/usecases/delete_tournament.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/enroll_tournament_team.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/generate_fixtures.dart';
+import 'package:cricket_scorer/features/tournament/domain/usecases/get_auction_setup.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/get_fixtures.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/get_leaderboards.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/get_pool.dart';
@@ -21,6 +23,7 @@ import 'package:cricket_scorer/features/tournament/domain/usecases/register_pool
 import 'package:cricket_scorer/features/tournament/domain/usecases/remove_pool_entry.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/remove_tournament_team.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/resolve_fixture.dart';
+import 'package:cricket_scorer/features/tournament/domain/usecases/set_auction_setup.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/start_fixture_match.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/update_pool_entry.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/update_tournament.dart';
@@ -331,6 +334,53 @@ class _FakeRemovePoolEntryUseCase implements RemovePoolEntryUseCase {
       throw UnimplementedError('Not exercised in this test.');
 }
 
+class _FakeSetAuctionSetupUseCase implements SetAuctionSetupUseCase {
+  Either<CricketResponse<AuctionSetupRes>, CricketFailure>? response;
+  SetAuctionSetupParams? lastParams;
+
+  @override
+  Future<Either<CricketResponse<AuctionSetupRes>, CricketFailure>> call({
+    SetAuctionSetupParams? params,
+  }) async {
+    lastParams = params;
+    final result = response;
+    if (result == null) throw UnimplementedError('Not exercised in this test.');
+    return result;
+  }
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) =>
+      throw UnimplementedError('Not exercised in this test.');
+}
+
+class _FakeGetAuctionSetupUseCase implements GetAuctionSetupUseCase {
+  Either<CricketResponse<AuctionSetupRes>, CricketFailure>? response;
+
+  @override
+  Future<Either<CricketResponse<AuctionSetupRes>, CricketFailure>> call({
+    GetAuctionSetupParams? params,
+  }) async {
+    final result = response;
+    if (result == null) throw UnimplementedError('Not exercised in this test.');
+    return result;
+  }
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) =>
+      throw UnimplementedError('Not exercised in this test.');
+}
+
+AuctionSetupRes _auctionSetup({
+  int? minSquadSize,
+  List<AuctionOwnerRes> owners = const [],
+}) => AuctionSetupRes(
+  tournamentId: 'tournament-1',
+  minSquadSize: minSquadSize,
+  maxSquadSize: null,
+  categoryCaps: null,
+  owners: owners,
+);
+
 void main() {
   late _FakeGetTournamentUseCase getTournamentUseCase;
   late _FakeGetOrganizationUseCase getOrganizationUseCase;
@@ -348,6 +398,8 @@ void main() {
   late _FakeGetPoolUseCase getPoolUseCase;
   late _FakeUpdatePoolEntryUseCase updatePoolEntryUseCase;
   late _FakeRemovePoolEntryUseCase removePoolEntryUseCase;
+  late _FakeSetAuctionSetupUseCase setAuctionSetupUseCase;
+  late _FakeGetAuctionSetupUseCase getAuctionSetupUseCase;
   late TournamentDetailController controller;
 
   TournamentDetailController build(String userId) => TournamentDetailController(
@@ -369,6 +421,8 @@ void main() {
     getPoolUseCase: getPoolUseCase,
     updatePoolEntryUseCase: updatePoolEntryUseCase,
     removePoolEntryUseCase: removePoolEntryUseCase,
+    setAuctionSetupUseCase: setAuctionSetupUseCase,
+    getAuctionSetupUseCase: getAuctionSetupUseCase,
   );
 
   setUp(() {
@@ -395,6 +449,8 @@ void main() {
     getPoolUseCase = _FakeGetPoolUseCase();
     updatePoolEntryUseCase = _FakeUpdatePoolEntryUseCase();
     removePoolEntryUseCase = _FakeRemovePoolEntryUseCase();
+    setAuctionSetupUseCase = _FakeSetAuctionSetupUseCase();
+    getAuctionSetupUseCase = _FakeGetAuctionSetupUseCase();
     controller = build('owner-1');
   });
 
@@ -849,5 +905,53 @@ void main() {
     final result = await controller.removePoolEntry('p1');
 
     expect(result, isFalse);
+  });
+
+  test('loadAuctionSetup populates auctionSetup on success', () async {
+    getAuctionSetupUseCase.response = Either.result(
+      CricketResponse(message: 'ok', data: _auctionSetup(minSquadSize: 15)),
+    );
+
+    await controller.loadAuctionSetup();
+
+    expect(controller.auctionSetup.value?.minSquadSize, 15);
+    expect(controller.auctionSetupLoading.value, isFalse);
+  });
+
+  test('loadAuctionSetup sets the backend error message on failure', () async {
+    getAuctionSetupUseCase.response = Either.fallback(
+      CricketBadRequestFailure(statusCode: 404, message: 'Tournament not found'),
+    );
+
+    await controller.loadAuctionSetup();
+
+    expect(controller.auctionSetupError.value, 'Tournament not found');
+    expect(controller.auctionSetup.value, isNull);
+  });
+
+  test('updateAuctionSetup sends the given fields and reloads on success', () async {
+    setAuctionSetupUseCase.response = Either.result(
+      CricketResponse(message: 'ok', data: _auctionSetup(minSquadSize: 15)),
+    );
+    getAuctionSetupUseCase.response = Either.result(
+      CricketResponse(message: 'ok', data: _auctionSetup(minSquadSize: 15)),
+    );
+
+    final result = await controller.updateAuctionSetup(minSquadSize: 15);
+
+    expect(result, isTrue);
+    expect(setAuctionSetupUseCase.lastParams?.minSquadSize, 15);
+    expect(controller.auctionSetup.value?.minSquadSize, 15);
+  });
+
+  test('updateAuctionSetup returns false on failure without reloading', () async {
+    setAuctionSetupUseCase.response = Either.fallback(
+      CricketBadRequestFailure(statusCode: 400, message: 'Invalid squad size'),
+    );
+
+    final result = await controller.updateAuctionSetup(minSquadSize: 200);
+
+    expect(result, isFalse);
+    expect(controller.auctionSetup.value, isNull);
   });
 }

@@ -364,4 +364,12 @@ Map<String, String> hi = {
   TranslationKeys.search: 'खोजें',
   TranslationKeys.searchHint: 'संगठन और टूर्नामेंट खोजें',
   TranslationKeys.noSearchResultsFound: 'कोई परिणाम नहीं मिला',
+  TranslationKeys.auctionSetup: 'नीलामी सेटअप',
+  TranslationKeys.squadRules: 'स्क्वाड नियम',
+  TranslationKeys.minSquadSize: 'न्यूनतम स्क्वाड साइज़',
+  TranslationKeys.maxSquadSize: 'अधिकतम स्क्वाड साइज़',
+  TranslationKeys.teamOwner: 'टीम मालिक',
+  TranslationKeys.budget: 'बजट',
+  TranslationKeys.noOwnerAssigned: 'कोई मालिक नियुक्त नहीं',
+  TranslationKeys.auctionSetupSaved: 'नीलामी सेटअप सहेजा गया',
 };

@@ -11,6 +11,7 @@ import 'package:cricket_scorer/features/tournament/data/models/response/tourname
 import 'package:cricket_scorer/features/tournament/domain/usecases/delete_tournament.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/enroll_tournament_team.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/generate_fixtures.dart';
+import 'package:cricket_scorer/features/tournament/domain/usecases/get_auction_setup.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/get_fixtures.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/get_leaderboards.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/get_pool.dart';
@@ -20,6 +21,7 @@ import 'package:cricket_scorer/features/tournament/domain/usecases/register_pool
 import 'package:cricket_scorer/features/tournament/domain/usecases/remove_pool_entry.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/remove_tournament_team.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/resolve_fixture.dart';
+import 'package:cricket_scorer/features/tournament/domain/usecases/set_auction_setup.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/start_fixture_match.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/update_pool_entry.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/update_tournament.dart';
@@ -200,6 +202,16 @@ class _UnusedUpdatePoolEntryUseCase implements UpdatePoolEntryUseCase {
   dynamic noSuchMethod(Invocation invocation) => throw UnimplementedError();
 }
 
+class _UnusedSetAuctionSetupUseCase implements SetAuctionSetupUseCase {
+  @override
+  dynamic noSuchMethod(Invocation invocation) => throw UnimplementedError();
+}
+
+class _UnusedGetAuctionSetupUseCase implements GetAuctionSetupUseCase {
+  @override
+  dynamic noSuchMethod(Invocation invocation) => throw UnimplementedError();
+}
+
 void main() {
   late _GetPoolUseCase getPoolUseCase;
   late _RegisterPoolPlayerUseCase registerPoolPlayerUseCase;
@@ -230,6 +242,8 @@ void main() {
         getPoolUseCase: getPoolUseCase,
         updatePoolEntryUseCase: _UnusedUpdatePoolEntryUseCase(),
         removePoolEntryUseCase: removePoolEntryUseCase,
+        setAuctionSetupUseCase: _UnusedSetAuctionSetupUseCase(),
+        getAuctionSetupUseCase: _UnusedGetAuctionSetupUseCase(),
       ),
       tag: 'tournament-1',
     );
