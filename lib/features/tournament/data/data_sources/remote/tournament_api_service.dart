@@ -174,4 +174,28 @@ class TournamentApiService {
   }) async {
     return await apiClient.get(endpoint: tournamentEndpoint.auctionSetup(tournamentId));
   }
+
+  Future<Either<ApiResponseModel, CricketFailure>> startAuction({
+    required String tournamentId,
+  }) async {
+    return await apiClient.post(endpoint: tournamentEndpoint.auctionStart(tournamentId));
+  }
+
+  Future<Either<ApiResponseModel, CricketFailure>> pauseAuction({
+    required String tournamentId,
+  }) async {
+    return await apiClient.post(endpoint: tournamentEndpoint.auctionPause(tournamentId));
+  }
+
+  Future<Either<ApiResponseModel, CricketFailure>> resumeAuction({
+    required String tournamentId,
+  }) async {
+    return await apiClient.post(endpoint: tournamentEndpoint.auctionResume(tournamentId));
+  }
+
+  Future<Either<ApiResponseModel, CricketFailure>> nextAuctionLot({
+    required String tournamentId,
+  }) async {
+    return await apiClient.post(endpoint: tournamentEndpoint.auctionNext(tournamentId));
+  }
 }

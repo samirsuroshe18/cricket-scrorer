@@ -36,4 +36,16 @@ class TournamentEndpoint {
 
   String auctionSetup(String tournamentId) =>
       '/v1/tournament/$tournamentId/auction-setup';
+
+  String auctionStart(String tournamentId) =>
+      '/v1/tournament/$tournamentId/auction/start';
+
+  String auctionPause(String tournamentId) =>
+      '/v1/tournament/$tournamentId/auction/pause';
+
+  String auctionResume(String tournamentId) =>
+      '/v1/tournament/$tournamentId/auction/resume';
+
+  String auctionNext(String tournamentId) =>
+      '/v1/tournament/$tournamentId/auction/next';
 }

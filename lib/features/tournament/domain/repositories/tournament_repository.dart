@@ -12,6 +12,7 @@ import 'package:cricket_scorer/features/tournament/data/models/request/start_fix
 import 'package:cricket_scorer/features/tournament/data/models/request/update_auction_setup_req.dart';
 import 'package:cricket_scorer/features/tournament/data/models/request/update_tournament_req.dart';
 import 'package:cricket_scorer/features/tournament/data/models/response/auction_setup_res.dart';
+import 'package:cricket_scorer/features/tournament/data/models/response/auction_state_res.dart';
 import 'package:cricket_scorer/features/tournament/data/models/response/fixture_res.dart';
 import 'package:cricket_scorer/features/tournament/data/models/response/leaderboard_row_res.dart';
 import 'package:cricket_scorer/features/tournament/data/models/response/standings_row_res.dart';
@@ -129,4 +130,20 @@ abstract class TournamentRepository {
   /// `GET /v1/tournament/:tournamentId/auction-setup` — any org member.
   Future<Either<CricketResponse<AuctionSetupRes>, CricketFailure>>
   getAuctionSetup({required String tournamentId});
+
+  /// `POST /v1/tournament/:tournamentId/auction/start` — owner-only.
+  Future<Either<CricketResponse<AuctionStartRes>, CricketFailure>>
+  startAuction({required String tournamentId});
+
+  /// `POST /v1/tournament/:tournamentId/auction/pause` — owner-only.
+  Future<Either<CricketResponse<AuctionPauseResumeRes>, CricketFailure>>
+  pauseAuction({required String tournamentId});
+
+  /// `POST /v1/tournament/:tournamentId/auction/resume` — owner-only.
+  Future<Either<CricketResponse<AuctionPauseResumeRes>, CricketFailure>>
+  resumeAuction({required String tournamentId});
+
+  /// `POST /v1/tournament/:tournamentId/auction/next` — owner-only.
+  Future<Either<CricketResponse<AuctionNextLotRes>, CricketFailure>>
+  nextAuctionLot({required String tournamentId});
 }
