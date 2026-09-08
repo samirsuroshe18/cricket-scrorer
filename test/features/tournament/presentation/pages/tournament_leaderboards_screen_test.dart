@@ -14,6 +14,10 @@ import 'package:cricket_scorer/features/tournament/domain/usecases/generate_fixt
 import 'package:cricket_scorer/features/tournament/domain/usecases/get_auction_setup.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/get_fixtures.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/get_leaderboards.dart';
+import 'package:cricket_scorer/features/tournament/domain/usecases/get_pool.dart';
+import 'package:cricket_scorer/features/tournament/domain/usecases/register_pool_player.dart';
+import 'package:cricket_scorer/features/tournament/domain/usecases/remove_pool_entry.dart';
+import 'package:cricket_scorer/features/tournament/domain/usecases/update_pool_entry.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/get_standings.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/get_tournament.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/remove_tournament_team.dart';
@@ -149,6 +153,27 @@ class _UnusedGetStandingsUseCase implements GetStandingsUseCase {
   dynamic noSuchMethod(Invocation invocation) => throw UnimplementedError();
 }
 
+
+class _UnusedRegisterPoolPlayerUseCase implements RegisterPoolPlayerUseCase {
+  @override
+  dynamic noSuchMethod(Invocation invocation) => throw UnimplementedError();
+}
+
+class _UnusedGetPoolUseCase implements GetPoolUseCase {
+  @override
+  dynamic noSuchMethod(Invocation invocation) => throw UnimplementedError();
+}
+
+class _UnusedUpdatePoolEntryUseCase implements UpdatePoolEntryUseCase {
+  @override
+  dynamic noSuchMethod(Invocation invocation) => throw UnimplementedError();
+}
+
+class _UnusedRemovePoolEntryUseCase implements RemovePoolEntryUseCase {
+  @override
+  dynamic noSuchMethod(Invocation invocation) => throw UnimplementedError();
+}
+
 class _UnusedSetAuctionSetupUseCase implements SetAuctionSetupUseCase {
   @override
   dynamic noSuchMethod(Invocation invocation) => throw UnimplementedError();
@@ -181,6 +206,10 @@ void main() {
         resolveFixtureUseCase: _UnusedResolveFixtureUseCase(),
         getStandingsUseCase: _UnusedGetStandingsUseCase(),
         getLeaderboardsUseCase: getLeaderboardsUseCase,
+        registerPoolPlayerUseCase: _UnusedRegisterPoolPlayerUseCase(),
+        getPoolUseCase: _UnusedGetPoolUseCase(),
+        updatePoolEntryUseCase: _UnusedUpdatePoolEntryUseCase(),
+        removePoolEntryUseCase: _UnusedRemovePoolEntryUseCase(),
         setAuctionSetupUseCase: _UnusedSetAuctionSetupUseCase(),
         getAuctionSetupUseCase: _UnusedGetAuctionSetupUseCase(),
       ),

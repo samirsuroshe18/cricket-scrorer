@@ -250,6 +250,12 @@ class _TournamentDetailScreenState extends State<TournamentDetailScreen> {
                         ),
                         TextButton(
                           onPressed: () => Get.toNamed<dynamic>(
+                            AppRoutes.tournamentPoolPath(_tournamentId),
+                          ),
+                          child: CricketText(text: TranslationKeys.playerPool.tr),
+                        ),
+                        TextButton(
+                          onPressed: () => Get.toNamed<dynamic>(
                             AppRoutes.tournamentAuctionSetupPath(_tournamentId),
                           ),
                           child: CricketText(text: TranslationKeys.auctionSetup.tr),

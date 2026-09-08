@@ -4,7 +4,10 @@ import 'package:cricket_scorer/core/utils/either_util.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/create_match_res.dart';
 import 'package:cricket_scorer/features/tournament/data/models/request/create_tournament_req.dart';
 import 'package:cricket_scorer/features/tournament/data/models/request/enroll_tournament_team_req.dart';
+import 'package:cricket_scorer/features/tournament/data/models/request/register_pool_player_req.dart';
 import 'package:cricket_scorer/features/tournament/data/models/request/resolve_fixture_req.dart';
+import 'package:cricket_scorer/features/tournament/data/models/request/update_pool_entry_req.dart';
+import 'package:cricket_scorer/features/tournament/data/models/response/pool_entry_res.dart';
 import 'package:cricket_scorer/features/tournament/data/models/request/start_fixture_match_req.dart';
 import 'package:cricket_scorer/features/tournament/data/models/request/update_auction_setup_req.dart';
 import 'package:cricket_scorer/features/tournament/data/models/request/update_tournament_req.dart';
@@ -85,6 +88,34 @@ abstract class TournamentRepository {
   /// tournament format.
   Future<Either<CricketResponse<TournamentLeaderboardsRes>, CricketFailure>>
   getLeaderboards({required String tournamentId});
+
+  /// `POST /v1/tournament/:tournamentId/pool` — owner-only. Base price is
+  /// always organizer-set; nothing here reads career stats.
+  Future<Either<CricketResponse<PoolEntryRes>, CricketFailure>>
+  registerPoolPlayer({
+    required String tournamentId,
+    required RegisterPoolPlayerReq params,
+  });
+
+  /// `GET /v1/tournament/:tournamentId/pool` — any org member.
+  Future<Either<CricketResponse<List<PoolEntryRes>>, CricketFailure>>
+  getPool({required String tournamentId});
+
+  /// `PATCH /v1/tournament/:tournamentId/pool/:playerId` — owner-only,
+  /// basePrice only.
+  Future<Either<CricketResponse<PoolEntryRes>, CricketFailure>>
+  updatePoolEntry({
+    required String tournamentId,
+    required String playerId,
+    required UpdatePoolEntryReq params,
+  });
+
+  /// `DELETE /v1/tournament/:tournamentId/pool/:playerId` — owner-only,
+  /// hard removal. No cutoff in this pass.
+  Future<Either<CricketResponse<void>, CricketFailure>> removePoolEntry({
+    required String tournamentId,
+    required String playerId,
+  });
 
   /// `PATCH /v1/tournament/:tournamentId/auction-setup` — owner-only. Each
   /// field applied only if present; `owners` fully replaces the current set
