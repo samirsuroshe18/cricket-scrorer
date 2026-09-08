@@ -356,4 +356,12 @@ Map<String, String> en = {
   TranslationKeys.search: 'Search',
   TranslationKeys.searchHint: 'Search organizations and tournaments',
   TranslationKeys.noSearchResultsFound: 'No results found',
+  TranslationKeys.auctionSetup: 'Auction setup',
+  TranslationKeys.squadRules: 'Squad rules',
+  TranslationKeys.minSquadSize: 'Min squad size',
+  TranslationKeys.maxSquadSize: 'Max squad size',
+  TranslationKeys.teamOwner: 'Team owner',
+  TranslationKeys.budget: 'Budget',
+  TranslationKeys.noOwnerAssigned: 'No owner assigned',
+  TranslationKeys.auctionSetupSaved: 'Auction setup saved',
 };
