@@ -263,6 +263,7 @@ class _TournamentDetailScreenState extends State<TournamentDetailScreen> {
                         TextButton(
                           onPressed: () => Get.toNamed<dynamic>(
                             AppRoutes.tournamentAuctionRoomPath(_tournamentId),
+                            arguments: {'isOwner': controller.isOwner},
                           ),
                           child: CricketText(text: TranslationKeys.liveAuction.tr),
                         ),
