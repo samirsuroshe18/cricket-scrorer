@@ -47,11 +47,22 @@ class AuctionLotResolvedRes {
   final int? soldPrice;
   final String? soldTo;
 
+  /// The winning team's own updated budget figures — present only when
+  /// [outcome] is `'sold'`. Sent so the client applies the server's
+  /// authoritative post-charge number rather than computing it itself from
+  /// a possibly-stale local `budgets` cache (see
+  /// AuctionRoomController.watchAuctionLotResolved's own comment on why
+  /// that used to be a real bug).
+  final int? spent;
+  final int? remaining;
+
   AuctionLotResolvedRes({
     required this.lotId,
     required this.outcome,
     this.soldPrice,
     this.soldTo,
+    this.spent,
+    this.remaining,
   });
 
   factory AuctionLotResolvedRes.fromJson(Map<String, dynamic> json) =>

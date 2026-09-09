@@ -92,19 +92,31 @@ class AuctionRoomController extends GetxController {
     });
 
     _bidRejectedSub = tournamentRepository.watchAuctionBidRejected(tournamentId: tournamentId).listen((rejection) {
+      // Rx only notifies listeners on an actual value change — setting the
+      // same message twice in a row (e.g. two consecutive INSUFFICIENT_
+      // BUDGET rejections) would otherwise be silently swallowed the
+      // second time, since GetX's equality check sees no change. Clearing
+      // first forces every rejection to always produce a real transition,
+      // so the snackbar worker in the screen fires every time, never just
+      // the first.
+      actionError.value = null;
       actionError.value = rejection.message;
     });
 
     _lotResolvedSub = tournamentRepository.watchAuctionLotResolved(tournamentId: tournamentId).listen((resolved) {
       currentLot.value = null;
       bidHistory.clear();
-      if (resolved.outcome == 'sold' && resolved.soldTo != null && resolved.soldPrice != null) {
+      // spent/remaining come from the server's own post-charge figures
+      // (see AuctionLotResolvedRes's own doc comment) — never recomputed
+      // here from the locally-cached budget, which could already be stale.
+      if (resolved.outcome == 'sold' && resolved.soldTo != null &&
+          resolved.spent != null && resolved.remaining != null) {
         final index = budgets.indexWhere((b) => b.teamId == resolved.soldTo);
         if (index != -1) {
           final b = budgets[index];
           budgets[index] = AuctionBudgetRes(
             teamId: b.teamId, teamName: b.teamName, ownerId: b.ownerId, budget: b.budget,
-            spent: b.spent + resolved.soldPrice!, remaining: b.remaining - resolved.soldPrice!,
+            spent: resolved.spent!, remaining: resolved.remaining!,
           );
         }
       }

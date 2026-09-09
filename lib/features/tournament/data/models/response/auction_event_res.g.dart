@@ -44,6 +44,8 @@ AuctionLotResolvedRes _$AuctionLotResolvedResFromJson(
   outcome: json['outcome'] as String,
   soldPrice: (json['soldPrice'] as num?)?.toInt(),
   soldTo: json['soldTo'] as String?,
+  spent: (json['spent'] as num?)?.toInt(),
+  remaining: (json['remaining'] as num?)?.toInt(),
 );
 
 Map<String, dynamic> _$AuctionLotResolvedResToJson(
@@ -53,6 +55,8 @@ Map<String, dynamic> _$AuctionLotResolvedResToJson(
   'outcome': instance.outcome,
   'soldPrice': instance.soldPrice,
   'soldTo': instance.soldTo,
+  'spent': instance.spent,
+  'remaining': instance.remaining,
 };
 
 AuctionResumedRes _$AuctionResumedResFromJson(Map<String, dynamic> json) =>
