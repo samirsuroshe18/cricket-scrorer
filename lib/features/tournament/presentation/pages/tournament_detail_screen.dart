@@ -187,87 +187,84 @@ class _TournamentDetailScreenState extends State<TournamentDetailScreen> {
                 ),
                 12.h,
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 3,
-                          ),
-                          decoration: BoxDecoration(
-                            color: context.colors.chipBackground,
-                            borderRadius: 8.radius,
-                          ),
-                          child: CricketText(
-                            text: tournamentFormatLabel(data.format),
-                            style: context.textTheme.labelSmall,
-                          ),
-                        ),
-                        8.w,
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 3,
-                          ),
-                          decoration: BoxDecoration(
-                            color: tournamentStatusColor(
-                              context,
-                              data.status,
-                            ).withValues(alpha: 0.12),
-                            borderRadius: 8.radius,
-                          ),
-                          child: CricketText(
-                            text: tournamentStatusLabel(data.status),
-                            style: context.textTheme.labelSmall?.copyWith(
-                              color: tournamentStatusColor(context, data.status),
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
-                      ],
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 3,
+                      ),
+                      decoration: BoxDecoration(
+                        color: context.colors.chipBackground,
+                        borderRadius: 8.radius,
+                      ),
+                      child: CricketText(
+                        text: tournamentFormatLabel(data.format),
+                        style: context.textTheme.labelSmall,
+                      ),
                     ),
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        // Knockout is a bracket, not a table — there's no
-                        // standings screen to link to for it. Leaderboards
-                        // are player-level, so they're shown for every
-                        // format, including knockout.
-                        if (data.format != 'knockout')
-                          TextButton(
-                            onPressed: () => Get.toNamed<dynamic>(
-                              AppRoutes.tournamentStandingsPath(_tournamentId),
-                            ),
-                            child: CricketText(text: TranslationKeys.standings.tr),
-                          ),
-                        TextButton(
-                          onPressed: () => Get.toNamed<dynamic>(
-                            AppRoutes.tournamentLeaderboardsPath(_tournamentId),
-                          ),
-                          child: CricketText(text: TranslationKeys.leaderboards.tr),
+                    8.w,
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 3,
+                      ),
+                      decoration: BoxDecoration(
+                        color: tournamentStatusColor(
+                          context,
+                          data.status,
+                        ).withValues(alpha: 0.12),
+                        borderRadius: 8.radius,
+                      ),
+                      child: CricketText(
+                        text: tournamentStatusLabel(data.status),
+                        style: context.textTheme.labelSmall?.copyWith(
+                          color: tournamentStatusColor(context, data.status),
+                          fontWeight: FontWeight.w600,
                         ),
-                        TextButton(
-                          onPressed: () => Get.toNamed<dynamic>(
-                            AppRoutes.tournamentPoolPath(_tournamentId),
-                          ),
-                          child: CricketText(text: TranslationKeys.playerPool.tr),
+                      ),
+                    ),
+                  ],
+                ),
+                4.h,
+                Wrap(
+                  spacing: 4,
+                  runSpacing: 0,
+                  children: [
+                    // Knockout is a bracket, not a table — there's no
+                    // standings screen to link to for it. Leaderboards
+                    // are player-level, so they're shown for every
+                    // format, including knockout.
+                    if (data.format != 'knockout')
+                      TextButton(
+                        onPressed: () => Get.toNamed<dynamic>(
+                          AppRoutes.tournamentStandingsPath(_tournamentId),
                         ),
-                        TextButton(
-                          onPressed: () => Get.toNamed<dynamic>(
-                            AppRoutes.tournamentAuctionSetupPath(_tournamentId),
-                          ),
-                          child: CricketText(text: TranslationKeys.auctionSetup.tr),
-                        ),
-                        TextButton(
-                          onPressed: () => Get.toNamed<dynamic>(
-                            AppRoutes.tournamentAuctionRoomPath(_tournamentId),
-                            arguments: {'isOwner': controller.isOwner},
-                          ),
-                          child: CricketText(text: TranslationKeys.liveAuction.tr),
-                        ),
-                      ],
+                        child: CricketText(text: TranslationKeys.standings.tr),
+                      ),
+                    TextButton(
+                      onPressed: () => Get.toNamed<dynamic>(
+                        AppRoutes.tournamentLeaderboardsPath(_tournamentId),
+                      ),
+                      child: CricketText(text: TranslationKeys.leaderboards.tr),
+                    ),
+                    TextButton(
+                      onPressed: () => Get.toNamed<dynamic>(
+                        AppRoutes.tournamentPoolPath(_tournamentId),
+                      ),
+                      child: CricketText(text: TranslationKeys.playerPool.tr),
+                    ),
+                    TextButton(
+                      onPressed: () => Get.toNamed<dynamic>(
+                        AppRoutes.tournamentAuctionSetupPath(_tournamentId),
+                      ),
+                      child: CricketText(text: TranslationKeys.auctionSetup.tr),
+                    ),
+                    TextButton(
+                      onPressed: () => Get.toNamed<dynamic>(
+                        AppRoutes.tournamentAuctionRoomPath(_tournamentId),
+                        arguments: {'isOwner': controller.isOwner},
+                      ),
+                      child: CricketText(text: TranslationKeys.liveAuction.tr),
                     ),
                   ],
                 ),
