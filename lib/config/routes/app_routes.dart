@@ -134,4 +134,25 @@ class AppRoutes {
 
   static String tournamentAuctionRoomPath(String tournamentId) =>
       '/tournament/$tournamentId/auction-room';
+
+  /// Registered with a GetX path parameter, same shape as
+  /// [tournamentLeaderboards]. Never navigate with this constant directly —
+  /// use [tournamentAuctionSquadPath]. No binding of its own, same reasoning
+  /// as standings/leaderboards: reuses the tag-registered
+  /// `TournamentDetailController` — this is a fetch-once-per-visit read,
+  /// not the continuously-live auction room.
+  static const String tournamentAuctionSquad =
+      '/tournament/:tournamentId/auction-squad';
+
+  static String tournamentAuctionSquadPath(String tournamentId) =>
+      '/tournament/$tournamentId/auction-squad';
+
+  /// Registered with a GetX path parameter, same shape as
+  /// [tournamentAuctionSquad]. Never navigate with this constant directly —
+  /// use [tournamentAuctionHistoryPath].
+  static const String tournamentAuctionHistory =
+      '/tournament/:tournamentId/auction-history';
+
+  static String tournamentAuctionHistoryPath(String tournamentId) =>
+      '/tournament/$tournamentId/auction-history';
 }

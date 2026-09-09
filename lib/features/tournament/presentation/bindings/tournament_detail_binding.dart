@@ -3,7 +3,9 @@ import 'package:cricket_scorer/features/organization/domain/usecases/get_organiz
 import 'package:cricket_scorer/features/tournament/domain/usecases/delete_tournament.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/enroll_tournament_team.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/generate_fixtures.dart';
+import 'package:cricket_scorer/features/tournament/domain/usecases/get_auction_history.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/get_auction_setup.dart';
+import 'package:cricket_scorer/features/tournament/domain/usecases/get_auction_squad.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/get_fixtures.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/get_leaderboards.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/get_pool.dart';
@@ -46,6 +48,8 @@ class TournamentDetailBinding extends Bindings {
         removePoolEntryUseCase: Get.find<RemovePoolEntryUseCase>(),
         setAuctionSetupUseCase: Get.find<SetAuctionSetupUseCase>(),
         getAuctionSetupUseCase: Get.find<GetAuctionSetupUseCase>(),
+        getAuctionSquadUseCase: Get.find<GetAuctionSquadUseCase>(),
+        getAuctionHistoryUseCase: Get.find<GetAuctionHistoryUseCase>(),
       ),
       tag: tournamentId,
     );

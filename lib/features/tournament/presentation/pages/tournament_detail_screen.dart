@@ -266,6 +266,18 @@ class _TournamentDetailScreenState extends State<TournamentDetailScreen> {
                       ),
                       child: CricketText(text: TranslationKeys.liveAuction.tr),
                     ),
+                    TextButton(
+                      onPressed: () => Get.toNamed<dynamic>(
+                        AppRoutes.tournamentAuctionSquadPath(_tournamentId),
+                      ),
+                      child: CricketText(text: TranslationKeys.auctionSquad.tr),
+                    ),
+                    TextButton(
+                      onPressed: () => Get.toNamed<dynamic>(
+                        AppRoutes.tournamentAuctionHistoryPath(_tournamentId),
+                      ),
+                      child: CricketText(text: TranslationKeys.auctionHistory.tr),
+                    ),
                   ],
                 ),
                 24.h,

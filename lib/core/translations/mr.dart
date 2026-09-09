@@ -382,4 +382,13 @@ Map<String, String> mr = {
   TranslationKeys.pauseAuction: 'थांबवा',
   TranslationKeys.resumeAuction: 'पुन्हा सुरू करा',
   TranslationKeys.placeBid: 'बोली लावा',
+  TranslationKeys.auctionSquad: 'संघ',
+  TranslationKeys.noSquadYet: 'अजून कोणताही खेळाडू विकला गेला नाही',
+  TranslationKeys.unsoldPlayers: 'न विकलेले',
+  TranslationKeys.sold: 'विकला',
+  TranslationKeys.unsold: 'न विकलेला',
+  TranslationKeys.spent: 'खर्च केले',
+  TranslationKeys.remaining: 'शिल्लक',
+  TranslationKeys.auctionHistory: 'इतिहास',
+  TranslationKeys.noAuctionHistoryYet: 'अजून कोणतेही निकाल नाहीत',
 };

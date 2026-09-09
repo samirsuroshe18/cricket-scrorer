@@ -14,6 +14,7 @@ import 'package:cricket_scorer/features/tournament/data/models/request/update_to
 import 'package:cricket_scorer/features/tournament/data/models/response/auction_setup_res.dart';
 import 'package:cricket_scorer/features/tournament/data/data_sources/remote/auction_socket_service/auction_socket_service.dart';
 import 'package:cricket_scorer/features/tournament/data/models/response/auction_event_res.dart';
+import 'package:cricket_scorer/features/tournament/data/models/response/auction_report_res.dart';
 import 'package:cricket_scorer/features/tournament/data/models/response/auction_state_res.dart';
 import 'package:cricket_scorer/features/tournament/data/models/response/fixture_res.dart';
 import 'package:cricket_scorer/features/tournament/data/models/response/leaderboard_row_res.dart';
@@ -448,6 +449,44 @@ class TournamentRepositoryImpl implements TournamentRepository {
       return Either.result(
         CricketResponse(
           data: AuctionNextLotRes.fromJson(
+            response.result.data as Map<String, dynamic>,
+          ),
+          message: response.result.message,
+        ),
+      );
+    }
+    return Either.fallback(response.fallback);
+  }
+
+  @override
+  Future<Either<CricketResponse<AuctionSquadRes>, CricketFailure>>
+  getAuctionSquad({required String tournamentId}) async {
+    final response = await tournamentApiService.getAuctionSquad(
+      tournamentId: tournamentId,
+    );
+    if (response.isResult) {
+      return Either.result(
+        CricketResponse(
+          data: AuctionSquadRes.fromJson(
+            response.result.data as Map<String, dynamic>,
+          ),
+          message: response.result.message,
+        ),
+      );
+    }
+    return Either.fallback(response.fallback);
+  }
+
+  @override
+  Future<Either<CricketResponse<AuctionHistoryRes>, CricketFailure>>
+  getAuctionHistory({required String tournamentId}) async {
+    final response = await tournamentApiService.getAuctionHistory(
+      tournamentId: tournamentId,
+    );
+    if (response.isResult) {
+      return Either.result(
+        CricketResponse(
+          data: AuctionHistoryRes.fromJson(
             response.result.data as Map<String, dynamic>,
           ),
           message: response.result.message,

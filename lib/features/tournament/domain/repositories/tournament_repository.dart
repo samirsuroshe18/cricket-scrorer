@@ -13,6 +13,7 @@ import 'package:cricket_scorer/features/tournament/data/models/request/update_au
 import 'package:cricket_scorer/features/tournament/data/models/request/update_tournament_req.dart';
 import 'package:cricket_scorer/features/tournament/data/models/response/auction_setup_res.dart';
 import 'package:cricket_scorer/features/tournament/data/models/response/auction_event_res.dart';
+import 'package:cricket_scorer/features/tournament/data/models/response/auction_report_res.dart';
 import 'package:cricket_scorer/features/tournament/data/models/response/auction_state_res.dart';
 import 'package:cricket_scorer/features/tournament/data/models/response/fixture_res.dart';
 import 'package:cricket_scorer/features/tournament/data/models/response/leaderboard_row_res.dart';
@@ -147,6 +148,17 @@ abstract class TournamentRepository {
   /// `POST /v1/tournament/:tournamentId/auction/next` — owner-only.
   Future<Either<CricketResponse<AuctionNextLotRes>, CricketFailure>>
   nextAuctionLot({required String tournamentId});
+
+  /// `GET /v1/tournament/:tournamentId/auction/squad` — any org member.
+  /// Live-reflects whatever's resolved so far; no `sessionId` — a
+  /// tournament has at most one `AuctionSession` ever.
+  Future<Either<CricketResponse<AuctionSquadRes>, CricketFailure>>
+  getAuctionSquad({required String tournamentId});
+
+  /// `GET /v1/tournament/:tournamentId/auction/history` — any org member.
+  /// Resolution-summary list, ordered oldest-resolved-first.
+  Future<Either<CricketResponse<AuctionHistoryRes>, CricketFailure>>
+  getAuctionHistory({required String tournamentId});
 
   /// The auction room's live half — see [AuctionSocketService]. Every
   /// stream here (except [watchAuctionState], which owns room join/leave)

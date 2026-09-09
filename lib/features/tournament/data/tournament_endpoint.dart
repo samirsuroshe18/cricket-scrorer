@@ -48,4 +48,10 @@ class TournamentEndpoint {
 
   String auctionNext(String tournamentId) =>
       '/v1/tournament/$tournamentId/auction/next';
+
+  String auctionSquad(String tournamentId) =>
+      '/v1/tournament/$tournamentId/auction/squad';
+
+  String auctionHistory(String tournamentId) =>
+      '/v1/tournament/$tournamentId/auction/history';
 }

@@ -3,6 +3,7 @@ import 'package:cricket_scorer/features/organization/domain/usecases/get_organiz
 import 'package:cricket_scorer/features/scoring/data/models/response/create_match_res.dart';
 import 'package:cricket_scorer/features/tournament/data/models/request/update_auction_setup_req.dart';
 import 'package:cricket_scorer/features/tournament/data/models/request/update_tournament_req.dart';
+import 'package:cricket_scorer/features/tournament/data/models/response/auction_report_res.dart';
 import 'package:cricket_scorer/features/tournament/data/models/response/auction_setup_res.dart';
 import 'package:cricket_scorer/features/tournament/data/models/response/fixture_res.dart';
 import 'package:cricket_scorer/features/tournament/data/models/response/leaderboard_row_res.dart';
@@ -12,7 +13,9 @@ import 'package:cricket_scorer/features/tournament/data/models/response/tourname
 import 'package:cricket_scorer/features/tournament/domain/usecases/delete_tournament.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/enroll_tournament_team.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/generate_fixtures.dart';
+import 'package:cricket_scorer/features/tournament/domain/usecases/get_auction_history.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/get_auction_setup.dart';
+import 'package:cricket_scorer/features/tournament/domain/usecases/get_auction_squad.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/get_fixtures.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/get_leaderboards.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/get_pool.dart';
@@ -73,6 +76,8 @@ class TournamentDetailController extends GetxController {
   final RemovePoolEntryUseCase removePoolEntryUseCase;
   final SetAuctionSetupUseCase setAuctionSetupUseCase;
   final GetAuctionSetupUseCase getAuctionSetupUseCase;
+  final GetAuctionSquadUseCase getAuctionSquadUseCase;
+  final GetAuctionHistoryUseCase getAuctionHistoryUseCase;
 
   TournamentDetailController({
     required this.tournamentId,
@@ -95,6 +100,8 @@ class TournamentDetailController extends GetxController {
     required this.removePoolEntryUseCase,
     required this.setAuctionSetupUseCase,
     required this.getAuctionSetupUseCase,
+    required this.getAuctionSquadUseCase,
+    required this.getAuctionHistoryUseCase,
   });
 
   final detail = Rxn<TournamentDetailRes>();
@@ -455,5 +462,52 @@ class TournamentDetailController extends GetxController {
     if (!response.isResult) return false;
     await loadAuctionSetup();
     return true;
+  }
+
+  // Same lazy-load reasoning as standings/leaderboards/pool above. Both
+  // live-reflect whatever's resolved so far — no "completed" gate, and no
+  // sessionId anywhere (a tournament has at most one AuctionSession ever).
+  final auctionSquad = Rxn<AuctionSquadRes>();
+  final auctionSquadLoading = false.obs;
+  final auctionSquadError = Rxn<String>();
+
+  Future<void> loadAuctionSquad() async {
+    auctionSquadLoading.value = true;
+    auctionSquadError.value = null;
+
+    final response = await getAuctionSquadUseCase(
+      params: GetAuctionSquadParams(tournamentId: tournamentId),
+    );
+
+    if (!response.isResult) {
+      auctionSquadError.value = response.fallback.message;
+      auctionSquadLoading.value = false;
+      return;
+    }
+
+    auctionSquad.value = response.result.data;
+    auctionSquadLoading.value = false;
+  }
+
+  final auctionHistory = Rxn<AuctionHistoryRes>();
+  final auctionHistoryLoading = false.obs;
+  final auctionHistoryError = Rxn<String>();
+
+  Future<void> loadAuctionHistory() async {
+    auctionHistoryLoading.value = true;
+    auctionHistoryError.value = null;
+
+    final response = await getAuctionHistoryUseCase(
+      params: GetAuctionHistoryParams(tournamentId: tournamentId),
+    );
+
+    if (!response.isResult) {
+      auctionHistoryError.value = response.fallback.message;
+      auctionHistoryLoading.value = false;
+      return;
+    }
+
+    auctionHistory.value = response.result.data;
+    auctionHistoryLoading.value = false;
   }
 }

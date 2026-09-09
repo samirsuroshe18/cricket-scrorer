@@ -198,4 +198,16 @@ class TournamentApiService {
   }) async {
     return await apiClient.post(endpoint: tournamentEndpoint.auctionNext(tournamentId));
   }
+
+  Future<Either<ApiResponseModel, CricketFailure>> getAuctionSquad({
+    required String tournamentId,
+  }) async {
+    return await apiClient.get(endpoint: tournamentEndpoint.auctionSquad(tournamentId));
+  }
+
+  Future<Either<ApiResponseModel, CricketFailure>> getAuctionHistory({
+    required String tournamentId,
+  }) async {
+    return await apiClient.get(endpoint: tournamentEndpoint.auctionHistory(tournamentId));
+  }
 }

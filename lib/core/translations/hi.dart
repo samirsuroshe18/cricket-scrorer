@@ -383,4 +383,13 @@ Map<String, String> hi = {
   TranslationKeys.pauseAuction: 'रोकें',
   TranslationKeys.resumeAuction: 'फिर से शुरू करें',
   TranslationKeys.placeBid: 'बोली लगाएं',
+  TranslationKeys.auctionSquad: 'दल',
+  TranslationKeys.noSquadYet: 'अभी तक कोई खिलाड़ी नहीं बिका',
+  TranslationKeys.unsoldPlayers: 'अनबिका',
+  TranslationKeys.sold: 'बिका',
+  TranslationKeys.unsold: 'अनबिका',
+  TranslationKeys.spent: 'खर्च किया',
+  TranslationKeys.remaining: 'शेष',
+  TranslationKeys.auctionHistory: 'इतिहास',
+  TranslationKeys.noAuctionHistoryYet: 'अभी तक कोई परिणाम नहीं',
 };

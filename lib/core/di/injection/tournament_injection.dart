@@ -13,7 +13,9 @@ import 'package:cricket_scorer/features/tournament/domain/usecases/next_auction_
 import 'package:cricket_scorer/features/tournament/domain/usecases/pause_auction.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/resume_auction.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/start_auction.dart';
+import 'package:cricket_scorer/features/tournament/domain/usecases/get_auction_history.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/get_auction_setup.dart';
+import 'package:cricket_scorer/features/tournament/domain/usecases/get_auction_squad.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/get_fixtures.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/get_leaderboards.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/get_pool.dart';
@@ -201,6 +203,16 @@ class TournamentInjection {
 
     Get.lazyPut<NextAuctionLotUseCase>(
       () => NextAuctionLotUseCase(tournamentRepository: Get.find<TournamentRepository>()),
+      fenix: true,
+    );
+
+    Get.lazyPut<GetAuctionSquadUseCase>(
+      () => GetAuctionSquadUseCase(tournamentRepository: Get.find<TournamentRepository>()),
+      fenix: true,
+    );
+
+    Get.lazyPut<GetAuctionHistoryUseCase>(
+      () => GetAuctionHistoryUseCase(tournamentRepository: Get.find<TournamentRepository>()),
       fenix: true,
     );
   }

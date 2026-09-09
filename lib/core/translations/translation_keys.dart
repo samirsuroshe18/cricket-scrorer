@@ -430,4 +430,14 @@ class TranslationKeys {
   static const String pauseAuction = 'pause_auction';
   static const String resumeAuction = 'resume_auction';
   static const String placeBid = 'place_bid';
+
+  static const String auctionSquad = 'auction_squad';
+  static const String noSquadYet = 'no_squad_yet';
+  static const String unsoldPlayers = 'unsold_players';
+  static const String sold = 'sold';
+  static const String unsold = 'unsold';
+  static const String spent = 'spent';
+  static const String remaining = 'remaining';
+  static const String auctionHistory = 'auction_history';
+  static const String noAuctionHistoryYet = 'no_auction_history_yet';
 }

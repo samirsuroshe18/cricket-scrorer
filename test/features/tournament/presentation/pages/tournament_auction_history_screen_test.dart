@@ -5,8 +5,8 @@ import 'package:cricket_scorer/core/network/models/cricket_response.dart';
 import 'package:cricket_scorer/core/utils/either_util.dart';
 import 'package:cricket_scorer/features/organization/data/models/response/organization_detail_res.dart';
 import 'package:cricket_scorer/features/organization/domain/usecases/get_organization.dart';
+import 'package:cricket_scorer/features/tournament/data/models/response/auction_report_res.dart';
 import 'package:cricket_scorer/features/tournament/data/models/response/fixture_res.dart';
-import 'package:cricket_scorer/features/tournament/data/models/response/pool_entry_res.dart';
 import 'package:cricket_scorer/features/tournament/data/models/response/tournament_detail_res.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/delete_tournament.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/enroll_tournament_team.dart';
@@ -28,17 +28,16 @@ import 'package:cricket_scorer/features/tournament/domain/usecases/start_fixture
 import 'package:cricket_scorer/features/tournament/domain/usecases/update_pool_entry.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/update_tournament.dart';
 import 'package:cricket_scorer/features/tournament/presentation/controllers/tournament_detail_controller.dart';
-import 'package:cricket_scorer/features/tournament/presentation/pages/tournament_player_pool_screen.dart';
-import 'package:flutter/material.dart';
+import 'package:cricket_scorer/features/tournament/presentation/pages/tournament_auction_history_screen.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart' hide Response;
 
-class _GetPoolUseCase implements GetPoolUseCase {
-  Either<CricketResponse<List<PoolEntryRes>>, CricketFailure>? response;
+class _GetAuctionHistoryUseCase implements GetAuctionHistoryUseCase {
+  Either<CricketResponse<AuctionHistoryRes>, CricketFailure>? response;
 
   @override
-  Future<Either<CricketResponse<List<PoolEntryRes>>, CricketFailure>> call({
-    GetPoolParams? params,
+  Future<Either<CricketResponse<AuctionHistoryRes>, CricketFailure>> call({
+    GetAuctionHistoryParams? params,
   }) async {
     final result = response;
     if (result == null) throw UnimplementedError('Not exercised in this test.');
@@ -49,48 +48,6 @@ class _GetPoolUseCase implements GetPoolUseCase {
   dynamic noSuchMethod(Invocation invocation) => throw UnimplementedError();
 }
 
-class _RegisterPoolPlayerUseCase implements RegisterPoolPlayerUseCase {
-  Either<CricketResponse<PoolEntryRes>, CricketFailure>? response;
-  RegisterPoolPlayerParams? lastParams;
-
-  @override
-  Future<Either<CricketResponse<PoolEntryRes>, CricketFailure>> call({
-    RegisterPoolPlayerParams? params,
-  }) async {
-    lastParams = params;
-    final result = response;
-    if (result == null) throw UnimplementedError('Not exercised in this test.');
-    return result;
-  }
-
-  @override
-  dynamic noSuchMethod(Invocation invocation) => throw UnimplementedError();
-}
-
-class _RemovePoolEntryUseCase implements RemovePoolEntryUseCase {
-  Either<CricketResponse<void>, CricketFailure>? response;
-  RemovePoolEntryParams? lastParams;
-
-  @override
-  Future<Either<CricketResponse<void>, CricketFailure>> call({
-    RemovePoolEntryParams? params,
-  }) async {
-    lastParams = params;
-    final result = response;
-    if (result == null) throw UnimplementedError('Not exercised in this test.');
-    return result;
-  }
-
-  @override
-  dynamic noSuchMethod(Invocation invocation) => throw UnimplementedError();
-}
-
-// TournamentDetailController.onInit() always calls loadDetail(), even
-// though this screen only cares about the pool — these three need a
-// working (not throwing) response so that automatic call succeeds
-// harmlessly. Same reasoning as the sibling standings/leaderboards tests.
-// The org's owner is 'owner-1', matching currentUserId below, so isOwner
-// is true and the add/edit/remove actions render.
 class _StubGetTournamentUseCase implements GetTournamentUseCase {
   @override
   Future<Either<CricketResponse<TournamentDetailRes>, CricketFailure>> call({
@@ -199,7 +156,22 @@ class _UnusedGetLeaderboardsUseCase implements GetLeaderboardsUseCase {
   dynamic noSuchMethod(Invocation invocation) => throw UnimplementedError();
 }
 
+class _UnusedRegisterPoolPlayerUseCase implements RegisterPoolPlayerUseCase {
+  @override
+  dynamic noSuchMethod(Invocation invocation) => throw UnimplementedError();
+}
+
+class _UnusedGetPoolUseCase implements GetPoolUseCase {
+  @override
+  dynamic noSuchMethod(Invocation invocation) => throw UnimplementedError();
+}
+
 class _UnusedUpdatePoolEntryUseCase implements UpdatePoolEntryUseCase {
+  @override
+  dynamic noSuchMethod(Invocation invocation) => throw UnimplementedError();
+}
+
+class _UnusedRemovePoolEntryUseCase implements RemovePoolEntryUseCase {
   @override
   dynamic noSuchMethod(Invocation invocation) => throw UnimplementedError();
 }
@@ -219,21 +191,12 @@ class _UnusedGetAuctionSquadUseCase implements GetAuctionSquadUseCase {
   dynamic noSuchMethod(Invocation invocation) => throw UnimplementedError();
 }
 
-class _UnusedGetAuctionHistoryUseCase implements GetAuctionHistoryUseCase {
-  @override
-  dynamic noSuchMethod(Invocation invocation) => throw UnimplementedError();
-}
-
 void main() {
-  late _GetPoolUseCase getPoolUseCase;
-  late _RegisterPoolPlayerUseCase registerPoolPlayerUseCase;
-  late _RemovePoolEntryUseCase removePoolEntryUseCase;
+  late _GetAuctionHistoryUseCase getAuctionHistoryUseCase;
 
   setUp(() {
     Get.testMode = true;
-    getPoolUseCase = _GetPoolUseCase();
-    registerPoolPlayerUseCase = _RegisterPoolPlayerUseCase();
-    removePoolEntryUseCase = _RemovePoolEntryUseCase();
+    getAuctionHistoryUseCase = _GetAuctionHistoryUseCase();
     Get.put<TournamentDetailController>(
       TournamentDetailController(
         tournamentId: 'tournament-1',
@@ -250,14 +213,14 @@ void main() {
         resolveFixtureUseCase: _UnusedResolveFixtureUseCase(),
         getStandingsUseCase: _UnusedGetStandingsUseCase(),
         getLeaderboardsUseCase: _UnusedGetLeaderboardsUseCase(),
-        registerPoolPlayerUseCase: registerPoolPlayerUseCase,
-        getPoolUseCase: getPoolUseCase,
+        registerPoolPlayerUseCase: _UnusedRegisterPoolPlayerUseCase(),
+        getPoolUseCase: _UnusedGetPoolUseCase(),
         updatePoolEntryUseCase: _UnusedUpdatePoolEntryUseCase(),
-        removePoolEntryUseCase: removePoolEntryUseCase,
+        removePoolEntryUseCase: _UnusedRemovePoolEntryUseCase(),
         setAuctionSetupUseCase: _UnusedSetAuctionSetupUseCase(),
         getAuctionSetupUseCase: _UnusedGetAuctionSetupUseCase(),
         getAuctionSquadUseCase: _UnusedGetAuctionSquadUseCase(),
-        getAuctionHistoryUseCase: _UnusedGetAuctionHistoryUseCase(),
+        getAuctionHistoryUseCase: getAuctionHistoryUseCase,
       ),
       tag: 'tournament-1',
     );
@@ -269,11 +232,11 @@ void main() {
     await tester.pumpWidget(
       GetMaterialApp(
         theme: AppTheme.lightTheme,
-        initialRoute: AppRoutes.tournamentPoolPath('tournament-1'),
+        initialRoute: AppRoutes.tournamentAuctionHistoryPath('tournament-1'),
         getPages: [
           GetPage(
-            name: AppRoutes.tournamentPool,
-            page: () => const TournamentPlayerPoolScreen(),
+            name: AppRoutes.tournamentAuctionHistory,
+            page: () => const TournamentAuctionHistoryScreen(),
           ),
         ],
       ),
@@ -281,94 +244,70 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  PoolEntryRes poolEntry({
-    String playerId = 'p1',
-    String playerName = 'Rohit Sharma',
-    int basePrice = 5000,
-  }) => PoolEntryRes(
-    playerId: playerId,
-    playerName: playerName,
-    role: 'batsman',
-    basePrice: basePrice,
-    registeredAt: '2026-09-07T10:00:00.000Z',
-  );
-
-  testWidgets('shows the registered pool entries', (tester) async {
-    getPoolUseCase.response = Either.result(
-      CricketResponse(message: 'ok', data: [poolEntry()]),
+  testWidgets('shows sold and unsold entries with their outcome', (tester) async {
+    getAuctionHistoryUseCase.response = Either.result(
+      CricketResponse(
+        message: 'ok',
+        data: AuctionHistoryRes(
+          tournamentId: 'tournament-1',
+          entries: [
+            AuctionHistoryEntryRes(
+              lotId: 'lot-1',
+              playerId: 'p1',
+              playerName: 'Virat Kohli',
+              role: 'batsman',
+              basePrice: 6000,
+              outcome: 'unsold',
+              resolvedAt: DateTime.parse('2026-09-08T10:00:00.000Z'),
+            ),
+            AuctionHistoryEntryRes(
+              lotId: 'lot-2',
+              playerId: 'p2',
+              playerName: 'Rohit Sharma',
+              role: 'batsman',
+              basePrice: 5000,
+              outcome: 'sold',
+              soldPrice: 6500,
+              teamId: 'team-1',
+              teamName: 'Riverside U19',
+              resolvedAt: DateTime.parse('2026-09-08T10:01:00.000Z'),
+            ),
+          ],
+        ),
+      ),
     );
 
     await pumpScreen(tester);
 
+    expect(find.text('Virat Kohli'), findsOneWidget);
+    expect(find.text('unsold'), findsOneWidget);
     expect(find.text('Rohit Sharma'), findsOneWidget);
-    expect(find.text('5000'), findsOneWidget);
+    expect(find.text('sold'), findsOneWidget);
+    expect(find.text('Riverside U19'), findsOneWidget);
+    expect(find.text('₹6500'), findsOneWidget);
   });
 
-  testWidgets('shows the empty state when nothing is registered', (tester) async {
-    getPoolUseCase.response = Either.result(
-      const CricketResponse(message: 'ok', data: <PoolEntryRes>[]),
+  testWidgets('shows the empty state when nothing has resolved yet', (tester) async {
+    getAuctionHistoryUseCase.response = Either.result(
+      CricketResponse(
+        message: 'ok',
+        data: AuctionHistoryRes(tournamentId: 'tournament-1', entries: const []),
+      ),
     );
 
     await pumpScreen(tester);
 
-    expect(find.text('no_players_in_pool_yet'), findsOneWidget);
+    expect(find.text('no_auction_history_yet'), findsOneWidget);
   });
 
   testWidgets('shows the backend error message and a retry button on failure', (tester) async {
-    getPoolUseCase.response = Either.fallback(
-      CricketNotFoundErrorFailure(statusCode: 404, message: 'Tournament not found'),
+    getAuctionHistoryUseCase.response = Either.fallback(
+      CricketNotFoundErrorFailure(statusCode: 404, message: 'No auction has been started for this tournament'),
     );
 
     await pumpScreen(tester);
 
-    expect(find.text('Tournament not found'), findsOneWidget);
+    expect(find.text('No auction has been started for this tournament'), findsOneWidget);
     expect(find.text('retry'), findsOneWidget);
-  });
-
-  testWidgets('registering a player from the sheet reloads the pool', (tester) async {
-    getPoolUseCase.response = Either.result(
-      const CricketResponse(message: 'ok', data: <PoolEntryRes>[]),
-    );
-    await pumpScreen(tester);
-    expect(find.text('no_players_in_pool_yet'), findsOneWidget);
-
-    registerPoolPlayerUseCase.response = Either.result(
-      CricketResponse(message: 'ok', data: poolEntry()),
-    );
-    getPoolUseCase.response = Either.result(
-      CricketResponse(message: 'ok', data: [poolEntry()]),
-    );
-
-    await tester.tap(find.byIcon(Icons.person_add_alt_outlined));
-    await tester.pumpAndSettle();
-    await tester.enterText(find.byType(TextFormField).first, 'Rohit Sharma');
-    await tester.enterText(find.byType(TextFormField).last, '5000');
-    await tester.tap(find.text('save'));
-    await tester.pumpAndSettle();
-
-    expect(registerPoolPlayerUseCase.lastParams?.playerName, 'Rohit Sharma');
-    expect(registerPoolPlayerUseCase.lastParams?.basePrice, 5000);
-    expect(find.text('Rohit Sharma'), findsOneWidget);
-  });
-
-  testWidgets('removing a player reloads the pool', (tester) async {
-    getPoolUseCase.response = Either.result(
-      CricketResponse(message: 'ok', data: [poolEntry()]),
-    );
-    await pumpScreen(tester);
-    expect(find.text('Rohit Sharma'), findsOneWidget);
-
-    removePoolEntryUseCase.response = Either.result(
-      const CricketResponse(message: 'ok', data: null),
-    );
-    getPoolUseCase.response = Either.result(
-      const CricketResponse(message: 'ok', data: <PoolEntryRes>[]),
-    );
-
-    await tester.tap(find.byIcon(Icons.close));
-    await tester.pumpAndSettle();
-
-    expect(removePoolEntryUseCase.lastParams?.playerId, 'p1');
-    expect(find.text('no_players_in_pool_yet'), findsOneWidget);
   });
 }

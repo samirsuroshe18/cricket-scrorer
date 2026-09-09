@@ -4,6 +4,7 @@ import 'package:cricket_scorer/core/utils/either_util.dart';
 import 'package:cricket_scorer/features/organization/data/models/response/organization_detail_res.dart';
 import 'package:cricket_scorer/features/organization/domain/usecases/get_organization.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/create_match_res.dart';
+import 'package:cricket_scorer/features/tournament/data/models/response/auction_report_res.dart';
 import 'package:cricket_scorer/features/tournament/data/models/response/auction_setup_res.dart';
 import 'package:cricket_scorer/features/tournament/data/models/response/fixture_res.dart';
 import 'package:cricket_scorer/features/tournament/data/models/response/leaderboard_row_res.dart';
@@ -13,7 +14,9 @@ import 'package:cricket_scorer/features/tournament/data/models/response/tourname
 import 'package:cricket_scorer/features/tournament/domain/usecases/delete_tournament.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/enroll_tournament_team.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/generate_fixtures.dart';
+import 'package:cricket_scorer/features/tournament/domain/usecases/get_auction_history.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/get_auction_setup.dart';
+import 'package:cricket_scorer/features/tournament/domain/usecases/get_auction_squad.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/get_fixtures.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/get_leaderboards.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/get_pool.dart';
@@ -370,6 +373,40 @@ class _FakeGetAuctionSetupUseCase implements GetAuctionSetupUseCase {
       throw UnimplementedError('Not exercised in this test.');
 }
 
+class _FakeGetAuctionSquadUseCase implements GetAuctionSquadUseCase {
+  Either<CricketResponse<AuctionSquadRes>, CricketFailure>? response;
+
+  @override
+  Future<Either<CricketResponse<AuctionSquadRes>, CricketFailure>> call({
+    GetAuctionSquadParams? params,
+  }) async {
+    final result = response;
+    if (result == null) throw UnimplementedError('Not exercised in this test.');
+    return result;
+  }
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) =>
+      throw UnimplementedError('Not exercised in this test.');
+}
+
+class _FakeGetAuctionHistoryUseCase implements GetAuctionHistoryUseCase {
+  Either<CricketResponse<AuctionHistoryRes>, CricketFailure>? response;
+
+  @override
+  Future<Either<CricketResponse<AuctionHistoryRes>, CricketFailure>> call({
+    GetAuctionHistoryParams? params,
+  }) async {
+    final result = response;
+    if (result == null) throw UnimplementedError('Not exercised in this test.');
+    return result;
+  }
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) =>
+      throw UnimplementedError('Not exercised in this test.');
+}
+
 AuctionSetupRes _auctionSetup({
   int? minSquadSize,
   List<AuctionOwnerRes> owners = const [],
@@ -400,6 +437,8 @@ void main() {
   late _FakeRemovePoolEntryUseCase removePoolEntryUseCase;
   late _FakeSetAuctionSetupUseCase setAuctionSetupUseCase;
   late _FakeGetAuctionSetupUseCase getAuctionSetupUseCase;
+  late _FakeGetAuctionSquadUseCase getAuctionSquadUseCase;
+  late _FakeGetAuctionHistoryUseCase getAuctionHistoryUseCase;
   late TournamentDetailController controller;
 
   TournamentDetailController build(String userId) => TournamentDetailController(
@@ -423,6 +462,8 @@ void main() {
     removePoolEntryUseCase: removePoolEntryUseCase,
     setAuctionSetupUseCase: setAuctionSetupUseCase,
     getAuctionSetupUseCase: getAuctionSetupUseCase,
+    getAuctionSquadUseCase: getAuctionSquadUseCase,
+    getAuctionHistoryUseCase: getAuctionHistoryUseCase,
   );
 
   setUp(() {
@@ -451,6 +492,8 @@ void main() {
     removePoolEntryUseCase = _FakeRemovePoolEntryUseCase();
     setAuctionSetupUseCase = _FakeSetAuctionSetupUseCase();
     getAuctionSetupUseCase = _FakeGetAuctionSetupUseCase();
+    getAuctionSquadUseCase = _FakeGetAuctionSquadUseCase();
+    getAuctionHistoryUseCase = _FakeGetAuctionHistoryUseCase();
     controller = build('owner-1');
   });
 
@@ -953,5 +996,55 @@ void main() {
 
     expect(result, isFalse);
     expect(controller.auctionSetup.value, isNull);
+  });
+
+  test('loadAuctionSquad populates auctionSquad on success', () async {
+    getAuctionSquadUseCase.response = Either.result(
+      CricketResponse(
+        message: 'ok',
+        data: AuctionSquadRes(tournamentId: 'tournament-1', teams: const [], unsold: const []),
+      ),
+    );
+
+    await controller.loadAuctionSquad();
+
+    expect(controller.auctionSquad.value?.tournamentId, 'tournament-1');
+    expect(controller.auctionSquadLoading.value, isFalse);
+  });
+
+  test('loadAuctionSquad sets the backend error message on failure', () async {
+    getAuctionSquadUseCase.response = Either.fallback(
+      CricketBadRequestFailure(statusCode: 404, message: 'No auction has been started for this tournament'),
+    );
+
+    await controller.loadAuctionSquad();
+
+    expect(controller.auctionSquadError.value, 'No auction has been started for this tournament');
+    expect(controller.auctionSquad.value, isNull);
+  });
+
+  test('loadAuctionHistory populates auctionHistory on success', () async {
+    getAuctionHistoryUseCase.response = Either.result(
+      CricketResponse(
+        message: 'ok',
+        data: AuctionHistoryRes(tournamentId: 'tournament-1', entries: const []),
+      ),
+    );
+
+    await controller.loadAuctionHistory();
+
+    expect(controller.auctionHistory.value?.tournamentId, 'tournament-1');
+    expect(controller.auctionHistoryLoading.value, isFalse);
+  });
+
+  test('loadAuctionHistory sets the backend error message on failure', () async {
+    getAuctionHistoryUseCase.response = Either.fallback(
+      CricketBadRequestFailure(statusCode: 404, message: 'No auction has been started for this tournament'),
+    );
+
+    await controller.loadAuctionHistory();
+
+    expect(controller.auctionHistoryError.value, 'No auction has been started for this tournament');
+    expect(controller.auctionHistory.value, isNull);
   });
 }

@@ -384,4 +384,13 @@ Map<String, String> en = {
   TranslationKeys.pauseAuction: 'Pause',
   TranslationKeys.resumeAuction: 'Resume',
   TranslationKeys.placeBid: 'Place bid',
+  TranslationKeys.auctionSquad: 'Squad',
+  TranslationKeys.noSquadYet: 'No players sold yet',
+  TranslationKeys.unsoldPlayers: 'Unsold',
+  TranslationKeys.sold: 'Sold',
+  TranslationKeys.unsold: 'Unsold',
+  TranslationKeys.spent: 'Spent',
+  TranslationKeys.remaining: 'Remaining',
+  TranslationKeys.auctionHistory: 'History',
+  TranslationKeys.noAuctionHistoryYet: 'No results yet',
 };

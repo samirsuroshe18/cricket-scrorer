@@ -11,7 +11,9 @@ import 'package:cricket_scorer/features/tournament/data/models/response/tourname
 import 'package:cricket_scorer/features/tournament/domain/usecases/delete_tournament.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/enroll_tournament_team.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/generate_fixtures.dart';
+import 'package:cricket_scorer/features/tournament/domain/usecases/get_auction_history.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/get_auction_setup.dart';
+import 'package:cricket_scorer/features/tournament/domain/usecases/get_auction_squad.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/get_fixtures.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/get_leaderboards.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/get_pool.dart';
@@ -182,6 +184,16 @@ class _UnusedGetAuctionSetupUseCase implements GetAuctionSetupUseCase {
   dynamic noSuchMethod(Invocation invocation) => throw UnimplementedError();
 }
 
+class _UnusedGetAuctionSquadUseCase implements GetAuctionSquadUseCase {
+  @override
+  dynamic noSuchMethod(Invocation invocation) => throw UnimplementedError();
+}
+
+class _UnusedGetAuctionHistoryUseCase implements GetAuctionHistoryUseCase {
+  @override
+  dynamic noSuchMethod(Invocation invocation) => throw UnimplementedError();
+}
+
 void main() {
   late _GetStandingsUseCase getStandingsUseCase;
 
@@ -210,6 +222,8 @@ void main() {
         removePoolEntryUseCase: _UnusedRemovePoolEntryUseCase(),
         setAuctionSetupUseCase: _UnusedSetAuctionSetupUseCase(),
         getAuctionSetupUseCase: _UnusedGetAuctionSetupUseCase(),
+        getAuctionSquadUseCase: _UnusedGetAuctionSquadUseCase(),
+        getAuctionHistoryUseCase: _UnusedGetAuctionHistoryUseCase(),
       ),
       tag: 'tournament-1',
     );

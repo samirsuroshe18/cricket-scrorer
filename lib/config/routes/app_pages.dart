@@ -41,7 +41,9 @@ import 'package:cricket_scorer/features/search/presentation/pages/search_screen.
 import 'package:cricket_scorer/features/tournament/presentation/bindings/auction_room_binding.dart';
 import 'package:cricket_scorer/features/tournament/presentation/bindings/tournament_detail_binding.dart';
 import 'package:cricket_scorer/features/tournament/presentation/pages/tournament_auction_room_screen.dart';
+import 'package:cricket_scorer/features/tournament/presentation/pages/tournament_auction_history_screen.dart';
 import 'package:cricket_scorer/features/tournament/presentation/pages/tournament_auction_setup_screen.dart';
+import 'package:cricket_scorer/features/tournament/presentation/pages/tournament_auction_squad_screen.dart';
 import 'package:cricket_scorer/features/tournament/presentation/pages/tournament_detail_screen.dart';
 import 'package:cricket_scorer/features/tournament/presentation/pages/tournament_leaderboards_screen.dart';
 import 'package:cricket_scorer/features/tournament/presentation/pages/tournament_player_pool_screen.dart';
@@ -174,6 +176,14 @@ abstract class AppPages {
       name: AppRoutes.tournamentAuctionRoom,
       page: () => const TournamentAuctionRoomScreen(),
       binding: AuctionRoomBinding(),
+    ),
+    GetPage(
+      name: AppRoutes.tournamentAuctionSquad,
+      page: () => const TournamentAuctionSquadScreen(),
+    ),
+    GetPage(
+      name: AppRoutes.tournamentAuctionHistory,
+      page: () => const TournamentAuctionHistoryScreen(),
     ),
   ];
 }
