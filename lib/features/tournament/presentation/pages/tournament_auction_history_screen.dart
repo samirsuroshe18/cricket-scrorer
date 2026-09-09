@@ -42,10 +42,21 @@ class _TournamentAuctionHistoryScreenState
         child: Obx(() {
           final loading = controller.auctionHistoryLoading.value;
           final error = controller.auctionHistoryError.value;
+          final notStarted = controller.auctionHistoryNotStarted.value;
           final history = controller.auctionHistory.value;
 
           if (loading && history == null) {
             return const Center(child: CircularProgressIndicator());
+          }
+          if (notStarted) {
+            return Center(
+              child: CricketText(
+                text: TranslationKeys.auctionNotStarted.tr,
+                style: context.textTheme.bodyMedium?.copyWith(
+                  color: context.colorScheme.onSurfaceVariant,
+                ),
+              ),
+            );
           }
           if (error != null && history == null) {
             return Center(

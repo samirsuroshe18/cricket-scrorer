@@ -302,12 +302,27 @@ void main() {
 
   testWidgets('shows the backend error message and a retry button on failure', (tester) async {
     getAuctionHistoryUseCase.response = Either.fallback(
-      CricketNotFoundErrorFailure(statusCode: 404, message: 'No auction has been started for this tournament'),
+      CricketBadRequestFailure(statusCode: 400, message: 'Something unrelated went wrong'),
     );
 
     await pumpScreen(tester);
 
-    expect(find.text('No auction has been started for this tournament'), findsOneWidget);
+    expect(find.text('Something unrelated went wrong'), findsOneWidget);
     expect(find.text('retry'), findsOneWidget);
+  });
+
+  testWidgets('shows a friendly message with no retry button before the auction has started', (tester) async {
+    getAuctionHistoryUseCase.response = Either.fallback(
+      CricketNotFoundErrorFailure(
+        statusCode: 404,
+        message: 'No auction has been started for this tournament',
+        code: 'AUCTION_NOT_FOUND',
+      ),
+    );
+
+    await pumpScreen(tester);
+
+    expect(find.text('auction_not_started'), findsOneWidget);
+    expect(find.text('retry'), findsNothing);
   });
 }

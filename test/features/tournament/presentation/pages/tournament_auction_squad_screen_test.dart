@@ -276,6 +276,7 @@ void main() {
     expect(find.text('Riverside U19'), findsOneWidget);
     expect(find.text('Rohit Sharma'), findsOneWidget);
     expect(find.text('₹5500'), findsOneWidget);
+    expect(find.textContaining('100000'), findsOneWidget);
     expect(find.textContaining('94500'), findsOneWidget);
   });
 
@@ -314,12 +315,27 @@ void main() {
 
   testWidgets('shows the backend error message and a retry button on failure', (tester) async {
     getAuctionSquadUseCase.response = Either.fallback(
-      CricketNotFoundErrorFailure(statusCode: 404, message: 'No auction has been started for this tournament'),
+      CricketBadRequestFailure(statusCode: 400, message: 'Something unrelated went wrong'),
     );
 
     await pumpScreen(tester);
 
-    expect(find.text('No auction has been started for this tournament'), findsOneWidget);
+    expect(find.text('Something unrelated went wrong'), findsOneWidget);
     expect(find.text('retry'), findsOneWidget);
+  });
+
+  testWidgets('shows a friendly message with no retry button before the auction has started', (tester) async {
+    getAuctionSquadUseCase.response = Either.fallback(
+      CricketNotFoundErrorFailure(
+        statusCode: 404,
+        message: 'No auction has been started for this tournament',
+        code: 'AUCTION_NOT_FOUND',
+      ),
+    );
+
+    await pumpScreen(tester);
+
+    expect(find.text('auction_not_started'), findsOneWidget);
+    expect(find.text('retry'), findsNothing);
   });
 }

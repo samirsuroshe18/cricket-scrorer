@@ -42,10 +42,21 @@ class _TournamentAuctionSquadScreenState
         child: Obx(() {
           final loading = controller.auctionSquadLoading.value;
           final error = controller.auctionSquadError.value;
+          final notStarted = controller.auctionSquadNotStarted.value;
           final squad = controller.auctionSquad.value;
 
           if (loading && squad == null) {
             return const Center(child: CircularProgressIndicator());
+          }
+          if (notStarted) {
+            return Center(
+              child: CricketText(
+                text: TranslationKeys.auctionNotStarted.tr,
+                style: context.textTheme.bodyMedium?.copyWith(
+                  color: context.colorScheme.onSurfaceVariant,
+                ),
+              ),
+            );
           }
           if (error != null && squad == null) {
             return Center(
@@ -156,6 +167,12 @@ class _TeamSquadCard extends StatelessWidget {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
+                  CricketText(
+                    text: '${TranslationKeys.budget.tr}: ₹${team.budget}',
+                    style: context.textTheme.bodySmall?.copyWith(
+                      color: context.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
                   CricketText(
                     text: '${TranslationKeys.spent.tr}: ₹${team.spent}',
                     style: context.textTheme.bodySmall,

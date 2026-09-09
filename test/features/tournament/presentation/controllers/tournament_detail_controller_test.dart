@@ -1014,12 +1014,29 @@ void main() {
 
   test('loadAuctionSquad sets the backend error message on failure', () async {
     getAuctionSquadUseCase.response = Either.fallback(
-      CricketBadRequestFailure(statusCode: 404, message: 'No auction has been started for this tournament'),
+      CricketBadRequestFailure(statusCode: 400, message: 'Something unrelated went wrong'),
     );
 
     await controller.loadAuctionSquad();
 
-    expect(controller.auctionSquadError.value, 'No auction has been started for this tournament');
+    expect(controller.auctionSquadError.value, 'Something unrelated went wrong');
+    expect(controller.auctionSquadNotStarted.value, isFalse);
+    expect(controller.auctionSquad.value, isNull);
+  });
+
+  test('loadAuctionSquad sets auctionSquadNotStarted, not a generic error, for AUCTION_NOT_FOUND', () async {
+    getAuctionSquadUseCase.response = Either.fallback(
+      CricketNotFoundErrorFailure(
+        statusCode: 404,
+        message: 'No auction has been started for this tournament',
+        code: 'AUCTION_NOT_FOUND',
+      ),
+    );
+
+    await controller.loadAuctionSquad();
+
+    expect(controller.auctionSquadNotStarted.value, isTrue);
+    expect(controller.auctionSquadError.value, isNull);
     expect(controller.auctionSquad.value, isNull);
   });
 
@@ -1039,12 +1056,29 @@ void main() {
 
   test('loadAuctionHistory sets the backend error message on failure', () async {
     getAuctionHistoryUseCase.response = Either.fallback(
-      CricketBadRequestFailure(statusCode: 404, message: 'No auction has been started for this tournament'),
+      CricketBadRequestFailure(statusCode: 400, message: 'Something unrelated went wrong'),
     );
 
     await controller.loadAuctionHistory();
 
-    expect(controller.auctionHistoryError.value, 'No auction has been started for this tournament');
+    expect(controller.auctionHistoryError.value, 'Something unrelated went wrong');
+    expect(controller.auctionHistoryNotStarted.value, isFalse);
+    expect(controller.auctionHistory.value, isNull);
+  });
+
+  test('loadAuctionHistory sets auctionHistoryNotStarted, not a generic error, for AUCTION_NOT_FOUND', () async {
+    getAuctionHistoryUseCase.response = Either.fallback(
+      CricketNotFoundErrorFailure(
+        statusCode: 404,
+        message: 'No auction has been started for this tournament',
+        code: 'AUCTION_NOT_FOUND',
+      ),
+    );
+
+    await controller.loadAuctionHistory();
+
+    expect(controller.auctionHistoryNotStarted.value, isTrue);
+    expect(controller.auctionHistoryError.value, isNull);
     expect(controller.auctionHistory.value, isNull);
   });
 }

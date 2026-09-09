@@ -470,17 +470,28 @@ class TournamentDetailController extends GetxController {
   final auctionSquad = Rxn<AuctionSquadRes>();
   final auctionSquadLoading = false.obs;
   final auctionSquadError = Rxn<String>();
+  // `AUCTION_NOT_FOUND` means no AuctionSession exists yet — a normal,
+  // easily-reached state before the organizer starts the auction, not a
+  // transient failure. Kept separate from auctionSquadError so the screen
+  // can show a friendly "hasn't started yet" message instead of an error
+  // banner with a retry button that can never succeed on its own.
+  final auctionSquadNotStarted = false.obs;
 
   Future<void> loadAuctionSquad() async {
     auctionSquadLoading.value = true;
     auctionSquadError.value = null;
+    auctionSquadNotStarted.value = false;
 
     final response = await getAuctionSquadUseCase(
       params: GetAuctionSquadParams(tournamentId: tournamentId),
     );
 
     if (!response.isResult) {
-      auctionSquadError.value = response.fallback.message;
+      if (response.fallback.code == 'AUCTION_NOT_FOUND') {
+        auctionSquadNotStarted.value = true;
+      } else {
+        auctionSquadError.value = response.fallback.message;
+      }
       auctionSquadLoading.value = false;
       return;
     }
@@ -492,17 +503,23 @@ class TournamentDetailController extends GetxController {
   final auctionHistory = Rxn<AuctionHistoryRes>();
   final auctionHistoryLoading = false.obs;
   final auctionHistoryError = Rxn<String>();
+  final auctionHistoryNotStarted = false.obs;
 
   Future<void> loadAuctionHistory() async {
     auctionHistoryLoading.value = true;
     auctionHistoryError.value = null;
+    auctionHistoryNotStarted.value = false;
 
     final response = await getAuctionHistoryUseCase(
       params: GetAuctionHistoryParams(tournamentId: tournamentId),
     );
 
     if (!response.isResult) {
-      auctionHistoryError.value = response.fallback.message;
+      if (response.fallback.code == 'AUCTION_NOT_FOUND') {
+        auctionHistoryNotStarted.value = true;
+      } else {
+        auctionHistoryError.value = response.fallback.message;
+      }
       auctionHistoryLoading.value = false;
       return;
     }
