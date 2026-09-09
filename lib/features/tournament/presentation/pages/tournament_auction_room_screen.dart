@@ -28,9 +28,9 @@ class _TournamentAuctionRoomScreenState extends State<TournamentAuctionRoomScree
     _isOwner = args is Map && args['isOwner'] == true;
 
     // Rejections surface via CricketSnackbar with the server's own message,
-    // exactly once per rejection — never silently swallowed. A once()
-    // worker rather than an ever() listener inside build() avoids re-firing
-    // the same snackbar on unrelated rebuilds.
+    // exactly once per rejection — never silently swallowed. Registered
+    // once here via ever(), rather than checked inline inside build(),
+    // which would re-fire the same snackbar on every unrelated rebuild.
     _actionErrorWorker = ever<String?>(_controller.actionError, (message) {
       if (message != null) {
         CricketSnackbar.showErrorMessage(message);

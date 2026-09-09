@@ -119,6 +119,38 @@ void main() {
     expect(find.text('start_auction'), findsOneWidget);
   });
 
+  testWidgets(
+    'the active-lot card does not overflow on a short viewport',
+    (tester) async {
+      // Regression test for a real RenderFlex overflow this screen shipped
+      // with: the lot card's Column had no way to shrink, so on a shorter
+      // screen than the test framework's default it overflowed instead of
+      // scrolling. Fixed by wrapping it in a SingleChildScrollView — this
+      // pins that fix by asserting no exception is thrown while laying out
+      // at a deliberately short height.
+      tester.view.physicalSize = const Size(400, 500);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+
+      final repository = _FakeTournamentRepository()
+        ..stateStream = Stream.value(Either.result(AuctionStateRes(
+          sessionStatus: 'active',
+          lot: AuctionLotRes(
+            lotId: 'lot-1', playerId: 'player-1', playerName: 'Rohit Sharma', playerRole: 'batsman',
+            basePrice: 5000, currentBid: 5000, endsAt: DateTime.now().add(const Duration(seconds: 15)),
+          ),
+          bidHistory: const [],
+          budgets: [
+            AuctionBudgetRes(teamId: 'team-1', teamName: 'Riverside U19', ownerId: 'owner-1', budget: 100000, spent: 0, remaining: 100000),
+          ],
+        )));
+      await pumpScreen(tester, repository);
+      await tester.pump();
+
+      expect(tester.takeException(), isNull);
+    },
+  );
+
   testWidgets('shows the current player and current bid once a lot is active', (tester) async {
     final repository = _FakeTournamentRepository()
       ..stateStream = Stream.value(Either.result(AuctionStateRes(
