@@ -168,11 +168,16 @@ class _LotCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // A scroll view rather than a plain Column — this card sits inside the
+    // screen's Expanded region alongside the budgets strip and bid history,
+    // so the space actually available to it varies with screen size; a
+    // fixed, non-scrollable Column here previously overflowed on shorter
+    // viewports instead of scrolling.
     return Card(
-      child: Padding(
+      child: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
           children: [
             CricketText(text: lot.playerName ?? '', style: Theme.of(context).textTheme.headlineSmall),
             if (lot.playerRole != null) CricketText(text: lot.playerRole!),
