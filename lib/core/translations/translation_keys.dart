@@ -419,4 +419,15 @@ class TranslationKeys {
   static const String budget = 'budget';
   static const String noOwnerAssigned = 'no_owner_assigned';
   static const String auctionSetupSaved = 'auction_setup_saved';
+  static const String liveAuction = 'live_auction';
+  static const String startAuction = 'start_auction';
+  static const String auctionNotStarted = 'auction_not_started';
+  static const String auctionCompleted = 'auction_completed';
+  static const String nextPlayer = 'next_player';
+  static const String waitingForNextPlayer = 'waiting_for_next_player';
+  static const String budgets = 'budgets';
+  static const String bidHistory = 'bid_history';
+  static const String pauseAuction = 'pause_auction';
+  static const String resumeAuction = 'resume_auction';
+  static const String placeBid = 'place_bid';
 }
