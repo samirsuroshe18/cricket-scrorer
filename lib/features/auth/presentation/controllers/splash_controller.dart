@@ -137,7 +137,18 @@ class SplashController extends GetxController
         );
       }
     } else {
-      unawaited(Get.offAllNamed(AppRoutes.login));
+      // AuthInterceptor's _forceLogout() (auth_interceptor.dart) already
+      // navigates to /login for exactly this failure — it runs inside the
+      // same failed request's error handling, which completes strictly
+      // before getUserUseCase()'s future resolves back here. Navigating
+      // again unconditionally raced a second Get.offAllNamed against the
+      // first LoginScreen's still-in-flight pop transition, which could
+      // tear down (or double-mount) the first screen's LoginController
+      // while it was still on screen. Same guard the interceptor itself
+      // already uses before it decides whether it needs to act.
+      if (Get.currentRoute != AppRoutes.login) {
+        unawaited(Get.offAllNamed(AppRoutes.login));
+      }
     }
   }
 
