@@ -7,6 +7,8 @@ class TranslationKeys {
   static const String password = 'password';
   static const String forgotPassword = 'forgot_password';
   static const String forgotPasswordDesc = 'forgot_password_desc';
+  static const String showPassword = 'show_password';
+  static const String hidePassword = 'hide_password';
   static const String cancel = 'cancel';
   static const String retry = 'retry';
   static const String confirm = 'confirm';

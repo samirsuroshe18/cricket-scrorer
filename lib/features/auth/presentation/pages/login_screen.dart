@@ -39,18 +39,29 @@ class LoginScreen extends GetView<LoginController> {
               children: [
                 4.rh,
 
-                const CricketImage(
-                  source: CricketImageSource.asset(AssetsUtil.appLogo),
-                  height: 120,
-                  width: 120,
-                  borderRadius: BorderRadius.all(Radius.circular(180)),
+                const ExcludeSemantics(
+                  // Decorative — the app name right below it already
+                  // conveys the same information to a screen reader.
+                  child: CricketImage(
+                    source: CricketImageSource.asset(
+                      AssetsUtil.appLogo,
+                    ),
+                    height: 120,
+                    width: 120,
+                    borderRadius: BorderRadius.all(
+                      Radius.circular(180),
+                    ),
+                  ),
                 ),
                 24.h,
 
-                CricketText(
-                  text: TranslationKeys.cricketScorer.tr,
-                  textAlign: TextAlign.center,
-                  style: context.textTheme.headlineLarge,
+                Semantics(
+                  header: true,
+                  child: CricketText(
+                    text: TranslationKeys.cricketScorer.tr,
+                    textAlign: TextAlign.center,
+                    style: context.textTheme.headlineLarge,
+                  ),
                 ),
 
                 8.h,
@@ -90,6 +101,9 @@ class LoginScreen extends GetView<LoginController> {
                       onPressed: () {
                         controller.isPasswordVisible.toggle();
                       },
+                      tooltip: controller.isPasswordVisible.value
+                          ? TranslationKeys.hidePassword.tr
+                          : TranslationKeys.showPassword.tr,
                       icon: Icon(
                         controller.isPasswordVisible.value
                             ? Icons.visibility
@@ -107,11 +121,6 @@ class LoginScreen extends GetView<LoginController> {
                   alignment: Alignment.centerRight,
                   child: TextButton(
                     onPressed: controller.onForgotPassword,
-                    style: TextButton.styleFrom(
-                      padding: EdgeInsets.zero,
-                      minimumSize: Size.zero,
-                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    ),
                     child: CricketText(
                       text: TranslationKeys.forgotPassword.tr,
                     ),
@@ -134,11 +143,6 @@ class LoginScreen extends GetView<LoginController> {
                     ),
                     TextButton(
                       onPressed: controller.goToRegister,
-                      style: TextButton.styleFrom(
-                        padding: EdgeInsets.zero,
-                        minimumSize: Size.zero,
-                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                      ),
                       child: CricketText(
                         text: TranslationKeys.register.tr,
                         style: context.textTheme.bodyMedium?.copyWith(

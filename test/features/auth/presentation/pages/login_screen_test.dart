@@ -227,6 +227,12 @@ void main() {
       );
       await tester.pump();
 
+      // The Register row sits below the default test viewport now that
+      // the Forgot-password/Register buttons use the theme's full touch
+      // target instead of a shrink-wrapped one — scroll it into view first.
+      await tester.ensureVisible(find.text(TranslationKeys.register.tr));
+      await tester.pump();
+
       await tester.tap(find.text(TranslationKeys.register.tr));
       expect(controller.emailController.text, isEmpty);
 
