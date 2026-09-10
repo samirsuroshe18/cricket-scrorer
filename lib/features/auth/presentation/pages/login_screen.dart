@@ -34,6 +34,7 @@ class LoginScreen extends GetView<LoginController> {
         padding: 24.p,
         child: Form(
           key: controller.formKey,
+          autovalidateMode: AutovalidateMode.onUserInteraction,
           child: AutofillGroup(
             child: Column(
               children: [
@@ -104,6 +105,10 @@ class LoginScreen extends GetView<LoginController> {
                       tooltip: controller.isPasswordVisible.value
                           ? TranslationKeys.hidePassword.tr
                           : TranslationKeys.showPassword.tr,
+                      // Tinted so it reads as the interactive control next
+                      // to the static, neutral-colored lock icon — the same
+                      // accent "Forgot password?" already uses just below.
+                      color: context.colorScheme.secondary,
                       icon: Icon(
                         controller.isPasswordVisible.value
                             ? Icons.visibility
@@ -153,11 +158,33 @@ class LoginScreen extends GetView<LoginController> {
                   ],
                 ),
 
-                20.h,
-                TextButton.icon(
-                  onPressed: () => unawaited(WatchMatchBottomSheet.show()),
-                  icon: const Icon(Icons.sports_cricket_outlined),
-                  label: CricketText(text: TranslationKeys.watchLiveMatch.tr),
+                24.h,
+
+                Row(
+                  children: [
+                    const Expanded(child: Divider()),
+                    12.w,
+                    CricketText(
+                      text: TranslationKeys.or.tr,
+                      style: context.textTheme.bodySmall,
+                    ),
+                    12.w,
+                    const Expanded(child: Divider()),
+                  ],
+                ),
+
+                16.h,
+
+                SizedBox(
+                  width: double.infinity,
+                  height: 48,
+                  child: OutlinedButton.icon(
+                    onPressed: () => unawaited(WatchMatchBottomSheet.show()),
+                    icon: const Icon(Icons.sports_cricket_outlined),
+                    label: CricketText(
+                      text: TranslationKeys.watchLiveMatch.tr,
+                    ),
+                  ),
                 ),
               ],
             ),

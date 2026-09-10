@@ -183,6 +183,16 @@ void main() {
       final fields = find.byType(TextFormField);
       await tester.enterText(fields.at(0), 'not-an-email');
       await tester.enterText(fields.at(1), 'a-valid-password');
+      await tester.pump();
+
+      // Form now uses AutovalidateMode.onUserInteraction, so each field
+      // already validated live from the enterText calls above — this
+      // submit is just confirming it stays consistent, not the only
+      // trigger. The extra content below Login (the "or" divider and the
+      // watch-live-match button) pushes it below the default test
+      // viewport, hence the scroll-into-view first.
+      await tester.ensureVisible(find.text(TranslationKeys.login.tr));
+      await tester.pump();
       await tester.tap(find.text(TranslationKeys.login.tr));
       await tester.pump();
 

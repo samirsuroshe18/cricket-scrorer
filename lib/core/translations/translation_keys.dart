@@ -12,6 +12,7 @@ class TranslationKeys {
   static const String cancel = 'cancel';
   static const String retry = 'retry';
   static const String confirm = 'confirm';
+  static const String or = 'or';
   static const String selectYourLanguage = 'select_your_language';
   static const String selectYourTheme = 'select_your_theme';
   static const String camera = 'camera';
