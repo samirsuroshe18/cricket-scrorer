@@ -15,6 +15,7 @@ import 'package:get/get.dart' hide Response;
 
 class _FakeTournamentRepository implements TournamentRepository {
   Stream<Either<AuctionStateRes, CricketFailure>> stateStream = const Stream.empty();
+  Stream<void> sessionStartedStream = const Stream.empty();
   Stream<AuctionLotRes> lotOnBlockStream = const Stream.empty();
   Stream<AuctionBidAcceptedRes> bidAcceptedStream = const Stream.empty();
   Stream<AuctionBidRejectedRes> bidRejectedStream = const Stream.empty();
@@ -26,6 +27,8 @@ class _FakeTournamentRepository implements TournamentRepository {
 
   @override
   Stream<Either<AuctionStateRes, CricketFailure>> watchAuctionState({required String tournamentId}) => stateStream;
+  @override
+  Stream<void> watchAuctionSessionStarted({required String tournamentId}) => sessionStartedStream;
   @override
   Stream<AuctionLotRes> watchAuctionLotOnBlock({required String tournamentId}) => lotOnBlockStream;
   @override
@@ -141,6 +144,25 @@ void main() {
 
     expect(repository.lastBidLotId, 'lot-1');
   });
+
+  test(
+    'a sessionStarted event moves sessionStatus off null for a socket that joined before start',
+    () async {
+      final repository = _FakeTournamentRepository()
+        ..stateStream = Stream.value(Either.result(AuctionStateRes(
+          sessionStatus: null,
+          lot: null,
+          bidHistory: const [],
+          budgets: const [],
+        )))
+        ..sessionStartedStream = Stream.value(null);
+      final controller = buildController(repository);
+      controller.onInit();
+      await Future<void>.delayed(Duration.zero);
+
+      expect(controller.sessionStatus.value, 'active');
+    },
+  );
 
   test('a lotResolved event clears the current lot', () async {
     final repository = _FakeTournamentRepository()

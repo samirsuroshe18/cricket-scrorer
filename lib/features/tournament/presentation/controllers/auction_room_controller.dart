@@ -48,6 +48,7 @@ class AuctionRoomController extends GetxController {
   final actionError = Rxn<String>();
 
   StreamSubscription<Either<AuctionStateRes, CricketFailure>>? _stateSub;
+  StreamSubscription<void>? _sessionStartedSub;
   StreamSubscription<AuctionLotRes>? _lotOnBlockSub;
   StreamSubscription<AuctionBidAcceptedRes>? _bidAcceptedSub;
   StreamSubscription<AuctionBidRejectedRes>? _bidRejectedSub;
@@ -71,6 +72,15 @@ class AuctionRoomController extends GetxController {
       } else {
         connectionError.value = either.fallback.message;
       }
+    });
+
+    // A socket that joined the room before the organizer started the
+    // auction never sees sessionStatus move off null any other way —
+    // watchAuctionLotOnBlock only ever carries the lot, never session
+    // status, so without this a viewer who joined early stays stuck on
+    // the "not started" screen even once players are on the block.
+    _sessionStartedSub = tournamentRepository.watchAuctionSessionStarted(tournamentId: tournamentId).listen((_) {
+      sessionStatus.value = 'active';
     });
 
     _lotOnBlockSub = tournamentRepository.watchAuctionLotOnBlock(tournamentId: tournamentId).listen((lot) {
@@ -146,6 +156,7 @@ class AuctionRoomController extends GetxController {
   @override
   void onClose() {
     _stateSub?.cancel();
+    _sessionStartedSub?.cancel();
     _lotOnBlockSub?.cancel();
     _bidAcceptedSub?.cancel();
     _bidRejectedSub?.cancel();

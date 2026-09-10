@@ -16,6 +16,7 @@ import 'package:get/get.dart' hide Response;
 
 class _FakeTournamentRepository implements TournamentRepository {
   Stream<Either<AuctionStateRes, CricketFailure>> stateStream = const Stream.empty();
+  Stream<void> sessionStartedStream = const Stream.empty();
   Stream<AuctionLotRes> lotOnBlockStream = const Stream.empty();
   Stream<AuctionBidAcceptedRes> bidAcceptedStream = const Stream.empty();
   Stream<AuctionBidRejectedRes> bidRejectedStream = const Stream.empty();
@@ -27,6 +28,8 @@ class _FakeTournamentRepository implements TournamentRepository {
 
   @override
   Stream<Either<AuctionStateRes, CricketFailure>> watchAuctionState({required String tournamentId}) => stateStream;
+  @override
+  Stream<void> watchAuctionSessionStarted({required String tournamentId}) => sessionStartedStream;
   @override
   Stream<AuctionLotRes> watchAuctionLotOnBlock({required String tournamentId}) => lotOnBlockStream;
   @override

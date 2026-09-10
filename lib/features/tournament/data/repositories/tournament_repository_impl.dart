@@ -502,6 +502,11 @@ class TournamentRepositoryImpl implements TournamentRepository {
   }
 
   @override
+  Stream<void> watchAuctionSessionStarted({required String tournamentId}) {
+    return auctionSocketService.watchSessionStarted(tournamentId);
+  }
+
+  @override
   Stream<AuctionLotRes> watchAuctionLotOnBlock({required String tournamentId}) {
     return auctionSocketService.watchLotOnBlock(tournamentId);
   }

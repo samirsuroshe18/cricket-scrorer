@@ -164,6 +164,7 @@ abstract class TournamentRepository {
   /// stream here (except [watchAuctionState], which owns room join/leave)
   /// assumes the room is already joined.
   Stream<Either<AuctionStateRes, CricketFailure>> watchAuctionState({required String tournamentId});
+  Stream<void> watchAuctionSessionStarted({required String tournamentId});
   Stream<AuctionLotRes> watchAuctionLotOnBlock({required String tournamentId});
   Stream<AuctionBidAcceptedRes> watchAuctionBidAccepted({required String tournamentId});
   Stream<AuctionBidRejectedRes> watchAuctionBidRejected({required String tournamentId});

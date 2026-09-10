@@ -69,6 +69,23 @@ class AuctionSocketService {
     return controller.stream;
   }
 
+  /// The one event that tells a socket which joined the room *before* the
+  /// organizer started the auction that it's no longer sitting on a null,
+  /// not-started session — `auction:lotOnBlock` never carries session
+  /// status, only the lot, so without this the room stayed silent forever
+  /// for an already-joined viewer.
+  Stream<void> watchSessionStarted(String tournamentId) {
+    final socket = socketClientService.socket;
+    final controller = StreamController<void>();
+    void onSessionStarted(dynamic _) => controller.add(null);
+    socket.on('auction:sessionStarted', onSessionStarted);
+    controller.onCancel = () async {
+      socket.off('auction:sessionStarted', onSessionStarted);
+      await controller.close();
+    };
+    return controller.stream;
+  }
+
   Stream<AuctionLotRes> watchLotOnBlock(String tournamentId) {
     final socket = socketClientService.socket;
     final controller = StreamController<AuctionLotRes>();
