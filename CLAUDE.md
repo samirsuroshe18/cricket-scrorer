@@ -117,6 +117,16 @@ Create **only the layers you need** — don't scaffold empty folders. For a feat
 
 A screen with no API of its own can be presentation-only (see `features/home/`) and reuse other features' usecases.
 
+### Widget extraction: inline vs. `presentation/widget/`
+
+Extraction is not "always split widgets into their own file" — most private, single-use layout fragments stay as `_PascalCase` `StatelessWidget`s inline in the page file that uses them (see `score_ball_screen.dart`, which has 11: `_BowlerLine`, `_ScoreboardCard`, `_RunDialPad`, etc.). Move a widget into `presentation/widget/` only when one of these actually applies:
+
+- **Genuine reuse** — used by more than one screen (e.g. `MatchHistoryCard` across `home_page.dart`, `organizations_list_screen.dart`, `team_profile_screen.dart`).
+- **Imperative modal/sheet** — invoked via `show...Sheet()` / `showDialog` from a controller rather than referenced in a `build()` method, even when only one screen calls it (e.g. `NextBowlerBottomSheet`, `WicketBottomSheet`) — keeps the controller from importing a private class out of another file.
+- **File size** — the page file has grown past roughly 500 lines and splitting genuinely improves navigability, independent of reuse.
+
+None of the above applying is not a defect — keep the widget inline. Don't extract "for best practice" alone: a mix of inline and extracted single-use widgets with no rule behind it is worse than a consistent default of inline-unless-justified.
+
 ## State Management (GetX)
 
 - **Pages**: `GetView<XController>` + `Obx` around only the widgets that actually react. Access the controller via the inherited `controller` getter. Every page in the codebase follows this — don't reintroduce a `GetBuilder` wrapper around a whole `Scaffold` (no controller calls `update()`, so it only costs rebuilds). Private presentational sub-widgets with no controller stay plain `StatelessWidget` (see `_OtpBox`).
