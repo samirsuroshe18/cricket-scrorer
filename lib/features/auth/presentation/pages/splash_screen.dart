@@ -2,6 +2,7 @@ import 'package:cricket_scorer/core/constants/assets_util.dart';
 import 'package:cricket_scorer/core/extensions/space_extension.dart';
 import 'package:cricket_scorer/core/extensions/theme_x.dart';
 import 'package:cricket_scorer/features/auth/presentation/controllers/splash_controller.dart';
+import 'package:cricket_scorer/features/auth/presentation/widget/live_badge.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -111,7 +112,7 @@ class _SplashBodyState extends State<_SplashBody> {
                   ),
                 ),
                 const SizedBox(height: 24),
-                _LivePill(t: t, scheme: scheme, live: context.colors.statusSuccess),
+                _LivePill(t: t),
               ],
             );
           },
@@ -273,67 +274,13 @@ class _FadeUp extends StatelessWidget {
 }
 
 class _LivePill extends StatelessWidget {
-  const _LivePill({required this.t, required this.scheme, required this.live});
+  const _LivePill({required this.t});
 
   final double t;
-  final ColorScheme scheme;
-  final Color live;
 
   @override
   Widget build(BuildContext context) {
     final local = _windowed(t, 0.80, 0.95);
-    final ping = _windowed(t, 0.85, 1.0);
-
-    return Opacity(
-      opacity: local,
-      child: Container(
-        padding: const EdgeInsets.fromLTRB(10, 6, 14, 6),
-        decoration: BoxDecoration(
-          color: scheme.surface,
-          borderRadius: 999.radius,
-          border: Border.all(color: scheme.outline),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            SizedBox(
-              width: 18,
-              height: 18,
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  Opacity(
-                    opacity: 1 - ping,
-                    child: Container(
-                      width: 8 + (10 * ping),
-                      height: 8 + (10 * ping),
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: live.withValues(alpha: 0.35),
-                      ),
-                    ),
-                  ),
-                  Container(
-                    width: 8,
-                    height: 8,
-                    decoration: BoxDecoration(shape: BoxShape.circle, color: live),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(width: 5),
-            Text(
-              'LIVE SCORING',
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w700,
-                letterSpacing: 1.4,
-                color: live,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
+    return Opacity(opacity: local, child: const LiveBadge());
   }
 }

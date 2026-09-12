@@ -50,8 +50,23 @@ class _NoopLanguageRepository implements LanguageRepository {
       throw UnimplementedError('Not exercised in this test.');
 }
 
+/// Widget-test binding has no real platform ticker cadence, so a genuinely
+/// repeating [AnimationController] (the header's live-status pulse) can
+/// still be actively ticking when GetX's locale-driven
+/// `reassembleApplication()` fires mid-test, which trips a Flutter
+/// framework-level assertion unrelated to anything this screen does wrong.
+/// Reduced-motion is also a real, supported mode for this widget (see
+/// `LiveBadge`), so exercising these tests under it sidesteps the clash
+/// exactly the way a user with Reduce Motion enabled would never hit it.
+void _disableAnimationsForTest(WidgetTester tester) {
+  tester.platformDispatcher.accessibilityFeaturesTestValue =
+      const FakeAccessibilityFeatures(disableAnimations: true);
+  addTearDown(tester.platformDispatcher.clearAccessibilityFeaturesTestValue);
+}
+
 Future<void> _pumpLoginScreen(WidgetTester tester) async {
   TestWidgetsFlutterBinding.ensureInitialized();
+  _disableAnimationsForTest(tester);
   SharedPreferences.setMockInitialValues({});
   await Get.put(SharedPreferenceService()).init();
   Get.put(ThemeService());
@@ -94,6 +109,7 @@ Future<void> _pumpLoginScreen(WidgetTester tester) async {
 /// route rather than just calling `Get.toNamed` with the right argument.
 Future<void> _pumpLoginScreenWithRouting(WidgetTester tester) async {
   TestWidgetsFlutterBinding.ensureInitialized();
+  _disableAnimationsForTest(tester);
   SharedPreferences.setMockInitialValues({});
   await Get.put(SharedPreferenceService()).init();
   Get.put(ThemeService());

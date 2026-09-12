@@ -51,6 +51,9 @@ class TranslationKeys {
   static const String rememberedPassword = 'remembered_password';
   static const String cricketScorer = 'cricket_scorer';
   static const String trackEveryBall = 'track_every_ball';
+  static const String welcomeBack = 'welcome_back';
+  static const String signInToKeepScoring = 'sign_in_to_keep_scoring';
+  static const String noAccountNeeded = 'no_account_needed';
   static const String enterPassword = 'enter_password';
   static const String dontHaveAccount = 'dont_have_account';
   static const String register = 'register';
