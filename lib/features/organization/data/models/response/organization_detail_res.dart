@@ -99,6 +99,10 @@ class OrganizationDetailRes {
   @JsonKey(defaultValue: <OrganizationTournamentRef>[])
   final List<OrganizationTournamentRef> tournaments;
 
+  /// Cloudinary URL from `POST /v1/organization/:orgId/logo`, or `null` for
+  /// an org that never uploaded one.
+  final String? logoUrl;
+
   OrganizationDetailRes({
     required this.id,
     required this.name,
@@ -106,6 +110,7 @@ class OrganizationDetailRes {
     required this.members,
     required this.teams,
     required this.tournaments,
+    this.logoUrl,
   });
 
   factory OrganizationDetailRes.fromJson(Map<String, dynamic> json) =>

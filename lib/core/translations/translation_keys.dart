@@ -332,6 +332,8 @@ class TranslationKeys {
   static const String deleteOrganizationConfirmMessage =
       'delete_organization_confirm_message';
   static const String create = 'create';
+  static const String updateOrganizationLogo = 'update_organization_logo';
+  static const String organizationLogoUpdated = 'organization_logo_updated';
 
   // Delegated scoring
   static const String assignScorer = 'assign_scorer';
