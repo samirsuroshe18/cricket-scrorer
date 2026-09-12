@@ -34,23 +34,35 @@ class LoginScreen extends GetView<LoginController> {
         padding: 24.p,
         child: Form(
           key: controller.formKey,
+          autovalidateMode: AutovalidateMode.onUserInteraction,
           child: AutofillGroup(
             child: Column(
               children: [
                 4.rh,
 
-                const CricketImage(
-                  source: CricketImageSource.asset(AssetsUtil.appLogo),
-                  height: 120,
-                  width: 120,
-                  borderRadius: BorderRadius.all(Radius.circular(180)),
+                const ExcludeSemantics(
+                  // Decorative — the app name right below it already
+                  // conveys the same information to a screen reader.
+                  child: CricketImage(
+                    source: CricketImageSource.asset(
+                      AssetsUtil.appLogo,
+                    ),
+                    height: 120,
+                    width: 120,
+                    borderRadius: BorderRadius.all(
+                      Radius.circular(180),
+                    ),
+                  ),
                 ),
                 24.h,
 
-                CricketText(
-                  text: TranslationKeys.cricketScorer.tr,
-                  textAlign: TextAlign.center,
-                  style: context.textTheme.headlineLarge,
+                Semantics(
+                  header: true,
+                  child: CricketText(
+                    text: TranslationKeys.cricketScorer.tr,
+                    textAlign: TextAlign.center,
+                    style: context.textTheme.headlineLarge,
+                  ),
                 ),
 
                 8.h,
@@ -90,6 +102,13 @@ class LoginScreen extends GetView<LoginController> {
                       onPressed: () {
                         controller.isPasswordVisible.toggle();
                       },
+                      tooltip: controller.isPasswordVisible.value
+                          ? TranslationKeys.hidePassword.tr
+                          : TranslationKeys.showPassword.tr,
+                      // Tinted so it reads as the interactive control next
+                      // to the static, neutral-colored lock icon — the same
+                      // accent "Forgot password?" already uses just below.
+                      color: context.colorScheme.secondary,
                       icon: Icon(
                         controller.isPasswordVisible.value
                             ? Icons.visibility
@@ -107,11 +126,6 @@ class LoginScreen extends GetView<LoginController> {
                   alignment: Alignment.centerRight,
                   child: TextButton(
                     onPressed: controller.onForgotPassword,
-                    style: TextButton.styleFrom(
-                      padding: EdgeInsets.zero,
-                      minimumSize: Size.zero,
-                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    ),
                     child: CricketText(
                       text: TranslationKeys.forgotPassword.tr,
                     ),
@@ -134,11 +148,6 @@ class LoginScreen extends GetView<LoginController> {
                     ),
                     TextButton(
                       onPressed: controller.goToRegister,
-                      style: TextButton.styleFrom(
-                        padding: EdgeInsets.zero,
-                        minimumSize: Size.zero,
-                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                      ),
                       child: CricketText(
                         text: TranslationKeys.register.tr,
                         style: context.textTheme.bodyMedium?.copyWith(
@@ -149,11 +158,33 @@ class LoginScreen extends GetView<LoginController> {
                   ],
                 ),
 
-                20.h,
-                TextButton.icon(
-                  onPressed: () => unawaited(WatchMatchBottomSheet.show()),
-                  icon: const Icon(Icons.sports_cricket_outlined),
-                  label: CricketText(text: TranslationKeys.watchLiveMatch.tr),
+                24.h,
+
+                Row(
+                  children: [
+                    const Expanded(child: Divider()),
+                    12.w,
+                    CricketText(
+                      text: TranslationKeys.or.tr,
+                      style: context.textTheme.bodySmall,
+                    ),
+                    12.w,
+                    const Expanded(child: Divider()),
+                  ],
+                ),
+
+                16.h,
+
+                SizedBox(
+                  width: double.infinity,
+                  height: 48,
+                  child: OutlinedButton.icon(
+                    onPressed: () => unawaited(WatchMatchBottomSheet.show()),
+                    icon: const Icon(Icons.sports_cricket_outlined),
+                    label: CricketText(
+                      text: TranslationKeys.watchLiveMatch.tr,
+                    ),
+                  ),
                 ),
               ],
             ),

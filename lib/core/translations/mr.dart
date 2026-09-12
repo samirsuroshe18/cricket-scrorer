@@ -8,6 +8,9 @@ Map<String, String> mr = {
   TranslationKeys.forgotPassword: 'पासवर्ड विसरलात?',
   TranslationKeys.forgotPasswordDesc:
       'तुमचा नोंदणीकृत ईमेल प्रविष्ट करा आणि आम्ही तुम्हाला\nएक रिसेट कोड पाठवू.',
+  TranslationKeys.showPassword: 'पासवर्ड दाखवा',
+  TranslationKeys.hidePassword: 'पासवर्ड लपवा',
+  TranslationKeys.or: 'किंवा',
   TranslationKeys.cancel: 'रद्द करा',
   TranslationKeys.retry: 'पुन्हा प्रयत्न करा',
   TranslationKeys.confirm: 'निश्चित करा',

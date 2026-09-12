@@ -6,6 +6,8 @@ import 'package:cricket_scorer/core/global/widgets/cricket_button.dart';
 import 'package:cricket_scorer/core/global/widgets/cricket_text.dart';
 import 'package:cricket_scorer/core/global/widgets/cricket_text_field.dart';
 import 'package:cricket_scorer/core/global/widgets/custom_app_bar.dart';
+import 'package:cricket_scorer/core/global/widgets/images/cricket_image.dart';
+import 'package:cricket_scorer/core/global/widgets/images/cricket_image_source.dart';
 import 'package:cricket_scorer/core/global/widgets/snackbars/cricket_snackbar.dart';
 import 'package:cricket_scorer/core/translations/translation_keys.dart';
 import 'package:cricket_scorer/features/organization/data/models/response/organization_summary_res.dart';
@@ -60,6 +62,27 @@ class OrganizationsListScreen extends GetView<OrganizationsListController> {
     }
   }
 
+  /// Same confirm copy `OrganizationDetailScreen._confirmRemoveMember` uses
+  /// for `isSelf` — this is that same action, reachable without opening the
+  /// org first. Never wired for a row the caller owns (see
+  /// [OrganizationsListController.leaveOrganization]).
+  Future<void> _confirmLeave(
+    BuildContext context,
+    OrganizationSummaryRes org,
+  ) async {
+    final confirmed = await CustomBottomSheet.warningBottomSheet<bool>(
+      title: TranslationKeys.leaveOrganizationConfirmTitle.tr,
+      message: TranslationKeys.leaveOrganizationConfirmMessage.tr,
+      confirmButtonName: TranslationKeys.leaveOrganization.tr,
+    );
+    if (confirmed != true) return;
+
+    final success = await controller.leaveOrganization(org.id);
+    if (!success) {
+      CricketSnackbar.showErrorMessage(TranslationKeys.somethingWentWrong.tr);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -92,6 +115,11 @@ class OrganizationsListScreen extends GetView<OrganizationsListController> {
             return _MessageState(
               icon: Icons.groups_outlined,
               message: TranslationKeys.noOrganizationsYet.tr,
+              action: CricketButton(
+                buttonText: TranslationKeys.createOrganization.tr,
+                onPressed: () => _showCreateSheet(context),
+                width: 220,
+              ),
             );
           }
 
@@ -101,8 +129,15 @@ class OrganizationsListScreen extends GetView<OrganizationsListController> {
               padding: 16.p,
               itemCount: controller.organizations.length,
               separatorBuilder: (_, _) => 12.h,
-              itemBuilder: (context, index) =>
-                  _OrganizationCard(org: controller.organizations[index]),
+              itemBuilder: (context, index) {
+                final org = controller.organizations[index];
+                return _OrganizationCard(
+                  org: org,
+                  onLeave: org.myRole == 'owner'
+                      ? null
+                      : () => _confirmLeave(context, org),
+                );
+              },
             ),
           );
         }),
@@ -142,9 +177,14 @@ class _MessageState extends StatelessWidget {
 }
 
 class _OrganizationCard extends StatelessWidget {
-  const _OrganizationCard({required this.org});
+  const _OrganizationCard({required this.org, this.onLeave});
 
   final OrganizationSummaryRes org;
+
+  /// Null for a row the caller owns — an owner leaves by deleting the
+  /// organization instead (`OrganizationDetailScreen`'s own delete action),
+  /// never by this row-level shortcut.
+  final VoidCallback? onLeave;
 
   /// Initials of the first two words of the name — same derivation
   /// `_TeamHeader._monogram` uses on `TeamProfileScreen`, minus the
@@ -153,6 +193,39 @@ class _OrganizationCard extends StatelessWidget {
     final words = org.name.trim().split(RegExp(r'\s+'));
     final letters = words.take(2).map((w) => w.isEmpty ? '' : w[0]).join();
     return letters.isEmpty ? '?' : letters.toUpperCase();
+  }
+
+  /// The uploaded logo when present (`OrganizationDetailScreen`'s owner-only
+  /// upload is the only writer of it), else the same monogram fallback this
+  /// card always showed.
+  Widget _avatar(BuildContext context) {
+    final logoUrl = org.logoUrl;
+    if (logoUrl == null || logoUrl.isEmpty) {
+      return CircleAvatar(
+        radius: 22,
+        backgroundColor: context.colors.chipBackground,
+        child: CricketText(
+          text: _monogram(),
+          style: context.textTheme.titleSmall?.copyWith(
+            color: context.colorScheme.primary,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      );
+    }
+
+    return CircleAvatar(
+      radius: 22,
+      backgroundColor: context.colors.chipBackground,
+      child: ClipOval(
+        child: CricketImage(
+          source: CricketImageSource.network(logoUrl),
+          width: 44,
+          height: 44,
+          fit: BoxFit.cover,
+        ),
+      ),
+    );
   }
 
   @override
@@ -170,17 +243,7 @@ class _OrganizationCard extends StatelessWidget {
           padding: 16.p,
           child: Row(
             children: [
-              CircleAvatar(
-                radius: 22,
-                backgroundColor: context.colors.chipBackground,
-                child: CricketText(
-                  text: _monogram(),
-                  style: context.textTheme.titleSmall?.copyWith(
-                    color: context.colorScheme.primary,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
+              _avatar(context),
               12.w,
               Expanded(
                 child: Column(
@@ -193,37 +256,77 @@ class _OrganizationCard extends StatelessWidget {
                       style: context.textTheme.titleSmall,
                     ),
                     4.h,
-                    CricketText(
-                      text:
-                          '${org.memberCount} ${TranslationKeys.members.tr} · '
-                          '${org.teamCount} ${TranslationKeys.teams.tr}',
-                      style: context.textTheme.bodySmall?.copyWith(
-                        color: context.colorScheme.onSurfaceVariant,
-                      ),
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.groups_outlined,
+                          size: 14,
+                          color: context.colorScheme.onSurfaceVariant,
+                        ),
+                        4.w,
+                        CricketText(
+                          text: '${org.memberCount} ${TranslationKeys.members.tr}',
+                          style: context.textTheme.bodySmall?.copyWith(
+                            color: context.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                        12.w,
+                        Icon(
+                          Icons.shield_outlined,
+                          size: 14,
+                          color: context.colorScheme.onSurfaceVariant,
+                        ),
+                        4.w,
+                        CricketText(
+                          text: '${org.teamCount} ${TranslationKeys.teams.tr}',
+                          style: context.textTheme.bodySmall?.copyWith(
+                            color: context.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
               ),
               8.w,
-              if (isOwner)
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: context.colors.statusInfo.withValues(alpha: 0.12),
-                    borderRadius: 8.radius,
-                  ),
-                  child: CricketText(
-                    text: org.myRole,
-                    style: context.textTheme.labelSmall?.copyWith(
-                      color: context.colors.statusInfo,
-                      fontWeight: FontWeight.w600,
-                    ),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 8,
+                  vertical: 4,
+                ),
+                decoration: BoxDecoration(
+                  color: isOwner
+                      ? context.colors.statusInfo.withValues(alpha: 0.12)
+                      : null,
+                  border: isOwner
+                      ? null
+                      : Border.all(color: context.colorScheme.outline),
+                  borderRadius: 8.radius,
+                ),
+                child: CricketText(
+                  text: org.myRole,
+                  style: context.textTheme.labelSmall?.copyWith(
+                    color: isOwner
+                        ? context.colors.statusInfo
+                        : context.colorScheme.onSurfaceVariant,
+                    fontWeight: isOwner ? FontWeight.w600 : null,
                   ),
                 ),
-              4.w,
+              ),
+              if (onLeave != null)
+                IconButton(
+                  tooltip: TranslationKeys.leaveOrganization.tr,
+                  visualDensity: VisualDensity.compact,
+                  icon: Icon(
+                    Icons.logout,
+                    size: 18,
+                    color: context.colors.statusDanger,
+                  ),
+                  onPressed: onLeave,
+                )
+              else
+                4.w,
               Icon(
                 Icons.chevron_right,
                 size: 18,

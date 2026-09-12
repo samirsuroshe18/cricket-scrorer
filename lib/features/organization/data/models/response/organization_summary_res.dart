@@ -16,12 +16,18 @@ class OrganizationSummaryRes {
   final int memberCount;
   final int teamCount;
 
+  /// Cloudinary URL from `POST /v1/organization/:orgId/logo`, or `null` for
+  /// an org that never uploaded one — the card falls back to a monogram
+  /// avatar in that case.
+  final String? logoUrl;
+
   OrganizationSummaryRes({
     required this.id,
     required this.name,
     required this.myRole,
     required this.memberCount,
     required this.teamCount,
+    this.logoUrl,
   });
 
   factory OrganizationSummaryRes.fromJson(Map<String, dynamic> json) =>

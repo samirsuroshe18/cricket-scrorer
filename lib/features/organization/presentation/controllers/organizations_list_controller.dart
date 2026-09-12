@@ -2,6 +2,7 @@ import 'package:cricket_scorer/features/organization/data/models/request/create_
 import 'package:cricket_scorer/features/organization/data/models/response/organization_summary_res.dart';
 import 'package:cricket_scorer/features/organization/domain/usecases/create_organization.dart';
 import 'package:cricket_scorer/features/organization/domain/usecases/get_my_organizations.dart';
+import 'package:cricket_scorer/features/organization/domain/usecases/remove_organization_member.dart';
 import 'package:get/get.dart';
 
 /// Every org the caller owns or belongs to, plus the ability to create a
@@ -10,10 +11,20 @@ import 'package:get/get.dart';
 class OrganizationsListController extends GetxController {
   final GetMyOrganizationsUseCase getMyOrganizationsUseCase;
   final CreateOrganizationUseCase createOrganizationUseCase;
+  final RemoveOrganizationMemberUseCase removeOrganizationMemberUseCase;
+
+  /// The signed-in scorer's own id — same synchronous cache read
+  /// `OrganizationDetailBinding` already relies on. Needed to call
+  /// [removeOrganizationMemberUseCase] on [leaveOrganization] with the
+  /// caller's own id, since a member row here carries no membership id of
+  /// its own (see `OrganizationSummaryRes`).
+  final String currentUserId;
 
   OrganizationsListController({
     required this.getMyOrganizationsUseCase,
     required this.createOrganizationUseCase,
+    required this.removeOrganizationMemberUseCase,
+    required this.currentUserId,
   });
 
   final organizations = <OrganizationSummaryRes>[].obs;
@@ -63,6 +74,25 @@ class OrganizationsListController extends GetxController {
         ),
       );
     }
+    return true;
+  }
+
+  /// Removes the caller's own membership from [orgId] — the list-screen
+  /// equivalent of `OrganizationDetailController.removeMember` called with
+  /// the caller's own id, for a member (non-owner) row's "leave
+  /// organization" action. Never called for a row the caller owns; owners
+  /// leave by deleting the organization instead, same rule
+  /// `OrganizationDetailScreen` already enforces.
+  Future<bool> leaveOrganization(String orgId) async {
+    final response = await removeOrganizationMemberUseCase(
+      params: RemoveOrganizationMemberParams(
+        orgId: orgId,
+        userId: currentUserId,
+      ),
+    );
+
+    if (!response.isResult) return false;
+    organizations.removeWhere((org) => org.id == orgId);
     return true;
   }
 }

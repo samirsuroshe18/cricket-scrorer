@@ -8,6 +8,9 @@ Map<String, String> en = {
   TranslationKeys.forgotPassword: 'Forgot Password?',
   TranslationKeys.forgotPasswordDesc:
       'Enter your registered email and we\'ll send\nyou a reset code.',
+  TranslationKeys.showPassword: 'Show password',
+  TranslationKeys.hidePassword: 'Hide password',
+  TranslationKeys.or: 'or',
   TranslationKeys.cancel: 'Cancel',
   TranslationKeys.retry: 'Retry',
   TranslationKeys.confirm: 'Confirm',
