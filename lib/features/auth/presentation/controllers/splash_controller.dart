@@ -37,7 +37,12 @@ class SplashController extends GetxController
   @override
   void onInit() {
     super.onInit();
-    animationController = AnimationController(vsync: this);
+    animationController = AnimationController(vsync: this)
+      ..addStatusListener((status) {
+        if (status == AnimationStatus.completed) {
+          _markEntranceComplete();
+        }
+      });
     WidgetsBinding.instance.addPostFrameCallback((_) {
       FlutterNativeSplash.remove();
     });
@@ -63,27 +68,33 @@ class SplashController extends GetxController
     unawaited(_navigate());
   }
 
-  /// Called from the view once Lottie composition loads
-  void onLottieLoaded(Duration compositionDuration) {
+  /// Drives the one-shot brand entrance for [duration] and resolves once it
+  /// completes — that completion is also this screen's minimum display
+  /// floor, so a fast network response never flashes the splash.
+  void startEntrance(Duration duration) {
     animationController
-      ..duration = compositionDuration
+      ..duration = duration
       ..forward();
-
-    animationController.addStatusListener((status) {
-      if (status == AnimationStatus.completed) {
-        _markAnimationComplete();
-      }
-    });
   }
 
-  void _markAnimationComplete() {
+  /// Jumps straight to the entrance's end state for reduced-motion — the
+  /// brand moment should not move at all, not just move briefly.
+  void skipEntrance() {
+    animationController.value = 1;
+  }
+
+  void _markEntranceComplete() {
     if (!_animationCompleter.isCompleted) {
       _animationCompleter.complete();
     }
   }
 
   Future<void> _navigate() async {
-    await Get.find<LanguageService>().fetchTranslationKeys(
+    // Runs alongside the animation and (when applicable) getUserUseCase()
+    // below rather than blocking ahead of them — it hits its own public,
+    // unauthenticated endpoints and neither reads nor is read by either,
+    // so serializing it before them only added dead time to every launch.
+    final translationsFuture = Get.find<LanguageService>().fetchTranslationKeys(
       getVersionUseCase: getVersionUseCase,
       getLanguageUseCase: getLanguageUseCase,
     );
@@ -92,7 +103,7 @@ class SplashController extends GetxController
     if (code != null) {
       // No user check, no onboarding check, no profile check — a spectator
       // link bypasses every branch below and every branch is auth-shaped.
-      await _animationCompleter.future;
+      await Future.wait([_animationCompleter.future, translationsFuture]);
       unawaited(
         Get.offAllNamed(AppRoutes.spectatorPath(code)),
       );
@@ -102,6 +113,7 @@ class SplashController extends GetxController
     final results = await Future.wait([
       _animationCompleter.future,
       _apiResponseFuture,
+      translationsFuture,
     ]);
 
     final Either<CricketResponse<User>, CricketFailure> response =
