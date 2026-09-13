@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:cricket_scorer/features/organization/data/models/request/add_organization_member_req.dart';
 import 'package:cricket_scorer/features/organization/data/models/request/create_organization_team_req.dart';
 import 'package:cricket_scorer/features/organization/data/models/response/organization_detail_res.dart';
@@ -7,6 +9,7 @@ import 'package:cricket_scorer/features/organization/domain/usecases/delete_orga
 import 'package:cricket_scorer/features/organization/domain/usecases/get_organization.dart';
 import 'package:cricket_scorer/features/organization/domain/usecases/get_organization_leaderboards.dart';
 import 'package:cricket_scorer/features/organization/domain/usecases/remove_organization_member.dart';
+import 'package:cricket_scorer/features/organization/domain/usecases/update_organization_logo.dart';
 import 'package:cricket_scorer/features/tournament/data/models/request/create_tournament_req.dart';
 import 'package:cricket_scorer/features/tournament/data/models/response/leaderboard_row_res.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/create_tournament.dart';
@@ -26,6 +29,7 @@ class OrganizationDetailController extends GetxController {
   final RemoveOrganizationMemberUseCase removeOrganizationMemberUseCase;
   final CreateOrganizationTeamUseCase createOrganizationTeamUseCase;
   final DeleteOrganizationUseCase deleteOrganizationUseCase;
+  final UpdateOrganizationLogoUseCase updateOrganizationLogoUseCase;
   final CreateTournamentUseCase createTournamentUseCase;
   final GetOrganizationLeaderboardsUseCase getOrganizationLeaderboardsUseCase;
 
@@ -37,6 +41,7 @@ class OrganizationDetailController extends GetxController {
     required this.removeOrganizationMemberUseCase,
     required this.createOrganizationTeamUseCase,
     required this.deleteOrganizationUseCase,
+    required this.updateOrganizationLogoUseCase,
     required this.createTournamentUseCase,
     required this.getOrganizationLeaderboardsUseCase,
   });
@@ -119,6 +124,19 @@ class OrganizationDetailController extends GetxController {
       params: DeleteOrganizationParams(orgId: orgId),
     );
     return response.isResult;
+  }
+
+  /// Uploads (or replaces) the org's logo, then refreshes [detail] so the
+  /// new `logoUrl` shows immediately — same refresh-after-write pattern
+  /// every other mutating method here already uses.
+  Future<bool> updateLogo(File file) async {
+    final response = await updateOrganizationLogoUseCase(
+      params: UpdateOrganizationLogoParams(orgId: orgId, file: file),
+    );
+
+    if (!response.isResult) return false;
+    await loadDetail();
+    return true;
   }
 
   Future<bool> createTournament(String name, String format) async {

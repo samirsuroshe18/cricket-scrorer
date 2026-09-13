@@ -6,6 +6,7 @@ import 'package:cricket_scorer/features/organization/data/models/response/organi
 import 'package:cricket_scorer/features/organization/data/models/response/organization_summary_res.dart';
 import 'package:cricket_scorer/features/organization/domain/usecases/create_organization.dart';
 import 'package:cricket_scorer/features/organization/domain/usecases/get_my_organizations.dart';
+import 'package:cricket_scorer/features/organization/domain/usecases/remove_organization_member.dart';
 import 'package:cricket_scorer/features/organization/presentation/controllers/organizations_list_controller.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart' hide Response;
@@ -50,18 +51,44 @@ class _FakeCreateOrganizationUseCase implements CreateOrganizationUseCase {
       throw UnimplementedError('Not exercised in this test.');
 }
 
+class _FakeRemoveOrganizationMemberUseCase
+    implements RemoveOrganizationMemberUseCase {
+  Either<CricketResponse<void>, CricketFailure>? response;
+  RemoveOrganizationMemberParams? lastParams;
+
+  @override
+  Future<Either<CricketResponse<void>, CricketFailure>> call({
+    RemoveOrganizationMemberParams? params,
+  }) async {
+    lastParams = params;
+    final result = response;
+    if (result == null) {
+      throw UnimplementedError('Not exercised in this test.');
+    }
+    return result;
+  }
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) =>
+      throw UnimplementedError('Not exercised in this test.');
+}
+
 void main() {
   late _FakeGetMyOrganizationsUseCase getMyOrganizationsUseCase;
   late _FakeCreateOrganizationUseCase createOrganizationUseCase;
+  late _FakeRemoveOrganizationMemberUseCase removeOrganizationMemberUseCase;
   late OrganizationsListController controller;
 
   setUp(() {
     Get.testMode = true;
     getMyOrganizationsUseCase = _FakeGetMyOrganizationsUseCase();
     createOrganizationUseCase = _FakeCreateOrganizationUseCase();
+    removeOrganizationMemberUseCase = _FakeRemoveOrganizationMemberUseCase();
     controller = OrganizationsListController(
       getMyOrganizationsUseCase: getMyOrganizationsUseCase,
       createOrganizationUseCase: createOrganizationUseCase,
+      removeOrganizationMemberUseCase: removeOrganizationMemberUseCase,
+      currentUserId: 'user-1',
     );
   });
 
@@ -143,6 +170,54 @@ void main() {
 
       expect(result, isFalse);
       expect(controller.organizations, isEmpty);
+    },
+  );
+
+  test(
+    'leaveOrganization removes the org from the list on success',
+    () async {
+      controller.organizations.assignAll([
+        OrganizationSummaryRes(
+          id: 'org-1',
+          name: 'Riverside CC',
+          myRole: 'member',
+          memberCount: 4,
+          teamCount: 1,
+        ),
+      ]);
+      removeOrganizationMemberUseCase.response = Either.result(
+        const CricketResponse(message: 'ok', data: null),
+      );
+
+      final result = await controller.leaveOrganization('org-1');
+
+      expect(result, isTrue);
+      expect(controller.organizations, isEmpty);
+      expect(removeOrganizationMemberUseCase.lastParams?.orgId, 'org-1');
+      expect(removeOrganizationMemberUseCase.lastParams?.userId, 'user-1');
+    },
+  );
+
+  test(
+    'leaveOrganization leaves the list untouched on failure',
+    () async {
+      controller.organizations.assignAll([
+        OrganizationSummaryRes(
+          id: 'org-1',
+          name: 'Riverside CC',
+          myRole: 'member',
+          memberCount: 4,
+          teamCount: 1,
+        ),
+      ]);
+      removeOrganizationMemberUseCase.response = Either.fallback(
+        CricketServerErrorFailure(statusCode: 500, message: 'Server error'),
+      );
+
+      final result = await controller.leaveOrganization('org-1');
+
+      expect(result, isFalse);
+      expect(controller.organizations, hasLength(1));
     },
   );
 }

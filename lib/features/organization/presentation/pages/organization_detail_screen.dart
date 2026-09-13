@@ -2,17 +2,23 @@ import 'package:cricket_scorer/config/routes/app_routes.dart';
 import 'package:cricket_scorer/core/extensions/space_extension.dart';
 import 'package:cricket_scorer/core/extensions/theme_x.dart';
 import 'package:cricket_scorer/core/global/widgets/bootom_sheets/custom_bottomsheet.dart';
+import 'package:cricket_scorer/core/global/widgets/bootom_sheets/wigets/choose_photo_option.dart';
 import 'package:cricket_scorer/core/global/widgets/cricket_button.dart';
 import 'package:cricket_scorer/core/global/widgets/cricket_text.dart';
 import 'package:cricket_scorer/core/global/widgets/cricket_text_field.dart';
 import 'package:cricket_scorer/core/global/widgets/custom_app_bar.dart';
+import 'package:cricket_scorer/core/global/widgets/dialogue/custom_dialog.dart';
+import 'package:cricket_scorer/core/global/widgets/images/cricket_image.dart';
+import 'package:cricket_scorer/core/global/widgets/images/cricket_image_source.dart';
 import 'package:cricket_scorer/core/global/widgets/snackbars/cricket_snackbar.dart';
+import 'package:cricket_scorer/core/services/compression_service.dart';
 import 'package:cricket_scorer/core/translations/translation_keys.dart';
 import 'package:cricket_scorer/features/organization/data/models/response/organization_detail_res.dart';
 import 'package:cricket_scorer/features/organization/presentation/controllers/organization_detail_controller.dart';
 import 'package:cricket_scorer/features/tournament/presentation/widget/format_status_chips.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:image_picker/image_picker.dart';
 
 /// An organization's members and teams, and the owner-only actions to
 /// manage both — reached by tapping a row on `OrganizationsListScreen`.
@@ -30,6 +36,63 @@ class _OrganizationDetailScreenState extends State<OrganizationDetailScreen> {
   late final String _orgId = Get.parameters['orgId']?.trim() ?? '';
   late final OrganizationDetailController controller =
       Get.find<OrganizationDetailController>(tag: _orgId);
+
+  final ImagePicker _picker = ImagePicker();
+
+  /// Owner-only, reached from the "Update logo" text button under the
+  /// header avatar — same camera-or-gallery choice sheet
+  /// `UpdateProfileController.pickImageBottomSheet` already uses for a
+  /// profile photo.
+  Future<void> _pickAndUploadLogo() async {
+    await CustomBottomSheet.wrapBottomSheet<dynamic>(
+      headlineText: TranslationKeys.updateOrganizationLogo.tr,
+      child: ChoosePhotoOption(
+        onCameraCallback: () async {
+          Get.back<dynamic>();
+          await _pickCompressAndUploadLogo(ImageSource.camera);
+        },
+        onGalleryCallback: () async {
+          Get.back<dynamic>();
+          await _pickCompressAndUploadLogo(ImageSource.gallery);
+        },
+      ),
+    );
+  }
+
+  Future<void> _pickCompressAndUploadLogo(ImageSource source) async {
+    XFile? picked;
+    try {
+      picked = await _picker.pickImage(
+        source: source,
+        requestFullMetadata: true,
+        imageQuality: 100,
+      );
+    } catch (_) {
+      CricketSnackbar.showErrorMessage(TranslationKeys.somethingWentWrong.tr);
+      return;
+    }
+    if (picked == null) return;
+
+    CricketLoaderDialog.show();
+    final compressed = await Get.find<CompressionService>().imageCompression(
+      inputPath: picked.path,
+    );
+    if (!compressed.isResult) {
+      CricketLoaderDialog.hide();
+      CricketSnackbar.showErrorMessage(compressed.fallback.message);
+      return;
+    }
+
+    final success = await controller.updateLogo(compressed.result);
+    CricketLoaderDialog.hide();
+    if (success) {
+      CricketSnackbar.showSuccessMessage(
+        TranslationKeys.organizationLogoUpdated.tr,
+      );
+    } else {
+      CricketSnackbar.showErrorMessage(TranslationKeys.somethingWentWrong.tr);
+    }
+  }
 
   Future<void> _showAddMemberSheet() async {
     final emailController = TextEditingController();
@@ -284,13 +347,24 @@ class _OrganizationDetailScreenState extends State<OrganizationDetailScreen> {
                     CircleAvatar(
                       radius: 28,
                       backgroundColor: context.colors.chipBackground,
-                      child: CricketText(
-                        text: _monogram(detail.name),
-                        style: context.textTheme.titleMedium?.copyWith(
-                          color: context.colorScheme.primary,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
+                      child: (detail.logoUrl == null || detail.logoUrl!.isEmpty)
+                          ? CricketText(
+                              text: _monogram(detail.name),
+                              style: context.textTheme.titleMedium?.copyWith(
+                                color: context.colorScheme.primary,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            )
+                          : ClipOval(
+                              child: CricketImage(
+                                source: CricketImageSource.network(
+                                  detail.logoUrl!,
+                                ),
+                                width: 56,
+                                height: 56,
+                                fit: BoxFit.cover,
+                              ),
+                            ),
                     ),
                     16.w,
                     Expanded(
@@ -303,6 +377,17 @@ class _OrganizationDetailScreenState extends State<OrganizationDetailScreen> {
                     ),
                   ],
                 ),
+                if (controller.isOwner)
+                  TextButton(
+                    onPressed: _pickAndUploadLogo,
+                    style: TextButton.styleFrom(
+                      padding: EdgeInsets.zero,
+                      minimumSize: Size.zero,
+                    ),
+                    child: CricketText(
+                      text: TranslationKeys.updateOrganizationLogo.tr,
+                    ),
+                  ),
                 24.h,
                 _SectionHeader(
                   title: TranslationKeys.members.tr,

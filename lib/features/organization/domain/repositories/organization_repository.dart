@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:cricket_scorer/core/error/cricket_failure.dart';
 import 'package:cricket_scorer/core/network/models/cricket_response.dart';
 import 'package:cricket_scorer/core/utils/either_util.dart';
@@ -40,6 +42,13 @@ abstract class OrganizationRepository {
   createTeam({
     required String orgId,
     required CreateOrganizationTeamReq? params,
+  });
+
+  /// `POST /v1/organization/:orgId/logo` — owner-only, uploads (or replaces)
+  /// the org's logo. Returns the new Cloudinary URL.
+  Future<Either<CricketResponse<String>, CricketFailure>> updateLogo({
+    required String orgId,
+    required File file,
   });
 
   /// `DELETE /v1/organization/:orgId` — owner-only, soft-deletes; the org's

@@ -13,6 +13,8 @@ class OrganizationEndpoint {
 
   String createTeam(String orgId) => '/v1/organization/$orgId/teams';
 
+  String logo(String orgId) => '/v1/organization/$orgId/logo';
+
   String delete(String orgId) => '/v1/organization/$orgId';
 
   String leaderboards(String orgId) => '/v1/organization/$orgId/leaderboards';

@@ -11,6 +11,7 @@ import 'package:cricket_scorer/features/organization/domain/usecases/get_my_orga
 import 'package:cricket_scorer/features/organization/domain/usecases/get_organization.dart';
 import 'package:cricket_scorer/features/organization/domain/usecases/get_organization_leaderboards.dart';
 import 'package:cricket_scorer/features/organization/domain/usecases/remove_organization_member.dart';
+import 'package:cricket_scorer/features/organization/domain/usecases/update_organization_logo.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/update_team_organization.dart';
 import 'package:cricket_scorer/features/scoring/domain/repositories/match_repository.dart';
 import 'package:get/get.dart';
@@ -73,6 +74,13 @@ class OrganizationInjection {
 
     Get.lazyPut<CreateOrganizationTeamUseCase>(
       () => CreateOrganizationTeamUseCase(
+        organizationRepository: Get.find<OrganizationRepository>(),
+      ),
+      fenix: true,
+    );
+
+    Get.lazyPut<UpdateOrganizationLogoUseCase>(
+      () => UpdateOrganizationLogoUseCase(
         organizationRepository: Get.find<OrganizationRepository>(),
       ),
       fenix: true,

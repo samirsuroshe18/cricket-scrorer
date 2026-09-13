@@ -5,6 +5,7 @@ import 'package:cricket_scorer/features/organization/domain/usecases/delete_orga
 import 'package:cricket_scorer/features/organization/domain/usecases/get_organization.dart';
 import 'package:cricket_scorer/features/organization/domain/usecases/get_organization_leaderboards.dart';
 import 'package:cricket_scorer/features/organization/domain/usecases/remove_organization_member.dart';
+import 'package:cricket_scorer/features/organization/domain/usecases/update_organization_logo.dart';
 import 'package:cricket_scorer/features/organization/presentation/controllers/organization_detail_controller.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/create_tournament.dart';
 import 'package:get/get.dart';
@@ -24,6 +25,8 @@ class OrganizationDetailBinding extends Bindings {
         createOrganizationTeamUseCase:
             Get.find<CreateOrganizationTeamUseCase>(),
         deleteOrganizationUseCase: Get.find<DeleteOrganizationUseCase>(),
+        updateOrganizationLogoUseCase:
+            Get.find<UpdateOrganizationLogoUseCase>(),
         createTournamentUseCase: Get.find<CreateTournamentUseCase>(),
         getOrganizationLeaderboardsUseCase:
             Get.find<GetOrganizationLeaderboardsUseCase>(),

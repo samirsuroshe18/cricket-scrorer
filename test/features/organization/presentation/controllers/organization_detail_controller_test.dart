@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:cricket_scorer/core/error/cricket_failure.dart';
 import 'package:cricket_scorer/core/network/models/cricket_response.dart';
 import 'package:cricket_scorer/core/utils/either_util.dart';
@@ -9,6 +11,7 @@ import 'package:cricket_scorer/features/organization/domain/usecases/delete_orga
 import 'package:cricket_scorer/features/organization/domain/usecases/get_organization.dart';
 import 'package:cricket_scorer/features/organization/domain/usecases/get_organization_leaderboards.dart';
 import 'package:cricket_scorer/features/organization/domain/usecases/remove_organization_member.dart';
+import 'package:cricket_scorer/features/organization/domain/usecases/update_organization_logo.dart';
 import 'package:cricket_scorer/features/tournament/data/models/response/leaderboard_row_res.dart';
 import 'package:cricket_scorer/features/organization/presentation/controllers/organization_detail_controller.dart';
 import 'package:cricket_scorer/features/tournament/domain/usecases/create_tournament.dart';
@@ -127,6 +130,28 @@ class _FakeDeleteOrganizationUseCase implements DeleteOrganizationUseCase {
       throw UnimplementedError('Not exercised in this test.');
 }
 
+class _FakeUpdateOrganizationLogoUseCase
+    implements UpdateOrganizationLogoUseCase {
+  Either<CricketResponse<String>, CricketFailure>? response;
+  UpdateOrganizationLogoParams? lastParams;
+
+  @override
+  Future<Either<CricketResponse<String>, CricketFailure>> call({
+    UpdateOrganizationLogoParams? params,
+  }) async {
+    lastParams = params;
+    final result = response;
+    if (result == null) {
+      throw UnimplementedError('Not exercised in this test.');
+    }
+    return result;
+  }
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) =>
+      throw UnimplementedError('Not exercised in this test.');
+}
+
 class _FakeCreateTournamentUseCase implements CreateTournamentUseCase {
   Either<CricketResponse<void>, CricketFailure>? response;
 
@@ -171,6 +196,7 @@ void main() {
   late _FakeRemoveOrganizationMemberUseCase removeMemberUseCase;
   late _FakeCreateOrganizationTeamUseCase createTeamUseCase;
   late _FakeDeleteOrganizationUseCase deleteOrganizationUseCase;
+  late _FakeUpdateOrganizationLogoUseCase updateOrganizationLogoUseCase;
   late _FakeCreateTournamentUseCase createTournamentUseCase;
   late _FakeGetOrganizationLeaderboardsUseCase getOrganizationLeaderboardsUseCase;
   late OrganizationDetailController controller;
@@ -182,6 +208,7 @@ void main() {
     removeMemberUseCase = _FakeRemoveOrganizationMemberUseCase();
     createTeamUseCase = _FakeCreateOrganizationTeamUseCase();
     deleteOrganizationUseCase = _FakeDeleteOrganizationUseCase();
+    updateOrganizationLogoUseCase = _FakeUpdateOrganizationLogoUseCase();
     createTournamentUseCase = _FakeCreateTournamentUseCase();
     getOrganizationLeaderboardsUseCase = _FakeGetOrganizationLeaderboardsUseCase();
     controller = OrganizationDetailController(
@@ -192,6 +219,7 @@ void main() {
       removeOrganizationMemberUseCase: removeMemberUseCase,
       createOrganizationTeamUseCase: createTeamUseCase,
       deleteOrganizationUseCase: deleteOrganizationUseCase,
+      updateOrganizationLogoUseCase: updateOrganizationLogoUseCase,
       createTournamentUseCase: createTournamentUseCase,
       getOrganizationLeaderboardsUseCase: getOrganizationLeaderboardsUseCase,
     );
@@ -219,6 +247,7 @@ void main() {
       removeOrganizationMemberUseCase: removeMemberUseCase,
       createOrganizationTeamUseCase: createTeamUseCase,
       deleteOrganizationUseCase: deleteOrganizationUseCase,
+      updateOrganizationLogoUseCase: updateOrganizationLogoUseCase,
       createTournamentUseCase: createTournamentUseCase,
       getOrganizationLeaderboardsUseCase: getOrganizationLeaderboardsUseCase,
     );
@@ -297,6 +326,36 @@ void main() {
     final result = await controller.createTeam('Riverside U19', 'RU19');
 
     expect(result, isTrue);
+  });
+
+  test('updateLogo sends the file and refreshes on success', () async {
+    updateOrganizationLogoUseCase.response = Either.result(
+      const CricketResponse(
+        message: 'ok',
+        data: 'https://res.cloudinary.com/logo.jpg',
+      ),
+    );
+    getOrganizationUseCase.response = Either.result(
+      CricketResponse(message: 'ok', data: _detail()),
+    );
+    final file = File('logo.jpg');
+
+    final result = await controller.updateLogo(file);
+
+    expect(result, isTrue);
+    expect(updateOrganizationLogoUseCase.lastParams?.orgId, 'org-1');
+    expect(updateOrganizationLogoUseCase.lastParams?.file, file);
+  });
+
+  test('updateLogo returns false on failure without refreshing', () async {
+    updateOrganizationLogoUseCase.response = Either.fallback(
+      CricketServerErrorFailure(statusCode: 500, message: 'Server error'),
+    );
+
+    final result = await controller.updateLogo(File('logo.jpg'));
+
+    expect(result, isFalse);
+    expect(controller.detail.value, isNull);
   });
 
   test('createTournament sends name and format and refreshes on success', () async {

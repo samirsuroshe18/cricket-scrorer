@@ -52,6 +52,7 @@ class HomePage extends GetView<HomeController> {
             onPressed: () => Get.toNamed<dynamic>(AppRoutes.search),
           ),
           IconButton(
+            tooltip: TranslationKeys.organizations.tr,
             icon: const Icon(Icons.groups_outlined),
             onPressed: () => Get.toNamed<dynamic>(AppRoutes.organizations),
           ),

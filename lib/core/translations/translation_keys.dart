@@ -7,9 +7,12 @@ class TranslationKeys {
   static const String password = 'password';
   static const String forgotPassword = 'forgot_password';
   static const String forgotPasswordDesc = 'forgot_password_desc';
+  static const String showPassword = 'show_password';
+  static const String hidePassword = 'hide_password';
   static const String cancel = 'cancel';
   static const String retry = 'retry';
   static const String confirm = 'confirm';
+  static const String or = 'or';
   static const String selectYourLanguage = 'select_your_language';
   static const String selectYourTheme = 'select_your_theme';
   static const String camera = 'camera';
@@ -48,6 +51,9 @@ class TranslationKeys {
   static const String rememberedPassword = 'remembered_password';
   static const String cricketScorer = 'cricket_scorer';
   static const String trackEveryBall = 'track_every_ball';
+  static const String welcomeBack = 'welcome_back';
+  static const String signInToKeepScoring = 'sign_in_to_keep_scoring';
+  static const String noAccountNeeded = 'no_account_needed';
   static const String enterPassword = 'enter_password';
   static const String dontHaveAccount = 'dont_have_account';
   static const String register = 'register';
@@ -329,6 +335,8 @@ class TranslationKeys {
   static const String deleteOrganizationConfirmMessage =
       'delete_organization_confirm_message';
   static const String create = 'create';
+  static const String updateOrganizationLogo = 'update_organization_logo';
+  static const String organizationLogoUpdated = 'organization_logo_updated';
 
   // Delegated scoring
   static const String assignScorer = 'assign_scorer';

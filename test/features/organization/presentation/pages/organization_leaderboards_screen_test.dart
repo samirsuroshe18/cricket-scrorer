@@ -11,6 +11,7 @@ import 'package:cricket_scorer/features/organization/domain/usecases/delete_orga
 import 'package:cricket_scorer/features/organization/domain/usecases/get_organization.dart';
 import 'package:cricket_scorer/features/organization/domain/usecases/get_organization_leaderboards.dart';
 import 'package:cricket_scorer/features/organization/domain/usecases/remove_organization_member.dart';
+import 'package:cricket_scorer/features/organization/domain/usecases/update_organization_logo.dart';
 import 'package:cricket_scorer/features/organization/presentation/controllers/organization_detail_controller.dart';
 import 'package:cricket_scorer/features/organization/presentation/pages/organization_leaderboards_screen.dart';
 import 'package:cricket_scorer/features/tournament/data/models/response/leaderboard_row_res.dart';
@@ -84,6 +85,12 @@ class _UnusedDeleteOrganizationUseCase implements DeleteOrganizationUseCase {
   dynamic noSuchMethod(Invocation invocation) => throw UnimplementedError();
 }
 
+class _UnusedUpdateOrganizationLogoUseCase
+    implements UpdateOrganizationLogoUseCase {
+  @override
+  dynamic noSuchMethod(Invocation invocation) => throw UnimplementedError();
+}
+
 class _UnusedCreateTournamentUseCase implements CreateTournamentUseCase {
   @override
   dynamic noSuchMethod(Invocation invocation) => throw UnimplementedError();
@@ -104,6 +111,7 @@ void main() {
         removeOrganizationMemberUseCase: _UnusedRemoveOrganizationMemberUseCase(),
         createOrganizationTeamUseCase: _UnusedCreateOrganizationTeamUseCase(),
         deleteOrganizationUseCase: _UnusedDeleteOrganizationUseCase(),
+        updateOrganizationLogoUseCase: _UnusedUpdateOrganizationLogoUseCase(),
         createTournamentUseCase: _UnusedCreateTournamentUseCase(),
         getOrganizationLeaderboardsUseCase: getOrganizationLeaderboardsUseCase,
       ),

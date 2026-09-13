@@ -84,6 +84,7 @@ OrganizationDetailRes _$OrganizationDetailResFromJson(
           )
           .toList() ??
       [],
+  logoUrl: json['logoUrl'] as String?,
 );
 
 Map<String, dynamic> _$OrganizationDetailResToJson(
@@ -95,4 +96,5 @@ Map<String, dynamic> _$OrganizationDetailResToJson(
   'members': instance.members.map((e) => e.toJson()).toList(),
   'teams': instance.teams.map((e) => e.toJson()).toList(),
   'tournaments': instance.tournaments.map((e) => e.toJson()).toList(),
+  'logoUrl': instance.logoUrl,
 };

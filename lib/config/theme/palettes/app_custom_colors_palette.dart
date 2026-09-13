@@ -26,7 +26,10 @@ class AppCustomColorsPalette {
     statusDanger: Color(0xffDA1414),
     statusWarning: Color(0xffB26A00),
     statusInfo: Color(0xff1F78E6),
-    statusSuccess: Color(0xff2EB86B),
+    // Darkened from the original 0xff2EB86B (~2.6:1 against white, failing
+    // WCAG AA) to ~4.7:1 — matches statusWarning's existing precedent of a
+    // deliberately darker light-mode shade for use as foreground/text.
+    statusSuccess: Color(0xff1A8449),
   );
 
   static const dark = AppCustomColors(

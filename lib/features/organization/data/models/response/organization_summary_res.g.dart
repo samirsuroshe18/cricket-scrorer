@@ -14,6 +14,7 @@ OrganizationSummaryRes _$OrganizationSummaryResFromJson(
   myRole: json['myRole'] as String,
   memberCount: (json['memberCount'] as num).toInt(),
   teamCount: (json['teamCount'] as num).toInt(),
+  logoUrl: json['logoUrl'] as String?,
 );
 
 Map<String, dynamic> _$OrganizationSummaryResToJson(
@@ -24,6 +25,7 @@ Map<String, dynamic> _$OrganizationSummaryResToJson(
   'myRole': instance.myRole,
   'memberCount': instance.memberCount,
   'teamCount': instance.teamCount,
+  'logoUrl': instance.logoUrl,
 };
 
 MyOrganizationsRes _$MyOrganizationsResFromJson(Map<String, dynamic> json) =>

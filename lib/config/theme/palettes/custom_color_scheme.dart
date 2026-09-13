@@ -30,6 +30,10 @@ class CustomColorScheme {
 
     tertiary: Color(0xff2EB86B),
     onTertiary: Colors.white,
+
+    // Muted text/icons on surface — explicit so it tracks the navy palette
+    // instead of Material's unrelated baseline default.
+    onSurfaceVariant: Color(0xff5B6478),
   );
 
   static const ColorScheme darkColorScheme = ColorScheme(
@@ -57,5 +61,9 @@ class CustomColorScheme {
 
     tertiary: Color(0xff38D980),
     onTertiary: Colors.white,
+
+    // Muted text/icons on surface — explicit so it tracks the navy palette
+    // instead of Material's unrelated baseline default.
+    onSurfaceVariant: Color(0xff9AA3C0),
   );
 }

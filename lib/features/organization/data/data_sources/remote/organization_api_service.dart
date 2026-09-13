@@ -6,6 +6,7 @@ import 'package:cricket_scorer/features/organization/data/models/request/add_org
 import 'package:cricket_scorer/features/organization/data/models/request/create_organization_req.dart';
 import 'package:cricket_scorer/features/organization/data/models/request/create_organization_team_req.dart';
 import 'package:cricket_scorer/features/organization/data/organization_endpoint.dart';
+import 'package:dio/dio.dart';
 
 class OrganizationApiService {
   final ApiClient apiClient;
@@ -61,6 +62,16 @@ class OrganizationApiService {
     return await apiClient.post(
       endpoint: organizationEndpoint.createTeam(orgId),
       data: params?.toJson(),
+    );
+  }
+
+  Future<Either<ApiResponseModel, CricketFailure>> updateLogo({
+    required String orgId,
+    required FormData params,
+  }) async {
+    return await apiClient.post(
+      endpoint: organizationEndpoint.logo(orgId),
+      data: params,
     );
   }
 
