@@ -143,9 +143,10 @@ void main() {
 
           await tester.enterText(fields.at(2), '7');
           await tester.pump();
-          // The preview renders the jersey number as "#7"; the field itself
-          // shows the bare digits, so this match is unambiguous.
-          expect(find.text('#7'), findsOneWidget);
+          // The jersey number now renders as a corner badge on the preview
+          // card showing the bare digits, same as the field itself — once
+          // in the field, once in the badge.
+          expect(find.text('7'), findsNWidgets(2));
         },
       );
     });

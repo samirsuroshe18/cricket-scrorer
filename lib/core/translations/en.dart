@@ -134,6 +134,10 @@ Map<String, String> en = {
   TranslationKeys.completeProfileSubtitle:
       'Just one more step before you start scoring',
   TranslationKeys.stepIndicatorLabel: 'Step 3 of 3',
+  TranslationKeys.aboutYourGame: 'About your game',
+  TranslationKeys.aboutYourGameHint: 'All optional — pick what applies',
+  TranslationKeys.decreaseJerseyNumber: 'Decrease jersey number',
+  TranslationKeys.increaseJerseyNumber: 'Increase jersey number',
   TranslationKeys.playerStats: 'Player Stats',
   TranslationKeys.matchesPlayed: 'Matches Played',
   TranslationKeys.innings: 'Innings',

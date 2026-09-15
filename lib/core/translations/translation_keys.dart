@@ -125,6 +125,10 @@ class TranslationKeys {
   static const String optionalDetailsHint = 'optional_details_hint';
   static const String completeProfileSubtitle = 'complete_profile_subtitle';
   static const String stepIndicatorLabel = 'step_indicator_label';
+  static const String aboutYourGame = 'about_your_game';
+  static const String aboutYourGameHint = 'about_your_game_hint';
+  static const String decreaseJerseyNumber = 'decrease_jersey_number';
+  static const String increaseJerseyNumber = 'increase_jersey_number';
 
   /// Player career-stats screen
   static const String playerStats = 'player_stats';

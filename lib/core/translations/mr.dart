@@ -134,6 +134,10 @@ Map<String, String> mr = {
   TranslationKeys.completeProfileSubtitle:
       'स्कोअरिंग सुरू करण्यापूर्वी फक्त एक पायरी बाकी',
   TranslationKeys.stepIndicatorLabel: 'पायरी ३ पैकी ३',
+  TranslationKeys.aboutYourGame: 'तुमच्या खेळाबद्दल',
+  TranslationKeys.aboutYourGameHint: 'सर्व पर्यायी — लागू असेल ते निवडा',
+  TranslationKeys.decreaseJerseyNumber: 'जर्सी क्रमांक कमी करा',
+  TranslationKeys.increaseJerseyNumber: 'जर्सी क्रमांक वाढवा',
   TranslationKeys.playerStats: 'खेळाडूची आकडेवारी',
   TranslationKeys.matchesPlayed: 'खेळलेले सामने',
   TranslationKeys.innings: 'डाव',
