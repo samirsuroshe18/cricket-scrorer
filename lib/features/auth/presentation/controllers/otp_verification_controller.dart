@@ -72,6 +72,12 @@ class OtpVerificationController extends GetxController {
   }
 
   void onOtpChanged(String value, int index) {
+    // A paste or OS autofill delivers the whole code to one box at once.
+    if (value.length > 1) {
+      _distributeDigits(value, startIndex: index);
+      return;
+    }
+
     if (value.isNotEmpty) {
       // Move focus to next box
       if (index < 5) {
@@ -85,6 +91,22 @@ class OtpVerificationController extends GetxController {
       if (index > 0) {
         focusNodes[index - 1].requestFocus();
       }
+    }
+  }
+
+  void _distributeDigits(String digits, {required int startIndex}) {
+    var boxIndex = startIndex;
+    var digitIndex = 0;
+    while (boxIndex < otpControllers.length && digitIndex < digits.length) {
+      otpControllers[boxIndex].text = digits[digitIndex];
+      boxIndex++;
+      digitIndex++;
+    }
+
+    if (boxIndex >= otpControllers.length) {
+      focusNodes.last.unfocus();
+    } else {
+      focusNodes[boxIndex].requestFocus();
     }
   }
 

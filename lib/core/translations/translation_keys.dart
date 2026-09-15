@@ -66,6 +66,7 @@ class TranslationKeys {
   static const String resend = 'resend';
   static const String resendCodeIn = 'resend_code_in';
   static const String didNotReceiveCode = 'did_not_receive_code';
+  static const String otpDigitLabel = 'otp_digit_label';
   static const String createAccount = 'create_account';
   static const String joinAndStartScoring = 'join_and_start_scoring';
   static const String fullName = 'full_name';
@@ -73,6 +74,12 @@ class TranslationKeys {
   static const String confirmPassword = 'confirm_password';
   static const String enterConfirmPassword = 'enter_confirm_password';
   static const String alreadyHaveAccount = 'already_have_account';
+  static const String passwordStrength = 'password_strength';
+  static const String passwordStrengthWeak = 'password_strength_weak';
+  static const String passwordStrengthFair = 'password_strength_fair';
+  static const String passwordStrengthStrong = 'password_strength_strong';
+  static const String passwordsMatch = 'passwords_match';
+  static const String validEmail = 'valid_email';
   static const String setNewPassword = 'set_new_password';
   static const String setNewPasswordDesc = 'set_new_password_desc';
   static const String newPassword = 'new_password';
