@@ -27,6 +27,10 @@ class CustomColorScheme {
 
     // Border
     outline: Color(0xffE6E6EB),
+    // Explicit for the same reason as onSurfaceVariant below — left unset,
+    // this defaults to Material's baseline grey (near-black against a light
+    // surface) instead of tracking this palette's own subtle-border color.
+    outlineVariant: Color(0xffE6E6EB),
 
     tertiary: Color(0xff2EB86B),
     onTertiary: Colors.white,
@@ -58,6 +62,7 @@ class CustomColorScheme {
 
     // Border
     outline: Color(0xff333D61),
+    outlineVariant: Color(0xff333D61),
 
     tertiary: Color(0xff38D980),
     onTertiary: Colors.white,
