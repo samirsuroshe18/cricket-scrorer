@@ -44,6 +44,17 @@ Map<String, String> hi = {
   TranslationKeys.shareTheVictory: 'जीत साझा करें',
   TranslationKeys.shareTheVictoryDesc:
       'मैच सारांश और टीम आँकड़े तुरंत साझा करें।',
+  TranslationKeys.onboardingPageSemanticLabel:
+      'पृष्ठ @current, कुल @total में से',
+  TranslationKeys.onboardingRunRateLabel: 'रन रेट',
+  TranslationKeys.onboardingThisOverLabel: 'यह ओवर',
+  TranslationKeys.onboardingHighestOverLabel: 'सर्वाधिक ओवर',
+  TranslationKeys.onboardingPowerplayLabel: 'पावरप्ले',
+  TranslationKeys.onboardingDeathOversLabel: 'डेथ ओवर्स',
+  TranslationKeys.onboardingOverRange: 'ओवर @range',
+  TranslationKeys.onboardingShareScorecard: 'स्कोरकार्ड साझा करें',
+  TranslationKeys.onboardingSampleResult: 'टाइटन्स 24 रन से जीता',
+  TranslationKeys.onboardingSampleContext: 'बनाम स्ट्राइकर्स · फाइनल',
   TranslationKeys.enterCompleteCode: 'कृपया पूरा 6-अंकीय कोड दर्ज करें',
   TranslationKeys.fullNameRequired: 'पूरा नाम आवश्यक है',
   TranslationKeys.nameTooShort: 'नाम कम से कम 2 अक्षरों का होना चाहिए',
@@ -337,7 +348,8 @@ Map<String, String> hi = {
   TranslationKeys.noTeamsInTournament: 'अभी तक कोई टीम नामांकित नहीं',
   TranslationKeys.removeTeam: 'टीम हटाएं',
   TranslationKeys.removeTeamConfirmTitle: 'यह टीम हटाएं?',
-  TranslationKeys.removeTeamConfirmMessage: 'टीम को बाद में फिर से जोड़ा जा सकता है।',
+  TranslationKeys.removeTeamConfirmMessage:
+      'टीम को बाद में फिर से जोड़ा जा सकता है।',
   TranslationKeys.teamRemovedFromTournament: 'टीम टूर्नामेंट से हटाई गई',
   TranslationKeys.fixtures: 'फिक्स्चर',
   TranslationKeys.generateFixtures: 'फिक्स्चर बनाएं',
@@ -372,7 +384,8 @@ Map<String, String> hi = {
   TranslationKeys.basePrice: 'बेस प्राइस',
   TranslationKeys.playerRegisteredInPool: 'खिलाड़ी पूल में पंजीकृत किया गया',
   TranslationKeys.poolEntryUpdated: 'पूल एंट्री अपडेट की गई',
-  TranslationKeys.invalidBasePrice: '1 और 100000000 के बीच एक पूर्ण संख्या दर्ज करें',
+  TranslationKeys.invalidBasePrice:
+      '1 और 100000000 के बीच एक पूर्ण संख्या दर्ज करें',
   TranslationKeys.player: 'खिलाड़ी',
   TranslationKeys.search: 'खोजें',
   TranslationKeys.searchHint: 'संगठन और टूर्नामेंट खोजें',
@@ -387,7 +400,8 @@ Map<String, String> hi = {
   TranslationKeys.auctionSetupSaved: 'नीलामी सेटअप सहेजा गया',
   TranslationKeys.liveAuction: 'लाइव नीलामी',
   TranslationKeys.startAuction: 'नीलामी शुरू करें',
-  TranslationKeys.auctionNotStarted: 'आयोजक के नीलामी शुरू करने की प्रतीक्षा है',
+  TranslationKeys.auctionNotStarted:
+      'आयोजक के नीलामी शुरू करने की प्रतीक्षा है',
   TranslationKeys.auctionCompleted: 'नीलामी पूरी हुई',
   TranslationKeys.nextPlayer: 'अगला खिलाड़ी',
   TranslationKeys.waitingForNextPlayer: 'अगले खिलाड़ी की प्रतीक्षा है',

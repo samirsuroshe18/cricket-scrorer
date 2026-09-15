@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:cricket_scorer/config/routes/app_routes.dart';
-import 'package:cricket_scorer/core/constants/assets_util.dart';
 import 'package:cricket_scorer/core/constants/shared_pref_key.dart';
 import 'package:cricket_scorer/core/services/shared_preference_service.dart';
 import 'package:cricket_scorer/core/translations/translation_keys.dart';
@@ -28,8 +27,8 @@ class OnboardingController extends GetxController {
   void nextPage() {
     if (currentPage.value < 2) {
       pageController.nextPage(
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeInOut,
+        duration: Durations.medium2,
+        curve: Easing.standard,
       );
     } else {
       finishOnboarding();
@@ -60,17 +59,14 @@ class OnboardingController extends GetxController {
 
   final onboardingPages = [
     OnboardingItem(
-      image: AssetsUtil.onboarding1,
       title: TranslationKeys.liveScoring.tr,
       description: TranslationKeys.liveScoringDesc.tr,
     ),
     OnboardingItem(
-      image: AssetsUtil.onboarding2,
       title: TranslationKeys.deepMatchStats.tr,
       description: TranslationKeys.deepMatchStatsDesc.tr,
     ),
     OnboardingItem(
-      image: AssetsUtil.onboarding3,
       title: TranslationKeys.shareTheVictory.tr,
       description: TranslationKeys.shareTheVictoryDesc.tr,
     ),

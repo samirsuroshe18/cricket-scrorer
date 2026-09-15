@@ -44,6 +44,17 @@ Map<String, String> mr = {
   TranslationKeys.shareTheVictory: 'विजय शेअर करा',
   TranslationKeys.shareTheVictoryDesc:
       'मॅचचा सारांश आणि टीमची आकडेवारी त्वरित शेअर करा.',
+  TranslationKeys.onboardingPageSemanticLabel:
+      'पृष्ठ @current, एकूण @total पैकी',
+  TranslationKeys.onboardingRunRateLabel: 'रन रेट',
+  TranslationKeys.onboardingThisOverLabel: 'हे ओव्हर',
+  TranslationKeys.onboardingHighestOverLabel: 'सर्वाधिक ओव्हर',
+  TranslationKeys.onboardingPowerplayLabel: 'पॉवरप्ले',
+  TranslationKeys.onboardingDeathOversLabel: 'डेथ ओव्हर्स',
+  TranslationKeys.onboardingOverRange: 'ओव्हर @range',
+  TranslationKeys.onboardingShareScorecard: 'स्कोअरकार्ड शेअर करा',
+  TranslationKeys.onboardingSampleResult: 'टायटन्स 24 धावांनी जिंकले',
+  TranslationKeys.onboardingSampleContext: 'वि. स्ट्रायकर्स · फायनल',
   TranslationKeys.enterCompleteCode: 'कृपया पूर्ण ६-अंकी कोड प्रविष्ट करा',
   TranslationKeys.fullNameRequired: 'पूर्ण नाव आवश्यक आहे',
   TranslationKeys.nameTooShort: 'नाव किमान २ वर्णांचे असावे',
@@ -303,7 +314,8 @@ Map<String, String> mr = {
 
   TranslationKeys.assignScorer: 'स्कोअरर नेमा',
   TranslationKeys.removeAssignment: 'नेमणूक काढा',
-  TranslationKeys.noScorerCandidates: 'या सामन्यात कोणताही संस्था-लिंक्ड संघ नाही',
+  TranslationKeys.noScorerCandidates:
+      'या सामन्यात कोणताही संस्था-लिंक्ड संघ नाही',
   TranslationKeys.scorerAssigned: 'स्कोअरर नेमला',
   TranslationKeys.scorerUnassigned: 'स्कोअरर काढला',
   TranslationKeys.assignedByName: '@name यांनी नेमले',
@@ -386,7 +398,8 @@ Map<String, String> mr = {
   TranslationKeys.auctionSetupSaved: 'लिलाव सेटअप जतन केले',
   TranslationKeys.liveAuction: 'लाइव्ह लिलाव',
   TranslationKeys.startAuction: 'लिलाव सुरू करा',
-  TranslationKeys.auctionNotStarted: 'आयोजकाने लिलाव सुरू करण्याची प्रतीक्षा आहे',
+  TranslationKeys.auctionNotStarted:
+      'आयोजकाने लिलाव सुरू करण्याची प्रतीक्षा आहे',
   TranslationKeys.auctionCompleted: 'लिलाव पूर्ण झाला',
   TranslationKeys.nextPlayer: 'पुढील खेळाडू',
   TranslationKeys.waitingForNextPlayer: 'पुढील खेळाडूची प्रतीक्षा आहे',

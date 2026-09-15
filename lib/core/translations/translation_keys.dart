@@ -37,6 +37,19 @@ class TranslationKeys {
   static const String deepMatchStatsDesc = 'deep_match_stats_desc';
   static const String shareTheVictory = 'share_the_victory';
   static const String shareTheVictoryDesc = 'share_the_victory_desc';
+  static const String onboardingPageSemanticLabel =
+      'onboarding_page_semantic_label';
+  static const String onboardingRunRateLabel = 'onboarding_run_rate_label';
+  static const String onboardingThisOverLabel = 'onboarding_this_over_label';
+  static const String onboardingHighestOverLabel =
+      'onboarding_highest_over_label';
+  static const String onboardingPowerplayLabel = 'onboarding_powerplay_label';
+  static const String onboardingDeathOversLabel =
+      'onboarding_death_overs_label';
+  static const String onboardingOverRange = 'onboarding_over_range';
+  static const String onboardingShareScorecard = 'onboarding_share_scorecard';
+  static const String onboardingSampleResult = 'onboarding_sample_result';
+  static const String onboardingSampleContext = 'onboarding_sample_context';
   static const String enterCompleteCode = 'enter_complete_code';
   static const String fullNameRequired = 'full_name_required';
   static const String nameTooShort = 'name_too_short';
