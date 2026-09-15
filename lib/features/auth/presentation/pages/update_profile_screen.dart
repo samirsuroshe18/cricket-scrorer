@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 
+import 'package:cricket_scorer/config/theme/app_theme.dart';
 import 'package:cricket_scorer/core/extensions/space_extension.dart';
 import 'package:cricket_scorer/core/extensions/theme_x.dart';
 import 'package:cricket_scorer/core/global/widgets/cricket_button.dart';
@@ -12,6 +13,7 @@ import 'package:cricket_scorer/core/translations/translation_keys.dart';
 import 'package:cricket_scorer/features/auth/data/profile_constants.dart';
 import 'package:cricket_scorer/features/auth/presentation/controllers/update_profile_controller.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/widget_previews.dart';
 import 'package:get/get.dart';
 
 /// Display label per wire value. Kept beside the screen rather than on
@@ -106,7 +108,7 @@ class _StepProgress extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = context.colorScheme;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 0, 20, 14),
+      padding: const EdgeInsets.only(left: 20, right: 20, bottom: 14),
       child: Row(
         children: [
           Expanded(
@@ -143,142 +145,164 @@ class _UpdateProfileForm extends StatelessWidget {
     return Form(
       key: controller.formKey,
       child: SingleChildScrollView(
-        padding: 20.p,
-        child: Column(
-          children: [
-            if (!controller.isEditing) ...[
-              CricketText(
-                text: TranslationKeys.completeProfileSubtitle.tr,
-                textAlign: TextAlign.center,
-                style: context.textTheme.bodyMedium?.copyWith(
-                  color: context.colorScheme.onSurfaceVariant,
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 480),
+            child: Padding(
+              padding: 20.p,
+              child: AutofillGroup(
+                child: Column(
+                  children: [
+                    if (!controller.isEditing) ...[
+                      CricketText(
+                        text: TranslationKeys.completeProfileSubtitle.tr,
+                        textAlign: TextAlign.center,
+                        style: context.textTheme.bodyMedium?.copyWith(
+                          color: context.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                      16.h,
+                    ],
+
+                    _AvatarPicker(controller: controller),
+
+                    24.h,
+
+                    _ProfilePreviewCard(controller: controller),
+
+                    24.h,
+
+                    /// Username
+                    CricketTextField(
+                      controller: controller.usernameController,
+                      hintText: TranslationKeys.enterUsername.tr,
+                      labelText: TranslationKeys.username.tr,
+                      prefixIcon: const Icon(Icons.person_outline),
+                      validator: controller.validateUsername,
+                      keyboardType: TextInputType.name,
+                      autofillHints: const [AutofillHints.newUsername],
+                      isRequired: true,
+                    ),
+
+                    20.h,
+
+                    /// Bio
+                    CricketTextField(
+                      controller: controller.bioController,
+                      hintText: TranslationKeys.tellUsAboutYourself.tr,
+                      labelText:
+                          '${TranslationKeys.bio.tr} (${TranslationKeys.optionalLabel.tr})',
+                      prefixIcon: const Icon(Icons.person_outline),
+                      maxLines: 4,
+                      maxLength: 150,
+                      keyboardType: TextInputType.name,
+                      textCapitalization: TextCapitalization.sentences,
+                    ),
+
+                    20.h,
+
+                    /// Playing role
+                    _SectionLabel(
+                      text: TranslationKeys.playingRole.tr,
+                      optional: true,
+                    ),
+                    8.h,
+                    Obx(
+                      () => Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: PlayingRole.all.map((String role) {
+                          return ChoiceChip(
+                            avatar: Icon(_playingRoleIcons[role], size: 18),
+                            label: CricketText(
+                              text: _playingRoleLabels[role]!.tr,
+                            ),
+                            selected: controller.playingRole.value == role,
+                            onSelected: (_) => controller.togglePlayingRole(
+                              role,
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                    ),
+
+                    20.h,
+
+                    /// Batting style
+                    _SectionLabel(
+                      text: TranslationKeys.battingStyle.tr,
+                      optional: true,
+                    ),
+                    8.h,
+                    Obx(
+                      () => Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: BattingStyle.all.map((String style) {
+                          return ChoiceChip(
+                            avatar: _StyleIcon(
+                              icon: _battingStyleIcons[style]!,
+                              mirrored: _mirroredBattingStyles.contains(style),
+                            ),
+                            label: CricketText(
+                              text: _battingStyleLabels[style]!.tr,
+                            ),
+                            selected: controller.battingStyle.value == style,
+                            onSelected: (_) => controller.toggleBattingStyle(
+                              style,
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                    ),
+
+                    20.h,
+
+                    /// Bowling style
+                    _SectionLabel(
+                      text: TranslationKeys.bowlingStyle.tr,
+                      optional: true,
+                    ),
+                    8.h,
+                    Obx(
+                      () => Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: BowlingStyle.all.map((String style) {
+                          return ChoiceChip(
+                            avatar: _StyleIcon(
+                              icon: _bowlingStyleIcons[style]!,
+                              mirrored: _mirroredBowlingStyles.contains(style),
+                            ),
+                            label: CricketText(
+                              text: _bowlingStyleLabels[style]!.tr,
+                            ),
+                            selected: controller.bowlingStyle.value == style,
+                            onSelected: (_) => controller.toggleBowlingStyle(
+                              style,
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                    ),
+
+                    20.h,
+
+                    /// Jersey number
+                    CricketTextField(
+                      controller: controller.jerseyNumberController,
+                      hintText: TranslationKeys.enterJerseyNumber.tr,
+                      labelText:
+                          '${TranslationKeys.jerseyNumber.tr} (${TranslationKeys.optionalLabel.tr})',
+                      prefixIcon: const Icon(Icons.numbers),
+                      keyboardType: TextInputType.number,
+                      validator: controller.validateJerseyNumber,
+                    ),
+                  ],
                 ),
               ),
-              16.h,
-            ],
-
-            _AvatarPicker(controller: controller),
-
-            24.h,
-
-            _ProfilePreviewCard(controller: controller),
-
-            24.h,
-
-            /// Username
-            CricketTextField(
-              controller: controller.usernameController,
-              hintText: TranslationKeys.enterUsername.tr,
-              labelText: TranslationKeys.username.tr,
-              prefixIcon: const Icon(Icons.person_outline),
-              validator: controller.validateUsername,
-              keyboardType: TextInputType.name,
-              isRequired: true,
             ),
-
-            20.h,
-
-            /// Bio
-            CricketTextField(
-              controller: controller.bioController,
-              hintText: TranslationKeys.tellUsAboutYourself.tr,
-              labelText:
-                  '${TranslationKeys.bio.tr} (${TranslationKeys.optionalLabel.tr})',
-              prefixIcon: const Icon(Icons.person_outline),
-              maxLines: 4,
-              maxLength: 150,
-              keyboardType: TextInputType.name,
-              textCapitalization: TextCapitalization.sentences,
-            ),
-
-            20.h,
-
-            /// Playing role
-            _SectionLabel(
-              text: TranslationKeys.playingRole.tr,
-              optional: true,
-            ),
-            8.h,
-            Obx(
-              () => Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: PlayingRole.all.map((String role) {
-                  return ChoiceChip(
-                    avatar: Icon(_playingRoleIcons[role], size: 18),
-                    label: CricketText(text: _playingRoleLabels[role]!.tr),
-                    selected: controller.playingRole.value == role,
-                    onSelected: (_) => controller.togglePlayingRole(role),
-                  );
-                }).toList(),
-              ),
-            ),
-
-            20.h,
-
-            /// Batting style
-            _SectionLabel(
-              text: TranslationKeys.battingStyle.tr,
-              optional: true,
-            ),
-            8.h,
-            Obx(
-              () => Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: BattingStyle.all.map((String style) {
-                  return ChoiceChip(
-                    avatar: _StyleIcon(
-                      icon: _battingStyleIcons[style]!,
-                      mirrored: _mirroredBattingStyles.contains(style),
-                    ),
-                    label: CricketText(text: _battingStyleLabels[style]!.tr),
-                    selected: controller.battingStyle.value == style,
-                    onSelected: (_) => controller.toggleBattingStyle(style),
-                  );
-                }).toList(),
-              ),
-            ),
-
-            20.h,
-
-            /// Bowling style
-            _SectionLabel(
-              text: TranslationKeys.bowlingStyle.tr,
-              optional: true,
-            ),
-            8.h,
-            Obx(
-              () => Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: BowlingStyle.all.map((String style) {
-                  return ChoiceChip(
-                    avatar: _StyleIcon(
-                      icon: _bowlingStyleIcons[style]!,
-                      mirrored: _mirroredBowlingStyles.contains(style),
-                    ),
-                    label: CricketText(text: _bowlingStyleLabels[style]!.tr),
-                    selected: controller.bowlingStyle.value == style,
-                    onSelected: (_) => controller.toggleBowlingStyle(style),
-                  );
-                }).toList(),
-              ),
-            ),
-
-            20.h,
-
-            /// Jersey number
-            CricketTextField(
-              controller: controller.jerseyNumberController,
-              hintText: TranslationKeys.enterJerseyNumber.tr,
-              labelText:
-                  '${TranslationKeys.jerseyNumber.tr} (${TranslationKeys.optionalLabel.tr})',
-              prefixIcon: const Icon(Icons.numbers),
-              keyboardType: TextInputType.number,
-              validator: controller.validateJerseyNumber,
-            ),
-          ],
+          ),
         ),
       ),
     );
@@ -330,11 +354,22 @@ class _AvatarPicker extends StatelessWidget {
                     : (networkUrl != null && networkUrl.isNotEmpty)
                     ? CricketImageSource.network(networkUrl)
                     : const CricketImageSource.file('');
-                return CricketImage(
-                  source: source,
-                  height: 120,
-                  width: 120,
-                  borderRadius: const BorderRadius.all(Radius.circular(180)),
+                return AnimatedSwitcher(
+                  duration: Durations.medium2,
+                  switchInCurve: Easing.standard,
+                  // CricketImageSource has no `==` override, so the key is
+                  // built from its fields rather than the instance itself —
+                  // keying on the instance would key by identity and
+                  // cross-fade on every rebuild, not just on a real change.
+                  child: CricketImage(
+                    key: ValueKey('${source.type}:${source.path}'),
+                    source: source,
+                    height: 120,
+                    width: 120,
+                    borderRadius: const BorderRadius.all(
+                      Radius.circular(180),
+                    ),
+                  ),
                 );
               }),
               Positioned(
@@ -452,12 +487,17 @@ class _ProfilePreviewCard extends StatelessWidget {
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    CricketImage(
-                      source: avatarSource,
-                      height: 44,
-                      width: 44,
-                      borderRadius: const BorderRadius.all(
-                        Radius.circular(44),
+                    // Purely a visual echo of the avatar already labeled
+                    // and controlled above — excluded so a screen reader
+                    // doesn't announce a second, unlabeled image node.
+                    ExcludeSemantics(
+                      child: CricketImage(
+                        source: avatarSource,
+                        height: 44,
+                        width: 44,
+                        borderRadius: const BorderRadius.all(
+                          Radius.circular(44),
+                        ),
                       ),
                     ),
                     12.w,
@@ -547,30 +587,45 @@ class _BottomActionBar extends StatelessWidget {
     return DecoratedBox(
       decoration: BoxDecoration(color: context.colorScheme.surface),
       child: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (!controller.isEditing) ...[
-                CricketText(
-                  text: TranslationKeys.optionalDetailsHint.tr,
-                  textAlign: TextAlign.center,
-                  style: context.textTheme.bodySmall?.copyWith(
-                    color: context.colorScheme.onSurfaceVariant,
-                  ),
-                ),
-                12.h,
-              ],
-              CricketButton(
-                onPressed: controller.updateProfile,
-                buttonText:
-                    (controller.isEditing
-                            ? TranslationKeys.saveChanges
-                            : TranslationKeys.completeProfile)
-                        .tr,
+        // Scaffold gives bottomNavigationBar a loose-but-finite height
+        // constraint (up to its own full height), so a bare Center would
+        // expand to fill that instead of shrink-wrapping this bar's actual
+        // content — starving `body` of height in the process.
+        child: Center(
+          heightFactor: 1,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 480),
+            child: Padding(
+              padding: const EdgeInsets.only(
+                left: 20,
+                right: 20,
+                top: 12,
+                bottom: 16,
               ),
-            ],
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (!controller.isEditing) ...[
+                    CricketText(
+                      text: TranslationKeys.optionalDetailsHint.tr,
+                      textAlign: TextAlign.center,
+                      style: context.textTheme.bodySmall?.copyWith(
+                        color: context.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                    12.h,
+                  ],
+                  CricketButton(
+                    onPressed: controller.updateProfile,
+                    buttonText:
+                        (controller.isEditing
+                                ? TranslationKeys.saveChanges
+                                : TranslationKeys.completeProfile)
+                            .tr,
+                  ),
+                ],
+              ),
+            ),
           ),
         ),
       ),
@@ -600,5 +655,79 @@ class _SectionLabel extends StatelessWidget {
         ],
       ],
     );
+  }
+}
+
+// Preview-only below. `_UpdateProfileForm`/`_AvatarPicker`/
+// `_ProfilePreviewCard`/`_BottomActionBar` all read from
+// `UpdateProfileController` via `Get.find()`, which needs a live GetX
+// binding the isolated Widget Previewer can't satisfy — same constraint
+// `login_screen.dart` documents for `AuthScoreboardHeader`. `_StepProgress`,
+// `_SectionLabel`, `_StyleIcon` and `_PreviewTag` take no controller, so
+// those are what's previewable here.
+
+@_MultiPreviewBrightness(name: 'Step progress')
+Widget stepProgressPreview() => const _StepProgress();
+
+@_MultiPreviewBrightness(name: 'Section label')
+Widget sectionLabelPreview() => Padding(
+  padding: const EdgeInsets.all(16),
+  child: _SectionLabel(text: TranslationKeys.battingStyle.tr, optional: true),
+);
+
+@_MultiPreviewBrightness(name: 'Style icons')
+Widget styleIconsPreview() => const Padding(
+  padding: EdgeInsets.all(16),
+  child: Row(
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      _StyleIcon(icon: Icons.back_hand_outlined, mirrored: false),
+      SizedBox(width: 12),
+      _StyleIcon(icon: Icons.back_hand_outlined, mirrored: true),
+      SizedBox(width: 12),
+      _StyleIcon(icon: Icons.rotate_right, mirrored: false),
+      SizedBox(width: 12),
+      _StyleIcon(icon: Icons.rotate_left, mirrored: false),
+    ],
+  ),
+);
+
+@_MultiPreviewBrightness(name: 'Preview tags')
+Widget previewTagsPreview() => const Padding(
+  padding: EdgeInsets.all(16),
+  child: Wrap(
+    spacing: 8,
+    runSpacing: 8,
+    children: [
+      _PreviewTag(icon: Icons.sports_cricket, text: 'Batsman'),
+      _PreviewTag(icon: Icons.back_hand_outlined, text: 'Right handed'),
+      _PreviewTag(icon: Icons.numbers, text: '#7'),
+    ],
+  ),
+);
+
+final class _MultiPreviewBrightness extends MultiPreview {
+  const _MultiPreviewBrightness({required this.name});
+
+  final String name;
+
+  @override
+  List<Preview> get previews => const [
+    Preview(brightness: Brightness.light),
+    Preview(brightness: Brightness.dark),
+  ];
+
+  @override
+  List<Preview> transform() {
+    return super.transform().map((preview) {
+      final builder = preview.toBuilder()
+        ..group = 'Complete profile screen'
+        ..name = '$name — ${preview.brightness!.name}'
+        ..theme = () => PreviewThemeData(
+          materialLight: AppTheme.lightTheme,
+          materialDark: AppTheme.darkTheme,
+        );
+      return builder.build();
+    }).toList();
   }
 }
