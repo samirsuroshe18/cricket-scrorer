@@ -6,7 +6,7 @@ part 'register_pool_player_req.g.dart';
 /// `SelectBowlerReq`'s `bowlerName`/optional `bowlerId` pair: given, it must
 /// already be owned by the caller; omitted, `playerName` find-or-creates
 /// under the caller's own scorer scope.
-@JsonSerializable()
+@JsonSerializable(includeIfNull: false)
 class RegisterPoolPlayerReq {
   final String? playerName;
   final String? playerId;
