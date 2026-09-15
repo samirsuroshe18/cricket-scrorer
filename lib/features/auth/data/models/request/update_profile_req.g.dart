@@ -12,6 +12,8 @@ UpdateProfileReq _$UpdateProfileReqFromJson(Map<String, dynamic> json) =>
       bio: json['bio'] as String?,
       battingStyle: json['battingStyle'] as String?,
       bowlingStyle: json['bowlingStyle'] as String?,
+      playingRole: json['playingRole'] as String?,
+      jerseyNumber: (json['jerseyNumber'] as num?)?.toInt(),
     );
 
 Map<String, dynamic> _$UpdateProfileReqToJson(UpdateProfileReq instance) =>
@@ -20,4 +22,6 @@ Map<String, dynamic> _$UpdateProfileReqToJson(UpdateProfileReq instance) =>
       'bio': instance.bio,
       'battingStyle': ?instance.battingStyle,
       'bowlingStyle': ?instance.bowlingStyle,
+      'playingRole': ?instance.playingRole,
+      'jerseyNumber': ?instance.jerseyNumber,
     };

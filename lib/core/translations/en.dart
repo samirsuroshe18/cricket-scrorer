@@ -122,6 +122,18 @@ Map<String, String> en = {
   TranslationKeys.continueText: 'Continue',
   TranslationKeys.myProfile: 'My Profile',
   TranslationKeys.saveChanges: 'Save Changes',
+  TranslationKeys.playingRole: 'Playing Role',
+  TranslationKeys.enterJerseyNumber: 'Enter jersey number',
+  TranslationKeys.jerseyNumberInvalid:
+      'Jersey number must be between 0 and 999',
+  TranslationKeys.optionalLabel: 'Optional',
+  TranslationKeys.profilePreview: 'Preview',
+  TranslationKeys.profilePreviewHint: 'This is how your profile will look',
+  TranslationKeys.optionalDetailsHint:
+      'Photo, bio and playing style are optional — add them anytime from My Profile.',
+  TranslationKeys.completeProfileSubtitle:
+      'Just one more step before you start scoring',
+  TranslationKeys.stepIndicatorLabel: 'Step 3 of 3',
   TranslationKeys.playerStats: 'Player Stats',
   TranslationKeys.matchesPlayed: 'Matches Played',
   TranslationKeys.innings: 'Innings',

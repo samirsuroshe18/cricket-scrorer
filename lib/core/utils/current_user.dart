@@ -13,10 +13,21 @@ import 'package:cricket_scorer/features/auth/data/models/user.dart';
 /// override, one of this function's callers, cannot await a network call
 /// before returning.
 String currentUserId() {
+  final user = currentUser();
+  return user?.id ?? '';
+}
+
+/// The signed-in user's cached profile, read synchronously from the same
+/// cache [currentUserId] reads — a plain [User] decode, so the caller sees
+/// whatever landed there last: the partial `LoggedInUser` shape login writes
+/// (see `login_controller.dart`), or the fuller shape a later profile fetch
+/// overwrites it with (see `update_profile_controller.dart`'s post-save
+/// refresh). Fields absent from whichever was written last simply decode as
+/// null — the same way they already do for [currentUserId]'s own read.
+User? currentUser() {
   final userJson =
       SharedPreferenceService.sharedPrefService.get(SharedPrefKey.userDetails)
           as String?;
-  if (userJson == null) return '';
-  final user = User.fromJson(jsonDecode(userJson) as Map<String, dynamic>);
-  return user.id ?? '';
+  if (userJson == null) return null;
+  return User.fromJson(jsonDecode(userJson) as Map<String, dynamic>);
 }

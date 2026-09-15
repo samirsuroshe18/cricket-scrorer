@@ -1,7 +1,9 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:cricket_scorer/config/routes/app_routes.dart';
+import 'package:cricket_scorer/core/constants/shared_pref_key.dart';
 import 'package:cricket_scorer/core/error/cricket_failure.dart';
 import 'package:cricket_scorer/core/global/widgets/bootom_sheets/custom_bottomsheet.dart';
 import 'package:cricket_scorer/core/global/widgets/bootom_sheets/wigets/choose_photo_option.dart';
@@ -9,6 +11,7 @@ import 'package:cricket_scorer/core/global/widgets/dialogue/custom_dialog.dart';
 import 'package:cricket_scorer/core/global/widgets/snackbars/cricket_snackbar.dart';
 import 'package:cricket_scorer/core/network/models/cricket_response.dart';
 import 'package:cricket_scorer/core/services/compression_service.dart';
+import 'package:cricket_scorer/core/services/shared_preference_service.dart';
 import 'package:cricket_scorer/core/translations/translation_keys.dart';
 import 'package:cricket_scorer/core/utils/either_util.dart';
 import 'package:cricket_scorer/features/auth/data/models/request/update_profile_req.dart';
@@ -30,19 +33,24 @@ class UpdateProfileController extends GetxController {
   final formKey = GlobalKey<FormState>();
   final usernameController = TextEditingController();
   final bioController = TextEditingController();
+  final jerseyNumberController = TextEditingController();
 
   final selectedImage = Rx<File?>(null);
   final existingPhotoUrl = Rx<String?>(null);
 
-  // Both optional, no default — mirrors the backend contract exactly.
+  // All optional, no default — mirrors the backend contract exactly.
   final battingStyle = Rx<String?>(null);
   final bowlingStyle = Rx<String?>(null);
+  final playingRole = Rx<String?>(null);
 
   void toggleBattingStyle(String style) =>
       battingStyle.value = battingStyle.value == style ? null : style;
 
   void toggleBowlingStyle(String style) =>
       bowlingStyle.value = bowlingStyle.value == style ? null : style;
+
+  void togglePlayingRole(String role) =>
+      playingRole.value = playingRole.value == role ? null : role;
 
   // Set once from the route arguments the home screen's Profile entry point
   // passes; the three onboarding call sites (login/splash/onboarding
@@ -71,6 +79,8 @@ class UpdateProfileController extends GetxController {
       bioController.text = user?.bio ?? '';
       battingStyle.value = user?.battingStyle;
       bowlingStyle.value = user?.bowlingStyle;
+      playingRole.value = user?.playingRole;
+      jerseyNumberController.text = user?.jerseyNumber?.toString() ?? '';
       existingPhotoUrl.value = user?.photoUrl;
     }
     isLoadingProfile.value = false;
@@ -137,6 +147,8 @@ class UpdateProfileController extends GetxController {
 
     CricketLoaderDialog.show();
 
+    final jerseyNumberText = jerseyNumberController.text.trim();
+
     Either<CricketResponse<void>, CricketFailure> response =
         await updateProfileUseCase(
           params: UpdateProfileReq(
@@ -144,9 +156,21 @@ class UpdateProfileController extends GetxController {
             bio: bioController.text,
             battingStyle: battingStyle.value,
             bowlingStyle: bowlingStyle.value,
+            playingRole: playingRole.value,
+            jerseyNumber: jerseyNumberText.isEmpty
+                ? null
+                : int.tryParse(jerseyNumberText),
           ),
           file: selectedImage.value,
         );
+
+    if (response.isResult) {
+      // The save call itself returns no user data — refreshing the locally
+      // cached profile here (the same cache `login_controller.dart` first
+      // writes) is what lets the Home app bar's avatar/name reflect this
+      // save immediately, instead of showing whatever login last cached.
+      await _refreshCachedProfile();
+    }
 
     CricketLoaderDialog.hide();
 
@@ -155,6 +179,16 @@ class UpdateProfileController extends GetxController {
       unawaited(Get.offAllNamed(AppRoutes.home));
     } else {
       CricketSnackbar.showErrorMessage(response.fallback.message);
+    }
+  }
+
+  Future<void> _refreshCachedProfile() async {
+    final response = await getUserUseCase();
+    if (response.isResult) {
+      await SharedPreferenceService.sharedPrefService.set(
+        SharedPrefKey.userDetails,
+        jsonEncode(response.result.data?.toJson()),
+      );
     }
   }
 
@@ -170,10 +204,24 @@ class UpdateProfileController extends GetxController {
     return null;
   }
 
+  String? validateJerseyNumber(String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return null;
+    }
+
+    final number = int.tryParse(value.trim());
+    if (number == null || number < 0 || number > 999) {
+      return TranslationKeys.jerseyNumberInvalid.tr;
+    }
+
+    return null;
+  }
+
   @override
   void onClose() {
     usernameController.dispose();
     bioController.dispose();
+    jerseyNumberController.dispose();
     super.onClose();
   }
 }

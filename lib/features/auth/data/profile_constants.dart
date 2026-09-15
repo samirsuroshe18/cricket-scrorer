@@ -29,3 +29,22 @@ class BowlingStyle {
     leftArmSpin,
   ];
 }
+
+/// Mirrors the backend's `PLAYER_ROLES` (`user.model.js`), minus `unknown` —
+/// that value is the schema's unset-default, not something a person picks
+/// for themselves on this form.
+class PlayingRole {
+  const PlayingRole._();
+
+  static const String batsman = 'batsman';
+  static const String bowler = 'bowler';
+  static const String allrounder = 'allrounder';
+  static const String wicketkeeper = 'wicketkeeper';
+
+  static const List<String> all = <String>[
+    batsman,
+    bowler,
+    allrounder,
+    wicketkeeper,
+  ];
+}

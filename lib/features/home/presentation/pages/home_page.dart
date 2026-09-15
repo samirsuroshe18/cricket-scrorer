@@ -10,6 +10,8 @@ import 'package:cricket_scorer/core/global/widgets/bootom_sheets/custom_bottomsh
 import 'package:cricket_scorer/core/global/widgets/cricket_button.dart';
 import 'package:cricket_scorer/core/global/widgets/cricket_text.dart';
 import 'package:cricket_scorer/core/global/widgets/custom_app_bar.dart';
+import 'package:cricket_scorer/core/global/widgets/images/cricket_image.dart';
+import 'package:cricket_scorer/core/global/widgets/images/cricket_image_source.dart';
 import 'package:cricket_scorer/core/services/language_service.dart';
 import 'package:cricket_scorer/core/translations/translation_keys.dart';
 import 'package:cricket_scorer/core/utils/current_user.dart';
@@ -57,7 +59,22 @@ class HomePage extends GetView<HomeController> {
             onPressed: () => Get.toNamed<dynamic>(AppRoutes.organizations),
           ),
           IconButton(
-            icon: const Icon(Icons.person_outline),
+            tooltip: TranslationKeys.myProfile.tr,
+            icon: Obx(() {
+              final photoUrl = controller.currentUserProfile.value?.photoUrl;
+              if (photoUrl == null || photoUrl.isEmpty) {
+                return const Icon(Icons.person_outline);
+              }
+              // A real photo earns a real avatar in the app bar — the whole
+              // point of this being reachable from Home at all is to show
+              // that saving a profile actually did something visible.
+              return CricketImage(
+                source: CricketImageSource.network(photoUrl),
+                height: 28,
+                width: 28,
+                borderRadius: const BorderRadius.all(Radius.circular(28)),
+              );
+            }),
             onPressed: () => Get.toNamed<dynamic>(
               AppRoutes.updateProfile,
               arguments: {'isEditing': true},

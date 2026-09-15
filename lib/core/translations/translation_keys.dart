@@ -116,6 +116,15 @@ class TranslationKeys {
   static const String continueText = 'continue_text';
   static const String myProfile = 'my_profile';
   static const String saveChanges = 'save_changes';
+  static const String playingRole = 'playing_role';
+  static const String enterJerseyNumber = 'enter_jersey_number';
+  static const String jerseyNumberInvalid = 'jersey_number_invalid';
+  static const String optionalLabel = 'optional_label';
+  static const String profilePreview = 'profile_preview';
+  static const String profilePreviewHint = 'profile_preview_hint';
+  static const String optionalDetailsHint = 'optional_details_hint';
+  static const String completeProfileSubtitle = 'complete_profile_subtitle';
+  static const String stepIndicatorLabel = 'step_indicator_label';
 
   /// Player career-stats screen
   static const String playerStats = 'player_stats';
