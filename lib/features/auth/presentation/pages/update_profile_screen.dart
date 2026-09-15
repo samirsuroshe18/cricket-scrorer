@@ -106,30 +106,48 @@ class _StepProgress extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = context.colorScheme;
     return Padding(
       padding: const EdgeInsets.only(left: 20, right: 20, bottom: 14),
       child: Row(
         children: [
-          Expanded(
-            child: ClipRRect(
-              borderRadius: 4.radius,
-              child: LinearProgressIndicator(
-                value: 1,
-                minHeight: 4,
-                backgroundColor: scheme.surfaceContainerHighest,
-                color: scheme.primary,
-              ),
-            ),
-          ),
+          // Onboarding is exactly three screens (register, verify OTP,
+          // this one) and this screen is always the last of them — two
+          // done segments plus one current, never parameterized.
+          const Expanded(child: _StepSegment(done: true)),
+          8.w,
+          const Expanded(child: _StepSegment(done: true)),
+          8.w,
+          const Expanded(child: _StepSegment(done: false)),
           10.w,
           CricketText(
             text: TranslationKeys.stepIndicatorLabel.tr,
             style: context.textTheme.labelSmall?.copyWith(
-              color: scheme.onSurfaceVariant,
+              color: context.colorScheme.onSurfaceVariant,
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// One segment of the onboarding step indicator — solid once that step is
+/// behind you, a soft tint while you're on it. Replaces a single bar drawn
+/// at full value under a "Step 3 of 3" caption, which read as already
+/// finished rather than in progress.
+class _StepSegment extends StatelessWidget {
+  const _StepSegment({required this.done});
+
+  final bool done;
+
+  @override
+  Widget build(BuildContext context) {
+    final primary = context.colorScheme.primary;
+    return Container(
+      height: 4,
+      decoration: BoxDecoration(
+        color: done ? primary : primary.withValues(alpha: 0.25),
+        borderRadius: 4.radius,
       ),
     );
   }
@@ -192,111 +210,133 @@ class _UpdateProfileForm extends StatelessWidget {
                       hintText: TranslationKeys.tellUsAboutYourself.tr,
                       labelText:
                           '${TranslationKeys.bio.tr} (${TranslationKeys.optionalLabel.tr})',
-                      prefixIcon: const Icon(Icons.person_outline),
+                      prefixIcon: const Icon(Icons.description_outlined),
                       maxLines: 4,
                       maxLength: 150,
                       keyboardType: TextInputType.name,
                       textCapitalization: TextCapitalization.sentences,
                     ),
 
-                    20.h,
+                    24.h,
 
-                    /// Playing role
-                    _SectionLabel(
-                      text: TranslationKeys.playingRole.tr,
-                      optional: true,
-                    ),
-                    8.h,
-                    Obx(
-                      () => Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
-                        children: PlayingRole.all.map((String role) {
-                          return ChoiceChip(
-                            avatar: Icon(_playingRoleIcons[role], size: 18),
-                            label: CricketText(
-                              text: _playingRoleLabels[role]!.tr,
-                            ),
-                            selected: controller.playingRole.value == role,
-                            onSelected: (_) => controller.togglePlayingRole(
-                              role,
-                            ),
-                          );
-                        }).toList(),
-                      ),
-                    ),
+                    // Plain text/label content shrink-wraps to its own
+                    // width, so it follows this Column's cross-axis
+                    // alignment rather than the full-width text fields
+                    // above (which fill the row regardless) — scoped to
+                    // just this section rather than changed on the outer
+                    // Column, which would also pull the centered avatar
+                    // and subtitle over to the left.
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        /// Playing role / batting style / bowling style —
+                        /// one section instead of three separately-labeled
+                        /// ones, each repeating "(Optional)"; the section
+                        /// subtitle says that once for all three.
+                        CricketText(
+                          text: TranslationKeys.aboutYourGame.tr,
+                          style: context.textTheme.titleSmall,
+                        ),
+                        CricketText(
+                          text: TranslationKeys.aboutYourGameHint.tr,
+                          style: context.textTheme.bodySmall?.copyWith(
+                            color: context.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
 
-                    20.h,
+                        16.h,
 
-                    /// Batting style
-                    _SectionLabel(
-                      text: TranslationKeys.battingStyle.tr,
-                      optional: true,
-                    ),
-                    8.h,
-                    Obx(
-                      () => Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
-                        children: BattingStyle.all.map((String style) {
-                          return ChoiceChip(
-                            avatar: _StyleIcon(
-                              icon: _battingStyleIcons[style]!,
-                              mirrored: _mirroredBattingStyles.contains(style),
-                            ),
-                            label: CricketText(
-                              text: _battingStyleLabels[style]!.tr,
-                            ),
-                            selected: controller.battingStyle.value == style,
-                            onSelected: (_) => controller.toggleBattingStyle(
-                              style,
-                            ),
-                          );
-                        }).toList(),
-                      ),
-                    ),
+                        /// Playing role
+                        _SectionLabel(text: TranslationKeys.playingRole.tr),
+                        8.h,
+                        Obx(
+                          () => Wrap(
+                            spacing: 8,
+                            runSpacing: 8,
+                            children: PlayingRole.all.map((String role) {
+                              return ChoiceChip(
+                                avatar: Icon(
+                                  _playingRoleIcons[role],
+                                  size: 18,
+                                ),
+                                label: CricketText(
+                                  text: _playingRoleLabels[role]!.tr,
+                                ),
+                                selected: controller.playingRole.value == role,
+                                onSelected: (_) =>
+                                    controller.togglePlayingRole(role),
+                              );
+                            }).toList(),
+                          ),
+                        ),
 
-                    20.h,
+                        16.h,
 
-                    /// Bowling style
-                    _SectionLabel(
-                      text: TranslationKeys.bowlingStyle.tr,
-                      optional: true,
-                    ),
-                    8.h,
-                    Obx(
-                      () => Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
-                        children: BowlingStyle.all.map((String style) {
-                          return ChoiceChip(
-                            avatar: _StyleIcon(
-                              icon: _bowlingStyleIcons[style]!,
-                              mirrored: _mirroredBowlingStyles.contains(style),
-                            ),
-                            label: CricketText(
-                              text: _bowlingStyleLabels[style]!.tr,
-                            ),
-                            selected: controller.bowlingStyle.value == style,
-                            onSelected: (_) => controller.toggleBowlingStyle(
-                              style,
-                            ),
-                          );
-                        }).toList(),
-                      ),
-                    ),
+                        /// Batting style
+                        _SectionLabel(text: TranslationKeys.battingStyle.tr),
+                        8.h,
+                        Obx(
+                          () => Wrap(
+                            spacing: 8,
+                            runSpacing: 8,
+                            children: BattingStyle.all.map((String style) {
+                              return ChoiceChip(
+                                avatar: _StyleIcon(
+                                  icon: _battingStyleIcons[style]!,
+                                  mirrored: _mirroredBattingStyles.contains(
+                                    style,
+                                  ),
+                                ),
+                                label: CricketText(
+                                  text: _battingStyleLabels[style]!.tr,
+                                ),
+                                selected:
+                                    controller.battingStyle.value == style,
+                                onSelected: (_) =>
+                                    controller.toggleBattingStyle(style),
+                              );
+                            }).toList(),
+                          ),
+                        ),
 
-                    20.h,
+                        16.h,
 
-                    /// Jersey number
-                    CricketTextField(
-                      controller: controller.jerseyNumberController,
-                      hintText: TranslationKeys.enterJerseyNumber.tr,
-                      labelText:
-                          '${TranslationKeys.jerseyNumber.tr} (${TranslationKeys.optionalLabel.tr})',
-                      prefixIcon: const Icon(Icons.numbers),
-                      keyboardType: TextInputType.number,
-                      validator: controller.validateJerseyNumber,
+                        /// Bowling style
+                        _SectionLabel(text: TranslationKeys.bowlingStyle.tr),
+                        8.h,
+                        Obx(
+                          () => Wrap(
+                            spacing: 8,
+                            runSpacing: 8,
+                            children: BowlingStyle.all.map((String style) {
+                              return ChoiceChip(
+                                avatar: _StyleIcon(
+                                  icon: _bowlingStyleIcons[style]!,
+                                  mirrored: _mirroredBowlingStyles.contains(
+                                    style,
+                                  ),
+                                ),
+                                label: CricketText(
+                                  text: _bowlingStyleLabels[style]!.tr,
+                                ),
+                                selected:
+                                    controller.bowlingStyle.value == style,
+                                onSelected: (_) =>
+                                    controller.toggleBowlingStyle(style),
+                              );
+                            }).toList(),
+                          ),
+                        ),
+
+                        20.h,
+
+                        /// Jersey number — a compact stepper rather than a
+                        /// full-width text field: this value reads as a
+                        /// small count (0-999), not a line of text, so it
+                        /// gets a control sized and shaped like one, with
+                        /// direct typing still available in the middle.
+                        _JerseySection(controller: controller),
+                      ],
                     ),
                   ],
                 ),
@@ -409,6 +449,9 @@ class _ProfilePreviewCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = context.colorScheme;
+    final motionDuration = MediaQuery.disableAnimationsOf(context)
+        ? Duration.zero
+        : Durations.medium2;
     return AnimatedBuilder(
       animation: Listenable.merge([
         controller.usernameController,
@@ -445,99 +488,172 @@ class _ProfilePreviewCard extends StatelessWidget {
                 icon: _bowlingStyleIcons[style],
                 text: _bowlingStyleLabels[style]!.tr,
               ),
-            if (jerseyNumber.isNotEmpty)
-              _PreviewTag(icon: Icons.numbers, text: '#$jerseyNumber'),
           ];
 
-          return Container(
-            padding: 16.p,
-            decoration: BoxDecoration(
-              color: scheme.surfaceContainerHighest,
-              borderRadius: 16.radius,
-              border: Border.all(color: scheme.outlineVariant),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
+          return Stack(
+            clipBehavior: Clip.none,
+            children: [
+              Container(
+                padding: 16.p,
+                decoration: BoxDecoration(
+                  color: scheme.surfaceContainerHighest,
+                  borderRadius: 16.radius,
+                  border: Border.all(color: scheme.outlineVariant),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Icon(
-                      Icons.visibility_outlined,
-                      size: 16,
-                      color: scheme.onSurfaceVariant,
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.visibility_outlined,
+                          size: 16,
+                          color: scheme.onSurfaceVariant,
+                        ),
+                        6.w,
+                        CricketText(
+                          text: TranslationKeys.profilePreview.tr,
+                          style: context.textTheme.labelMedium?.copyWith(
+                            fontWeight: FontWeight.w700,
+                            color: scheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
                     ),
-                    6.w,
+                    4.h,
                     CricketText(
-                      text: TranslationKeys.profilePreview.tr,
-                      style: context.textTheme.labelMedium?.copyWith(
-                        fontWeight: FontWeight.w700,
+                      text: TranslationKeys.profilePreviewHint.tr,
+                      style: context.textTheme.bodySmall?.copyWith(
                         color: scheme.onSurfaceVariant,
                       ),
                     ),
-                  ],
-                ),
-                4.h,
-                CricketText(
-                  text: TranslationKeys.profilePreviewHint.tr,
-                  style: context.textTheme.bodySmall?.copyWith(
-                    color: scheme.onSurfaceVariant,
-                  ),
-                ),
-                12.h,
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Purely a visual echo of the avatar already labeled
-                    // and controlled above — excluded so a screen reader
-                    // doesn't announce a second, unlabeled image node.
-                    ExcludeSemantics(
-                      child: CricketImage(
-                        source: avatarSource,
-                        height: 44,
-                        width: 44,
-                        borderRadius: const BorderRadius.all(
-                          Radius.circular(44),
-                        ),
-                      ),
-                    ),
-                    12.w,
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          CricketText(
-                            text: username.isEmpty
-                                ? TranslationKeys.username.tr
-                                : username,
-                            maxLines: 1,
-                            textOverflow: TextOverflow.ellipsis,
-                            style: context.textTheme.titleSmall?.copyWith(
-                              fontWeight: FontWeight.w700,
+                    12.h,
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Purely a visual echo of the avatar already
+                        // labeled and controlled above — excluded so a
+                        // screen reader doesn't announce a second,
+                        // unlabeled image node.
+                        ExcludeSemantics(
+                          child: CricketImage(
+                            source: avatarSource,
+                            height: 44,
+                            width: 44,
+                            borderRadius: const BorderRadius.all(
+                              Radius.circular(44),
                             ),
                           ),
-                          if (bio.isNotEmpty) ...[
-                            2.h,
-                            CricketText(
-                              text: bio,
-                              maxLines: 2,
-                              textOverflow: TextOverflow.ellipsis,
-                              style: context.textTheme.bodySmall,
-                            ),
-                          ],
-                        ],
-                      ),
+                        ),
+                        12.w,
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              CricketText(
+                                text: username.isEmpty
+                                    ? TranslationKeys.username.tr
+                                    : username,
+                                maxLines: 1,
+                                textOverflow: TextOverflow.ellipsis,
+                                style: context.textTheme.titleSmall?.copyWith(
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                              if (bio.isNotEmpty) ...[
+                                2.h,
+                                CricketText(
+                                  text: bio,
+                                  maxLines: 2,
+                                  textOverflow: TextOverflow.ellipsis,
+                                  style: context.textTheme.bodySmall,
+                                ),
+                              ],
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
+                    if (tags.isNotEmpty) ...[
+                      10.h,
+                      Wrap(spacing: 8, runSpacing: 8, children: tags),
+                    ],
                   ],
                 ),
-                if (tags.isNotEmpty) ...[
-                  10.h,
-                  Wrap(spacing: 8, runSpacing: 8, children: tags),
-                ],
-              ],
-            ),
+              ),
+              // The squad number reads as a real jersey badge — pinned to
+              // the card's corner like a printed patch — rather than
+              // getting lost as one more pill in the tag row below it. Kept
+              // in the tree (not `if`-conditional) so it can pop in/out as
+              // the field is typed instead of appearing with no transition.
+              // Excluded from semantics for the same reason as the avatar
+              // thumbnail above: it's a decorative echo of the actual
+              // jersey-number field, and a screen reader announcing a bare
+              // "7" with no label would be more confusing than saying
+              // nothing — the labeled value already reads fine from the
+              // field itself.
+              Positioned(
+                top: -12,
+                right: 14,
+                child: ExcludeSemantics(
+                  child: AnimatedScale(
+                    scale: jerseyNumber.isEmpty ? 0.6 : 1,
+                    duration: motionDuration,
+                    curve: Easing.emphasizedDecelerate,
+                    child: AnimatedOpacity(
+                      opacity: jerseyNumber.isEmpty ? 0 : 1,
+                      duration: motionDuration,
+                      curve: Easing.standard,
+                      child: _JerseyBadge(number: jerseyNumber),
+                    ),
+                  ),
+                ),
+              ),
+            ],
           );
         });
       },
+    );
+  }
+}
+
+/// The squad-number patch pinned to the preview card's corner — reuses the
+/// existing `valueIndicator` navy token (already the slider's value-bubble
+/// color) rather than introducing a new one, with the same white-on-navy
+/// pairing `CustomSelectionTheme`'s `valueIndicatorTextStyle` already uses.
+class _JerseyBadge extends StatelessWidget {
+  const _JerseyBadge({required this.number});
+
+  final String number;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
+      padding: 8.p,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: context.colors.valueIndicator,
+        borderRadius: 12.radius,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.25),
+            blurRadius: 8,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      // A minimum rather than a fixed size — a 3-digit number, or a large
+      // iOS/Android text-scale setting, grows the badge instead of clipping
+      // against a hard 44x44 box.
+      child: CricketText(
+        text: number,
+        maxLines: 1,
+        style: context.textTheme.titleMedium?.copyWith(
+          color: Colors.white,
+          fontWeight: FontWeight.w800,
+        ),
+      ),
     );
   }
 }
@@ -633,27 +749,108 @@ class _BottomActionBar extends StatelessWidget {
   }
 }
 
+/// A field-group label within "About your game" — no per-label
+/// "(Optional)" any more, since that section's own subtitle already says
+/// all of it is optional once, rather than three times.
 class _SectionLabel extends StatelessWidget {
-  const _SectionLabel({required this.text, this.optional = false});
+  const _SectionLabel({required this.text});
 
   final String text;
-  final bool optional;
 
   @override
   Widget build(BuildContext context) {
-    return Row(
+    return CricketText(text: text, style: context.textTheme.titleSmall);
+  }
+}
+
+/// Jersey number as a compact increment/decrement control rather than a
+/// full-width text field — the value is a small count (0-999), not a line
+/// of text, so it gets a control sized and shaped like one. The digits
+/// stay directly editable in the middle for a custom number.
+class _JerseySection extends StatelessWidget {
+  const _JerseySection({required this.controller});
+
+  final UpdateProfileController controller;
+
+  void _step(int delta) {
+    final current =
+        int.tryParse(controller.jerseyNumberController.text.trim()) ?? 0;
+    final next = (current + delta).clamp(0, 999);
+    controller.jerseyNumberController.text = '$next';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final label =
+        '${TranslationKeys.jerseyNumber.tr} (${TranslationKeys.optionalLabel.tr})';
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        CricketText(text: text, style: context.textTheme.titleSmall),
-        if (optional) ...[
-          6.w,
-          CricketText(
-            text: '(${TranslationKeys.optionalLabel.tr})',
-            style: context.textTheme.bodySmall?.copyWith(
-              color: context.colorScheme.onSurfaceVariant,
+        CricketText(text: label, style: context.textTheme.bodyMedium),
+        8.h,
+        // The visible label above is a plain CricketText rather than
+        // InputDecoration's floating label — that label needs the field's
+        // full (much wider) width to sit comfortably; this field is
+        // deliberately narrow. `Semantics` restores the same accessible
+        // name InputDecoration.label would otherwise have provided.
+        Semantics(
+          label: label,
+          child: SizedBox(
+            width: 190,
+            child: TextFormField(
+              controller: controller.jerseyNumberController,
+              validator: controller.validateJerseyNumber,
+              keyboardType: TextInputType.number,
+              textAlign: TextAlign.center,
+              style: context.textTheme.titleMedium,
+              decoration: InputDecoration(
+                isDense: true,
+                hintText: '0',
+                prefixIcon: _StepperButton(
+                  icon: Icons.remove,
+                  tooltip: TranslationKeys.decreaseJerseyNumber.tr,
+                  onPressed: () => _step(-1),
+                ),
+                suffixIcon: _StepperButton(
+                  icon: Icons.add,
+                  tooltip: TranslationKeys.increaseJerseyNumber.tr,
+                  onPressed: () => _step(1),
+                ),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                contentPadding: const EdgeInsets.symmetric(vertical: 14),
+              ),
             ),
           ),
-        ],
+        ),
       ],
+    );
+  }
+}
+
+class _StepperButton extends StatelessWidget {
+  const _StepperButton({
+    required this.icon,
+    required this.tooltip,
+    required this.onPressed,
+  });
+
+  final IconData icon;
+  final String tooltip;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return IconButton(
+      onPressed: onPressed,
+      icon: Icon(icon, size: 18),
+      tooltip: tooltip,
+      padding: EdgeInsets.zero,
+      constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+      visualDensity: VisualDensity.compact,
+      color: context.colorScheme.onSurfaceVariant,
     );
   }
 }
@@ -663,8 +860,8 @@ class _SectionLabel extends StatelessWidget {
 // `UpdateProfileController` via `Get.find()`, which needs a live GetX
 // binding the isolated Widget Previewer can't satisfy — same constraint
 // `login_screen.dart` documents for `AuthScoreboardHeader`. `_StepProgress`,
-// `_SectionLabel`, `_StyleIcon` and `_PreviewTag` take no controller, so
-// those are what's previewable here.
+// `_SectionLabel`, `_StyleIcon`, `_PreviewTag` and `_JerseyBadge` take no
+// controller, so those are what's previewable here.
 
 @_MultiPreviewBrightness(name: 'Step progress')
 Widget stepProgressPreview() => const _StepProgress();
@@ -672,7 +869,7 @@ Widget stepProgressPreview() => const _StepProgress();
 @_MultiPreviewBrightness(name: 'Section label')
 Widget sectionLabelPreview() => Padding(
   padding: const EdgeInsets.all(16),
-  child: _SectionLabel(text: TranslationKeys.battingStyle.tr, optional: true),
+  child: _SectionLabel(text: TranslationKeys.battingStyle.tr),
 );
 
 @_MultiPreviewBrightness(name: 'Style icons')
@@ -702,6 +899,21 @@ Widget previewTagsPreview() => const Padding(
       _PreviewTag(icon: Icons.sports_cricket, text: 'Batsman'),
       _PreviewTag(icon: Icons.back_hand_outlined, text: 'Right handed'),
       _PreviewTag(icon: Icons.numbers, text: '#7'),
+    ],
+  ),
+);
+
+@_MultiPreviewBrightness(name: 'Jersey badge')
+Widget jerseyBadgePreview() => const Padding(
+  padding: EdgeInsets.all(16),
+  child: Row(
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      _JerseyBadge(number: '7'),
+      SizedBox(width: 12),
+      // A 3-digit number is the widest real value `validateJerseyNumber`
+      // allows (0-999) — exercises the min-size-not-fixed-size box.
+      _JerseyBadge(number: '999'),
     ],
   ),
 );

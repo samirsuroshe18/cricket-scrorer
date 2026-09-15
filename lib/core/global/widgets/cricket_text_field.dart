@@ -45,7 +45,20 @@ class CricketTextField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return TextFormField(
+    // A multi-line field is tall enough that Material's default centering
+    // of the label/hint and prefixIcon reads as misplaced — both sit in
+    // the middle of the box instead of beside the first line.
+    // `alignLabelWithHint` fixes the label/hint. The icon has no public
+    // equivalent — InputDecorator always centers `prefixIcon` across the
+    // *whole* field height, multi-line or not (a long-standing Flutter
+    // limitation, not a config flag) — so a multi-line field with an icon
+    // draws the icon manually, top-left, over a `contentPadding` that
+    // leaves room for it, instead of handing it to `prefixIcon`.
+    final isMultiline = maxLines > 1;
+    final hasIcon = prefixIcon != null;
+    final manualIcon = isMultiline && hasIcon;
+
+    final field = TextFormField(
       controller: controller,
       obscureText: obscureText,
       keyboardType: keyboardType,
@@ -73,16 +86,42 @@ class CricketTextField extends StatelessWidget {
                 : [],
           ),
         ),
-        prefixIcon: prefixIcon,
+        alignLabelWithHint: isMultiline,
+        prefixIcon: manualIcon ? null : prefixIcon,
         suffixIcon: suffixIcon,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
         ),
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 16,
-          vertical: 14,
-        ),
+        contentPadding: manualIcon
+            ? const EdgeInsets.only(
+                left: 44,
+                right: 16,
+                top: 14,
+                bottom: 14,
+              )
+            : const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 14,
+              ),
       ),
+    );
+
+    if (!manualIcon) return field;
+
+    return Stack(
+      children: [
+        field,
+        Positioned(
+          top: 14,
+          left: 16,
+          child: IgnorePointer(
+            child: IconTheme.merge(
+              data: IconThemeData(color: context.colorScheme.onSurfaceVariant),
+              child: prefixIcon!,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
