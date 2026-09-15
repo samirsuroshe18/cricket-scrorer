@@ -7,7 +7,9 @@ import 'package:cricket_scorer/core/global/widgets/snackbars/cricket_snackbar.da
 import 'package:cricket_scorer/core/network/api_client_service.dart';
 import 'package:cricket_scorer/core/services/secure_storages_service.dart';
 import 'package:cricket_scorer/core/services/shared_preference_service.dart';
+import 'package:cricket_scorer/core/utils/current_user.dart';
 import 'package:cricket_scorer/features/auth/data/models/request/logout_req.dart';
+import 'package:cricket_scorer/features/auth/data/models/user.dart';
 import 'package:cricket_scorer/features/auth/domain/usecases/logout.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/create_match_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/match_history_res.dart';
@@ -57,10 +59,26 @@ class HomeController extends GetxController {
   /// showing.
   bool _isLoadingHistory = false;
 
+  /// The signed-in user's own cached photo/username — nothing filled in on
+  /// the Complete/My Profile screen was ever shown back to the user before
+  /// this, anywhere in the app. Read synchronously from the same cache
+  /// `login_controller.dart` writes (and `update_profile_controller.dart`
+  /// now refreshes on save), not fetched here, so opening Home never waits
+  /// on a network call just to draw the app bar.
+  final currentUserProfile = Rx<User?>(null);
+
   @override
   void onInit() {
     super.onInit();
+    refreshCurrentUserProfile();
     unawaited(loadHistory());
+  }
+
+  /// Re-reads the cached profile — called once on init and again after
+  /// returning from the profile screen, so an edit is reflected without
+  /// needing its own network round trip here.
+  void refreshCurrentUserProfile() {
+    currentUserProfile.value = currentUser();
   }
 
   /// First page, replacing whatever list is already showing — the pull-to-

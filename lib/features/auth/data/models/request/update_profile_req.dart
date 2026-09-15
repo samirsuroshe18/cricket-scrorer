@@ -14,12 +14,18 @@ class UpdateProfileReq {
   final String? battingStyle;
   @JsonKey(includeIfNull: false)
   final String? bowlingStyle;
+  @JsonKey(includeIfNull: false)
+  final String? playingRole;
+  @JsonKey(includeIfNull: false)
+  final int? jerseyNumber;
 
   UpdateProfileReq({
     required this.userName,
     this.bio,
     this.battingStyle,
     this.bowlingStyle,
+    this.playingRole,
+    this.jerseyNumber,
   });
 
   factory UpdateProfileReq.fromJson(Map<String, dynamic> json) =>

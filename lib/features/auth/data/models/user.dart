@@ -33,6 +33,10 @@ class User {
   final String? battingStyle;
   @JsonKey(name: 'bowlingStyle')
   final String? bowlingStyle;
+  @JsonKey(name: 'playingRole')
+  final String? playingRole;
+  @JsonKey(name: 'jerseyNumber')
+  final int? jerseyNumber;
   @JsonKey(name: 'profileCompleted')
   final bool? profileCompleted;
   @JsonKey(name: 'accountStatus')
@@ -57,6 +61,8 @@ class User {
     this.bio,
     this.battingStyle,
     this.bowlingStyle,
+    this.playingRole,
+    this.jerseyNumber,
     this.profileCompleted,
     this.accountStatus,
     this.language,
@@ -76,6 +82,8 @@ class User {
     String? bio,
     String? battingStyle,
     String? bowlingStyle,
+    String? playingRole,
+    int? jerseyNumber,
     bool? profileCompleted,
     String? accountStatus,
     String? language,
@@ -93,6 +101,8 @@ class User {
     bio: bio ?? this.bio,
     battingStyle: battingStyle ?? this.battingStyle,
     bowlingStyle: bowlingStyle ?? this.bowlingStyle,
+    playingRole: playingRole ?? this.playingRole,
+    jerseyNumber: jerseyNumber ?? this.jerseyNumber,
     profileCompleted: profileCompleted ?? this.profileCompleted,
     accountStatus: accountStatus ?? this.accountStatus,
     language: language ?? this.language,

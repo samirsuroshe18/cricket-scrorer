@@ -123,6 +123,17 @@ Map<String, String> mr = {
   TranslationKeys.continueText: 'सुरू ठेवा',
   TranslationKeys.myProfile: 'माझी प्रोफाइल',
   TranslationKeys.saveChanges: 'बदल जतन करा',
+  TranslationKeys.playingRole: 'खेळण्याची भूमिका',
+  TranslationKeys.enterJerseyNumber: 'जर्सी क्रमांक प्रविष्ट करा',
+  TranslationKeys.jerseyNumberInvalid: 'जर्सी क्रमांक ० ते ९९९ दरम्यान असावा',
+  TranslationKeys.optionalLabel: 'पर्यायी',
+  TranslationKeys.profilePreview: 'पूर्वावलोकन',
+  TranslationKeys.profilePreviewHint: 'तुमची प्रोफाइल अशी दिसेल',
+  TranslationKeys.optionalDetailsHint:
+      'फोटो, बायो आणि खेळण्याची शैली पर्यायी आहेत — त्या नंतरही माझी प्रोफाइलमधून जोडता येतात.',
+  TranslationKeys.completeProfileSubtitle:
+      'स्कोअरिंग सुरू करण्यापूर्वी फक्त एक पायरी बाकी',
+  TranslationKeys.stepIndicatorLabel: 'पायरी ३ पैकी ३',
   TranslationKeys.playerStats: 'खेळाडूची आकडेवारी',
   TranslationKeys.matchesPlayed: 'खेळलेले सामने',
   TranslationKeys.innings: 'डाव',

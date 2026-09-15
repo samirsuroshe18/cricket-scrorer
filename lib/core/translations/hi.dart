@@ -123,6 +123,17 @@ Map<String, String> hi = {
   TranslationKeys.continueText: 'जारी रखें',
   TranslationKeys.myProfile: 'मेरी प्रोफ़ाइल',
   TranslationKeys.saveChanges: 'बदलाव सहेजें',
+  TranslationKeys.playingRole: 'खेलने की भूमिका',
+  TranslationKeys.enterJerseyNumber: 'जर्सी नंबर दर्ज करें',
+  TranslationKeys.jerseyNumberInvalid: 'जर्सी नंबर 0 से 999 के बीच होना चाहिए',
+  TranslationKeys.optionalLabel: 'वैकल्पिक',
+  TranslationKeys.profilePreview: 'पूर्वावलोकन',
+  TranslationKeys.profilePreviewHint: 'आपकी प्रोफ़ाइल ऐसी दिखेगी',
+  TranslationKeys.optionalDetailsHint:
+      'फ़ोटो, बायो और खेलने की शैली वैकल्पिक हैं — इन्हें बाद में मेरी प्रोफ़ाइल से भी जोड़ा जा सकता है।',
+  TranslationKeys.completeProfileSubtitle:
+      'स्कोरिंग शुरू करने से पहले बस एक और कदम',
+  TranslationKeys.stepIndicatorLabel: 'चरण 3 में से 3',
   TranslationKeys.playerStats: 'खिलाड़ी आँकड़े',
   TranslationKeys.matchesPlayed: 'खेले गए मैच',
   TranslationKeys.innings: 'पारी',
