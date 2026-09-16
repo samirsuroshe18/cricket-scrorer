@@ -15,52 +15,56 @@ import 'package:cricket_scorer/features/organization/presentation/controllers/or
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-/// Every organization the caller owns or belongs to — reached from Home's
-/// app bar. Mirrors `MatchHistoryCard`'s card treatment and
-/// `TeamProfileScreen`'s monogram-avatar pattern so this reads as the same
-/// app, not a bolted-on generic list.
+/// The create-organization sheet — top-level (not a method on
+/// [OrganizationsListScreen]) so `TeamsTab`'s Organizations section can
+/// trigger the exact same flow off its own FAB instead of duplicating it.
+Future<void> showCreateOrganizationSheet(
+  OrganizationsListController controller,
+) async {
+  final nameController = TextEditingController();
+  final created = await CustomBottomSheet.wrapBottomSheet<bool>(
+    headlineText: TranslationKeys.createOrganization.tr,
+    child: Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        CricketTextField(
+          controller: nameController,
+          hintText: TranslationKeys.organizationName.tr,
+          labelText: TranslationKeys.organizationName.tr,
+          prefixIcon: const Icon(Icons.groups_outlined),
+          isRequired: true,
+        ),
+        20.h,
+        CricketButton(
+          buttonText: TranslationKeys.create.tr,
+          onPressed: () async {
+            final name = nameController.text.trim();
+            if (name.isEmpty) return;
+            final success = await controller.createOrganization(name);
+            if (success) {
+              Get.back<bool>(result: true);
+            } else {
+              CricketSnackbar.showErrorMessage(
+                TranslationKeys.somethingWentWrong.tr,
+              );
+            }
+          },
+        ),
+      ],
+    ),
+  );
+  if (created == true) {
+    CricketSnackbar.showSuccessMessage(TranslationKeys.organizationCreated.tr);
+  }
+}
+
+/// Every organization the caller owns or belongs to — reached from the
+/// Teams tab's Organizations section "See all". Mirrors
+/// `MatchHistoryCard`'s card treatment and `TeamProfileScreen`'s
+/// monogram-avatar pattern so this reads as the same app, not a bolted-on
+/// generic list.
 class OrganizationsListScreen extends GetView<OrganizationsListController> {
   const OrganizationsListScreen({super.key});
-
-  Future<void> _showCreateSheet(BuildContext context) async {
-    final nameController = TextEditingController();
-    final created = await CustomBottomSheet.wrapBottomSheet<bool>(
-      headlineText: TranslationKeys.createOrganization.tr,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          CricketTextField(
-            controller: nameController,
-            hintText: TranslationKeys.organizationName.tr,
-            labelText: TranslationKeys.organizationName.tr,
-            prefixIcon: const Icon(Icons.groups_outlined),
-            isRequired: true,
-          ),
-          20.h,
-          CricketButton(
-            buttonText: TranslationKeys.create.tr,
-            onPressed: () async {
-              final name = nameController.text.trim();
-              if (name.isEmpty) return;
-              final success = await controller.createOrganization(name);
-              if (success) {
-                Get.back<bool>(result: true);
-              } else {
-                CricketSnackbar.showErrorMessage(
-                  TranslationKeys.somethingWentWrong.tr,
-                );
-              }
-            },
-          ),
-        ],
-      ),
-    );
-    if (created == true) {
-      CricketSnackbar.showSuccessMessage(
-        TranslationKeys.organizationCreated.tr,
-      );
-    }
-  }
 
   /// Same confirm copy `OrganizationDetailScreen._confirmRemoveMember` uses
   /// for `isSelf` — this is that same action, reachable without opening the
@@ -88,7 +92,7 @@ class OrganizationsListScreen extends GetView<OrganizationsListController> {
     return Scaffold(
       appBar: CustomAppBar(title: TranslationKeys.organizations.tr),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _showCreateSheet(context),
+        onPressed: () => showCreateOrganizationSheet(controller),
         icon: const Icon(Icons.add),
         label: CricketText(text: TranslationKeys.create.tr),
       ),
@@ -100,7 +104,7 @@ class OrganizationsListScreen extends GetView<OrganizationsListController> {
 
           final error = controller.loadError.value;
           if (error != null && controller.organizations.isEmpty) {
-            return _MessageState(
+            return OrganizationMessageState(
               icon: Icons.error_outline,
               message: error,
               action: CricketButton(
@@ -112,12 +116,12 @@ class OrganizationsListScreen extends GetView<OrganizationsListController> {
           }
 
           if (controller.organizations.isEmpty) {
-            return _MessageState(
+            return OrganizationMessageState(
               icon: Icons.groups_outlined,
               message: TranslationKeys.noOrganizationsYet.tr,
               action: CricketButton(
                 buttonText: TranslationKeys.createOrganization.tr,
-                onPressed: () => _showCreateSheet(context),
+                onPressed: () => showCreateOrganizationSheet(controller),
                 width: 220,
               ),
             );
@@ -131,7 +135,7 @@ class OrganizationsListScreen extends GetView<OrganizationsListController> {
               separatorBuilder: (_, _) => 12.h,
               itemBuilder: (context, index) {
                 final org = controller.organizations[index];
-                return _OrganizationCard(
+                return OrganizationCard(
                   org: org,
                   onLeave: org.myRole == 'owner'
                       ? null
@@ -146,8 +150,16 @@ class OrganizationsListScreen extends GetView<OrganizationsListController> {
   }
 }
 
-class _MessageState extends StatelessWidget {
-  const _MessageState({required this.icon, required this.message, this.action});
+/// Public so the Teams tab's Organizations section (`TeamsTab`) can render
+/// the same empty/error message treatment as this standalone screen without
+/// a second copy of it.
+class OrganizationMessageState extends StatelessWidget {
+  const OrganizationMessageState({
+    required this.icon,
+    required this.message,
+    this.action,
+    super.key,
+  });
 
   final IconData icon;
   final String message;
@@ -176,8 +188,10 @@ class _MessageState extends StatelessWidget {
   }
 }
 
-class _OrganizationCard extends StatelessWidget {
-  const _OrganizationCard({required this.org, this.onLeave});
+/// Public so `TeamsTab`'s Organizations section can reuse the exact same
+/// card instead of duplicating it.
+class OrganizationCard extends StatelessWidget {
+  const OrganizationCard({required this.org, this.onLeave, super.key});
 
   final OrganizationSummaryRes org;
 
@@ -266,7 +280,8 @@ class _OrganizationCard extends StatelessWidget {
                         ),
                         4.w,
                         CricketText(
-                          text: '${org.memberCount} ${TranslationKeys.members.tr}',
+                          text:
+                              '${org.memberCount} ${TranslationKeys.members.tr}',
                           style: context.textTheme.bodySmall?.copyWith(
                             color: context.colorScheme.onSurfaceVariant,
                           ),

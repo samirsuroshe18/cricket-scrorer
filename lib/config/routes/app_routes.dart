@@ -8,6 +8,7 @@ class AppRoutes {
   static const String setPassword = '/set-password';
   static const String onBoarding = '/on-boarding';
   static const String updateProfile = '/update-profile';
+  static const String settings = '/settings';
   static const String imagePreview = '/image_preview';
   static const String createMatch = '/create-match';
   static const String scoreBall = '/score-ball';
@@ -57,8 +58,7 @@ class AppRoutes {
   /// [organizationDetailPath].
   static const String organizationDetail = '/organization/:orgId';
 
-  static String organizationDetailPath(String orgId) =>
-      '/organization/$orgId';
+  static String organizationDetailPath(String orgId) => '/organization/$orgId';
 
   /// Registered with a GetX path parameter, same shape as
   /// [organizationDetail]. Never navigate with this constant directly —
@@ -107,8 +107,7 @@ class AppRoutes {
   /// use [tournamentPoolPath]. No binding of its own, same reasoning as
   /// standings/leaderboards: reuses the tag-registered
   /// `TournamentDetailController`.
-  static const String tournamentPool =
-      '/tournament/:tournamentId/pool';
+  static const String tournamentPool = '/tournament/:tournamentId/pool';
 
   static String tournamentPoolPath(String tournamentId) =>
       '/tournament/$tournamentId/pool';

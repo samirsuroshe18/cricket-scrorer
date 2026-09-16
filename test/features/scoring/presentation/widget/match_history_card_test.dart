@@ -10,69 +10,78 @@ import 'package:get/get.dart';
 MatchHistoryItem _item({
   MatchUserRef? createdBy,
   MatchUserRef? assignedScorer,
+  String status = 'completed',
+  CurrentInningsSummary? currentInnings,
 }) => MatchHistoryItem(
   matchId: 'match-1',
   teamA: TeamRef(id: 'team-a', name: 'Mumbai Indians'),
   teamB: TeamRef(id: 'team-b', name: 'Chennai Super Kings'),
   totalOvers: 20,
-  status: 'completed',
+  status: status,
   createdBy: createdBy,
   assignedScorer: assignedScorer,
   createdAt: '2026-08-20T10:15:00.000Z',
+  currentInnings: currentInnings,
 );
 
 void main() {
-  testWidgets('tapping teamA\'s name opens that team\'s profile, not the card\'s own onTap', (
-    tester,
-  ) async {
-    var cardTapped = false;
+  testWidgets(
+    'tapping teamA\'s name opens that team\'s profile, not the card\'s own onTap',
+    (
+      tester,
+    ) async {
+      var cardTapped = false;
 
-    await tester.pumpWidget(
-      GetMaterialApp(
-        theme: AppTheme.lightTheme,
-        initialRoute: '/home',
-        getPages: [
-          GetPage(
-            name: '/home',
-            page: () => MatchHistoryCard(
-              item: _item(),
-              currentUserId: 'viewer-1',
-              onTap: () => cardTapped = true,
+      await tester.pumpWidget(
+        GetMaterialApp(
+          theme: AppTheme.lightTheme,
+          initialRoute: '/home',
+          getPages: [
+            GetPage(
+              name: '/home',
+              page: () => MatchHistoryCard(
+                item: _item(),
+                currentUserId: 'viewer-1',
+                onTap: () => cardTapped = true,
+              ),
             ),
-          ),
-          GetPage(
-            name: AppRoutes.teamProfile,
-            page: () => const Scaffold(body: Text('team profile')),
-          ),
-        ],
-      ),
-    );
-
-    await tester.tap(find.text('Mumbai Indians'));
-    await tester.pumpAndSettle();
-
-    expect(find.text('team profile'), findsOneWidget);
-    expect(cardTapped, isFalse);
-  });
-
-  testWidgets('with highlightTeamId set to teamA, the title shows only the opponent', (
-    tester,
-  ) async {
-    await tester.pumpWidget(
-      GetMaterialApp(
-        theme: AppTheme.lightTheme,
-        home: MatchHistoryCard(
-          item: _item(),
-          currentUserId: 'viewer-1',
-          onTap: () {},
-          highlightTeamId: 'team-a',
+            GetPage(
+              name: AppRoutes.teamProfile,
+              page: () => const Scaffold(body: Text('team profile')),
+            ),
+          ],
         ),
-      ),
-    );
+      );
 
-    expect(find.text('vs Chennai Super Kings'), findsOneWidget);
-    expect(find.text('Mumbai Indians'), findsNothing);
-  });
+      await tester.tap(find.text('Mumbai Indians'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('team profile'), findsOneWidget);
+      expect(cardTapped, isFalse);
+    },
+  );
+
+  testWidgets(
+    'with highlightTeamId set to teamA, the title shows only the opponent',
+    (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        GetMaterialApp(
+          theme: AppTheme.lightTheme,
+          home: MatchHistoryCard(
+            item: _item(),
+            currentUserId: 'viewer-1',
+            onTap: () {},
+            highlightTeamId: 'team-a',
+          ),
+        ),
+      );
+
+      expect(find.text('vs Chennai Super Kings'), findsOneWidget);
+      expect(find.text('Mumbai Indians'), findsNothing);
+    },
+  );
 
   testWidgets(
     'shows no delegation label when there is no createdBy or assignedScorer',
@@ -227,6 +236,51 @@ void main() {
       );
 
       expect(find.byIcon(Icons.person_add_alt), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'shows the live score line when currentInnings is present',
+    (tester) async {
+      await tester.pumpWidget(
+        GetMaterialApp(
+          theme: AppTheme.lightTheme,
+          home: MatchHistoryCard(
+            item: _item(
+              status: 'live',
+              currentInnings: CurrentInningsSummary(
+                inningsNumber: 1,
+                totalRuns: 145,
+                wickets: 4,
+                overs: '18.2',
+              ),
+            ),
+            currentUserId: 'viewer-1',
+            onTap: () {},
+          ),
+        ),
+      );
+
+      expect(find.textContaining('145/4'), findsOneWidget);
+      expect(find.textContaining('18.2'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'shows no score line when currentInnings is null (e.g. a completed match)',
+    (tester) async {
+      await tester.pumpWidget(
+        GetMaterialApp(
+          theme: AppTheme.lightTheme,
+          home: MatchHistoryCard(
+            item: _item(),
+            currentUserId: 'viewer-1',
+            onTap: () {},
+          ),
+        ),
+      );
+
+      expect(find.textContaining('/'), findsNothing);
     },
   );
 }

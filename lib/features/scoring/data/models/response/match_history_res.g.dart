@@ -12,6 +12,24 @@ MatchUserRef _$MatchUserRefFromJson(Map<String, dynamic> json) =>
 Map<String, dynamic> _$MatchUserRefToJson(MatchUserRef instance) =>
     <String, dynamic>{'id': instance.id, 'name': instance.name};
 
+CurrentInningsSummary _$CurrentInningsSummaryFromJson(
+  Map<String, dynamic> json,
+) => CurrentInningsSummary(
+  inningsNumber: (json['inningsNumber'] as num).toInt(),
+  totalRuns: (json['totalRuns'] as num).toInt(),
+  wickets: (json['wickets'] as num).toInt(),
+  overs: json['overs'] as String,
+);
+
+Map<String, dynamic> _$CurrentInningsSummaryToJson(
+  CurrentInningsSummary instance,
+) => <String, dynamic>{
+  'inningsNumber': instance.inningsNumber,
+  'totalRuns': instance.totalRuns,
+  'wickets': instance.wickets,
+  'overs': instance.overs,
+};
+
 MatchHistoryItem _$MatchHistoryItemFromJson(Map<String, dynamic> json) =>
     MatchHistoryItem(
       matchId: json['matchId'] as String,
@@ -34,6 +52,11 @@ MatchHistoryItem _$MatchHistoryItemFromJson(Map<String, dynamic> json) =>
               json['assignedScorer'] as Map<String, dynamic>,
             ),
       createdAt: json['createdAt'] as String,
+      currentInnings: json['currentInnings'] == null
+          ? null
+          : CurrentInningsSummary.fromJson(
+              json['currentInnings'] as Map<String, dynamic>,
+            ),
     );
 
 Map<String, dynamic> _$MatchHistoryItemToJson(MatchHistoryItem instance) =>
@@ -50,6 +73,7 @@ Map<String, dynamic> _$MatchHistoryItemToJson(MatchHistoryItem instance) =>
       'createdBy': instance.createdBy?.toJson(),
       'assignedScorer': instance.assignedScorer?.toJson(),
       'createdAt': instance.createdAt,
+      'currentInnings': instance.currentInnings?.toJson(),
     };
 
 MatchHistoryRes _$MatchHistoryResFromJson(Map<String, dynamic> json) =>

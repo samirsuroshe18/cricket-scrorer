@@ -22,6 +22,35 @@ class MatchUserRef {
   Map<String, dynamic> toJson() => _$MatchUserRefToJson(this);
 }
 
+/// `MatchHistoryItem.currentInnings` — a lightweight score summary, not the
+/// full `innings` shape `getPublicMatch`/the spectator socket return
+/// (no `target`/`extras`/`strike`/`partnership`/`bowler`; those need a
+/// `BallEvent` read the history list deliberately skips to stay cheap across
+/// a page of matches). Read straight off the `Inning` document's own running
+/// totals server-side, per docs/api.md.
+@JsonSerializable()
+class CurrentInningsSummary {
+  final int inningsNumber;
+  final int totalRuns;
+  final int wickets;
+
+  /// `"N.n"`, e.g. `"18.2"` — already formatted server-side, same convention
+  /// as every other overs string this app displays.
+  final String overs;
+
+  CurrentInningsSummary({
+    required this.inningsNumber,
+    required this.totalRuns,
+    required this.wickets,
+    required this.overs,
+  });
+
+  factory CurrentInningsSummary.fromJson(Map<String, dynamic> json) =>
+      _$CurrentInningsSummaryFromJson(json);
+
+  Map<String, dynamic> toJson() => _$CurrentInningsSummaryToJson(this);
+}
+
 /// One row of `GET /v1/match/history`. `result` is only ever populated for a
 /// `completed` match — an `abandoned` one has no winner, and the server sends
 /// `null` for it — so the history/home screen must not assume a non-null
@@ -70,6 +99,10 @@ class MatchHistoryItem {
 
   final String createdAt;
 
+  /// Non-null only while [status] is `live`/`innings_break` — see
+  /// [CurrentInningsSummary] and docs/api.md.
+  final CurrentInningsSummary? currentInnings;
+
   MatchHistoryItem({
     required this.matchId,
     required this.teamA,
@@ -83,6 +116,7 @@ class MatchHistoryItem {
     this.createdBy,
     this.assignedScorer,
     required this.createdAt,
+    this.currentInnings,
   });
 
   /// Used after a successful `PATCH /v1/match/:matchId/scorer` to patch the
@@ -101,6 +135,7 @@ class MatchHistoryItem {
     createdBy: createdBy,
     assignedScorer: assignedScorer,
     createdAt: createdAt,
+    currentInnings: currentInnings,
   );
 
   factory MatchHistoryItem.fromJson(Map<String, dynamic> json) =>

@@ -9,8 +9,9 @@ import 'package:cricket_scorer/features/scoring/data/models/response/match_histo
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-/// Opens the assign/reassign/remove sheet for [item] — shared by
-/// `HomePage` and `TeamProfileScreen` so the sheet itself isn't duplicated,
+/// Opens the assign/reassign/remove sheet for [item] — shared by the home
+/// shell's Home/Matches tabs and `TeamProfileScreen` so the sheet itself
+/// isn't duplicated,
 /// only the thin controller methods it calls (same duplication boundary
 /// `TeamProfileController` already draws against `HomeController`).
 ///
