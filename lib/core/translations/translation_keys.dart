@@ -481,4 +481,26 @@ class TranslationKeys {
   static const String remaining = 'remaining';
   static const String auctionHistory = 'auction_history';
   static const String noAuctionHistoryYet = 'no_auction_history_yet';
+
+  // Home shell — bottom nav + dashboard sections
+  static const String navHome = 'nav_home';
+  static const String navMatches = 'nav_matches';
+  static const String navTeams = 'nav_teams';
+  static const String navProfile = 'nav_profile';
+  static const String homeGreeting = 'home_greeting';
+  static const String homeGreetingNoName = 'home_greeting_no_name';
+  static const String liveNow = 'live_now';
+  static const String continueScoring = 'continue_scoring';
+  static const String recentMatches = 'recent_matches';
+  static const String seeAll = 'see_all';
+  static const String filterMatches = 'filter_matches';
+  static const String filterAll = 'filter_all';
+  static const String myTeams = 'my_teams_section';
+  static const String myTeamsEmptyHint = 'my_teams_empty_hint';
+  static const String noFilteredMatches = 'no_filtered_matches';
+  static const String editProfile = 'edit_profile';
+  static const String viewMyStats = 'view_my_stats';
+  static const String settings = 'settings';
+  static const String appearance = 'appearance';
+  static const String account = 'account';
 }

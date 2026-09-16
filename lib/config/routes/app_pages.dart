@@ -18,7 +18,8 @@ import 'package:cricket_scorer/features/auth/presentation/pages/set_password_scr
 import 'package:cricket_scorer/features/auth/presentation/pages/splash_screen.dart';
 import 'package:cricket_scorer/features/auth/presentation/pages/update_profile_screen.dart';
 import 'package:cricket_scorer/features/home/presentation/bindings/home_binding.dart';
-import 'package:cricket_scorer/features/home/presentation/pages/home_page.dart';
+import 'package:cricket_scorer/features/home/presentation/pages/main_shell_screen.dart';
+import 'package:cricket_scorer/features/home/presentation/pages/settings_screen.dart';
 import 'package:cricket_scorer/features/scoring/presentation/bindings/create_match_binding.dart';
 import 'package:cricket_scorer/features/scoring/presentation/bindings/result_binding.dart';
 import 'package:cricket_scorer/features/scoring/presentation/bindings/player_stats_binding.dart';
@@ -79,8 +80,12 @@ abstract class AppPages {
     ),
     GetPage(
       name: AppRoutes.home,
-      page: () => const HomePage(),
+      page: () => const MainShellScreen(),
       binding: HomeBinding(),
+    ),
+    GetPage(
+      name: AppRoutes.settings,
+      page: () => const SettingsScreen(),
     ),
     GetPage(
       name: AppRoutes.setPassword,

@@ -7,8 +7,9 @@ import 'package:cricket_scorer/features/scoring/data/models/response/match_histo
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-/// One row of a match-history-shaped list — used by `HomePage` (the
-/// scorer's own match history, [highlightTeamId] null) and
+/// One row of a match-history-shaped list — used by the home shell's Home
+/// and Matches tabs (the scorer's own match history, [highlightTeamId]
+/// null) and
 /// `TeamProfileScreen` (past results for one team, [highlightTeamId] set to
 /// that team's id) since `GET /v1/team/:teamId/matches` returns the exact
 /// same [MatchHistoryItem] shape as `GET /v1/match/history`.
@@ -32,7 +33,7 @@ class MatchHistoryCard extends StatelessWidget {
   final String currentUserId;
 
   /// Null on `TeamProfileScreen`'s list — that screen offers no delete
-  /// affordance, only `HomePage`'s own history does.
+  /// affordance, only the home shell's own match history does.
   final VoidCallback? onDelete;
 
   /// Null hides the assign-scorer icon entirely — neither screen that uses
@@ -51,7 +52,8 @@ class MatchHistoryCard extends StatelessWidget {
   /// profile is already on screen — the title shows just the opponent
   /// ("vs Chennai Super Kings") instead of "Team A vs Team B", so
   /// `TeamProfileScreen`'s own match list doesn't repeat the name already in
-  /// its header. `HomePage` passes null and always gets the full title.
+  /// its header. The home shell's tabs pass null and always get the full
+  /// title.
   final String? highlightTeamId;
 
   void _openTeamProfile(String teamId) {
@@ -167,6 +169,17 @@ class MatchHistoryCard extends StatelessWidget {
                     ),
                 ],
               ),
+              if (item.currentInnings case final innings?) ...[
+                6.h,
+                CricketText(
+                  text:
+                      '${innings.totalRuns}/${innings.wickets} '
+                      '(${innings.overs} ${TranslationKeys.overs.tr})',
+                  style: context.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
               6.h,
               CricketText(
                 text:
