@@ -7,9 +7,9 @@ import 'package:cricket_scorer/core/global/widgets/cricket_text.dart';
 import 'package:cricket_scorer/core/translations/translation_keys.dart';
 import 'package:cricket_scorer/features/auth/presentation/controllers/otp_verification_controller.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter/widget_previews.dart';
 import 'package:get/get.dart';
+import 'package:pinput/pinput.dart';
 
 class OtpVerificationScreen extends GetView<OtpVerificationController> {
   const OtpVerificationScreen({super.key});
@@ -35,22 +35,9 @@ class OtpVerificationScreen extends GetView<OtpVerificationController> {
                       key: controller.formKey,
                       child: Column(
                         children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: List.generate(
-                              6,
-                              (index) => _OtpBox(
-                                controller: controller.otpControllers[index],
-                                focusNode: controller.focusNodes[index],
-                                onChanged: (value) =>
-                                    controller.onOtpChanged(value, index),
-                                autofillHints: const [
-                                  AutofillHints.oneTimeCode,
-                                ],
-                                semanticLabel: TranslationKeys.otpDigitLabel
-                                    .trParams({'position': '${index + 1}'}),
-                              ),
-                            ),
+                          _OtpPinput(
+                            controller: controller.otpController,
+                            focusNode: controller.focusNode,
                           ),
 
                           24.h,
@@ -215,82 +202,59 @@ class _VerifyCard extends GetView<OtpVerificationController> {
   }
 }
 
-/// A single digit box. The border animates between [ColorScheme.outline]
-/// and [ColorScheme.primary] as focus moves across the row.
-class _OtpBox extends StatelessWidget {
-  const _OtpBox({
-    required this.controller,
-    required this.focusNode,
-    required this.onChanged,
-    required this.semanticLabel,
-    this.autofillHints,
-  });
+/// The 6-digit code entry, built on the `pinput` package rather than a
+/// hand-rolled row of text fields — it owns SMS/clipboard autofill, paste
+/// distribution across boxes, and the focused/default decoration swap
+/// (animated implicitly by [PinTheme]) that this screen previously had to
+/// reimplement itself.
+class _OtpPinput extends StatelessWidget {
+  const _OtpPinput({required this.controller, required this.focusNode});
 
   final TextEditingController controller;
   final FocusNode focusNode;
-  final ValueChanged<String> onChanged;
-  final String semanticLabel;
-  final List<String>? autofillHints;
 
   @override
   Widget build(BuildContext context) {
     final scheme = context.colorScheme;
 
-    return AnimatedBuilder(
-      animation: focusNode,
-      builder: (context, child) {
-        final isFocused = focusNode.hasFocus;
-        return AnimatedContainer(
-          duration: Durations.short2,
-          curve: Easing.standard,
-          width: 48,
-          height: 56,
-          decoration: BoxDecoration(
-            color: scheme.surface,
-            borderRadius: 12.radius,
-            border: Border.all(
-              color: isFocused ? scheme.primary : scheme.outline,
-              width: isFocused ? 2 : 1,
-            ),
-          ),
-          child: child,
-        );
-      },
+    final defaultPinTheme = PinTheme(
+      width: 48,
+      height: 56,
+      textStyle: context.textTheme.titleLarge?.copyWith(
+        fontWeight: FontWeight.bold,
+      ),
+      decoration: BoxDecoration(
+        color: scheme.surface,
+        borderRadius: 12.radius,
+        border: Border.all(color: scheme.outline),
+      ),
+    );
+
+    final focusedPinTheme = defaultPinTheme.copyWith(
+      decoration: defaultPinTheme.decoration?.copyWith(
+        border: Border.all(color: scheme.primary, width: 2),
+      ),
+    );
+
+    // Caps scaling for these boxed glyphs at 200% (WCAG 1.4.4's required
+    // minimum) so iOS's larger accessibility sizes (up to ~3.1x) can't clip
+    // them against the fixed 48x56 boxes — the rest of the screen keeps the
+    // device's full text-scale setting.
+    return MediaQuery.withClampedTextScaling(
+      maxScaleFactor: 2,
       child: Semantics(
-        label: semanticLabel,
+        label: TranslationKeys.otpFieldLabel.tr,
         textField: true,
-        // Caps scaling for this single boxed glyph at 200% (WCAG 1.4.4's
-        // required minimum) so iOS's larger accessibility sizes (up to
-        // ~3.1x) can't clip it against the fixed 48x56 box — the rest of
-        // the screen keeps the device's full text-scale setting.
-        child: MediaQuery.withClampedTextScaling(
-          maxScaleFactor: 2,
-          child: TextFormField(
-            controller: controller,
-            focusNode: focusNode,
-            textAlign: TextAlign.center,
-            keyboardType: TextInputType.number,
-            style: context.textTheme.titleLarge?.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
-            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-            autofillHints: autofillHints,
-            decoration: const InputDecoration(
-              border: InputBorder.none,
-              enabledBorder: InputBorder.none,
-              focusedBorder: InputBorder.none,
-              errorBorder: InputBorder.none,
-              focusedErrorBorder: InputBorder.none,
-              disabledBorder: InputBorder.none,
-              filled: false,
-              contentPadding: EdgeInsets.zero,
-            ),
-            onChanged: onChanged,
-            validator: (value) {
-              if (value == null || value.isEmpty) return '';
-              return null;
-            },
-          ),
+        child: Pinput(
+          length: 6,
+          controller: controller,
+          focusNode: focusNode,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          defaultPinTheme: defaultPinTheme,
+          focusedPinTheme: focusedPinTheme,
+          submittedPinTheme: defaultPinTheme,
+          animationCurve: Easing.standard,
+          animationDuration: Durations.short2,
         ),
       ),
     );
@@ -300,38 +264,31 @@ class _OtpBox extends StatelessWidget {
 // Preview-only below. The full screen isn't previewable in isolation —
 // ThemePickerButton/LanguagePickerButton resolve ThemeService/LanguageService
 // via Get.find(), which cascade into SharedPreferences and repository
-// dependencies the isolated Widget Previewer can't satisfy. The pin-box row
+// dependencies the isolated Widget Previewer can't satisfy. The pin field
 // is the screen's one interactive/functional addition, so it's previewed on
-// its own with local controllers instead.
+// its own with a local controller instead.
 
-@_MultiPreviewBrightness(name: 'OTP boxes')
-Widget otpBoxesPreview() => const ColoredBox(
+@_MultiPreviewBrightness(name: 'OTP field')
+Widget otpFieldPreview() => const ColoredBox(
   color: Colors.black12,
-  child: Center(child: _OtpBoxRowPreview()),
+  child: Center(child: _OtpPinputPreview()),
 );
 
-class _OtpBoxRowPreview extends StatefulWidget {
-  const _OtpBoxRowPreview();
+class _OtpPinputPreview extends StatefulWidget {
+  const _OtpPinputPreview();
 
   @override
-  State<_OtpBoxRowPreview> createState() => _OtpBoxRowPreviewState();
+  State<_OtpPinputPreview> createState() => _OtpPinputPreviewState();
 }
 
-class _OtpBoxRowPreviewState extends State<_OtpBoxRowPreview> {
-  late final List<TextEditingController> _controllers = List.generate(
-    6,
-    (i) => TextEditingController(text: i < 3 ? '${i + 1}' : ''),
-  );
-  late final List<FocusNode> _focusNodes = List.generate(6, (_) => FocusNode());
+class _OtpPinputPreviewState extends State<_OtpPinputPreview> {
+  final _controller = TextEditingController(text: '123');
+  final _focusNode = FocusNode();
 
   @override
   void dispose() {
-    for (final c in _controllers) {
-      c.dispose();
-    }
-    for (final f in _focusNodes) {
-      f.dispose();
-    }
+    _controller.dispose();
+    _focusNode.dispose();
     super.dispose();
   }
 
@@ -339,23 +296,7 @@ class _OtpBoxRowPreviewState extends State<_OtpBoxRowPreview> {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.all(24),
-      child: AutofillGroup(
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: List.generate(
-            6,
-            (index) => Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 4),
-              child: _OtpBox(
-                controller: _controllers[index],
-                focusNode: _focusNodes[index],
-                onChanged: (_) {},
-                semanticLabel: 'Digit ${index + 1} of 6',
-              ),
-            ),
-          ),
-        ),
-      ),
+      child: _OtpPinput(controller: _controller, focusNode: _focusNode),
     );
   }
 }

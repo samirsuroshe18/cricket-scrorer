@@ -84,7 +84,7 @@ Map<String, String> en = {
   TranslationKeys.resend: 'Resend',
   TranslationKeys.resendCodeIn: 'Resend code in  ',
   TranslationKeys.didNotReceiveCode: "Didn't receive the code?  ",
-  TranslationKeys.otpDigitLabel: 'Digit {position} of 6',
+  TranslationKeys.otpFieldLabel: '6-digit verification code',
   TranslationKeys.createAccount: 'Create Account',
   TranslationKeys.joinAndStartScoring: 'Join and start scoring matches',
   TranslationKeys.fullName: 'Full Name',

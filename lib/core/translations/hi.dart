@@ -85,7 +85,7 @@ Map<String, String> hi = {
   TranslationKeys.resend: 'पुनः भेजें',
   TranslationKeys.resendCodeIn: 'कोड पुनः भेजें  ',
   TranslationKeys.didNotReceiveCode: 'कोड प्राप्त नहीं हुआ?  ',
-  TranslationKeys.otpDigitLabel: 'अंक {position}, ६ में से',
+  TranslationKeys.otpFieldLabel: '6 अंकों का सत्यापन कोड',
   TranslationKeys.createAccount: 'खाता बनाएँ',
   TranslationKeys.joinAndStartScoring: 'जुड़ें और मैच स्कोरिंग शुरू करें',
   TranslationKeys.fullName: 'पूरा नाम',

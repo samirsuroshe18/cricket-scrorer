@@ -85,7 +85,7 @@ Map<String, String> mr = {
   TranslationKeys.resend: 'पुन्हा पाठवा',
   TranslationKeys.resendCodeIn: 'कोड पुन्हा पाठवा  ',
   TranslationKeys.didNotReceiveCode: 'कोड मिळाला नाही?  ',
-  TranslationKeys.otpDigitLabel: 'अंक {position}, ६ पैकी',
+  TranslationKeys.otpFieldLabel: '6 अंकी पडताळणी कोड',
   TranslationKeys.createAccount: 'खाते तयार करा',
   TranslationKeys.joinAndStartScoring: 'सामिल व्हा आणि मॅच स्कोअरिंग सुरू करा',
   TranslationKeys.fullName: 'पूर्ण नाव',
