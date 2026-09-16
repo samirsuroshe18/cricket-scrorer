@@ -77,18 +77,12 @@ Future<void> _pumpLoginScreen(WidgetTester tester) async {
   // LanguagePickerButton (rendered in LoginScreen's app bar) resolves these
   // two directly via Get.find, independent of LoginController, so they need
   // their own registration too.
-  final getVersionUseCase = Get.put(
-    GetVersionUseCase(languageRepository: languageRepository),
-  );
-  final getLanguageUseCase = Get.put(
-    GetLanguageUseCase(languageRepository: languageRepository),
-  );
+  Get.put(GetVersionUseCase(languageRepository: languageRepository));
+  Get.put(GetLanguageUseCase(languageRepository: languageRepository));
 
   Get.put<LoginController>(
     LoginController(
       loginUseCase: _UnusedLoginUseCase(),
-      getVersionUseCase: getVersionUseCase,
-      getLanguageUseCase: getLanguageUseCase,
       updateLanguageUseCase: UpdateLanguageUseCase(
         languageRepository: languageRepository,
       ),
@@ -117,18 +111,12 @@ Future<void> _pumpLoginScreenWithRouting(WidgetTester tester) async {
 
   final languageRepository = _NoopLanguageRepository();
 
-  final getVersionUseCase = Get.put(
-    GetVersionUseCase(languageRepository: languageRepository),
-  );
-  final getLanguageUseCase = Get.put(
-    GetLanguageUseCase(languageRepository: languageRepository),
-  );
+  Get.put(GetVersionUseCase(languageRepository: languageRepository));
+  Get.put(GetLanguageUseCase(languageRepository: languageRepository));
 
   Get.put<LoginController>(
     LoginController(
       loginUseCase: _UnusedLoginUseCase(),
-      getVersionUseCase: getVersionUseCase,
-      getLanguageUseCase: getLanguageUseCase,
       updateLanguageUseCase: UpdateLanguageUseCase(
         languageRepository: languageRepository,
       ),

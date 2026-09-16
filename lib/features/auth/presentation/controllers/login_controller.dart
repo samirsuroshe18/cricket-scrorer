@@ -4,9 +4,7 @@ import 'dart:convert';
 import 'package:cricket_scorer/config/routes/app_routes.dart';
 import 'package:cricket_scorer/core/constants/shared_pref_key.dart';
 import 'package:cricket_scorer/core/error/cricket_failure.dart';
-import 'package:cricket_scorer/core/global/domain/usecases/get_language.dart';
 import 'package:cricket_scorer/core/global/domain/usecases/get_user_language.dart';
-import 'package:cricket_scorer/core/global/domain/usecases/get_version.dart';
 import 'package:cricket_scorer/core/global/domain/usecases/update_language.dart';
 import 'package:cricket_scorer/core/global/widgets/dialogue/custom_dialog.dart';
 import 'package:cricket_scorer/core/global/widgets/snackbars/cricket_snackbar.dart';
@@ -16,6 +14,7 @@ import 'package:cricket_scorer/core/services/secure_storages_service.dart';
 import 'package:cricket_scorer/core/services/shared_preference_service.dart';
 import 'package:cricket_scorer/core/translations/translation_keys.dart';
 import 'package:cricket_scorer/core/utils/either_util.dart';
+import 'package:cricket_scorer/core/utils/post_auth_router.dart';
 import 'package:cricket_scorer/core/utils/validators.dart';
 import 'package:cricket_scorer/features/auth/data/models/login_request_model.dart';
 import 'package:cricket_scorer/features/auth/data/models/login_response.dart';
@@ -24,16 +23,12 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 class LoginController extends GetxController {
-  final GetVersionUseCase getVersionUseCase;
-  final GetLanguageUseCase getLanguageUseCase;
   final UpdateLanguageUseCase updateLanguageUseCase;
 
   final LoginUseCase loginUseCase;
 
   LoginController({
     required this.loginUseCase,
-    required this.getVersionUseCase,
-    required this.getLanguageUseCase,
     required this.updateLanguageUseCase,
   });
 
@@ -97,43 +92,17 @@ class LoginController extends GetxController {
           jsonEncode(response.result.data?.loggedInUser?.toJson()),
         );
 
-        bool? onboardingCompleted =
-            await SharedPreferenceService.sharedPrefService.get(
-                  SharedPrefKey.onboardingCompleted,
-                )
-                as bool?;
-        if (onboardingCompleted == null || !onboardingCompleted) {
-          unawaited(
-            Get.offAllNamed(
-              AppRoutes.onBoarding,
-              arguments:
-                  {
-                        'profileCompleted':
-                            response
-                                .result
-                                .data
-                                ?.loggedInUser
-                                ?.profileCompleted ??
-                            false,
-                      }
-                      as Map<String, dynamic>,
-            ),
-          );
-          return;
-        } else if (!(response.result.data?.loggedInUser?.profileCompleted ??
-            false)) {
-          unawaited(Get.offAllNamed(AppRoutes.updateProfile));
-          return;
-        } else {
-          unawaited(Get.offAllNamed(AppRoutes.home));
-        }
-
         CricketSnackbar.showSuccessMessage(response.result.message);
         unawaited(
           Get.find<LanguageService>().syncLanguageFromServer(
             getUserLanguageUseCase: Get.find<GetUserLanguageUseCase>(),
-            updateLanguageUseCase: Get.find<UpdateLanguageUseCase>(),
+            updateLanguageUseCase: updateLanguageUseCase,
           ),
+        );
+
+        await PostAuthRouter.route(
+          profileCompleted:
+              response.result.data?.loggedInUser?.profileCompleted ?? false,
         );
       } catch (e) {
         CricketSnackbar.showErrorMessage(

@@ -16,11 +16,16 @@ import 'package:get/get.dart';
 
 /// Only `getUser` is ever exercised by these tests (`isEditing: true` calls
 /// it from `onInit`); every other member falls through to `noSuchMethod` the
-/// same way `_NoopLanguageRepository` does in `login_screen_test.dart`.
+/// same way `_NoopLanguageRepository` does in `login_screen_test.dart`. It
+/// resolves successfully with no data — a fallback here now surfaces an
+/// error snackbar (see `update_profile_controller.dart`), which races the
+/// as-yet-unmounted `GetMaterialApp` overlay during `_pumpUpdateProfileScreen`
+/// and crashes; these tests only care that the load completes, not that it
+/// fails.
 class _NoopAuthRepository implements AuthRepository {
   @override
   Future<Either<CricketResponse<User>, CricketFailure>> getUser() async =>
-      Either.fallback(CricketNoInternetFailure(statusCode: 0));
+      Either.result(const CricketResponse(message: 'ok'));
 
   @override
   Never noSuchMethod(Invocation invocation) =>

@@ -35,8 +35,6 @@ class OtpVerificationScreen extends GetView<OtpVerificationController> {
                       key: controller.formKey,
                       child: Column(
                         children: [
-                          // TEMP DEBUG: autofillHints removed entirely to
-                          // test whether iOS groups these by pattern alone.
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: List.generate(
@@ -46,7 +44,9 @@ class OtpVerificationScreen extends GetView<OtpVerificationController> {
                                 focusNode: controller.focusNodes[index],
                                 onChanged: (value) =>
                                     controller.onOtpChanged(value, index),
-                                autofillHints: null,
+                                autofillHints: const [
+                                  AutofillHints.oneTimeCode,
+                                ],
                                 semanticLabel: TranslationKeys.otpDigitLabel
                                     .trParams({'position': '${index + 1}'}),
                               ),
@@ -240,9 +240,9 @@ class _OtpBox extends StatelessWidget {
       animation: focusNode,
       builder: (context, child) {
         final isFocused = focusNode.hasFocus;
-        // TEMP DEBUG: plain Container (no animation) to test whether
-        // AnimatedContainer's decoration tween is causing the ghost border.
-        return Container(
+        return AnimatedContainer(
+          duration: Durations.short2,
+          curve: Easing.standard,
           width: 48,
           height: 56,
           decoration: BoxDecoration(
@@ -269,9 +269,7 @@ class _OtpBox extends StatelessWidget {
             controller: controller,
             focusNode: focusNode,
             textAlign: TextAlign.center,
-            // TEMP DEBUG: was TextInputType.number — testing whether the
-            // numeric keypad is what triggers iOS's verification-code UI.
-            keyboardType: TextInputType.visiblePassword,
+            keyboardType: TextInputType.number,
             style: context.textTheme.titleLarge?.copyWith(
               fontWeight: FontWeight.bold,
             ),
