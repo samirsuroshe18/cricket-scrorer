@@ -2,16 +2,15 @@ import 'dart:async';
 
 import 'package:cricket_scorer/config/routes/app_routes.dart';
 import 'package:cricket_scorer/core/translations/translation_keys.dart';
-import 'package:cricket_scorer/core/constants/shared_pref_key.dart';
 import 'package:cricket_scorer/core/error/cricket_failure.dart';
 import 'package:cricket_scorer/core/global/domain/usecases/get_language.dart';
 import 'package:cricket_scorer/core/global/domain/usecases/get_version.dart';
 import 'package:cricket_scorer/core/global/widgets/snackbars/cricket_snackbar.dart';
 import 'package:cricket_scorer/core/network/models/cricket_response.dart';
 import 'package:cricket_scorer/core/services/language_service.dart';
-import 'package:cricket_scorer/core/services/shared_preference_service.dart';
 import 'package:cricket_scorer/core/utils/pending_deep_link.dart';
 import 'package:cricket_scorer/core/utils/either_util.dart';
+import 'package:cricket_scorer/core/utils/post_auth_router.dart';
 import 'package:cricket_scorer/features/auth/data/models/user.dart';
 import 'package:cricket_scorer/features/auth/domain/usecases/get_user.dart';
 import 'package:flutter/material.dart';
@@ -121,32 +120,17 @@ class SplashController extends GetxController
 
     if (response.isResult) {
       try {
-        bool? onboardingCompleted =
-            await SharedPreferenceService.sharedPrefService.get(
-                  SharedPrefKey.onboardingCompleted,
-                )
-                as bool?;
-        if (onboardingCompleted == null || !onboardingCompleted) {
-          unawaited(
-            Get.offAllNamed(
-              AppRoutes.onBoarding,
-              arguments:
-                  {
-                        'profileCompleted':
-                            response.result.data?.profileCompleted ?? false,
-                      }
-                      as Map<String, dynamic>,
-            ),
-          );
-        } else if (!(response.result.data?.profileCompleted ?? false)) {
-          unawaited(Get.offAllNamed(AppRoutes.updateProfile));
-        } else {
-          unawaited(Get.offAllNamed(AppRoutes.home));
-        }
+        await PostAuthRouter.route(
+          profileCompleted: response.result.data?.profileCompleted ?? false,
+        );
       } catch (e) {
         CricketSnackbar.showErrorMessage(
-          TranslationKeys.somethingWentWrong,
+          TranslationKeys.somethingWentWrong.tr,
         );
+        // The failure above is a local shared-prefs read, not an auth
+        // failure — still route the user off the splash screen instead of
+        // stranding them here.
+        unawaited(Get.offAllNamed(AppRoutes.login));
       }
     } else {
       // AuthInterceptor's _forceLogout() (auth_interceptor.dart) already

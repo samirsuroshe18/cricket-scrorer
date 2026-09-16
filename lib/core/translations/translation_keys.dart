@@ -79,7 +79,7 @@ class TranslationKeys {
   static const String resend = 'resend';
   static const String resendCodeIn = 'resend_code_in';
   static const String didNotReceiveCode = 'did_not_receive_code';
-  static const String otpDigitLabel = 'otp_digit_label';
+  static const String otpFieldLabel = 'otp_field_label';
   static const String createAccount = 'create_account';
   static const String joinAndStartScoring = 'join_and_start_scoring';
   static const String fullName = 'full_name';

@@ -25,9 +25,8 @@ class OtpVerificationController extends GetxController {
 
   final formKey = GlobalKey<FormState>();
 
-  // 6 individual controllers and focus nodes for OTP boxes
-  final otpControllers = List.generate(6, (_) => TextEditingController());
-  final focusNodes = List.generate(6, (_) => FocusNode());
+  final otpController = TextEditingController();
+  final focusNode = FocusNode();
 
   final maskedTarget = ''.obs;
   final isResendEnabled = false.obs;
@@ -71,52 +70,11 @@ class OtpVerificationController extends GetxController {
     });
   }
 
-  void onOtpChanged(String value, int index) {
-    // A paste or OS autofill delivers the whole code to one box at once.
-    if (value.length > 1) {
-      _distributeDigits(value, startIndex: index);
-      return;
-    }
-
-    if (value.isNotEmpty) {
-      // Move focus to next box
-      if (index < 5) {
-        focusNodes[index + 1].requestFocus();
-      } else {
-        // Last box — dismiss keyboard
-        focusNodes[index].unfocus();
-      }
-    } else {
-      // On delete, move focus to previous box
-      if (index > 0) {
-        focusNodes[index - 1].requestFocus();
-      }
-    }
-  }
-
-  void _distributeDigits(String digits, {required int startIndex}) {
-    var boxIndex = startIndex;
-    var digitIndex = 0;
-    while (boxIndex < otpControllers.length && digitIndex < digits.length) {
-      otpControllers[boxIndex].text = digits[digitIndex];
-      boxIndex++;
-      digitIndex++;
-    }
-
-    if (boxIndex >= otpControllers.length) {
-      focusNodes.last.unfocus();
-    } else {
-      focusNodes[boxIndex].requestFocus();
-    }
-  }
-
-  String get _otpCode => otpControllers.map((c) => c.text).join();
+  String get _otpCode => otpController.text;
 
   void _clearOtp() {
-    for (final c in otpControllers) {
-      c.clear();
-    }
-    focusNodes.first.requestFocus();
+    otpController.clear();
+    focusNode.requestFocus();
   }
 
   Future<void> verifyOtp() async {
@@ -199,12 +157,8 @@ class OtpVerificationController extends GetxController {
   @override
   void onClose() {
     _countdownTimer?.cancel();
-    for (final c in otpControllers) {
-      c.dispose();
-    }
-    for (final f in focusNodes) {
-      f.dispose();
-    }
+    otpController.dispose();
+    focusNode.dispose();
     super.onClose();
   }
 }

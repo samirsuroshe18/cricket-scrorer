@@ -73,6 +73,11 @@ class UpdateProfileController extends GetxController {
   Future<void> _loadExistingProfile() async {
     isLoadingProfile.value = true;
     final response = await getUserUseCase();
+    if (isClosed) {
+      // The screen was popped while the fetch was in flight — the text
+      // controllers below are already disposed.
+      return;
+    }
     if (response.isResult) {
       final user = response.result.data;
       usernameController.text = user?.userName ?? '';
@@ -82,6 +87,8 @@ class UpdateProfileController extends GetxController {
       playingRole.value = user?.playingRole;
       jerseyNumberController.text = user?.jerseyNumber?.toString() ?? '';
       existingPhotoUrl.value = user?.photoUrl;
+    } else {
+      CricketSnackbar.showErrorMessage(response.fallback.message);
     }
     isLoadingProfile.value = false;
   }
@@ -147,38 +154,37 @@ class UpdateProfileController extends GetxController {
 
     CricketLoaderDialog.show();
 
-    final jerseyNumberText = jerseyNumberController.text.trim();
+    try {
+      final jerseyNumberText = jerseyNumberController.text.trim();
 
-    Either<CricketResponse<void>, CricketFailure> response =
-        await updateProfileUseCase(
-          params: UpdateProfileReq(
-            userName: usernameController.text,
-            bio: bioController.text,
-            battingStyle: battingStyle.value,
-            bowlingStyle: bowlingStyle.value,
-            playingRole: playingRole.value,
-            jerseyNumber: jerseyNumberText.isEmpty
-                ? null
-                : int.tryParse(jerseyNumberText),
-          ),
-          file: selectedImage.value,
-        );
+      Either<CricketResponse<void>, CricketFailure> response =
+          await updateProfileUseCase(
+            params: UpdateProfileReq(
+              userName: usernameController.text,
+              bio: bioController.text,
+              battingStyle: battingStyle.value,
+              bowlingStyle: bowlingStyle.value,
+              playingRole: playingRole.value,
+              jerseyNumber: jerseyNumberText.isEmpty
+                  ? null
+                  : int.tryParse(jerseyNumberText),
+            ),
+            file: selectedImage.value,
+          );
 
-    if (response.isResult) {
-      // The save call itself returns no user data — refreshing the locally
-      // cached profile here (the same cache `login_controller.dart` first
-      // writes) is what lets the Home app bar's avatar/name reflect this
-      // save immediately, instead of showing whatever login last cached.
-      await _refreshCachedProfile();
-    }
-
-    CricketLoaderDialog.hide();
-
-    if (response.isResult) {
-      CricketSnackbar.showSuccessMessage(response.result.message);
-      unawaited(Get.offAllNamed(AppRoutes.home));
-    } else {
-      CricketSnackbar.showErrorMessage(response.fallback.message);
+      if (response.isResult) {
+        // The save call itself returns no user data — refreshing the locally
+        // cached profile here (the same cache `login_controller.dart` first
+        // writes) is what lets the Home app bar's avatar/name reflect this
+        // save immediately, instead of showing whatever login last cached.
+        await _refreshCachedProfile();
+        CricketSnackbar.showSuccessMessage(response.result.message);
+        unawaited(Get.offAllNamed(AppRoutes.home));
+      } else {
+        CricketSnackbar.showErrorMessage(response.fallback.message);
+      }
+    } finally {
+      CricketLoaderDialog.hide();
     }
   }
 
