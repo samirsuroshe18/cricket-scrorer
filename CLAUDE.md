@@ -162,6 +162,20 @@ The server contract this client implements against is `POST /v1/match/:matchId/s
 - **Fixed (2026-08-30): the spectator screen had no handling for `match:abandoned`.** A spectator connected when a match got called off saw the score simply stop updating, with no indication why — and one who opened the link afterward saw "Waiting for play to begin" (or, mid-innings, a live-looking score) instead of an abandoned state. `SpectatorController` now has `isAbandoned`, set from `match.status` on the initial `GET /public/:code` fetch and from a new `match:abandoned` subscription (`MatchSocketService.watchMatchAbandoned` → `MatchRepository.watchMatchAbandoned`, mirroring `watchMatchComplete`'s wiring) while connected live. `spectator_screen.dart` checks it first, ahead of `matchResult`, and shows `AbandonedMatchBanner` (reused from the result screen) plus the final score snapshot. Verified live on the emulator both ways — mid-session abandonment while the screen was open, and a cold open after the fact — since `SpectatorController.onInit()` reads `Get.parameters`, which this codebase has no test harness for yet (same pre-existing gap `ResultController` has); no automated test covers this.
 - **Resolved, not a bug (verified 2026-08-30): `blockedOnRule`'s `lastError` (the raw i18n `failedCode`) is never rendered raw.** Neither `SyncStatusBanner` nor `SyncBlockedBottomSheet` displays it — both show fixed, already-translated copy (`syncBlockedOnRule`/`syncBlockedMessage`) for this phase. `lastError` is threaded into `SyncStatusBanner` as a constructor parameter but is dead code within its `build()` — harmless, not a translation leak, not touched here since removing an unused parameter isn't a correctness fix.
 
+## Notifications & player claim
+
+**Built, not a gap.** `features/notifications/` is a standard feature slice (paginated inbox list, unread badge, mark-read/mark-all-read) plus one shared decision for where a tap lands — `navigateForNotificationData` (`presentation/utils/notification_navigation.dart`) — called identically from three entry points so they can never disagree: `FirebaseService.onMessageOpenedApp` (killed/backgrounded push tap), `NotificationService`'s local-notification tap callback (foreground push), and `NotificationsScreen`'s own row tap. A `matchId` payload lands on the Matches tab rather than trying to reconstruct `HomeController.openMatch`'s live-vs-completed routing from a bare id; a `tournamentId` payload routes straight to that tournament.
+
+Two real bugs were fixed in the same change: the foreground push path built the local-notification payload with `message.data.toString()` (a Dart map literal, not JSON), so it could never be `jsonDecode`d back on tap — now `jsonEncode`/`jsonDecode` on both ends (`firebase_service.dart` / `notification_service.dart`). iOS also never called `setForegroundNotificationPresentationOptions`, so a push arriving while the app was foregrounded showed nothing there.
+
+`HomeController._syncFcmToken()` posts the device's FCM token so the backend has somewhere to push.
+
+**Player claim**: an invite-link deep link, `cricketscorer:///claim-player/<playerId>?name=<name>` (parsed by `PendingDeepLink`/`DeepLinkService`, same `cricketscorer://` scheme as the spectator code link), reached from the player-stats screen's "invite to claim" action. `ClaimPlayerController`/`ClaimPlayerScreen` call the `claimPlayer`/`unclaimPlayer` usecases; `isClaimed` on the career-stats response drives the invite-vs-already-claimed affordance.
+
+Backend contract: [docs/api.md](../docs/api.md) → `## Notifications`, `## POST /v1/player/:playerId/claim`.
+
+Covered by the full `flutter test` suite — 341/341 passing (verified 2026-09-17); live-verified on the iOS simulator (notification bell → inbox → tap routing; claim-link flow).
+
 ## Naming Conventions
 
 | Thing | File | Class |
