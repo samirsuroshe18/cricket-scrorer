@@ -12,6 +12,7 @@ MatchHistoryItem _item({
   MatchUserRef? assignedScorer,
   String status = 'completed',
   CurrentInningsSummary? currentInnings,
+  String syncStatus = 'synced',
 }) => MatchHistoryItem(
   matchId: 'match-1',
   teamA: TeamRef(id: 'team-a', name: 'Mumbai Indians'),
@@ -22,6 +23,7 @@ MatchHistoryItem _item({
   assignedScorer: assignedScorer,
   createdAt: '2026-08-20T10:15:00.000Z',
   currentInnings: currentInnings,
+  syncStatus: syncStatus,
 );
 
 void main() {
@@ -281,6 +283,67 @@ void main() {
       );
 
       expect(find.textContaining('/'), findsNothing);
+    },
+  );
+
+  testWidgets(
+    "shows the conflict chip when syncStatus is 'conflict'",
+    (tester) async {
+      await tester.pumpWidget(
+        GetMaterialApp(
+          theme: AppTheme.lightTheme,
+          home: MatchHistoryCard(
+            item: _item(syncStatus: 'conflict'),
+            currentUserId: 'viewer-1',
+            onTap: () {},
+          ),
+        ),
+      );
+
+      expect(find.textContaining('sync_conflict_title'), findsOneWidget);
+      expect(find.byIcon(Icons.sync_problem), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    "shows the syncing chip when syncStatus is 'syncing'",
+    (tester) async {
+      await tester.pumpWidget(
+        GetMaterialApp(
+          theme: AppTheme.lightTheme,
+          home: MatchHistoryCard(
+            item: _item(syncStatus: 'syncing'),
+            currentUserId: 'viewer-1',
+            onTap: () {},
+          ),
+        ),
+      );
+
+      expect(find.textContaining('syncing_now'), findsOneWidget);
+      expect(find.byIcon(Icons.sync), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    "shows no sync chip for 'synced' or the ambiguous default 'local' — "
+    'most matches are scored entirely online and stay at local forever, so '
+    "badging it would flag them as 'not synced' incorrectly",
+    (tester) async {
+      for (final status in ['synced', 'local']) {
+        await tester.pumpWidget(
+          GetMaterialApp(
+            theme: AppTheme.lightTheme,
+            home: MatchHistoryCard(
+              item: _item(syncStatus: status),
+              currentUserId: 'viewer-1',
+              onTap: () {},
+            ),
+          ),
+        );
+
+        expect(find.textContaining('sync_conflict_title'), findsNothing);
+        expect(find.textContaining('syncing_now'), findsNothing);
+      }
     },
   );
 }

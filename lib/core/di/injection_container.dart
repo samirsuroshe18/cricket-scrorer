@@ -6,6 +6,7 @@ import 'package:cricket_scorer/core/di/injection/organization_injection.dart';
 import 'package:cricket_scorer/core/di/injection/scoring_injection.dart';
 import 'package:cricket_scorer/core/di/injection/search_injection.dart';
 import 'package:cricket_scorer/core/di/injection/tournament_injection.dart';
+import 'package:cricket_scorer/core/di/injection/notification_injection.dart';
 
 class InjectionContainer {
   const InjectionContainer._();
@@ -19,5 +20,6 @@ class InjectionContainer {
     OrganizationInjection.init();
     TournamentInjection.init();
     SearchInjection.init();
+    NotificationInjection.init();
   }
 }

@@ -9,6 +9,7 @@ class AppRoutes {
   static const String onBoarding = '/on-boarding';
   static const String updateProfile = '/update-profile';
   static const String settings = '/settings';
+  static const String notifications = '/notifications';
   static const String imagePreview = '/image_preview';
   static const String createMatch = '/create-match';
   static const String scoreBall = '/score-ball';
@@ -50,6 +51,15 @@ class AppRoutes {
   static String teamProfilePath(String teamId) => '/team/$teamId/profile';
 
   static const String organizations = '/organizations';
+
+  /// Registered with a GetX path parameter. Never navigate with this
+  /// constant directly — use [claimPlayerPath]. `name` travels as a query
+  /// param, not a path segment, since it's free text (a player's name) that
+  /// needs proper escaping.
+  static const String claimPlayer = '/claim-player/:playerId';
+
+  static String claimPlayerPath(String playerId, {required String name}) =>
+      '/claim-player/$playerId?name=${Uri.encodeQueryComponent(name)}';
 
   static const String search = '/search';
 

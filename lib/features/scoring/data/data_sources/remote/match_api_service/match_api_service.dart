@@ -170,6 +170,22 @@ class MatchApiService {
     );
   }
 
+  /// Self-service only — no ownership check server-side, deliberately: see
+  /// `POST /v1/player/:playerId/claim` in docs/api.md.
+  Future<Either<ApiResponseModel, CricketFailure>> claimPlayer({
+    required String playerId,
+  }) async {
+    return await apiClient.post(endpoint: matchEndpoint.claimPlayer(playerId));
+  }
+
+  Future<Either<ApiResponseModel, CricketFailure>> unclaimPlayer({
+    required String playerId,
+  }) async {
+    return await apiClient.post(
+      endpoint: matchEndpoint.unclaimPlayer(playerId),
+    );
+  }
+
   /// No token is attached deliberately — not because one is stripped, but
   /// because [ApiClient] only adds an `Authorization` header when
   /// [SecureStorageService] actually holds one, and a spectator session

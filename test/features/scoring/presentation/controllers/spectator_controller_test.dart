@@ -149,6 +149,16 @@ class _FakeMatchRepository implements MatchRepository {
       throw UnimplementedError('Not exercised in this test.');
 
   @override
+  Future<Either<CricketResponse<Map<String, dynamic>>, CricketFailure>>
+  claimPlayer({required String playerId}) =>
+      throw UnimplementedError('Not exercised in this test.');
+
+  @override
+  Future<Either<CricketResponse<Map<String, dynamic>>, CricketFailure>>
+  unclaimPlayer({required String playerId}) =>
+      throw UnimplementedError('Not exercised in this test.');
+
+  @override
   Future<Either<CricketResponse<AbandonMatchRes>, CricketFailure>>
   abandonMatch({required String matchId}) =>
       throw UnimplementedError('Not exercised in this test.');

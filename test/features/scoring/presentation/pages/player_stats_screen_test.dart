@@ -53,6 +53,7 @@ CareerStatsRes _stats({
   String? bio,
   String? battingStyle,
   String? bowlingStyle,
+  bool isClaimed = false,
 }) => CareerStatsRes(
   playerId: 'player-1',
   playerName: 'Rahul',
@@ -61,6 +62,7 @@ CareerStatsRes _stats({
   bio: bio,
   battingStyle: battingStyle,
   bowlingStyle: bowlingStyle,
+  isClaimed: isClaimed,
   matchesPlayed: 0,
   batting: BattingCareerStats(
     inningsBatted: 0, runs: 0, ballsFaced: 0, timesOut: 0, notOuts: 0,

@@ -95,6 +95,7 @@ MatchHistoryItem _item(String matchId) => MatchHistoryItem(
   totalOvers: 20,
   status: 'completed',
   createdAt: '2026-08-20T10:15:00.000Z',
+  syncStatus: 'synced',
 );
 
 void main() {

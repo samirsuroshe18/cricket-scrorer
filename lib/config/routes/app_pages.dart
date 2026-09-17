@@ -20,15 +20,18 @@ import 'package:cricket_scorer/features/auth/presentation/pages/update_profile_s
 import 'package:cricket_scorer/features/home/presentation/bindings/home_binding.dart';
 import 'package:cricket_scorer/features/home/presentation/pages/main_shell_screen.dart';
 import 'package:cricket_scorer/features/home/presentation/pages/settings_screen.dart';
+import 'package:cricket_scorer/features/notifications/presentation/pages/notifications_screen.dart';
 import 'package:cricket_scorer/features/scoring/presentation/bindings/create_match_binding.dart';
 import 'package:cricket_scorer/features/scoring/presentation/bindings/result_binding.dart';
 import 'package:cricket_scorer/features/scoring/presentation/bindings/player_stats_binding.dart';
 import 'package:cricket_scorer/features/scoring/presentation/bindings/score_ball_binding.dart';
 import 'package:cricket_scorer/features/scoring/presentation/bindings/spectator_binding.dart';
 import 'package:cricket_scorer/features/scoring/presentation/bindings/team_profile_binding.dart';
+import 'package:cricket_scorer/features/scoring/presentation/bindings/claim_player_binding.dart';
 import 'package:cricket_scorer/features/scoring/presentation/pages/create_match_screen.dart';
 import 'package:cricket_scorer/features/scoring/presentation/pages/result_screen.dart';
 import 'package:cricket_scorer/features/scoring/presentation/pages/player_stats_screen.dart';
+import 'package:cricket_scorer/features/scoring/presentation/pages/claim_player_screen.dart';
 import 'package:cricket_scorer/features/scoring/presentation/pages/score_ball_screen.dart';
 import 'package:cricket_scorer/features/scoring/presentation/pages/spectator_screen.dart';
 import 'package:cricket_scorer/features/scoring/presentation/pages/team_profile_screen.dart';
@@ -87,6 +90,13 @@ abstract class AppPages {
       name: AppRoutes.settings,
       page: () => const SettingsScreen(),
     ),
+    // No binding of its own — the home shell's HomeBinding already
+    // registers NotificationsController (it also feeds Home's bell badge),
+    // and this route is never reachable before that shell has mounted.
+    GetPage(
+      name: AppRoutes.notifications,
+      page: () => const NotificationsScreen(),
+    ),
     GetPage(
       name: AppRoutes.setPassword,
       page: () => const SetPasswordScreen(),
@@ -131,6 +141,11 @@ abstract class AppPages {
       name: AppRoutes.playerStats,
       page: () => const PlayerStatsScreen(),
       binding: PlayerStatsBinding(),
+    ),
+    GetPage(
+      name: AppRoutes.claimPlayer,
+      page: () => const ClaimPlayerScreen(),
+      binding: ClaimPlayerBinding(),
     ),
     GetPage(
       name: AppRoutes.teamProfile,

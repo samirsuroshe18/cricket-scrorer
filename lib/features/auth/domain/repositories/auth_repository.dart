@@ -52,4 +52,9 @@ abstract class AuthRepository {
   Future<Either<CricketResponse<Map<String, dynamic>>, CricketFailure>> logout({
     required String? refreshToken,
   });
+
+  Future<Either<CricketResponse<Map<String, dynamic>>, CricketFailure>>
+  updateFcmToken({
+    required String fcmToken,
+  });
 }

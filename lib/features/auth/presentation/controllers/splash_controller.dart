@@ -53,6 +53,15 @@ class SplashController extends GetxController
   /// all, not merely skip acting on its result.
   String? _spectatorCode;
 
+  /// A `/claim-player/<id>?name=<name>` cold launch — unlike [_spectatorCode],
+  /// this does NOT skip `get-current-user`: claiming is inherently a "link
+  /// my own account" action, so it needs to know whether there even is a
+  /// signed-in account to link. A claim link opened by a signed-out device
+  /// is simply dropped once `_navigate` reaches the else branch below —
+  /// there's no "resume this after login" queue, so the person just taps
+  /// the share link again once they're signed in.
+  ClaimPlayerLink? _pendingClaim;
+
   @override
   void onReady() {
     super.onReady();
@@ -60,7 +69,13 @@ class SplashController extends GetxController
   }
 
   Future<void> _resolveAndNavigate() async {
-    _spectatorCode = await PendingDeepLink.readSpectatorCode();
+    final uri = await PendingDeepLink.readInitialUri();
+    if (uri != null) {
+      _spectatorCode = PendingDeepLink.spectatorCodeFrom(uri);
+      if (_spectatorCode == null) {
+        _pendingClaim = PendingDeepLink.claimPlayerFrom(uri);
+      }
+    }
     if (_spectatorCode == null) {
       _apiResponseFuture = getUserUseCase();
     }
@@ -119,6 +134,15 @@ class SplashController extends GetxController
         results[1] as Either<CricketResponse<User>, CricketFailure>;
 
     if (response.isResult) {
+      final claim = _pendingClaim;
+      if (claim != null) {
+        unawaited(
+          Get.offAllNamed<dynamic>(
+            AppRoutes.claimPlayerPath(claim.playerId, name: claim.name),
+          ),
+        );
+        return;
+      }
       try {
         await PostAuthRouter.route(
           profileCompleted: response.result.data?.profileCompleted ?? false,

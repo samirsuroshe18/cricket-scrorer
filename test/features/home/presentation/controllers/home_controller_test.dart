@@ -18,6 +18,7 @@ import 'package:cricket_scorer/features/auth/data/models/response/verify_otp_res
 import 'package:cricket_scorer/features/auth/data/models/user.dart';
 import 'package:cricket_scorer/features/auth/domain/repositories/auth_repository.dart';
 import 'package:cricket_scorer/features/auth/domain/usecases/logout.dart';
+import 'package:cricket_scorer/features/auth/domain/usecases/update_fcm_token.dart';
 import 'package:cricket_scorer/features/home/presentation/controllers/home_controller.dart';
 import 'package:cricket_scorer/features/scoring/data/models/request/create_match_req.dart';
 import 'package:cricket_scorer/features/scoring/data/models/request/score_ball_req.dart';
@@ -105,11 +106,19 @@ class _UnusedAuthRepository implements AuthRepository {
   Future<Either<CricketResponse<Map<String, dynamic>>, CricketFailure>>
   logout({required String? refreshToken}) =>
       throw UnimplementedError('Not exercised in this test.');
+
+  @override
+  Future<Either<CricketResponse<Map<String, dynamic>>, CricketFailure>>
+  updateFcmToken({required String fcmToken}) =>
+      throw UnimplementedError('Not exercised in this test.');
 }
 
 /// `logout` is controllable per test (a canned result, or made to throw);
 /// every other method throws — nothing else on `AuthRepository` is exercised
-/// by `HomeController.logout`.
+/// by `HomeController.logout`. `updateFcmToken` is likewise never actually
+/// invoked: `_syncFcmToken` short-circuits on `Get.isRegistered<
+/// FirebaseService>()`, which is false in every one of these tests (no real
+/// Firebase app to register).
 class _FakeAuthRepository implements AuthRepository {
   Either<CricketResponse<Map<String, dynamic>>, CricketFailure>?
   logoutResponse;
@@ -164,6 +173,11 @@ class _FakeAuthRepository implements AuthRepository {
   @override
   Future<Either<CricketResponse<Map<String, dynamic>>, CricketFailure>>
   updateProfile({required UpdateProfileReq? params, File? file}) =>
+      throw UnimplementedError('Not exercised in this test.');
+
+  @override
+  Future<Either<CricketResponse<Map<String, dynamic>>, CricketFailure>>
+  updateFcmToken({required String fcmToken}) =>
       throw UnimplementedError('Not exercised in this test.');
 }
 
@@ -317,6 +331,16 @@ class _FakeMatchRepository implements MatchRepository {
       throw UnimplementedError('Not exercised in this test.');
 
   @override
+  Future<Either<CricketResponse<Map<String, dynamic>>, CricketFailure>>
+  claimPlayer({required String playerId}) =>
+      throw UnimplementedError('Not exercised in this test.');
+
+  @override
+  Future<Either<CricketResponse<Map<String, dynamic>>, CricketFailure>>
+  unclaimPlayer({required String playerId}) =>
+      throw UnimplementedError('Not exercised in this test.');
+
+  @override
   Stream<Either<MatchCompleteRes, CricketFailure>> watchMatchComplete({
     required String matchId,
   }) => const Stream.empty();
@@ -385,6 +409,7 @@ MatchHistoryItem _item(String matchId, {String status = 'live'}) =>
       totalOvers: 5,
       status: status,
       createdAt: '2026-08-20T10:15:00.000Z',
+      syncStatus: 'synced',
     );
 
 void main() {
@@ -401,6 +426,9 @@ void main() {
         matchRepository: repo,
       ),
       assignScorerUseCase: AssignScorerUseCase(matchRepository: repo),
+      updateFcmTokenUseCase: UpdateFcmTokenUseCase(
+        authRepository: _UnusedAuthRepository(),
+      ),
     );
   });
 
@@ -661,6 +689,7 @@ void main() {
         assignScorerUseCase: AssignScorerUseCase(
           matchRepository: _FakeMatchRepository(),
         ),
+        updateFcmTokenUseCase: UpdateFcmTokenUseCase(authRepository: authRepo),
       );
 
       await tester.pumpWidget(

@@ -1,15 +1,31 @@
+import 'package:cricket_scorer/config/routes/app_routes.dart';
 import 'package:cricket_scorer/core/extensions/space_extension.dart';
 import 'package:cricket_scorer/core/extensions/theme_x.dart';
 import 'package:cricket_scorer/core/global/widgets/cricket_button.dart';
 import 'package:cricket_scorer/core/global/widgets/cricket_text.dart';
 import 'package:cricket_scorer/core/global/widgets/custom_app_bar.dart';
+import 'package:cricket_scorer/core/global/widgets/snackbars/cricket_snackbar.dart';
 import 'package:cricket_scorer/core/translations/translation_keys.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/career_stats_res.dart';
 import 'package:cricket_scorer/features/scoring/presentation/controllers/player_stats_controller.dart';
 import 'package:cricket_scorer/features/scoring/presentation/utils/career_stats_format.dart';
 import 'package:cricket_scorer/features/scoring/presentation/widget/edit_player_profile_sheet.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+
+/// Copies a `cricketscorer:///claim-player/<id>?name=<name>` link to the
+/// clipboard — the scorer pastes it wherever they'd reach this player in
+/// real life (a team WhatsApp group, a DM). No OS share sheet: this app has
+/// no share package dependency, and every other "give someone a link"
+/// moment already uses the same copy-to-clipboard pattern (see
+/// `ScoreBallScreen`'s share-code action).
+void _copyClaimLink(CareerStatsRes data) {
+  final link =
+      'cricketscorer://${AppRoutes.claimPlayerPath(data.playerId, name: data.playerName)}';
+  Clipboard.setData(ClipboardData(text: link));
+  CricketSnackbar.showSuccessMessage(TranslationKeys.codeCopied.tr);
+}
 
 const Map<String, String> _roleLabels = <String, String>{
   'batsman': TranslationKeys.roleBatsman,
@@ -46,6 +62,28 @@ class PlayerStatsScreen extends GetView<PlayerStatsController> {
       appBar: CustomAppBar(
         title: TranslationKeys.playerStats.tr,
         actions: [
+          Obx(() {
+            final data = controller.careerStats.value;
+            if (data == null) return const SizedBox.shrink();
+            return IconButton(
+              tooltip: data.isClaimed
+                  ? TranslationKeys.playerAlreadyClaimed.tr
+                  : TranslationKeys.invitePlayerToClaim.tr,
+              icon: Icon(
+                data.isClaimed
+                    ? Icons.verified_outlined
+                    : Icons.person_add_alt_outlined,
+                color: data.isClaimed
+                    ? context.colors.statusSuccess
+                    : null,
+              ),
+              onPressed: data.isClaimed
+                  ? () => CricketSnackbar.showAlertMessage(
+                      TranslationKeys.playerAlreadyClaimed.tr,
+                    )
+                  : () => _copyClaimLink(data),
+            );
+          }),
           Obx(() {
             final data = controller.careerStats.value;
             if (data == null) return const SizedBox.shrink();

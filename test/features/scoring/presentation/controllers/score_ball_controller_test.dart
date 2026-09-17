@@ -184,6 +184,18 @@ class _OfflineMatchRepository implements MatchRepository {
   }
 
   @override
+  Future<Either<CricketResponse<Map<String, dynamic>>, CricketFailure>>
+  claimPlayer({required String playerId}) async {
+    throw UnimplementedError('Not exercised in this test.');
+  }
+
+  @override
+  Future<Either<CricketResponse<Map<String, dynamic>>, CricketFailure>>
+  unclaimPlayer({required String playerId}) async {
+    throw UnimplementedError('Not exercised in this test.');
+  }
+
+  @override
   Stream<Either<MatchCompleteRes, CricketFailure>> watchMatchComplete({
     required String matchId,
   }) => const Stream.empty();
@@ -504,6 +516,18 @@ class _MixedMatchRepository implements MatchRepository {
   }
 
   @override
+  Future<Either<CricketResponse<Map<String, dynamic>>, CricketFailure>>
+  claimPlayer({required String playerId}) async {
+    throw UnimplementedError('Not exercised in this test.');
+  }
+
+  @override
+  Future<Either<CricketResponse<Map<String, dynamic>>, CricketFailure>>
+  unclaimPlayer({required String playerId}) async {
+    throw UnimplementedError('Not exercised in this test.');
+  }
+
+  @override
   Stream<Either<MatchCompleteRes, CricketFailure>> watchMatchComplete({
     required String matchId,
   }) => const Stream.empty();
@@ -698,6 +722,18 @@ class _RecordingMatchRepository implements MatchRepository {
     required String playerId,
     required UpdatePlayerReq params,
   }) async {
+    throw UnimplementedError('Not exercised in this test.');
+  }
+
+  @override
+  Future<Either<CricketResponse<Map<String, dynamic>>, CricketFailure>>
+  claimPlayer({required String playerId}) async {
+    throw UnimplementedError('Not exercised in this test.');
+  }
+
+  @override
+  Future<Either<CricketResponse<Map<String, dynamic>>, CricketFailure>>
+  unclaimPlayer({required String playerId}) async {
     throw UnimplementedError('Not exercised in this test.');
   }
 
@@ -1068,6 +1104,18 @@ class _ServerSimulatingMatchRepository implements MatchRepository {
   }
 
   @override
+  Future<Either<CricketResponse<Map<String, dynamic>>, CricketFailure>>
+  claimPlayer({required String playerId}) async {
+    throw UnimplementedError('Not exercised in this test.');
+  }
+
+  @override
+  Future<Either<CricketResponse<Map<String, dynamic>>, CricketFailure>>
+  unclaimPlayer({required String playerId}) async {
+    throw UnimplementedError('Not exercised in this test.');
+  }
+
+  @override
   Stream<Either<MatchCompleteRes, CricketFailure>> watchMatchComplete({
     required String matchId,
   }) => const Stream.empty();
@@ -1257,6 +1305,18 @@ class _RuleBlockingMatchRepository implements MatchRepository {
     required String playerId,
     required UpdatePlayerReq params,
   }) async {
+    throw UnimplementedError('Not exercised in this test.');
+  }
+
+  @override
+  Future<Either<CricketResponse<Map<String, dynamic>>, CricketFailure>>
+  claimPlayer({required String playerId}) async {
+    throw UnimplementedError('Not exercised in this test.');
+  }
+
+  @override
+  Future<Either<CricketResponse<Map<String, dynamic>>, CricketFailure>>
+  unclaimPlayer({required String playerId}) async {
     throw UnimplementedError('Not exercised in this test.');
   }
 
@@ -3819,6 +3879,16 @@ class _LockTransitionMatchRepository implements MatchRepository {
   @override
   Future<Either<CricketResponse<PlayerProfileRes>, CricketFailure>>
   updatePlayer({required String playerId, required UpdatePlayerReq params}) =>
+      throw UnimplementedError('Not exercised in this test.');
+
+  @override
+  Future<Either<CricketResponse<Map<String, dynamic>>, CricketFailure>>
+  claimPlayer({required String playerId}) =>
+      throw UnimplementedError('Not exercised in this test.');
+
+  @override
+  Future<Either<CricketResponse<Map<String, dynamic>>, CricketFailure>>
+  unclaimPlayer({required String playerId}) =>
       throw UnimplementedError('Not exercised in this test.');
 
   @override

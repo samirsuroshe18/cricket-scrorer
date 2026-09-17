@@ -151,6 +151,14 @@ abstract class MatchRepository {
   Future<Either<CricketResponse<PlayerProfileRes>, CricketFailure>>
   updatePlayer({required String playerId, required UpdatePlayerReq params});
 
+  /// `POST /v1/player/:playerId/claim` — self-service, no ownership check.
+  Future<Either<CricketResponse<Map<String, dynamic>>, CricketFailure>>
+  claimPlayer({required String playerId});
+
+  /// `POST /v1/player/:playerId/unclaim`.
+  Future<Either<CricketResponse<Map<String, dynamic>>, CricketFailure>>
+  unclaimPlayer({required String playerId});
+
   /// The `match:complete` event — see [MatchSocketService.watchMatchComplete].
   Stream<Either<MatchCompleteRes, CricketFailure>> watchMatchComplete({
     required String matchId,

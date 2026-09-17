@@ -95,4 +95,13 @@ class UserApiService {
       ),
     );
   }
+
+  Future<Either<ApiResponseModel, CricketFailure>> updateFcmToken({
+    required String fcmToken,
+  }) async {
+    return await apiClient.post(
+      endpoint: authEndpoint.updateFcm,
+      data: {'fcmToken': fcmToken},
+    );
+  }
 }

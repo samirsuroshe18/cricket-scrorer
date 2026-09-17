@@ -123,6 +123,13 @@ class CareerStatsRes {
   final String? battingStyle;
   final String? bowlingStyle;
 
+  /// Whether *someone* has linked their account to this player — never who,
+  /// even to the owning scorer viewing this. Just enough for this screen to
+  /// switch between an "invite to claim" and an "already claimed"
+  /// affordance. See docs/api.md's `## Notifications` section for what
+  /// claiming unlocks.
+  final bool isClaimed;
+
   final int matchesPlayed;
   final BattingCareerStats batting;
   final BowlingCareerStats bowling;
@@ -135,6 +142,7 @@ class CareerStatsRes {
     required this.bio,
     required this.battingStyle,
     required this.bowlingStyle,
+    required this.isClaimed,
     required this.matchesPlayed,
     required this.batting,
     required this.bowling,

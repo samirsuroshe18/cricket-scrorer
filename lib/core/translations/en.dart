@@ -455,4 +455,17 @@ Map<String, String> en = {
   TranslationKeys.settings: 'Settings',
   TranslationKeys.appearance: 'Appearance',
   TranslationKeys.account: 'Account',
+
+  TranslationKeys.claimPlayerTitle: 'Claim your profile',
+  TranslationKeys.claimPlayerPrompt: 'Is this you — @name?',
+  TranslationKeys.claimPlayerHint: 'Linking your account means you\'ll get notified when it\'s your turn to bat or bowl, and when you\'re sold in an auction.',
+  TranslationKeys.claimPlayerConfirm: 'Yes, this is me',
+  TranslationKeys.claimPlayerSuccess: 'You\'ve linked @name to your account.',
+  TranslationKeys.claimPlayerGoHome: 'Go to Home',
+  TranslationKeys.invitePlayerToClaim: 'Invite this player to claim their profile',
+  TranslationKeys.playerAlreadyClaimed: 'This player has already claimed their profile',
+  TranslationKeys.shareClaimMessage: 'Claim your cricket profile on Cricket Scorer!',
+  TranslationKeys.notifications: 'Notifications',
+  TranslationKeys.noNotificationsYet: 'No notifications yet',
+  TranslationKeys.markAllRead: 'Mark all read',
 };
