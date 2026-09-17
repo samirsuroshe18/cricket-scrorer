@@ -503,4 +503,18 @@ class TranslationKeys {
   static const String settings = 'settings';
   static const String appearance = 'appearance';
   static const String account = 'account';
+
+  // Player claim/unclaim + notifications
+  static const String claimPlayerTitle = 'claim_player_title';
+  static const String claimPlayerPrompt = 'claim_player_prompt';
+  static const String claimPlayerHint = 'claim_player_hint';
+  static const String claimPlayerConfirm = 'claim_player_confirm';
+  static const String claimPlayerSuccess = 'claim_player_success';
+  static const String claimPlayerGoHome = 'claim_player_go_home';
+  static const String invitePlayerToClaim = 'invite_player_to_claim';
+  static const String playerAlreadyClaimed = 'player_already_claimed';
+  static const String shareClaimMessage = 'share_claim_message';
+  static const String notifications = 'notifications';
+  static const String noNotificationsYet = 'no_notifications_yet';
+  static const String markAllRead = 'mark_all_read';
 }

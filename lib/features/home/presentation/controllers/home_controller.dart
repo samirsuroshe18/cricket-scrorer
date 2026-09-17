@@ -10,7 +10,9 @@ import 'package:cricket_scorer/core/services/shared_preference_service.dart';
 import 'package:cricket_scorer/core/utils/current_user.dart';
 import 'package:cricket_scorer/features/auth/data/models/request/logout_req.dart';
 import 'package:cricket_scorer/features/auth/data/models/user.dart';
+import 'package:cricket_scorer/core/services/firebase_service.dart';
 import 'package:cricket_scorer/features/auth/domain/usecases/logout.dart';
+import 'package:cricket_scorer/features/auth/domain/usecases/update_fcm_token.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/create_match_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/match_history_res.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/delete_match.dart';
@@ -31,6 +33,7 @@ class HomeController extends GetxController {
   final DeleteMatchUseCase deleteMatchUseCase;
   final GetScorerCandidatesUseCase getScorerCandidatesUseCase;
   final AssignScorerUseCase assignScorerUseCase;
+  final UpdateFcmTokenUseCase updateFcmTokenUseCase;
 
   HomeController({
     required this.logoutUseCase,
@@ -38,6 +41,7 @@ class HomeController extends GetxController {
     required this.deleteMatchUseCase,
     required this.getScorerCandidatesUseCase,
     required this.assignScorerUseCase,
+    required this.updateFcmTokenUseCase,
   });
 
   static const int _pageSize = 20;
@@ -72,6 +76,7 @@ class HomeController extends GetxController {
     super.onInit();
     refreshCurrentUserProfile();
     unawaited(loadHistory());
+    unawaited(_syncFcmToken());
   }
 
   /// Re-reads the cached profile — called once on init and again after
@@ -79,6 +84,23 @@ class HomeController extends GetxController {
   /// needing its own network round trip here.
   void refreshCurrentUserProfile() {
     currentUserProfile.value = currentUser();
+  }
+
+  /// Registers this device's FCM token against the signed-in user, once per
+  /// cold start that reaches Home — the missing link that made every
+  /// server-triggered push a no-op until now (see docs/api.md's
+  /// `## Notifications` section). Guarded on `Get.isRegistered`, not a
+  /// constructor dependency: `FirebaseService` needs a real Firebase app
+  /// (unavailable in a bare unit test), and every other `HomeController`
+  /// dependency here is already a plain, fakeable usecase — adding one more
+  /// thing this method needs would force every existing test to also fake
+  /// Firebase just to construct the controller at all. A no-op skip is
+  /// exactly correct there: no real device, nothing to register.
+  Future<void> _syncFcmToken() async {
+    if (!Get.isRegistered<FirebaseService>()) return;
+    final token = await Get.find<FirebaseService>().generateToken();
+    if (token == null || token.isEmpty) return;
+    await updateFcmTokenUseCase(params: token);
   }
 
   /// First page, replacing whatever list is already showing — the pull-to-

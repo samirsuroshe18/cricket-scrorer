@@ -198,6 +198,11 @@ class MatchHistoryCard extends StatelessWidget {
                   ),
                 ),
               ],
+              if (item.syncStatus == 'conflict' ||
+                  item.syncStatus == 'syncing') ...[
+                6.h,
+                _SyncStatusChip(syncStatus: item.syncStatus),
+              ],
             ],
           ),
         ),
@@ -267,6 +272,44 @@ class _StatusBadge extends StatelessWidget {
           fontWeight: FontWeight.w600,
         ),
       ),
+    );
+  }
+}
+
+/// Only ever built for `conflict`/`syncing` — see [MatchHistoryItem.syncStatus]'s
+/// doc comment for why `local`/`synced` render nothing here. Reuses the same
+/// copy the in-console sync banner already shows
+/// (`sync_conflict_title`/`syncing_now`), so a scorer sees consistent
+/// wording whether they're looking at the card or already inside the match.
+class _SyncStatusChip extends StatelessWidget {
+  const _SyncStatusChip({required this.syncStatus});
+
+  final String syncStatus;
+
+  @override
+  Widget build(BuildContext context) {
+    final isConflict = syncStatus == 'conflict';
+    final color = isConflict
+        ? context.colors.statusDanger
+        : context.colors.statusInfo;
+    final label = isConflict
+        ? TranslationKeys.syncConflictTitle.tr
+        : TranslationKeys.syncingNow.tr;
+    final icon = isConflict ? Icons.sync_problem : Icons.sync;
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: 14, color: color),
+        4.w,
+        CricketText(
+          text: label,
+          style: context.textTheme.labelSmall?.copyWith(
+            color: color,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ],
     );
   }
 }

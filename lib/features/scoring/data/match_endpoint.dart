@@ -44,6 +44,10 @@ class MatchEndpoint {
 
   String playerProfile(String playerId) => '/v1/player/$playerId';
 
+  String claimPlayer(String playerId) => '/v1/player/$playerId/claim';
+
+  String unclaimPlayer(String playerId) => '/v1/player/$playerId/unclaim';
+
   String abandon(String matchId) => '/v1/match/$matchId/abandon';
 
   String delete(String matchId) => '/v1/match/$matchId';

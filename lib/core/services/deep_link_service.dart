@@ -50,19 +50,38 @@ class DeepLinkService extends GetxService {
   /// decision is testable without a real `uriLinkStream` event.
   String? routeFor(Uri uri) {
     final code = PendingDeepLink.spectatorCodeFrom(uri);
-    if (code == null) return null;
+    if (code != null) {
+      final path = AppRoutes.spectatorPath(code);
+      return Get.currentRoute == path ? null : path;
+    }
 
-    final path = AppRoutes.spectatorPath(code);
-    return Get.currentRoute == path ? null : path;
+    final claim = PendingDeepLink.claimPlayerFrom(uri);
+    if (claim != null) {
+      final path = AppRoutes.claimPlayerPath(claim.playerId, name: claim.name);
+      return Get.currentRoute.startsWith(_claimRouteBase(claim.playerId))
+          ? null
+          : path;
+    }
+
+    return null;
   }
+
+  static String _claimRouteBase(String playerId) => '/claim-player/$playerId';
 
   void _onLink(Uri uri) {
     final path = routeFor(uri);
     if (path == null) return;
 
-    // No user check, no onboarding check, no profile check — same as the
-    // cold-start path: a spectator link bypasses every auth-shaped branch.
-    unawaited(Get.offAllNamed<dynamic>(path));
+    // A spectator link bypasses every auth-shaped branch, so it resets the
+    // whole stack (`offAllNamed`). A claim link, by contrast, only makes
+    // sense for someone already signed in and using the app — a plain push
+    // (`toNamed`) so "back" returns them to wherever they actually were,
+    // same as any other screen a share link might open.
+    if (PendingDeepLink.spectatorCodeFrom(uri) != null) {
+      unawaited(Get.offAllNamed<dynamic>(path));
+    } else {
+      unawaited(Get.toNamed<dynamic>(path));
+    }
   }
 
   @override

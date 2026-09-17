@@ -10,4 +10,5 @@ class AuthEndpoint {
   final String setPass = '/v1/user/set-password';
   final String updateProfile = '/v1/user/update-profile';
   final String logout = '/v1/user/logout';
+  final String updateFcm = '/v1/user/update-fcm';
 }

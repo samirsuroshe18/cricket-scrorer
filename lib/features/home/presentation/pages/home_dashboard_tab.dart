@@ -1,6 +1,8 @@
 import 'dart:async';
 
+import 'package:cricket_scorer/config/routes/app_routes.dart';
 import 'package:cricket_scorer/core/extensions/space_extension.dart';
+import 'package:cricket_scorer/core/extensions/theme_x.dart';
 import 'package:cricket_scorer/core/global/widgets/cricket_text.dart';
 import 'package:cricket_scorer/core/utils/current_user.dart';
 import 'package:cricket_scorer/core/translations/translation_keys.dart';
@@ -8,6 +10,7 @@ import 'package:cricket_scorer/features/home/presentation/controllers/home_contr
 import 'package:cricket_scorer/features/home/presentation/controllers/main_shell_controller.dart';
 import 'package:cricket_scorer/features/home/presentation/widgets/home_state_placeholders.dart';
 import 'package:cricket_scorer/features/home/presentation/widgets/match_card_actions.dart';
+import 'package:cricket_scorer/features/notifications/presentation/controllers/notifications_controller.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/match_history_res.dart';
 import 'package:cricket_scorer/features/scoring/presentation/widget/assign_scorer_sheet.dart';
 import 'package:cricket_scorer/features/scoring/presentation/widget/match_history_card.dart';
@@ -165,16 +168,70 @@ class _Header extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.only(top: 8, bottom: 4),
-      child: Obx(() {
-        final username = controller.currentUserProfile.value?.userName;
-        final greeting = (username != null && username.isNotEmpty)
-            ? TranslationKeys.homeGreeting.trParams({'name': username})
-            : TranslationKeys.homeGreetingNoName.tr;
-        return CricketText(
-          text: greeting,
-          style: context.textTheme.headlineMedium,
-        );
-      }),
+      child: Row(
+        children: [
+          Expanded(
+            child: Obx(() {
+              final username = controller.currentUserProfile.value?.userName;
+              final greeting = (username != null && username.isNotEmpty)
+                  ? TranslationKeys.homeGreeting.trParams({'name': username})
+                  : TranslationKeys.homeGreetingNoName.tr;
+              return CricketText(
+                text: greeting,
+                style: context.textTheme.headlineMedium,
+              );
+            }),
+          ),
+          const _NotificationBell(),
+        ],
+      ),
     );
+  }
+}
+
+class _NotificationBell extends StatelessWidget {
+  const _NotificationBell();
+
+  @override
+  Widget build(BuildContext context) {
+    final notifications = Get.find<NotificationsController>();
+
+    return Obx(() {
+      final count = notifications.unreadCount.value;
+      return IconButton(
+        tooltip: TranslationKeys.notifications.tr,
+        onPressed: () => Get.toNamed<dynamic>(AppRoutes.notifications),
+        icon: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            const Icon(Icons.notifications_none),
+            if (count > 0)
+              Positioned(
+                right: -4,
+                top: -4,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 4,
+                    vertical: 1,
+                  ),
+                  constraints: const BoxConstraints(minWidth: 16),
+                  decoration: BoxDecoration(
+                    color: context.colors.statusDanger,
+                    borderRadius: 8.radius,
+                  ),
+                  child: CricketText(
+                    text: count > 9 ? '9+' : '$count',
+                    textAlign: TextAlign.center,
+                    style: context.textTheme.labelSmall?.copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        ),
+      );
+    });
   }
 }

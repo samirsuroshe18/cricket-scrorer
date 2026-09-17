@@ -1,8 +1,10 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:cricket_scorer/config/flavors.dart';
 import 'package:cricket_scorer/core/services/notification_service.dart';
+import 'package:cricket_scorer/features/notifications/presentation/utils/notification_navigation.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
@@ -42,6 +44,11 @@ class FirebaseService extends GetxService {
 
     //Request permission for iOS
     await _messaging.requestPermission(alert: true, badge: true, sound: true);
+    await _messaging.setForegroundNotificationPresentationOptions(
+      alert: true,
+      badge: true,
+      sound: true,
+    );
 
     FirebaseMessaging.onMessage.listen((RemoteMessage message) async {
       if (kDebugMode) {
@@ -53,7 +60,7 @@ class FirebaseService extends GetxService {
           Get.find<NotificationService>().show(
             title: message.notification?.title,
             body: message.notification?.body,
-            payload: message.data.toString(),
+            payload: jsonEncode(message.data),
           ),
         );
       }
@@ -63,6 +70,7 @@ class FirebaseService extends GetxService {
       if (kDebugMode) {
         print('Open from background data : ${message.data}');
       }
+      navigateForNotificationData(message.data);
     });
 
     FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);

@@ -10,6 +10,7 @@ import 'package:cricket_scorer/features/auth/domain/usecases/logout.dart';
 import 'package:cricket_scorer/features/auth/domain/usecases/register.dart';
 import 'package:cricket_scorer/features/auth/domain/usecases/resend_otp.dart';
 import 'package:cricket_scorer/features/auth/domain/usecases/set_password.dart';
+import 'package:cricket_scorer/features/auth/domain/usecases/update_fcm_token.dart';
 import 'package:cricket_scorer/features/auth/domain/usecases/update_profile.dart';
 import 'package:cricket_scorer/features/auth/domain/usecases/verify_otp.dart';
 import 'package:get/get.dart';
@@ -93,6 +94,13 @@ class AuthInjection {
 
     Get.lazyPut<LogoutUseCase>(
       () => LogoutUseCase(
+        authRepository: Get.find<AuthRepository>(),
+      ),
+      fenix: true,
+    );
+
+    Get.lazyPut<UpdateFcmTokenUseCase>(
+      () => UpdateFcmTokenUseCase(
         authRepository: Get.find<AuthRepository>(),
       ),
       fenix: true,

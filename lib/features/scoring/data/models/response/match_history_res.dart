@@ -99,6 +99,18 @@ class MatchHistoryItem {
 
   final String createdAt;
 
+  /// `local` / `syncing` / `synced` / `conflict` — `Match.syncStatus`
+  /// verbatim, per docs/api.md. Always present, but `local` is heavily
+  /// overloaded: it's both the default a match never touched by
+  /// `POST /:matchId/sync` keeps forever (i.e. most matches scored entirely
+  /// online) *and* what a genuinely queued-but-not-yet-synced match sits at.
+  /// Those two cases aren't distinguishable from this field alone, so
+  /// [MatchHistoryCard] only badges `conflict`/`syncing` — the two
+  /// unambiguous states — and treats `local` the same as `synced`: no
+  /// badge, rather than incorrectly flagging every online-scored match as
+  /// "not synced".
+  final String syncStatus;
+
   /// Non-null only while [status] is `live`/`innings_break` — see
   /// [CurrentInningsSummary] and docs/api.md.
   final CurrentInningsSummary? currentInnings;
@@ -116,6 +128,7 @@ class MatchHistoryItem {
     this.createdBy,
     this.assignedScorer,
     required this.createdAt,
+    required this.syncStatus,
     this.currentInnings,
   });
 
@@ -135,6 +148,7 @@ class MatchHistoryItem {
     createdBy: createdBy,
     assignedScorer: assignedScorer,
     createdAt: createdAt,
+    syncStatus: syncStatus,
     currentInnings: currentInnings,
   );
 

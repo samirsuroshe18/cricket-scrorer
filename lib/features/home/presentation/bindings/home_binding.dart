@@ -12,6 +12,12 @@ import 'package:cricket_scorer/features/scoring/domain/usecases/get_match_histor
 import 'package:cricket_scorer/features/scoring/domain/usecases/get_my_teams.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/get_scorer_candidates.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/assign_scorer.dart';
+import 'package:cricket_scorer/features/auth/domain/usecases/update_fcm_token.dart';
+import 'package:cricket_scorer/features/notifications/domain/usecases/get_notifications.dart';
+import 'package:cricket_scorer/features/notifications/domain/usecases/get_unread_count.dart';
+import 'package:cricket_scorer/features/notifications/domain/usecases/mark_all_notifications_read.dart';
+import 'package:cricket_scorer/features/notifications/domain/usecases/mark_notification_read.dart';
+import 'package:cricket_scorer/features/notifications/presentation/controllers/notifications_controller.dart';
 import 'package:get/get.dart';
 
 /// Registered at [AppRoutes.home], which now renders [MainShellScreen] — a
@@ -33,6 +39,7 @@ class HomeBinding extends Bindings {
         deleteMatchUseCase: Get.find<DeleteMatchUseCase>(),
         getScorerCandidatesUseCase: Get.find<GetScorerCandidatesUseCase>(),
         assignScorerUseCase: Get.find<AssignScorerUseCase>(),
+        updateFcmTokenUseCase: Get.find<UpdateFcmTokenUseCase>(),
       ),
     );
 
@@ -47,6 +54,16 @@ class HomeBinding extends Bindings {
         removeOrganizationMemberUseCase:
             Get.find<RemoveOrganizationMemberUseCase>(),
         currentUserId: currentUserId(),
+      ),
+    );
+
+    Get.lazyPut(
+      () => NotificationsController(
+        getNotificationsUseCase: Get.find<GetNotificationsUseCase>(),
+        getUnreadCountUseCase: Get.find<GetUnreadCountUseCase>(),
+        markNotificationReadUseCase: Get.find<MarkNotificationReadUseCase>(),
+        markAllNotificationsReadUseCase:
+            Get.find<MarkAllNotificationsReadUseCase>(),
       ),
     );
   }

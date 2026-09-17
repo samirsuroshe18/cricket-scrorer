@@ -14,6 +14,7 @@ MatchHistoryItem _item({MatchUserRef? assignedScorer}) => MatchHistoryItem(
   status: 'upcoming',
   assignedScorer: assignedScorer,
   createdAt: '2026-08-20T10:15:00.000Z',
+  syncStatus: 'synced',
 );
 
 void main() {

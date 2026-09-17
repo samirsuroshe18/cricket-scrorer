@@ -1,6 +1,8 @@
+import 'dart:convert';
 import 'dart:math';
 
 import 'package:cricket_scorer/core/constants/app_constants.dart';
+import 'package:cricket_scorer/features/notifications/presentation/utils/notification_navigation.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:get/get.dart';
@@ -65,9 +67,19 @@ class NotificationService extends GetxService {
   }
 
   Future<void> _onSelectNotification(NotificationResponse response) async {
-    if (response.payload != null) {
+    final payload = response.payload;
+    if (payload == null || payload.isEmpty) return;
+
+    if (kDebugMode) {
+      print('Notification Payload : $payload');
+    }
+
+    try {
+      final data = jsonDecode(payload) as Map<String, dynamic>;
+      navigateForNotificationData(data);
+    } catch (e) {
       if (kDebugMode) {
-        print('Notification Payload : ${response.payload}');
+        print('Notification Payload decode error : $e');
       }
     }
   }

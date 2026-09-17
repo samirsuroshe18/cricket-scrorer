@@ -294,6 +294,34 @@ class MatchRepositoryImpl extends MatchRepository {
   }
 
   @override
+  Future<Either<CricketResponse<Map<String, dynamic>>, CricketFailure>>
+  claimPlayer({required String playerId}) async {
+    Either<ApiResponseModel, CricketFailure> response = await matchApiService
+        .claimPlayer(playerId: playerId);
+    if (response.isResult) {
+      return Either.result(
+        CricketResponse(data: {}, message: response.result.message),
+      );
+    } else {
+      return Either.fallback(response.fallback);
+    }
+  }
+
+  @override
+  Future<Either<CricketResponse<Map<String, dynamic>>, CricketFailure>>
+  unclaimPlayer({required String playerId}) async {
+    Either<ApiResponseModel, CricketFailure> response = await matchApiService
+        .unclaimPlayer(playerId: playerId);
+    if (response.isResult) {
+      return Either.result(
+        CricketResponse(data: {}, message: response.result.message),
+      );
+    } else {
+      return Either.fallback(response.fallback);
+    }
+  }
+
+  @override
   Stream<Either<MatchCompleteRes, CricketFailure>> watchMatchComplete({
     required String matchId,
   }) {

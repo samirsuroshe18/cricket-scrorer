@@ -191,4 +191,21 @@ class AuthRepositoryImpl extends AuthRepository {
       return Either.fallback(response.fallback);
     }
   }
+
+  @override
+  Future<Either<CricketResponse<Map<String, dynamic>>, CricketFailure>>
+  updateFcmToken({required String fcmToken}) async {
+    Either<ApiResponseModel, CricketFailure> response = await userApiService
+        .updateFcmToken(fcmToken: fcmToken);
+    if (response.isResult) {
+      return Either.result(
+        CricketResponse(
+          data: {},
+          message: response.result.message,
+        ),
+      );
+    } else {
+      return Either.fallback(response.fallback);
+    }
+  }
 }
