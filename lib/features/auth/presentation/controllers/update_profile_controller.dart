@@ -38,7 +38,8 @@ class UpdateProfileController extends GetxController {
   final selectedImage = Rx<File?>(null);
   final existingPhotoUrl = Rx<String?>(null);
 
-  // All optional, no default — mirrors the backend contract exactly.
+  // All optional. battingStyle/bowlingStyle have no backend default;
+  // playingRole does ('unknown') but is normalized to null on load below.
   final battingStyle = Rx<String?>(null);
   final bowlingStyle = Rx<String?>(null);
   final playingRole = Rx<String?>(null);
@@ -84,7 +85,14 @@ class UpdateProfileController extends GetxController {
       bioController.text = user?.bio ?? '';
       battingStyle.value = user?.battingStyle;
       bowlingStyle.value = user?.bowlingStyle;
-      playingRole.value = user?.playingRole;
+      // Unlike battingStyle/bowlingStyle, the backend gives playingRole a
+      // schema default of 'unknown' rather than leaving it unset (see
+      // PlayingRole's doc comment in profile_constants.dart) — treated as
+      // unset here so it doesn't reach _playingRoleLabels, which has no
+      // entry for it.
+      playingRole.value = user?.playingRole == 'unknown'
+          ? null
+          : user?.playingRole;
       jerseyNumberController.text = user?.jerseyNumber?.toString() ?? '';
       existingPhotoUrl.value = user?.photoUrl;
     } else {
