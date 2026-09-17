@@ -5,6 +5,7 @@ class SharedPrefKey {
   static const String refreshToken = 'refreshToken';
   static const String userDetails = 'userDetails';
   static const String onboardingCompleted = 'onboardingCompleted';
+  static const String installMarker = 'installMarker';
   static const String themeMode = 'themeMode';
   static const String language = 'language';
   static const String savedLangVersion = 'savedLangVersion';

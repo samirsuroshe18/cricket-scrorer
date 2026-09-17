@@ -36,6 +36,13 @@ class CoreInjection {
       () async => SecureStorageService().init(),
       permanent: true,
     );
+    // Must run before anything reads a token (ApiClient, SplashController):
+    // an iOS reinstall wipes SharedPreferences but not the Keychain, so a
+    // stale access/refresh token can otherwise survive an uninstall. See
+    // SecureStorageService.reconcileWithInstall for the full reasoning.
+    await Get.find<SecureStorageService>().reconcileWithInstall(
+      Get.find<SharedPreferenceService>(),
+    );
     await Get.putAsync<ApiClient>(
       () async => ApiClient().init(),
       permanent: true,
