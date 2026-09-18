@@ -84,14 +84,30 @@ class MatchHistoryCard extends StatelessWidget {
 
     if (highlight == item.teamA.id || highlight == item.teamB.id) {
       final opponent = highlight == item.teamA.id ? item.teamB : item.teamA;
-      return _teamNameLink(context, opponent.id, 'vs ${opponent.name}');
+      final opponentColor = highlight == item.teamA.id
+          ? context.colors.teamB
+          : context.colors.teamA;
+      return Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _TeamAvatar(name: opponent.name, color: opponentColor),
+          8.w,
+          Flexible(
+            child: _teamNameLink(context, opponent.id, 'vs ${opponent.name}'),
+          ),
+        ],
+      );
     }
 
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
+        _TeamAvatar(name: item.teamA.name, color: context.colors.teamA),
+        6.w,
         Flexible(child: _teamNameLink(context, item.teamA.id, item.teamA.name)),
         CricketText(text: ' vs ', style: context.textTheme.titleSmall),
+        _TeamAvatar(name: item.teamB.name, color: context.colors.teamB),
+        6.w,
         Flexible(child: _teamNameLink(context, item.teamB.id, item.teamB.name)),
       ],
     );
@@ -109,100 +125,121 @@ class MatchHistoryCard extends StatelessWidget {
     return null;
   }
 
+  static const _liveStatuses = {'live', 'innings_break'};
+
   @override
   Widget build(BuildContext context) {
     final delete = onDelete;
     final deleting = isDeleting;
     final delegationLabel = _delegationLabel();
+    final isLive = _liveStatuses.contains(item.status);
+    final liveColor = context.colors.liveCard;
 
     return Material(
-      color: context.colorScheme.surfaceContainerHighest,
+      color: isLive
+          ? Color.alphaBlend(
+              liveColor.withValues(alpha: context.isDark ? 0.24 : 0.3),
+              context.colorScheme.surfaceContainerHighest,
+            )
+          : context.colorScheme.surfaceContainerHighest,
       borderRadius: 12.radius,
+      clipBehavior: Clip.antiAlias,
       child: InkWell(
-        borderRadius: 12.radius,
         onTap: onTap,
-        child: Padding(
-          padding: 16.p,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+        child: IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Expanded(child: _buildTitle(context)),
-                  8.w,
-                  _StatusBadge(status: item.status),
-                  if (onAssignScorer != null)
-                    IconButton(
-                      tooltip: TranslationKeys.assignScorer.tr,
-                      visualDensity: VisualDensity.compact,
-                      icon: Icon(
-                        Icons.person_add_alt,
-                        size: 20,
-                        color: context.colorScheme.onSurfaceVariant,
-                      ),
-                      onPressed: onAssignScorer,
-                    ),
-                  if (delete != null)
-                    Obx(
-                      () => (deleting?.call() ?? false)
-                          ? const Padding(
-                              padding: EdgeInsets.all(8),
-                              child: SizedBox(
-                                width: 16,
-                                height: 16,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                ),
-                              ),
-                            )
-                          : IconButton(
-                              tooltip: TranslationKeys.deleteMatch.tr,
+              if (isLive) Container(width: 4, color: liveColor),
+              Expanded(
+                child: Padding(
+                  padding: 16.p,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Expanded(child: _buildTitle(context)),
+                          8.w,
+                          _StatusBadge(status: item.status),
+                          if (onAssignScorer != null)
+                            IconButton(
+                              tooltip: TranslationKeys.assignScorer.tr,
                               visualDensity: VisualDensity.compact,
                               icon: Icon(
-                                Icons.delete_outline,
+                                Icons.person_add_alt,
                                 size: 20,
                                 color: context.colorScheme.onSurfaceVariant,
                               ),
-                              onPressed: delete,
+                              onPressed: onAssignScorer,
                             ),
-                    ),
-                ],
-              ),
-              if (item.currentInnings case final innings?) ...[
-                6.h,
-                CricketText(
-                  text:
-                      '${innings.totalRuns}/${innings.wickets} '
-                      '(${innings.overs} ${TranslationKeys.overs.tr})',
-                  style: context.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w700,
+                          if (delete != null)
+                            Obx(
+                              () => (deleting?.call() ?? false)
+                                  ? const Padding(
+                                      padding: EdgeInsets.all(8),
+                                      child: SizedBox(
+                                        width: 16,
+                                        height: 16,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                        ),
+                                      ),
+                                    )
+                                  : IconButton(
+                                      tooltip: TranslationKeys.deleteMatch.tr,
+                                      visualDensity: VisualDensity.compact,
+                                      icon: Icon(
+                                        Icons.delete_outline,
+                                        size: 20,
+                                        color: context
+                                            .colorScheme
+                                            .onSurfaceVariant,
+                                      ),
+                                      onPressed: delete,
+                                    ),
+                            ),
+                        ],
+                      ),
+                      if (item.currentInnings case final innings?) ...[
+                        6.h,
+                        CricketText(
+                          text:
+                              '${innings.totalRuns}/${innings.wickets} '
+                              '(${innings.overs} ${TranslationKeys.overs.tr})',
+                          style: context.textTheme.titleLarge?.copyWith(
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                      ],
+                      6.h,
+                      CricketText(
+                        text:
+                            '${item.totalOvers} ${TranslationKeys.overs.tr} · '
+                            '${_formatDate(item.createdAt)}',
+                        style: context.textTheme.bodySmall?.copyWith(
+                          color: context.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                      if (delegationLabel != null) ...[
+                        4.h,
+                        CricketText(
+                          text: delegationLabel,
+                          style: context.textTheme.bodySmall?.copyWith(
+                            color: context.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
+                      if (item.syncStatus == 'conflict' ||
+                          item.syncStatus == 'syncing') ...[
+                        6.h,
+                        _SyncStatusChip(syncStatus: item.syncStatus),
+                      ],
+                    ],
                   ),
                 ),
-              ],
-              6.h,
-              CricketText(
-                text:
-                    '${item.totalOvers} ${TranslationKeys.overs.tr} · '
-                    '${_formatDate(item.createdAt)}',
-                style: context.textTheme.bodySmall?.copyWith(
-                  color: context.colorScheme.onSurfaceVariant,
-                ),
               ),
-              if (delegationLabel != null) ...[
-                4.h,
-                CricketText(
-                  text: delegationLabel,
-                  style: context.textTheme.bodySmall?.copyWith(
-                    color: context.colorScheme.onSurfaceVariant,
-                  ),
-                ),
-              ],
-              if (item.syncStatus == 'conflict' ||
-                  item.syncStatus == 'syncing') ...[
-                6.h,
-                _SyncStatusChip(syncStatus: item.syncStatus),
-              ],
             ],
           ),
         ),
@@ -232,6 +269,49 @@ class MatchHistoryCard extends StatelessWidget {
     final date = DateTime.tryParse(iso);
     if (date == null) return iso;
     return '${date.day} ${_months[date.month - 1]} ${date.year}';
+  }
+}
+
+/// A team-colored initials badge — purely a UI-layer scan aid built from
+/// [item.teamA]/[item.teamB]'s existing `name` field, no backend change. The
+/// team name link right next to it already reads out the full name, so this
+/// is excluded from the semantics tree rather than announced twice.
+class _TeamAvatar extends StatelessWidget {
+  const _TeamAvatar({required this.name, required this.color});
+
+  final String name;
+  final Color color;
+
+  String get _initials {
+    final words = name
+        .trim()
+        .split(RegExp(r'\s+'))
+        .where((word) => word.isNotEmpty)
+        .toList();
+    if (words.isEmpty) return '?';
+    if (words.length == 1) {
+      return words.first
+          .substring(0, words.first.length > 1 ? 2 : 1)
+          .toUpperCase();
+    }
+    return (words.first[0] + words.last[0]).toUpperCase();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ExcludeSemantics(
+      child: CircleAvatar(
+        radius: 12,
+        backgroundColor: color.withValues(alpha: 0.16),
+        child: CricketText(
+          text: _initials,
+          style: context.textTheme.labelSmall?.copyWith(
+            color: color,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+      ),
+    );
   }
 }
 
