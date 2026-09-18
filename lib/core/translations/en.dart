@@ -454,6 +454,7 @@ Map<String, String> en = {
   TranslationKeys.teamLogoUpdated: 'Team logo updated',
   TranslationKeys.statMatches: 'Matches',
   TranslationKeys.statRuns: 'Runs',
+  TranslationKeys.statWickets: 'Wickets',
   TranslationKeys.startFirstMatch: 'Start your first match',
   TranslationKeys.noFilteredMatches: 'No @status matches',
   TranslationKeys.editProfile: 'Edit profile',

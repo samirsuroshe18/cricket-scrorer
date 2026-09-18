@@ -374,6 +374,7 @@ class TranslationKeys {
   static const String teamLogoUpdated = 'team_logo_updated';
   static const String statMatches = 'stat_matches';
   static const String statRuns = 'stat_runs';
+  static const String statWickets = 'stat_wickets';
 
   // Delegated scoring
   static const String assignScorer = 'assign_scorer';

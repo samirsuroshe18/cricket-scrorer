@@ -35,7 +35,7 @@ class HomeStatChips extends StatelessWidget {
         Expanded(
           child: _StatChip(
             value: stats.wickets,
-            label: TranslationKeys.wickets.tr,
+            label: TranslationKeys.statWickets.tr,
           ),
         ),
       ],

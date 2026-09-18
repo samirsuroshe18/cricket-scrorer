@@ -31,7 +31,7 @@ void main() {
     // Raw keys: no translations are loaded in this bare test.
     expect(find.text('stat_matches'), findsOneWidget);
     expect(find.text('stat_runs'), findsOneWidget);
-    expect(find.text('wickets'), findsOneWidget);
+    expect(find.text('stat_wickets'), findsOneWidget);
   });
 
   testWidgets('lays out without overflow in dark mode at a narrow width', (

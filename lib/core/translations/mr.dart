@@ -452,6 +452,7 @@ Map<String, String> mr = {
   TranslationKeys.teamLogoUpdated: 'संघाचा लोगो अपडेट झाला',
   TranslationKeys.statMatches: 'सामने',
   TranslationKeys.statRuns: 'धावा',
+  TranslationKeys.statWickets: 'बळी',
   TranslationKeys.startFirstMatch: 'तुमचा पहिला सामना सुरू करा',
   TranslationKeys.noFilteredMatches: '@status सामने नाहीत',
   TranslationKeys.editProfile: 'प्रोफाइल संपादित करा',
