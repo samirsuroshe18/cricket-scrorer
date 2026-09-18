@@ -12,6 +12,7 @@ import 'package:cricket_scorer/features/scoring/data/models/response/match_aband
 import 'package:cricket_scorer/features/scoring/data/models/response/delete_match_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/live_score_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/match_history_res.dart';
+import 'package:cricket_scorer/features/scoring/data/models/response/my_career_stats_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/request/start_innings_req.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/over_complete_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/score_ball_res.dart';
@@ -148,6 +149,10 @@ abstract class MatchRepository {
   /// `MatchEndpoint.careerStats`'s own comment on why this lives here anyway.
   Future<Either<CricketResponse<CareerStatsRes>, CricketFailure>>
   getCareerStats({required String playerId});
+
+  /// `GET /v1/user/me/career-stats` — the signed-in user's own totals.
+  Future<Either<CricketResponse<MyCareerStatsRes>, CricketFailure>>
+  getMyCareerStats();
 
   /// `PATCH /v1/player/:playerId` — same ownership shape as [getCareerStats].
   Future<Either<CricketResponse<PlayerProfileRes>, CricketFailure>>

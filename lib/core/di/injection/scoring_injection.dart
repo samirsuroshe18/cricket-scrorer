@@ -20,6 +20,7 @@ import 'package:cricket_scorer/features/scoring/domain/usecases/get_match_histor
 import 'package:cricket_scorer/features/scoring/domain/usecases/get_public_match.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/get_scorecard.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/get_career_stats.dart';
+import 'package:cricket_scorer/features/scoring/domain/usecases/get_my_career_stats.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/update_player.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/claim_player.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/unclaim_player.dart';
@@ -97,6 +98,12 @@ class ScoringInjection {
 
     Get.lazyPut<GetCareerStatsUseCase>(
       () => GetCareerStatsUseCase(matchRepository: Get.find<MatchRepository>()),
+      fenix: true,
+    );
+
+    Get.lazyPut<GetMyCareerStatsUseCase>(
+      () =>
+          GetMyCareerStatsUseCase(matchRepository: Get.find<MatchRepository>()),
       fenix: true,
     );
 

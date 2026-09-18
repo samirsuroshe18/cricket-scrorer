@@ -42,6 +42,11 @@ class MatchEndpoint {
   // shares this one chain.
   String careerStats(String playerId) => '/v1/player/$playerId/career-stats';
 
+  /// `GET /v1/user/me/career-stats` — the caller's own totals over every
+  /// claimed Player. Lives here beside [careerStats] for the same reason:
+  /// career stats share this one client/service/repository chain.
+  final String myCareerStats = '/v1/user/me/career-stats';
+
   String playerProfile(String playerId) => '/v1/player/$playerId';
 
   String claimPlayer(String playerId) => '/v1/player/$playerId/claim';

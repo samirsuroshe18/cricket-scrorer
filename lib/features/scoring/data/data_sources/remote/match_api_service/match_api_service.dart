@@ -170,6 +170,10 @@ class MatchApiService {
     return await apiClient.get(endpoint: matchEndpoint.careerStats(playerId));
   }
 
+  Future<Either<ApiResponseModel, CricketFailure>> getMyCareerStats() async {
+    return await apiClient.get(endpoint: matchEndpoint.myCareerStats);
+  }
+
   /// Same ownership shape as [getCareerStats].
   Future<Either<ApiResponseModel, CricketFailure>> updatePlayer({
     required String playerId,

@@ -11,6 +11,8 @@ import 'package:cricket_scorer/core/utils/current_user.dart';
 import 'package:cricket_scorer/core/translations/translation_keys.dart';
 import 'package:cricket_scorer/features/home/presentation/controllers/home_controller.dart';
 import 'package:cricket_scorer/features/home/presentation/controllers/main_shell_controller.dart';
+import 'package:cricket_scorer/features/home/presentation/controllers/my_stats_controller.dart';
+import 'package:cricket_scorer/features/home/presentation/widgets/home_stat_chips.dart';
 import 'package:cricket_scorer/features/home/presentation/widgets/home_state_placeholders.dart';
 import 'package:cricket_scorer/features/home/presentation/widgets/match_card_actions.dart';
 import 'package:cricket_scorer/features/notifications/presentation/controllers/notifications_controller.dart';
@@ -74,7 +76,10 @@ class HomeDashboardTab extends StatelessWidget {
 
           if (controller.matches.isEmpty) {
             return RefreshIndicator(
-              onRefresh: controller.loadHistory,
+              onRefresh: () => Future.wait([
+                controller.loadHistory(),
+                Get.find<MyStatsController>().load(),
+              ]),
               child: ListView(
                 padding: 16.p,
                 children: [
@@ -82,6 +87,7 @@ class HomeDashboardTab extends StatelessWidget {
                   12.h,
                   _Header(controller: controller),
                   16.h,
+                  const _MyStatsSection(),
                   _QuickActionsRow(shell: shell),
                   SizedBox(
                     height: MediaQuery.sizeOf(context).height * 0.42,
@@ -120,7 +126,10 @@ class HomeDashboardTab extends StatelessWidget {
           );
 
           return RefreshIndicator(
-            onRefresh: controller.loadHistory,
+            onRefresh: () => Future.wait([
+              controller.loadHistory(),
+              Get.find<MyStatsController>().load(),
+            ]),
             child: ListView(
               padding: 16.p,
               children: [
@@ -128,6 +137,7 @@ class HomeDashboardTab extends StatelessWidget {
                 12.h,
                 _Header(controller: controller),
                 16.h,
+                const _MyStatsSection(),
                 _QuickActionsRow(shell: shell),
                 24.h,
                 if (liveNow.isNotEmpty) ...[
@@ -205,6 +215,28 @@ class _Header extends StatelessWidget {
         ],
       ),
     );
+  }
+}
+
+/// Hidden until the user has claimed at least one Player and the first load
+/// has succeeded, so a new user never sees a strip of zeros.
+class _MyStatsSection extends StatelessWidget {
+  const _MyStatsSection();
+
+  @override
+  Widget build(BuildContext context) {
+    final controller = Get.find<MyStatsController>();
+
+    return Obx(() {
+      final stats = controller.stats.value;
+      if (stats == null || stats.linkedPlayerCount == 0) {
+        return const SizedBox.shrink();
+      }
+      return Padding(
+        padding: const EdgeInsets.only(bottom: 16),
+        child: HomeStatChips(stats: stats),
+      );
+    });
   }
 }
 
