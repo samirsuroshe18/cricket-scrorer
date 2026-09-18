@@ -71,6 +71,11 @@ class MatchEndpoint {
   String updateTeamOrganization(String teamId) =>
       '/v1/team/$teamId/organization';
 
+  /// `POST /v1/team/:teamId/logo` — multipart upload. Lives here, not on a
+  /// team-specific endpoint class, for the same reason [updateTeamOrganization]
+  /// does: the scoring feature slice already owns every `/v1/team` route.
+  String teamLogo(String teamId) => '/v1/team/$teamId/logo';
+
   /// `GET /v1/match/:matchId/scorer-candidates` — who a caller with assign-
   /// authority can pick from.
   String scorerCandidates(String matchId) =>

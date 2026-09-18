@@ -10,6 +10,7 @@ import 'package:cricket_scorer/features/scoring/data/models/request/start_inning
 import 'package:cricket_scorer/features/scoring/data/models/request/sync_req.dart';
 import 'package:cricket_scorer/features/scoring/data/models/request/undo_ball_req.dart';
 import 'package:cricket_scorer/features/scoring/data/models/request/update_player_req.dart';
+import 'package:dio/dio.dart' show FormData;
 
 class MatchApiService {
   final ApiClient apiClient;
@@ -81,6 +82,16 @@ class MatchApiService {
     return await apiClient.patch(
       endpoint: matchEndpoint.updateTeamOrganization(teamId),
       data: {'organizationId': organizationId},
+    );
+  }
+
+  Future<Either<ApiResponseModel, CricketFailure>> updateTeamLogo({
+    required String teamId,
+    required FormData params,
+  }) async {
+    return await apiClient.post(
+      endpoint: matchEndpoint.teamLogo(teamId),
+      data: params,
     );
   }
 

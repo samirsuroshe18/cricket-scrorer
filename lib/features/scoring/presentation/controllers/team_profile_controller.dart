@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:cricket_scorer/config/routes/app_routes.dart';
 import 'package:cricket_scorer/core/global/widgets/snackbars/cricket_snackbar.dart';
@@ -10,6 +11,7 @@ import 'package:cricket_scorer/features/scoring/domain/usecases/get_team_matches
 import 'package:cricket_scorer/features/scoring/domain/usecases/get_team_profile.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/get_scorer_candidates.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/assign_scorer.dart';
+import 'package:cricket_scorer/features/scoring/domain/usecases/update_team_logo.dart';
 import 'package:get/get.dart';
 
 /// The same still-live/terminal split `HomeController.openMatch` routes on —
@@ -29,6 +31,7 @@ class TeamProfileController extends GetxController {
   final GetTeamMatchesUseCase getTeamMatchesUseCase;
   final GetScorerCandidatesUseCase getScorerCandidatesUseCase;
   final AssignScorerUseCase assignScorerUseCase;
+  final UpdateTeamLogoUseCase updateTeamLogoUseCase;
 
   TeamProfileController({
     required this.teamId,
@@ -36,6 +39,7 @@ class TeamProfileController extends GetxController {
     required this.getTeamMatchesUseCase,
     required this.getScorerCandidatesUseCase,
     required this.assignScorerUseCase,
+    required this.updateTeamLogoUseCase,
   });
 
   static const int _pageSize = 20;
@@ -91,6 +95,22 @@ class TeamProfileController extends GetxController {
     } else {
       profileError.value = response.fallback.message;
     }
+  }
+
+  /// Uploads (or replaces) the team's logo, then re-fetches the profile so the
+  /// new `logoUrl` shows immediately. A failure surfaces the server's own
+  /// localized message (e.g. a 403 for a team the caller can't access) and
+  /// leaves the profile untouched.
+  Future<bool> updateLogo(File file) async {
+    final response = await updateTeamLogoUseCase(
+      params: UpdateTeamLogoParams(teamId: teamId, file: file),
+    );
+    if (!response.isResult) {
+      CricketSnackbar.showErrorMessage(response.fallback.message);
+      return false;
+    }
+    await loadProfile();
+    return true;
   }
 
   /// First page, replacing whatever list is already showing — same shape as

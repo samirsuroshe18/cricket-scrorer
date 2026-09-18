@@ -379,6 +379,12 @@ class _FakeMatchRepository implements MatchRepository {
     required String? organizationId,
   }) => throw UnimplementedError('Not exercised in this test.');
 
+  @override
+  Future<Either<CricketResponse<String>, CricketFailure>> updateTeamLogo({
+    required String teamId,
+    required File file,
+  }) => throw UnimplementedError('Not exercised in this test.');
+
   Either<CricketResponse<ScorerCandidatesRes>, CricketFailure>?
   scorerCandidatesResponse;
   Either<CricketResponse<AssignScorerRes>, CricketFailure>?

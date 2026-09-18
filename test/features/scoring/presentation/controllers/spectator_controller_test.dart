@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:cricket_scorer/core/error/cricket_failure.dart';
 import 'package:cricket_scorer/core/network/models/cricket_response.dart';
@@ -195,6 +196,12 @@ class _FakeMatchRepository implements MatchRepository {
   updateTeamOrganization({
     required String teamId,
     required String? organizationId,
+  }) => throw UnimplementedError('Not exercised in this test.');
+
+  @override
+  Future<Either<CricketResponse<String>, CricketFailure>> updateTeamLogo({
+    required String teamId,
+    required File file,
   }) => throw UnimplementedError('Not exercised in this test.');
 
   @override

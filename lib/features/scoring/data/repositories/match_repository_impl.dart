@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:cricket_scorer/core/error/cricket_failure.dart';
 import 'package:cricket_scorer/core/network/models/api_response_model.dart';
 import 'package:cricket_scorer/core/network/models/cricket_response.dart';
@@ -17,6 +19,7 @@ import 'package:cricket_scorer/features/scoring/data/models/request/start_inning
 import 'package:cricket_scorer/features/scoring/data/models/response/over_complete_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/score_ball_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/select_bowler_res.dart';
+import 'package:dio/dio.dart' show FormData, MultipartFile;
 import 'package:cricket_scorer/features/scoring/data/models/response/start_innings_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/request/sync_req.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/sync_res.dart';
@@ -468,6 +471,35 @@ class MatchRepositoryImpl extends MatchRepository {
           data: TeamOrganizationRes.fromJson(
             response.result.data as Map<String, dynamic>,
           ),
+          message: response.result.message,
+        ),
+      );
+    } else {
+      return Either.fallback(response.fallback);
+    }
+  }
+
+  @override
+  Future<Either<CricketResponse<String>, CricketFailure>> updateTeamLogo({
+    required String teamId,
+    required File file,
+  }) async {
+    final formData = FormData.fromMap({
+      'file': await MultipartFile.fromFile(
+        file.path,
+        filename: file.path.split('/').last,
+      ),
+    });
+
+    final response = await matchApiService.updateTeamLogo(
+      teamId: teamId,
+      params: formData,
+    );
+    if (response.isResult) {
+      final data = response.result.data as Map<String, dynamic>;
+      return Either.result(
+        CricketResponse(
+          data: data['logoUrl'] as String,
           message: response.result.message,
         ),
       );

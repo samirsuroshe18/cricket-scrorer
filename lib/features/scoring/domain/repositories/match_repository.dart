@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:cricket_scorer/core/error/cricket_failure.dart';
 import 'package:cricket_scorer/core/network/models/cricket_response.dart';
 import 'package:cricket_scorer/core/utils/either_util.dart';
@@ -214,6 +216,13 @@ abstract class MatchRepository {
   updateTeamOrganization({
     required String teamId,
     required String? organizationId,
+  });
+
+  /// `POST /v1/team/:teamId/logo` — multipart; the returned string is the new
+  /// Cloudinary URL.
+  Future<Either<CricketResponse<String>, CricketFailure>> updateTeamLogo({
+    required String teamId,
+    required File file,
   });
 
   /// `GET /v1/match/:matchId/scorer-candidates` — see docs/api.md's
