@@ -58,5 +58,8 @@ void main() {
     );
 
     expect(tester.takeException(), isNull);
+    expect(find.text('1234'), findsOneWidget);
+    expect(find.text('56789'), findsOneWidget);
+    expect(find.text('999'), findsOneWidget);
   });
 }

@@ -93,4 +93,21 @@ void main() {
 
     expect(useCase.callCount, 1);
   });
+
+  test(
+    'a throwing use case is swallowed and a later load still works',
+    () async {
+      // `response` is null, so the fake throws on this first call.
+      await controller.load();
+
+      expect(controller.stats.value, isNull);
+
+      useCase.response = Either.result(
+        CricketResponse(message: 'ok', data: _stats()),
+      );
+      await controller.load();
+
+      expect(controller.stats.value?.matchesPlayed, 5);
+    },
+  );
 }

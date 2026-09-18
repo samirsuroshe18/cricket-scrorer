@@ -26,12 +26,13 @@ class MyStatsController extends GetxController {
   Future<void> load() async {
     if (_isLoading) return;
     _isLoading = true;
-
-    final response = await getMyCareerStatsUseCase();
-
-    _isLoading = false;
-    if (response.isResult) {
-      stats.value = response.result.data;
+    try {
+      final response = await getMyCareerStatsUseCase();
+      if (response.isResult) stats.value = response.result.data;
+    } catch (_) {
+      // Silent by design — see the class doc.
+    } finally {
+      _isLoading = false;
     }
   }
 }

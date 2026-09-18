@@ -40,7 +40,13 @@ void main() {
 
   testWidgets('an empty logoUrl is treated as no logo', (tester) async {
     await tester.pumpWidget(
-      _host(const TeamAvatar(name: 'Mumbai Indians', color: Colors.blue, logoUrl: '')),
+      _host(
+        const TeamAvatar(
+          name: 'Mumbai Indians',
+          color: Colors.blue,
+          logoUrl: '',
+        ),
+      ),
     );
 
     expect(find.text('MI'), findsOneWidget);
