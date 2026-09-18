@@ -1,3 +1,4 @@
+import 'package:cricket_scorer/config/routes/app_routes.dart';
 import 'package:cricket_scorer/core/extensions/space_extension.dart';
 import 'package:cricket_scorer/core/extensions/theme_x.dart';
 import 'package:cricket_scorer/core/global/widgets/cricket_button.dart';
@@ -39,6 +40,13 @@ class EmptyMatchesState extends StatelessWidget {
                 color: context.colorScheme.onSurfaceVariant,
               ),
               textAlign: TextAlign.center,
+            ),
+            24.h,
+            CricketButton(
+              buttonText: TranslationKeys.startFirstMatch.tr,
+              prefixIcon: const Icon(Icons.add),
+              onPressed: () => Get.toNamed<dynamic>(AppRoutes.createMatch),
+              width: 220,
             ),
           ],
         ),

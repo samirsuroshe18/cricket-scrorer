@@ -447,6 +447,8 @@ Map<String, String> mr = {
   TranslationKeys.filterAll: 'सर्व',
   TranslationKeys.myTeams: 'माझे संघ',
   TranslationKeys.myTeamsEmptyHint: 'तुमचे संघ इथे दिसतील.',
+  TranslationKeys.joinByCode: 'कोडने सामील व्हा',
+  TranslationKeys.startFirstMatch: 'तुमचा पहिला सामना सुरू करा',
   TranslationKeys.noFilteredMatches: '@status सामने नाहीत',
   TranslationKeys.editProfile: 'प्रोफाइल संपादित करा',
   TranslationKeys.viewMyStats: 'माझी आकडेवारी पहा',
@@ -456,13 +458,18 @@ Map<String, String> mr = {
 
   TranslationKeys.claimPlayerTitle: 'तुमची प्रोफाइल क्लेम करा',
   TranslationKeys.claimPlayerPrompt: 'हे तुम्ही आहात का — @name?',
-  TranslationKeys.claimPlayerHint: 'खाते जोडल्यास फलंदाजी किंवा गोलंदाजीची पाळी आल्यावर, आणि लिलावात विकले गेल्यावर तुम्हाला सूचना मिळेल.',
+  TranslationKeys.claimPlayerHint:
+      'खाते जोडल्यास फलंदाजी किंवा गोलंदाजीची पाळी आल्यावर, आणि लिलावात विकले गेल्यावर तुम्हाला सूचना मिळेल.',
   TranslationKeys.claimPlayerConfirm: 'होय, हा मीच आहे',
-  TranslationKeys.claimPlayerSuccess: 'तुम्ही @name ला तुमच्या खात्याशी जोडले आहे.',
+  TranslationKeys.claimPlayerSuccess:
+      'तुम्ही @name ला तुमच्या खात्याशी जोडले आहे.',
   TranslationKeys.claimPlayerGoHome: 'होमवर जा',
-  TranslationKeys.invitePlayerToClaim: 'या खेळाडूला प्रोफाइल क्लेम करण्यासाठी आमंत्रित करा',
-  TranslationKeys.playerAlreadyClaimed: 'या खेळाडूने आधीच त्यांची प्रोफाइल क्लेम केली आहे',
-  TranslationKeys.shareClaimMessage: 'क्रिकेट स्कोअररवर तुमची क्रिकेट प्रोफाइल क्लेम करा!',
+  TranslationKeys.invitePlayerToClaim:
+      'या खेळाडूला प्रोफाइल क्लेम करण्यासाठी आमंत्रित करा',
+  TranslationKeys.playerAlreadyClaimed:
+      'या खेळाडूने आधीच त्यांची प्रोफाइल क्लेम केली आहे',
+  TranslationKeys.shareClaimMessage:
+      'क्रिकेट स्कोअररवर तुमची क्रिकेट प्रोफाइल क्लेम करा!',
   TranslationKeys.notifications: 'सूचना',
   TranslationKeys.noNotificationsYet: 'अजून कोणतीही सूचना नाही',
   TranslationKeys.markAllRead: 'सर्व वाचलेले चिन्हांकित करा',

@@ -497,6 +497,8 @@ class TranslationKeys {
   static const String filterAll = 'filter_all';
   static const String myTeams = 'my_teams_section';
   static const String myTeamsEmptyHint = 'my_teams_empty_hint';
+  static const String joinByCode = 'join_by_code';
+  static const String startFirstMatch = 'start_first_match';
   static const String noFilteredMatches = 'no_filtered_matches';
   static const String editProfile = 'edit_profile';
   static const String viewMyStats = 'view_my_stats';

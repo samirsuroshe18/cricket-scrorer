@@ -1,9 +1,12 @@
 import 'dart:async';
 
 import 'package:cricket_scorer/config/routes/app_routes.dart';
+import 'package:cricket_scorer/core/constants/assets_util.dart';
 import 'package:cricket_scorer/core/extensions/space_extension.dart';
 import 'package:cricket_scorer/core/extensions/theme_x.dart';
 import 'package:cricket_scorer/core/global/widgets/cricket_text.dart';
+import 'package:cricket_scorer/core/global/widgets/images/cricket_image.dart';
+import 'package:cricket_scorer/core/global/widgets/images/cricket_image_source.dart';
 import 'package:cricket_scorer/core/utils/current_user.dart';
 import 'package:cricket_scorer/core/translations/translation_keys.dart';
 import 'package:cricket_scorer/features/home/presentation/controllers/home_controller.dart';
@@ -14,6 +17,7 @@ import 'package:cricket_scorer/features/notifications/presentation/controllers/n
 import 'package:cricket_scorer/features/scoring/data/models/response/match_history_res.dart';
 import 'package:cricket_scorer/features/scoring/presentation/widget/assign_scorer_sheet.dart';
 import 'package:cricket_scorer/features/scoring/presentation/widget/match_history_card.dart';
+import 'package:cricket_scorer/features/scoring/presentation/widget/watch_match_bottom_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -33,11 +37,8 @@ const _sectionCap = 3;
 /// Home tab: a dashboard, not a list. Reuses the same [HomeController] the
 /// Matches tab reads from — one fetch, two views of it — grouped into
 /// Live Now / Continue Scoring / Recent Matches rather than one flat feed.
-/// Live-score detail isn't shown here: `MatchHistoryItem` (and the API
-/// response behind it) carries no score field today, only status/teams/
-/// overs, so these cards show exactly what the full Matches tab's cards
-/// already show. Adding a score requires a backend + DTO change, called out
-/// separately rather than built silently.
+/// Cards render exactly what the full Matches tab's cards already show,
+/// `MatchHistoryItem.currentInnings` score included where present.
 class HomeDashboardTab extends StatelessWidget {
   const HomeDashboardTab({super.key});
 
@@ -50,7 +51,17 @@ class HomeDashboardTab extends StatelessWidget {
       body: SafeArea(
         child: Obx(() {
           if (controller.isLoading.value && controller.matches.isEmpty) {
-            return const Center(child: CircularProgressIndicator());
+            return const Column(
+              children: [
+                Padding(
+                  padding: EdgeInsets.fromLTRB(16, 8, 16, 0),
+                  child: _BrandStrip(),
+                ),
+                Expanded(
+                  child: Center(child: CircularProgressIndicator()),
+                ),
+              ],
+            );
           }
 
           final error = controller.loadError.value;
@@ -65,11 +76,15 @@ class HomeDashboardTab extends StatelessWidget {
             return RefreshIndicator(
               onRefresh: controller.loadHistory,
               child: ListView(
-                padding: EdgeInsets.zero,
+                padding: 16.p,
                 children: [
+                  const _BrandStrip(),
+                  12.h,
                   _Header(controller: controller),
+                  16.h,
+                  _QuickActionsRow(shell: shell),
                   SizedBox(
-                    height: MediaQuery.sizeOf(context).height * 0.5,
+                    height: MediaQuery.sizeOf(context).height * 0.42,
                     child: const EmptyMatchesState(),
                   ),
                 ],
@@ -109,7 +124,11 @@ class HomeDashboardTab extends StatelessWidget {
             child: ListView(
               padding: 16.p,
               children: [
+                const _BrandStrip(),
+                12.h,
                 _Header(controller: controller),
+                16.h,
+                _QuickActionsRow(shell: shell),
                 24.h,
                 if (liveNow.isNotEmpty) ...[
                   DashboardSectionHeader(
@@ -167,7 +186,7 @@ class _Header extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(top: 8, bottom: 4),
+      padding: const EdgeInsets.only(bottom: 4),
       child: Row(
         children: [
           Expanded(
@@ -233,5 +252,142 @@ class _NotificationBell extends StatelessWidget {
         ),
       );
     });
+  }
+}
+
+/// A compact take on `AuthScoreboardHeader`'s ball-mark + wordmark + accent
+/// bar — same brand language, sized for a dashboard row rather than a full
+/// auth screen (no theme/language pickers; those already live in Settings).
+/// Kept visible through the loading state too, so Home never looks blank
+/// while the first fetch is in flight.
+class _BrandStrip extends StatelessWidget {
+  const _BrandStrip();
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = context.colorScheme;
+
+    return Row(
+      children: [
+        const ExcludeSemantics(
+          child: CricketImage(
+            source: CricketImageSource.asset(AssetsUtil.ballMark),
+            width: 18,
+            height: 15,
+            fit: BoxFit.contain,
+          ),
+        ),
+        6.w,
+        CricketText(
+          text: TranslationKeys.cricketScorer.tr.toUpperCase(),
+          maxLines: 1,
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w800,
+            letterSpacing: 1.6,
+            color: scheme.onSurfaceVariant,
+          ),
+        ),
+        10.w,
+        Expanded(
+          child: Container(
+            height: 2,
+            decoration: BoxDecoration(
+              color: scheme.primary,
+              borderRadius: 1.radius,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// Supplements the shell's "Start Match" FAB with a row of the other common
+/// entry points a single FAB under-discovers, per the Home UI/UX review.
+/// Start Match is kept first — it stays the primary action — and the other
+/// two reuse navigation the app already has: [WatchMatchBottomSheet] (the
+/// same sheet the login screen's spectator entry point uses) and the shell's
+/// own Teams tab.
+class _QuickActionsRow extends StatelessWidget {
+  const _QuickActionsRow({required this.shell});
+
+  final MainShellController shell;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(
+          child: _QuickActionTile(
+            icon: Icons.add_circle_outline,
+            label: TranslationKeys.startMatch.tr,
+            onTap: () => Get.toNamed<dynamic>(AppRoutes.createMatch),
+          ),
+        ),
+        10.w,
+        Expanded(
+          child: _QuickActionTile(
+            icon: Icons.qr_code_rounded,
+            label: TranslationKeys.joinByCode.tr,
+            onTap: () => unawaited(WatchMatchBottomSheet.show()),
+          ),
+        ),
+        10.w,
+        Expanded(
+          child: _QuickActionTile(
+            icon: Icons.groups_outlined,
+            label: TranslationKeys.navTeams.tr,
+            onTap: () => shell.showTab(2),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _QuickActionTile extends StatelessWidget {
+  const _QuickActionTile({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = context.colorScheme;
+
+    return Material(
+      color: scheme.primaryContainer.withValues(alpha: 0.5),
+      borderRadius: 14.radius,
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 8),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, color: scheme.primary),
+              6.h,
+              CricketText(
+                text: label,
+                textAlign: TextAlign.center,
+                maxLines: 1,
+                textOverflow: TextOverflow.ellipsis,
+                style: context.textTheme.labelMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: scheme.onSurface,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }

@@ -325,6 +325,39 @@ void main() {
   );
 
   testWidgets(
+    'renders inside a ListView (the real Home/Matches usage) without a '
+    'layout exception for a live match with an accent bar',
+    (tester) async {
+      await tester.pumpWidget(
+        GetMaterialApp(
+          theme: AppTheme.lightTheme,
+          home: Scaffold(
+            body: ListView(
+              children: [
+                MatchHistoryCard(
+                  item: _item(
+                    status: 'live',
+                    currentInnings: CurrentInningsSummary(
+                      inningsNumber: 1,
+                      totalRuns: 52,
+                      wickets: 2,
+                      overs: '6.3',
+                    ),
+                  ),
+                  currentUserId: 'viewer-1',
+                  onTap: () {},
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets(
     "shows no sync chip for 'synced' or the ambiguous default 'local' — "
     'most matches are scored entirely online and stay at local forever, so '
     "badging it would flag them as 'not synced' incorrectly",
