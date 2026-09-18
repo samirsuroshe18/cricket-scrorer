@@ -1,7 +1,10 @@
 import 'dart:async';
 
 import 'package:cricket_scorer/config/routes/app_routes.dart';
+import 'package:cricket_scorer/core/error/cricket_failure.dart';
 import 'package:cricket_scorer/core/global/widgets/snackbars/cricket_snackbar.dart';
+import 'package:cricket_scorer/core/network/models/cricket_response.dart';
+import 'package:cricket_scorer/core/utils/either_util.dart';
 import 'package:cricket_scorer/core/translations/translation_keys.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/create_match_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/match_history_res.dart';
@@ -102,12 +105,20 @@ class TeamProfileController extends GetxController {
     matchesError.value = null;
     _page = 1;
 
-    final response = await getTeamMatchesUseCase(
-      params: GetTeamMatchesParams(teamId: teamId, page: 1, limit: _pageSize),
-    );
-
-    isLoadingMatches.value = false;
-    _isLoadingMatches = false;
+    final Either<CricketResponse<MatchHistoryRes>, CricketFailure> response;
+    try {
+      response = await getTeamMatchesUseCase(
+        params: GetTeamMatchesParams(teamId: teamId, page: 1, limit: _pageSize),
+      );
+    } on Object {
+      // A response that fails to parse throws out of the use case rather than
+      // coming back as a failure; without this the list would spin forever.
+      matchesError.value = TranslationKeys.somethingWentWrong.tr;
+      return;
+    } finally {
+      isLoadingMatches.value = false;
+      _isLoadingMatches = false;
+    }
 
     if (response.isResult) {
       final data = response.result.data;

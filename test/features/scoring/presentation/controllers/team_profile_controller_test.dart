@@ -35,6 +35,7 @@ class _FakeGetTeamProfileUseCase implements GetTeamProfileUseCase {
 
 class _FakeGetTeamMatchesUseCase implements GetTeamMatchesUseCase {
   Either<CricketResponse<MatchHistoryRes>, CricketFailure>? response;
+  Object? throwOnCall;
   int callCount = 0;
   int? lastPage;
 
@@ -44,6 +45,8 @@ class _FakeGetTeamMatchesUseCase implements GetTeamMatchesUseCase {
   }) async {
     callCount += 1;
     lastPage = params!.page;
+    final error = throwOnCall;
+    if (error != null) throw error;
     final result = response;
     if (result == null) throw UnimplementedError('Not exercised in this test.');
     return result;
@@ -170,6 +173,44 @@ void main() {
     expect(controller.matches.length, 1);
     expect(controller.hasMore.value, isFalse);
     expect(matchesUseCase.lastPage, 1);
+  });
+
+  test(
+    'loadMatches ends the loading state and sets matchesError when the '
+    'response cannot be parsed (regression: list spun forever)',
+    () async {
+      matchesUseCase.throwOnCall = TypeError();
+
+      await controller.loadMatches();
+
+      expect(controller.isLoadingMatches.value, isFalse);
+      expect(controller.matchesError.value, isNotNull);
+      expect(controller.matches, isEmpty);
+    },
+  );
+
+  test('loadMatches can be retried after a parse failure', () async {
+    matchesUseCase.throwOnCall = TypeError();
+    await controller.loadMatches();
+
+    matchesUseCase
+      ..throwOnCall = null
+      ..response = Either.result(
+        CricketResponse(
+          message: 'ok',
+          data: MatchHistoryRes(
+            matches: [_item('match-1')],
+            page: 1,
+            limit: 20,
+            total: 1,
+          ),
+        ),
+      );
+    await controller.loadMatches();
+
+    expect(matchesUseCase.callCount, 2);
+    expect(controller.matchesError.value, isNull);
+    expect(controller.matches.length, 1);
   });
 
   test(
