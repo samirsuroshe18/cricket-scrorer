@@ -3,9 +3,16 @@ import 'dart:async';
 import 'package:cricket_scorer/config/routes/app_routes.dart';
 import 'package:cricket_scorer/core/extensions/space_extension.dart';
 import 'package:cricket_scorer/core/extensions/theme_x.dart';
+import 'package:cricket_scorer/core/global/widgets/bootom_sheets/custom_bottomsheet.dart';
+import 'package:cricket_scorer/core/global/widgets/bootom_sheets/wigets/choose_photo_option.dart';
 import 'package:cricket_scorer/core/global/widgets/cricket_button.dart';
 import 'package:cricket_scorer/core/global/widgets/cricket_text.dart';
 import 'package:cricket_scorer/core/global/widgets/custom_app_bar.dart';
+import 'package:cricket_scorer/core/global/widgets/dialogue/custom_dialog.dart';
+import 'package:cricket_scorer/core/global/widgets/images/cricket_image.dart';
+import 'package:cricket_scorer/core/global/widgets/images/cricket_image_source.dart';
+import 'package:cricket_scorer/core/global/widgets/snackbars/cricket_snackbar.dart';
+import 'package:cricket_scorer/core/services/compression_service.dart';
 import 'package:cricket_scorer/core/translations/translation_keys.dart';
 import 'package:cricket_scorer/core/utils/current_user.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/team_profile_res.dart';
@@ -14,6 +21,7 @@ import 'package:cricket_scorer/features/scoring/presentation/widget/assign_score
 import 'package:cricket_scorer/features/scoring/presentation/widget/match_history_card.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:image_picker/image_picker.dart';
 
 /// A team's roster plus its past results — reached by tapping a team's name
 /// on a `MatchHistoryCard` (home's match history, or another team's own
@@ -40,6 +48,55 @@ class _TeamProfileScreenState extends State<TeamProfileScreen> {
   late final TeamProfileController controller =
       Get.find<TeamProfileController>(tag: _teamId);
   late final String _currentUserId = currentUserId();
+
+  final ImagePicker _picker = ImagePicker();
+
+  Future<void> _pickAndUploadLogo() async {
+    await CustomBottomSheet.wrapBottomSheet<dynamic>(
+      headlineText: TranslationKeys.updateTeamLogo.tr,
+      child: ChoosePhotoOption(
+        onCameraCallback: () async {
+          Get.back<dynamic>();
+          await _pickCompressAndUploadLogo(ImageSource.camera);
+        },
+        onGalleryCallback: () async {
+          Get.back<dynamic>();
+          await _pickCompressAndUploadLogo(ImageSource.gallery);
+        },
+      ),
+    );
+  }
+
+  Future<void> _pickCompressAndUploadLogo(ImageSource source) async {
+    XFile? picked;
+    try {
+      picked = await _picker.pickImage(
+        source: source,
+        requestFullMetadata: true,
+        imageQuality: 100,
+      );
+    } catch (_) {
+      CricketSnackbar.showErrorMessage(TranslationKeys.somethingWentWrong.tr);
+      return;
+    }
+    if (picked == null) return;
+
+    CricketLoaderDialog.show();
+    final compressed = await Get.find<CompressionService>().imageCompression(
+      inputPath: picked.path,
+    );
+    if (!compressed.isResult) {
+      CricketLoaderDialog.hide();
+      CricketSnackbar.showErrorMessage(compressed.fallback.message);
+      return;
+    }
+
+    final success = await controller.updateLogo(compressed.result);
+    CricketLoaderDialog.hide();
+    if (success) {
+      CricketSnackbar.showSuccessMessage(TranslationKeys.teamLogoUpdated.tr);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -75,7 +132,7 @@ class _TeamProfileScreenState extends State<TeamProfileScreen> {
               child: ListView(
                 padding: 16.p,
                 children: [
-                  _TeamHeader(profile: data),
+                  _TeamHeader(profile: data, onUpdateLogo: _pickAndUploadLogo),
                   24.h,
                   CricketText(
                     text: TranslationKeys.pastResults.tr,
@@ -186,9 +243,10 @@ class _ErrorState extends StatelessWidget {
 }
 
 class _TeamHeader extends StatelessWidget {
-  const _TeamHeader({required this.profile});
+  const _TeamHeader({required this.profile, required this.onUpdateLogo});
 
   final TeamProfileRes profile;
+  final VoidCallback onUpdateLogo;
 
   /// `shortName` if the team has one (a club almost always names one for
   /// exactly this purpose — think "MI", "CSK"), otherwise the initials of
@@ -215,13 +273,22 @@ class _TeamHeader extends StatelessWidget {
             CircleAvatar(
               radius: 28,
               backgroundColor: context.colors.chipBackground,
-              child: CricketText(
-                text: _monogram(),
-                style: context.textTheme.titleMedium?.copyWith(
-                  color: context.colorScheme.primary,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
+              child: (profile.logoUrl == null || profile.logoUrl!.isEmpty)
+                  ? CricketText(
+                      text: _monogram(),
+                      style: context.textTheme.titleMedium?.copyWith(
+                        color: context.colorScheme.primary,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    )
+                  : ClipOval(
+                      child: CricketImage(
+                        source: CricketImageSource.network(profile.logoUrl!),
+                        width: 56,
+                        height: 56,
+                        fit: BoxFit.cover,
+                      ),
+                    ),
             ),
             16.w,
             Expanded(
@@ -253,6 +320,14 @@ class _TeamHeader extends StatelessWidget {
               ),
             ),
           ],
+        ),
+        TextButton(
+          onPressed: onUpdateLogo,
+          style: TextButton.styleFrom(
+            padding: EdgeInsets.zero,
+            minimumSize: Size.zero,
+          ),
+          child: CricketText(text: TranslationKeys.updateTeamLogo.tr),
         ),
         16.h,
         CricketText(
