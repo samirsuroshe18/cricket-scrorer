@@ -370,6 +370,10 @@ class TranslationKeys {
   static const String create = 'create';
   static const String updateOrganizationLogo = 'update_organization_logo';
   static const String organizationLogoUpdated = 'organization_logo_updated';
+  static const String updateTeamLogo = 'update_team_logo';
+  static const String teamLogoUpdated = 'team_logo_updated';
+  static const String statMatches = 'stat_matches';
+  static const String statRuns = 'stat_runs';
 
   // Delegated scoring
   static const String assignScorer = 'assign_scorer';
