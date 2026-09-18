@@ -7,7 +7,11 @@ class TeamRef {
   final String id;
   final String name;
 
-  TeamRef({required this.id, required this.name});
+  /// Cloudinary URL from `POST /v1/team/:teamId/logo`, or `null` for a team
+  /// that never had one uploaded.
+  final String? logoUrl;
+
+  TeamRef({required this.id, required this.name, this.logoUrl});
 
   factory TeamRef.fromJson(Map<String, dynamic> json) =>
       _$TeamRefFromJson(json);

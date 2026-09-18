@@ -46,6 +46,9 @@ class TeamProfileRes {
   final String teamId;
   final String name;
   final String? shortName;
+
+  /// Cloudinary URL from `POST /v1/team/:teamId/logo`, or `null`.
+  final String? logoUrl;
   final OrganizationRef? organization;
   final List<TeamRosterPlayer> roster;
 
@@ -53,6 +56,7 @@ class TeamProfileRes {
     required this.teamId,
     required this.name,
     this.shortName,
+    this.logoUrl,
     this.organization,
     required this.roster,
   });
