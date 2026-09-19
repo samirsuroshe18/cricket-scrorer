@@ -4,6 +4,7 @@ import 'package:cricket_scorer/core/extensions/theme_x.dart';
 import 'package:cricket_scorer/core/global/widgets/cricket_text.dart';
 import 'package:cricket_scorer/core/translations/translation_keys.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/match_history_res.dart';
+import 'package:cricket_scorer/features/scoring/presentation/widget/team_avatar.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -90,7 +91,11 @@ class MatchHistoryCard extends StatelessWidget {
       return Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          _TeamAvatar(name: opponent.name, color: opponentColor),
+          TeamAvatar(
+            name: opponent.name,
+            color: opponentColor,
+            logoUrl: opponent.logoUrl,
+          ),
           8.w,
           Flexible(
             child: _teamNameLink(context, opponent.id, 'vs ${opponent.name}'),
@@ -102,11 +107,19 @@ class MatchHistoryCard extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        _TeamAvatar(name: item.teamA.name, color: context.colors.teamA),
+        TeamAvatar(
+          name: item.teamA.name,
+          color: context.colors.teamA,
+          logoUrl: item.teamA.logoUrl,
+        ),
         6.w,
         Flexible(child: _teamNameLink(context, item.teamA.id, item.teamA.name)),
         CricketText(text: ' vs ', style: context.textTheme.titleSmall),
-        _TeamAvatar(name: item.teamB.name, color: context.colors.teamB),
+        TeamAvatar(
+          name: item.teamB.name,
+          color: context.colors.teamB,
+          logoUrl: item.teamB.logoUrl,
+        ),
         6.w,
         Flexible(child: _teamNameLink(context, item.teamB.id, item.teamB.name)),
       ],
@@ -269,49 +282,6 @@ class MatchHistoryCard extends StatelessWidget {
     final date = DateTime.tryParse(iso);
     if (date == null) return iso;
     return '${date.day} ${_months[date.month - 1]} ${date.year}';
-  }
-}
-
-/// A team-colored initials badge — purely a UI-layer scan aid built from
-/// [item.teamA]/[item.teamB]'s existing `name` field, no backend change. The
-/// team name link right next to it already reads out the full name, so this
-/// is excluded from the semantics tree rather than announced twice.
-class _TeamAvatar extends StatelessWidget {
-  const _TeamAvatar({required this.name, required this.color});
-
-  final String name;
-  final Color color;
-
-  String get _initials {
-    final words = name
-        .trim()
-        .split(RegExp(r'\s+'))
-        .where((word) => word.isNotEmpty)
-        .toList();
-    if (words.isEmpty) return '?';
-    if (words.length == 1) {
-      return words.first
-          .substring(0, words.first.length > 1 ? 2 : 1)
-          .toUpperCase();
-    }
-    return (words.first[0] + words.last[0]).toUpperCase();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return ExcludeSemantics(
-      child: CircleAvatar(
-        radius: 12,
-        backgroundColor: color.withValues(alpha: 0.16),
-        child: CricketText(
-          text: _initials,
-          style: context.textTheme.labelSmall?.copyWith(
-            color: color,
-            fontWeight: FontWeight.w800,
-          ),
-        ),
-      ),
-    );
   }
 }
 

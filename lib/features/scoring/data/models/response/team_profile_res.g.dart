@@ -27,6 +27,7 @@ TeamProfileRes _$TeamProfileResFromJson(Map<String, dynamic> json) =>
       teamId: json['teamId'] as String,
       name: json['name'] as String,
       shortName: json['shortName'] as String?,
+      logoUrl: json['logoUrl'] as String?,
       organization: json['organization'] == null
           ? null
           : OrganizationRef.fromJson(
@@ -42,6 +43,7 @@ Map<String, dynamic> _$TeamProfileResToJson(TeamProfileRes instance) =>
       'teamId': instance.teamId,
       'name': instance.name,
       'shortName': instance.shortName,
+      'logoUrl': instance.logoUrl,
       'organization': instance.organization?.toJson(),
       'roster': instance.roster.map((e) => e.toJson()).toList(),
     };

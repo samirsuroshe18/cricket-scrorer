@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:cricket_scorer/config/theme/app_theme.dart';
 import 'package:cricket_scorer/core/error/cricket_failure.dart';
 import 'package:cricket_scorer/core/network/models/cricket_response.dart';
@@ -11,6 +13,7 @@ import 'package:cricket_scorer/features/scoring/domain/usecases/get_team_matches
 import 'package:cricket_scorer/features/scoring/domain/usecases/get_team_profile.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/get_scorer_candidates.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/assign_scorer.dart';
+import 'package:cricket_scorer/features/scoring/domain/usecases/update_team_logo.dart';
 import 'package:cricket_scorer/features/scoring/presentation/controllers/team_profile_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -96,6 +99,25 @@ class _FakeAssignScorerUseCase implements AssignScorerUseCase {
       throw UnimplementedError('Not exercised in this test.');
 }
 
+class _FakeUpdateTeamLogoUseCase implements UpdateTeamLogoUseCase {
+  Either<CricketResponse<String>, CricketFailure>? response;
+  UpdateTeamLogoParams? lastParams;
+
+  @override
+  Future<Either<CricketResponse<String>, CricketFailure>> call({
+    UpdateTeamLogoParams? params,
+  }) async {
+    lastParams = params;
+    final result = response;
+    if (result == null) throw UnimplementedError('Not exercised in this test.');
+    return result;
+  }
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) =>
+      throw UnimplementedError('Not exercised in this test.');
+}
+
 MatchHistoryItem _item(String matchId) => MatchHistoryItem(
   matchId: matchId,
   teamA: TeamRef(id: 'team-1', name: 'Mumbai Indians'),
@@ -111,6 +133,7 @@ void main() {
   late _FakeGetTeamMatchesUseCase matchesUseCase;
   late _FakeGetScorerCandidatesUseCase scorerCandidatesUseCase;
   late _FakeAssignScorerUseCase assignScorerUseCase;
+  late _FakeUpdateTeamLogoUseCase updateTeamLogoUseCase;
   late TeamProfileController controller;
 
   setUp(() {
@@ -119,12 +142,14 @@ void main() {
     matchesUseCase = _FakeGetTeamMatchesUseCase();
     scorerCandidatesUseCase = _FakeGetScorerCandidatesUseCase();
     assignScorerUseCase = _FakeAssignScorerUseCase();
+    updateTeamLogoUseCase = _FakeUpdateTeamLogoUseCase();
     controller = TeamProfileController(
       teamId: 'team-1',
       getTeamProfileUseCase: profileUseCase,
       getTeamMatchesUseCase: matchesUseCase,
       getScorerCandidatesUseCase: scorerCandidatesUseCase,
       assignScorerUseCase: assignScorerUseCase,
+      updateTeamLogoUseCase: updateTeamLogoUseCase,
     );
   });
 
@@ -354,6 +379,7 @@ void main() {
         getTeamMatchesUseCase: matchesUseCaseA,
         getScorerCandidatesUseCase: _FakeGetScorerCandidatesUseCase(),
         assignScorerUseCase: _FakeAssignScorerUseCase(),
+        updateTeamLogoUseCase: _FakeUpdateTeamLogoUseCase(),
       );
       profileUseCaseA.response = Either.result(
         CricketResponse(
@@ -374,6 +400,7 @@ void main() {
         getTeamMatchesUseCase: matchesUseCaseB,
         getScorerCandidatesUseCase: _FakeGetScorerCandidatesUseCase(),
         assignScorerUseCase: _FakeAssignScorerUseCase(),
+        updateTeamLogoUseCase: _FakeUpdateTeamLogoUseCase(),
       );
       profileUseCaseB.response = Either.result(
         CricketResponse(
@@ -439,5 +466,69 @@ void main() {
 
     expect(success, isTrue);
     expect(controller.matches.first.assignedScorer?.name, 'Raj');
+  });
+
+  group('updateLogo', () {
+    TeamProfileRes profileWith(String? logoUrl) => TeamProfileRes(
+      teamId: 'team-1',
+      name: 'Mumbai Indians',
+      logoUrl: logoUrl,
+      roster: const [],
+    );
+
+    test('uploads, then reloads the profile so the new logo shows', () async {
+      profileUseCase.response = Either.result(
+        CricketResponse(message: 'ok', data: profileWith(null)),
+      );
+      await controller.loadProfile();
+      expect(controller.profile.value?.logoUrl, isNull);
+
+      updateTeamLogoUseCase.response = Either.result(
+        const CricketResponse(message: 'ok', data: 'https://x/new.png'),
+      );
+      profileUseCase.response = Either.result(
+        CricketResponse(message: 'ok', data: profileWith('https://x/new.png')),
+      );
+
+      final file = File('logo.png');
+      final ok = await controller.updateLogo(file);
+
+      expect(ok, isTrue);
+      expect(updateTeamLogoUseCase.lastParams?.teamId, 'team-1');
+      expect(updateTeamLogoUseCase.lastParams?.file, file);
+      expect(controller.profile.value?.logoUrl, 'https://x/new.png');
+    });
+
+    // CricketSnackbar reads Get.theme and needs a mounted overlay, so the
+    // failure path runs inside a real GetMaterialApp and drains the
+    // snackbar's timers before the test ends.
+    testWidgets(
+      'returns false and leaves the profile alone when the upload fails',
+      (tester) async {
+        await tester.pumpWidget(
+          GetMaterialApp(
+            theme: AppTheme.lightTheme,
+            home: const Scaffold(body: SizedBox()),
+          ),
+        );
+
+        profileUseCase.response = Either.result(
+          CricketResponse(message: 'ok', data: profileWith(null)),
+        );
+        await controller.loadProfile();
+
+        updateTeamLogoUseCase.response = Either.fallback(
+          CricketForbiddenErrorFailure(statusCode: 403, message: 'Not yours'),
+        );
+
+        final ok = await controller.updateLogo(File('logo.png'));
+        for (var i = 0; i < 220; i++) {
+          await tester.pump(const Duration(milliseconds: 16));
+        }
+
+        expect(ok, isFalse);
+        expect(controller.profile.value?.logoUrl, isNull);
+      },
+    );
   });
 }

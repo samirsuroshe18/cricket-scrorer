@@ -2,6 +2,7 @@ import 'package:cricket_scorer/core/utils/current_user.dart';
 import 'package:cricket_scorer/features/auth/domain/usecases/logout.dart';
 import 'package:cricket_scorer/features/home/presentation/controllers/home_controller.dart';
 import 'package:cricket_scorer/features/home/presentation/controllers/main_shell_controller.dart';
+import 'package:cricket_scorer/features/home/presentation/controllers/my_stats_controller.dart';
 import 'package:cricket_scorer/features/home/presentation/controllers/my_teams_controller.dart';
 import 'package:cricket_scorer/features/organization/domain/usecases/create_organization.dart';
 import 'package:cricket_scorer/features/organization/domain/usecases/get_my_organizations.dart';
@@ -9,6 +10,7 @@ import 'package:cricket_scorer/features/organization/domain/usecases/remove_orga
 import 'package:cricket_scorer/features/organization/presentation/controllers/organizations_list_controller.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/delete_match.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/get_match_history.dart';
+import 'package:cricket_scorer/features/scoring/domain/usecases/get_my_career_stats.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/get_my_teams.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/get_scorer_candidates.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/assign_scorer.dart';
@@ -45,6 +47,12 @@ class HomeBinding extends Bindings {
 
     Get.lazyPut(
       () => MyTeamsController(getMyTeamsUseCase: Get.find<GetMyTeamsUseCase>()),
+    );
+
+    Get.lazyPut(
+      () => MyStatsController(
+        getMyCareerStatsUseCase: Get.find<GetMyCareerStatsUseCase>(),
+      ),
     );
 
     Get.lazyPut(

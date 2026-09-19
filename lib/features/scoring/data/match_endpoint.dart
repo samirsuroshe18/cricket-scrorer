@@ -42,6 +42,11 @@ class MatchEndpoint {
   // shares this one chain.
   String careerStats(String playerId) => '/v1/player/$playerId/career-stats';
 
+  /// `GET /v1/user/me/career-stats` — the caller's own totals over every
+  /// claimed Player. Lives here beside [careerStats] for the same reason:
+  /// career stats share this one client/service/repository chain.
+  final String myCareerStats = '/v1/user/me/career-stats';
+
   String playerProfile(String playerId) => '/v1/player/$playerId';
 
   String claimPlayer(String playerId) => '/v1/player/$playerId/claim';
@@ -70,6 +75,11 @@ class MatchEndpoint {
   /// — see docs/api.md's `## Organization` section.
   String updateTeamOrganization(String teamId) =>
       '/v1/team/$teamId/organization';
+
+  /// `POST /v1/team/:teamId/logo` — multipart upload. Lives here, not on a
+  /// team-specific endpoint class, for the same reason [updateTeamOrganization]
+  /// does: the scoring feature slice already owns every `/v1/team` route.
+  String teamLogo(String teamId) => '/v1/team/$teamId/logo';
 
   /// `GET /v1/match/:matchId/scorer-candidates` — who a caller with assign-
   /// authority can pick from.
