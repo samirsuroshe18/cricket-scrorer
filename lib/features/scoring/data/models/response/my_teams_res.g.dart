@@ -16,6 +16,7 @@ TeamSummary _$TeamSummaryFromJson(Map<String, dynamic> json) => TeamSummary(
   id: json['id'] as String,
   name: json['name'] as String,
   shortName: json['shortName'] as String?,
+  logoUrl: json['logoUrl'] as String?,
   organization: json['organization'] == null
       ? null
       : OrganizationRef.fromJson(json['organization'] as Map<String, dynamic>),
@@ -26,6 +27,7 @@ Map<String, dynamic> _$TeamSummaryToJson(TeamSummary instance) =>
       'id': instance.id,
       'name': instance.name,
       'shortName': instance.shortName,
+      'logoUrl': instance.logoUrl,
       'organization': instance.organization?.toJson(),
     };
 

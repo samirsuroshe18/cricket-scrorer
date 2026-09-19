@@ -30,6 +30,10 @@ class TeamSummary {
   final String name;
   final String? shortName;
 
+  /// Cloudinary URL from `POST /v1/team/:teamId/logo`, or `null` for a team
+  /// that never had one uploaded.
+  final String? logoUrl;
+
   /// Non-null when this team belongs to an organization the caller is a
   /// member of — see docs/api.md's `## Organization` section. Null for a
   /// standalone team, which is every team created before this feature
@@ -40,6 +44,7 @@ class TeamSummary {
     required this.id,
     required this.name,
     this.shortName,
+    this.logoUrl,
     this.organization,
   });
 

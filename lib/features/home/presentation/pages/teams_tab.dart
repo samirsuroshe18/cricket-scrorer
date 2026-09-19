@@ -6,9 +6,9 @@ import 'package:cricket_scorer/core/global/widgets/custom_app_bar.dart';
 import 'package:cricket_scorer/core/translations/translation_keys.dart';
 import 'package:cricket_scorer/features/home/presentation/controllers/my_teams_controller.dart';
 import 'package:cricket_scorer/features/home/presentation/widgets/home_state_placeholders.dart';
+import 'package:cricket_scorer/features/home/presentation/widgets/team_chip.dart';
 import 'package:cricket_scorer/features/organization/presentation/controllers/organizations_list_controller.dart';
 import 'package:cricket_scorer/features/organization/presentation/pages/organizations_list_screen.dart';
-import 'package:cricket_scorer/features/scoring/data/models/response/my_teams_res.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -81,7 +81,7 @@ class TeamsTab extends StatelessWidget {
                     itemCount: myTeams.teams.length,
                     separatorBuilder: (_, _) => 10.w,
                     itemBuilder: (context, index) =>
-                        _TeamChip(team: myTeams.teams[index]),
+                        TeamChip(team: myTeams.teams[index]),
                   ),
                 );
               }),
@@ -137,58 +137,6 @@ class TeamsTab extends StatelessWidget {
               }),
             ],
           ),
-        ),
-      ),
-    );
-  }
-}
-
-class _TeamChip extends StatelessWidget {
-  const _TeamChip({required this.team});
-
-  final TeamSummary team;
-
-  String _monogram() {
-    final words = team.name.trim().split(RegExp(r'\s+'));
-    final letters = words.take(2).map((w) => w.isEmpty ? '' : w[0]).join();
-    return letters.isEmpty ? '?' : letters.toUpperCase();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      borderRadius: 12.radius,
-      onTap: () => Get.toNamed<dynamic>(AppRoutes.teamProfilePath(team.id)),
-      child: Container(
-        width: 84,
-        padding: 8.p,
-        decoration: BoxDecoration(
-          color: context.colorScheme.surfaceContainerHighest,
-          borderRadius: 12.radius,
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            CircleAvatar(
-              radius: 18,
-              backgroundColor: context.colors.chipBackground,
-              child: CricketText(
-                text: _monogram(),
-                style: context.textTheme.labelLarge?.copyWith(
-                  color: context.colorScheme.primary,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-            6.h,
-            CricketText(
-              text: team.shortName ?? team.name,
-              maxLines: 1,
-              textOverflow: TextOverflow.ellipsis,
-              textAlign: TextAlign.center,
-              style: context.textTheme.labelSmall,
-            ),
-          ],
         ),
       ),
     );
