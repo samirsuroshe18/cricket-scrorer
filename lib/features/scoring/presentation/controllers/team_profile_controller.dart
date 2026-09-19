@@ -82,12 +82,18 @@ class TeamProfileController extends GetxController {
     isLoadingProfile.value = true;
     profileError.value = null;
 
-    final response = await getTeamProfileUseCase(
-      params: GetTeamProfileParams(teamId: teamId),
-    );
-
-    isLoadingProfile.value = false;
-    _isLoadingProfile = false;
+    final Either<CricketResponse<TeamProfileRes>, CricketFailure> response;
+    try {
+      response = await getTeamProfileUseCase(
+        params: GetTeamProfileParams(teamId: teamId),
+      );
+    } on Object {
+      profileError.value = TranslationKeys.somethingWentWrong.tr;
+      return;
+    } finally {
+      isLoadingProfile.value = false;
+      _isLoadingProfile = false;
+    }
 
     if (response.isResult) {
       profile.value = response.result.data;
@@ -134,15 +140,21 @@ class TeamProfileController extends GetxController {
     if (isLoadingMore.value || !hasMore.value) return;
     isLoadingMore.value = true;
 
-    final response = await getTeamMatchesUseCase(
-      params: GetTeamMatchesParams(
-        teamId: teamId,
-        page: _page + 1,
-        limit: _pageSize,
-      ),
-    );
-
-    isLoadingMore.value = false;
+    final Either<CricketResponse<MatchHistoryRes>, CricketFailure> response;
+    try {
+      response = await getTeamMatchesUseCase(
+        params: GetTeamMatchesParams(
+          teamId: teamId,
+          page: _page + 1,
+          limit: _pageSize,
+        ),
+      );
+    } on Object {
+      CricketSnackbar.showErrorMessage(TranslationKeys.somethingWentWrong.tr);
+      return;
+    } finally {
+      isLoadingMore.value = false;
+    }
 
     if (response.isResult) {
       final data = response.result.data;
