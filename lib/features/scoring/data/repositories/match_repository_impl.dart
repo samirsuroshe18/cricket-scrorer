@@ -399,9 +399,13 @@ class MatchRepositoryImpl extends MatchRepository {
 
   @override
   Future<Either<CricketResponse<MatchHistoryRes>, CricketFailure>>
-  getMatchHistory({required int page, required int limit}) async {
+  getMatchHistory({
+    required int page,
+    required int limit,
+    List<String>? statuses,
+  }) async {
     Either<ApiResponseModel, CricketFailure> response = await matchApiService
-        .getMatchHistory(page: page, limit: limit);
+        .getMatchHistory(page: page, limit: limit, statuses: statuses);
     if (response.isResult) {
       return Either.result(
         CricketResponse(

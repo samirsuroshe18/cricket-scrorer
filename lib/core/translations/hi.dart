@@ -531,4 +531,9 @@ Map<String, String> hi = {
   TranslationKeys.homeSyncConflictOne: 'सिंक टकराव · @match',
   TranslationKeys.homeSyncConflictMany: '@count मैचों में सिंक टकराव है',
   TranslationKeys.homeRefreshFailed: 'रीफ़्रेश नहीं हो सका',
+  TranslationKeys.matchesSectionActive: 'चल रहे मैच',
+  TranslationKeys.matchesSectionPast: 'पिछले मैच',
+  TranslationKeys.showAllMatches: 'सभी दिखाएं',
+  TranslationKeys.loadMoreMatches: 'और मैच लोड करें',
+  TranslationKeys.matchesOverOne: '1 ओवर',
 };

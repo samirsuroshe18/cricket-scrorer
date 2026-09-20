@@ -36,4 +36,38 @@ void main() {
     expect(innings.target, isNull);
     expect(innings.recentBalls, isEmpty);
   });
+
+  group('MatchHistoryRes.counts', () {
+    Map<String, dynamic> json({Map<String, dynamic>? counts}) => {
+      'matches': <Map<String, dynamic>>[],
+      'page': 1,
+      'limit': 20,
+      'total': 0,
+      'counts': ?counts,
+    };
+
+    test("parses the server's per-status counts", () {
+      final res = MatchHistoryRes.fromJson(
+        json(
+          counts: {
+            'upcoming': 1,
+            'live': 2,
+            'innings_break': 0,
+            'completed': 5,
+            'abandoned': 3,
+          },
+        ),
+      );
+
+      expect(res.counts['live'], 2);
+      expect(res.counts['completed'], 5);
+      expect(res.counts, hasLength(5));
+    });
+
+    // A server that predates the field must not fail the whole history parse
+    // — the chips just show no number.
+    test('is empty, not an error, when the server omits it', () {
+      expect(MatchHistoryRes.fromJson(json()).counts, isEmpty);
+    });
+  });
 }

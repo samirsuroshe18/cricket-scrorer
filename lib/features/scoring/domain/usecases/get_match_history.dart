@@ -9,7 +9,10 @@ class GetMatchHistoryParams {
   final int page;
   final int limit;
 
-  const GetMatchHistoryParams({this.page = 1, this.limit = 20});
+  /// Server-side status filter; null or empty means every status.
+  final List<String>? statuses;
+
+  const GetMatchHistoryParams({this.page = 1, this.limit = 20, this.statuses});
 }
 
 class GetMatchHistoryUseCase
@@ -30,6 +33,7 @@ class GetMatchHistoryUseCase
     return matchRepository.getMatchHistory(
       page: resolved.page,
       limit: resolved.limit,
+      statuses: resolved.statuses,
     );
   }
 }

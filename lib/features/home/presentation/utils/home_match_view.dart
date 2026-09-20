@@ -124,6 +124,32 @@ String shortDate(String iso) {
   return '${date.day} ${_months[date.month - 1]}';
 }
 
+/// [shortDate], plus the year once the match is from an earlier one — the
+/// Matches tab lists a whole history, where "3 Sep" alone is ambiguous.
+String matchDateLabel(String iso, {DateTime? now}) {
+  final date = DateTime.tryParse(iso)?.toLocal();
+  if (date == null) return iso;
+  final base = shortDate(iso);
+  return date.year == (now ?? DateTime.now()).year
+      ? base
+      : '$base ${date.year}';
+}
+
+/// "Assigned by X" / "Assigned to X" for a delegated match, null when the
+/// viewer's own match was never delegated. Same rule as
+/// `MatchHistoryCard`'s private label, which team profile still uses.
+String? delegationLabelFor(MatchHistoryItem item, String userId) {
+  final creator = item.createdBy;
+  if (creator != null && creator.id != userId) {
+    return TranslationKeys.assignedByName.trParams({'name': creator.name});
+  }
+  final scorer = item.assignedScorer;
+  if (scorer != null) {
+    return TranslationKeys.assignedToName.trParams({'name': scorer.name});
+  }
+  return null;
+}
+
 /// Up to two initials for the header avatar — "cricket_final" → "CF",
 /// "Priya Nair" → "PN". `?` when there is nothing to draw from.
 String initialsFor(String? name) {

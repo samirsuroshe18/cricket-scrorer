@@ -529,4 +529,9 @@ Map<String, String> mr = {
   TranslationKeys.homeSyncConflictOne: 'सिंक संघर्ष · @match',
   TranslationKeys.homeSyncConflictMany: '@count सामन्यांमध्ये सिंक संघर्ष आहे',
   TranslationKeys.homeRefreshFailed: 'रीफ्रेश करता आले नाही',
+  TranslationKeys.matchesSectionActive: 'सुरू असलेले सामने',
+  TranslationKeys.matchesSectionPast: 'मागील सामने',
+  TranslationKeys.showAllMatches: 'सर्व दाखवा',
+  TranslationKeys.loadMoreMatches: 'आणखी सामने लोड करा',
+  TranslationKeys.matchesOverOne: '1 षटक',
 };

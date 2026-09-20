@@ -182,9 +182,15 @@ abstract class MatchRepository {
   /// `GET /v1/match/history` — the caller's own matches, newest first,
   /// paginated. Feeds the history/home screen; a card's `status` is what
   /// decides whether tapping it reopens the scoring console or the result
-  /// screen.
+  /// screen. [statuses], when non-empty, filters server-side before
+  /// paginating (`?status=live,innings_break`), so `total`/`hasMore` describe
+  /// the filtered set.
   Future<Either<CricketResponse<MatchHistoryRes>, CricketFailure>>
-  getMatchHistory({required int page, required int limit});
+  getMatchHistory({
+    required int page,
+    required int limit,
+    List<String>? statuses,
+  });
 
   /// `POST /v1/match/:matchId/abandon` — a live/innings-break match that will
   /// never finish (rain, a no-show). Generates a best-effort partial
