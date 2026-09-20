@@ -1,19 +1,19 @@
 import 'package:cricket_scorer/config/routes/app_routes.dart';
-import 'package:cricket_scorer/core/global/widgets/cricket_text.dart';
 import 'package:cricket_scorer/core/translations/translation_keys.dart';
 import 'package:cricket_scorer/features/home/presentation/controllers/main_shell_controller.dart';
 import 'package:cricket_scorer/features/home/presentation/pages/home_dashboard_tab.dart';
 import 'package:cricket_scorer/features/home/presentation/pages/matches_tab.dart';
 import 'package:cricket_scorer/features/home/presentation/pages/profile_tab.dart';
 import 'package:cricket_scorer/features/home/presentation/pages/teams_tab.dart';
+import 'package:cricket_scorer/features/home/presentation/widgets/home_bottom_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 /// Registered at [AppRoutes.home] — the app's real entry point now, not
 /// `HomePage`'s old flat match list. Four tabs (Home/Matches/Teams/Profile)
 /// live inside one `IndexedStack` so switching tabs never re-triggers a
-/// fetch, plus one persistent "Start Match" FAB shown only where it's the
-/// primary action (Home and Matches), not on Teams or Profile.
+/// fetch. "Start Match" is the bar's docked centre button, available from
+/// every tab rather than floating over the lists on two of them.
 class MainShellScreen extends StatelessWidget {
   const MainShellScreen({super.key});
 
@@ -32,35 +32,30 @@ class MainShellScreen extends StatelessWidget {
       final index = shell.tabIndex.value;
       return Scaffold(
         body: IndexedStack(index: index, children: _tabs),
-        floatingActionButton: (index == 0 || index == 1)
-            ? FloatingActionButton.extended(
-                onPressed: () => Get.toNamed<dynamic>(AppRoutes.createMatch),
-                icon: const Icon(Icons.add),
-                label: CricketText(text: TranslationKeys.startMatch.tr),
-              )
-            : null,
-        bottomNavigationBar: BottomNavigationBar(
+        bottomNavigationBar: HomeBottomBar(
           currentIndex: index,
-          onTap: shell.showTab,
+          onSelect: shell.showTab,
+          actionLabel: TranslationKeys.startMatch.tr,
+          onAction: () => Get.toNamed<dynamic>(AppRoutes.createMatch),
           items: [
-            BottomNavigationBarItem(
-              icon: const Icon(Icons.home_outlined),
-              activeIcon: const Icon(Icons.home),
+            HomeNavItem(
+              icon: Icons.home_outlined,
+              activeIcon: Icons.home_rounded,
               label: TranslationKeys.navHome.tr,
             ),
-            BottomNavigationBarItem(
-              icon: const Icon(Icons.sports_cricket_outlined),
-              activeIcon: const Icon(Icons.sports_cricket),
+            HomeNavItem(
+              icon: Icons.sports_cricket_outlined,
+              activeIcon: Icons.sports_cricket,
               label: TranslationKeys.navMatches.tr,
             ),
-            BottomNavigationBarItem(
-              icon: const Icon(Icons.groups_outlined),
-              activeIcon: const Icon(Icons.groups),
+            HomeNavItem(
+              icon: Icons.groups_outlined,
+              activeIcon: Icons.groups_rounded,
               label: TranslationKeys.navTeams.tr,
             ),
-            BottomNavigationBarItem(
-              icon: const Icon(Icons.person_outline),
-              activeIcon: const Icon(Icons.person),
+            HomeNavItem(
+              icon: Icons.person_outline_rounded,
+              activeIcon: Icons.person_rounded,
               label: TranslationKeys.navProfile.tr,
             ),
           ],

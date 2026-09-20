@@ -12,22 +12,45 @@ MatchUserRef _$MatchUserRefFromJson(Map<String, dynamic> json) =>
 Map<String, dynamic> _$MatchUserRefToJson(MatchUserRef instance) =>
     <String, dynamic>{'id': instance.id, 'name': instance.name};
 
+RecentBall _$RecentBallFromJson(Map<String, dynamic> json) => RecentBall(
+  totalRuns: (json['totalRuns'] as num).toInt(),
+  extraType: json['extraType'] as String?,
+  isWicket: json['isWicket'] as bool,
+);
+
+Map<String, dynamic> _$RecentBallToJson(RecentBall instance) =>
+    <String, dynamic>{
+      'totalRuns': instance.totalRuns,
+      'extraType': instance.extraType,
+      'isWicket': instance.isWicket,
+    };
+
 CurrentInningsSummary _$CurrentInningsSummaryFromJson(
   Map<String, dynamic> json,
 ) => CurrentInningsSummary(
   inningsNumber: (json['inningsNumber'] as num).toInt(),
+  battingTeam: json['battingTeam'] as String?,
   totalRuns: (json['totalRuns'] as num).toInt(),
   wickets: (json['wickets'] as num).toInt(),
   overs: json['overs'] as String,
+  target: (json['target'] as num?)?.toInt(),
+  recentBalls:
+      (json['recentBalls'] as List<dynamic>?)
+          ?.map((e) => RecentBall.fromJson(e as Map<String, dynamic>))
+          .toList() ??
+      const [],
 );
 
 Map<String, dynamic> _$CurrentInningsSummaryToJson(
   CurrentInningsSummary instance,
 ) => <String, dynamic>{
   'inningsNumber': instance.inningsNumber,
+  'battingTeam': instance.battingTeam,
   'totalRuns': instance.totalRuns,
   'wickets': instance.wickets,
   'overs': instance.overs,
+  'target': instance.target,
+  'recentBalls': instance.recentBalls.map((e) => e.toJson()).toList(),
 };
 
 MatchHistoryItem _$MatchHistoryItemFromJson(Map<String, dynamic> json) =>

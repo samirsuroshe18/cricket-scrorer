@@ -50,7 +50,7 @@ class TeamsTab extends StatelessWidget {
             orgs.loadOrganizations(),
           ]),
           child: ListView(
-            padding: 16.p,
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 44),
             children: [
               DashboardSectionHeader(title: TranslationKeys.myTeams.tr),
               12.h,

@@ -146,12 +146,14 @@ class MatchHistoryCard extends StatelessWidget {
     final deleting = isDeleting;
     final delegationLabel = _delegationLabel();
     final isLive = _liveStatuses.contains(item.status);
-    final liveColor = context.colors.liveCard;
+    // Live is the brand red everywhere — the bar, the badge and the wash —
+    // so a live match reads the same on this list as on Home's cards.
+    final liveColor = context.colorScheme.primary;
 
     return Material(
       color: isLive
           ? Color.alphaBlend(
-              liveColor.withValues(alpha: context.isDark ? 0.24 : 0.3),
+              liveColor.withValues(alpha: context.isDark ? 0.14 : 0.08),
               context.colorScheme.surfaceContainerHighest,
             )
           : context.colorScheme.surfaceContainerHighest,
@@ -293,10 +295,10 @@ class _StatusBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final (label, color) = switch (status) {
-      'live' => (TranslationKeys.statusLive.tr, context.colors.statusInfo),
+      'live' => (TranslationKeys.statusLive.tr, context.colors.statusDanger),
       'innings_break' => (
         TranslationKeys.statusInningsBreak.tr,
-        context.colors.statusInfo,
+        context.colors.statusDanger,
       ),
       'completed' => (
         TranslationKeys.statusCompleted.tr,

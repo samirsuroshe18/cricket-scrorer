@@ -22,15 +22,47 @@ class MatchUserRef {
   Map<String, dynamic> toJson() => _$MatchUserRefToJson(this);
 }
 
+/// One delivery in [CurrentInningsSummary.recentBalls] — just what a ball
+/// dot needs to draw itself, not the full `BallEvent`.
+@JsonSerializable()
+class RecentBall {
+  /// `runs + extras` — everything the delivery added to the score.
+  final int totalRuns;
+
+  /// `wide` / `no_ball`, or null for a legal delivery.
+  final String? extraType;
+  final bool isWicket;
+
+  RecentBall({
+    required this.totalRuns,
+    this.extraType,
+    required this.isWicket,
+  });
+
+  factory RecentBall.fromJson(Map<String, dynamic> json) =>
+      _$RecentBallFromJson(json);
+
+  Map<String, dynamic> toJson() => _$RecentBallToJson(this);
+}
+
 /// `MatchHistoryItem.currentInnings` — a lightweight score summary, not the
 /// full `innings` shape `getPublicMatch`/the spectator socket return
-/// (no `target`/`extras`/`strike`/`partnership`/`bowler`; those need a
+/// (no `extras`/`strike`/`partnership`/`bowler`; those need a
 /// `BallEvent` read the history list deliberately skips to stay cheap across
 /// a page of matches). Read straight off the `Inning` document's own running
 /// totals server-side, per docs/api.md.
-@JsonSerializable()
+///
+/// [battingTeam], [target] and [recentBalls] were added for the Home
+/// dashboard's live cards; all three tolerate an older server that omits
+/// them, so a stale backend degrades to the plain score instead of failing
+/// the whole history parse.
+@JsonSerializable(explicitToJson: true)
 class CurrentInningsSummary {
   final int inningsNumber;
+
+  /// `teamA` / `teamB` — which side [totalRuns] belongs to. Null only from a
+  /// server that predates the field.
+  final String? battingTeam;
   final int totalRuns;
   final int wickets;
 
@@ -38,11 +70,22 @@ class CurrentInningsSummary {
   /// as every other overs string this app displays.
   final String overs;
 
+  /// Runs needed to win. Only ever set in innings 2; null while the first
+  /// side bats.
+  final int? target;
+
+  /// The last up-to-six deliveries, oldest first. Empty for anything but a
+  /// `live` match that has had a ball bowled.
+  final List<RecentBall> recentBalls;
+
   CurrentInningsSummary({
     required this.inningsNumber,
+    this.battingTeam,
     required this.totalRuns,
     required this.wickets,
     required this.overs,
+    this.target,
+    this.recentBalls = const [],
   });
 
   factory CurrentInningsSummary.fromJson(Map<String, dynamic> json) =>

@@ -1,4 +1,7 @@
 import 'package:cricket_scorer/core/utils/current_user.dart';
+import 'package:cricket_scorer/features/home/presentation/controllers/home_sync_status_controller.dart';
+import 'package:cricket_scorer/features/scoring/data/data_sources/local/offline_sync_service.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:cricket_scorer/features/auth/domain/usecases/logout.dart';
 import 'package:cricket_scorer/features/home/presentation/controllers/home_controller.dart';
 import 'package:cricket_scorer/features/home/presentation/controllers/main_shell_controller.dart';
@@ -43,6 +46,17 @@ class HomeBinding extends Bindings {
         assignScorerUseCase: Get.find<AssignScorerUseCase>(),
         updateFcmTokenUseCase: Get.find<UpdateFcmTokenUseCase>(),
       ),
+    );
+
+    Get.lazyPut(
+      () => HomeSyncStatusController(
+        queue: Get.find<OfflineSyncService>().watchAllQueued(),
+        connectivity: Connectivity().onConnectivityChanged,
+        checkConnectivity: Connectivity().checkConnectivity,
+      ),
+      // Not lazy in effect: nothing reads it until the dashboard's strip is
+      // built, and fenix keeps it from being rebuilt if the shell re-mounts.
+      fenix: true,
     );
 
     Get.lazyPut(
