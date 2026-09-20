@@ -173,97 +173,127 @@ class CustomBottomSheet {
     Color confirmButtonColor = AppColor.primaryRed,
     bool hideCancelButton = false,
     bool isDismissible = true,
+
+    /// Off by default so existing confirmations keep their look; the X closes
+    /// the sheet the same way Cancel does (result `false`), never confirming.
+    bool isXButtonRequired = false,
   }) {
     return Get.bottomSheet<T>(
       SafeArea(
         bottom: false,
         child: PopScope(
           canPop: false,
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            decoration: BoxDecoration(
-              color: Get.theme.colorScheme.surface,
-              borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(20),
-              ),
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const SizedBox(height: 30),
-
-                if (assetName != null && assetName.isNotEmpty) ...[
-                  assetName.endsWith('.json')
-                      ? Lottie.asset(
-                          assetName,
-                          height: 100,
-                          width: 100,
-                        )
-                      : CricketImage(
-                          source: CricketImageSource.asset(assetName),
-                          height: 100,
-                          width: 100,
-                          fit: BoxFit.scaleDown,
-                          color: Get.theme.colorScheme.onSurface,
-                        ),
-                  const SizedBox(height: 24),
-                ],
-
-                CricketText(
-                  text: title,
-                  style: Get.context?.textTheme.displayMedium,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (isXButtonRequired) ...[
+                IconButton(
+                  onPressed: () => Get.back(result: false),
+                  style: IconButton.styleFrom(side: BorderSide.none),
+                  icon: Icon(
+                    LucideIcons.circleX,
+                    color: Get.theme.colorScheme.onPrimary,
+                    size: 40,
+                    weight: 1.5,
+                  ),
                 ),
-
-                const SizedBox(height: 8),
-
-                CricketText(
-                  text: message,
-                  textAlign: TextAlign.center,
-                  maxLines: 5,
-                  style: Get.context?.textTheme.headlineSmall,
+                20.h,
+              ],
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                decoration: BoxDecoration(
+                  color: Get.theme.colorScheme.surface,
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(20),
+                  ),
                 ),
-
-                const SizedBox(height: 24),
-
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  spacing: 14,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    if (!hideCancelButton)
-                      Expanded(
-                        child: CricketOutlinedButton(
-                          buttonName:
-                              cancelButtonName ?? TranslationKeys.cancel.tr,
-                          onPressed: () => Get.back(result: false),
-                        ),
-                      ),
+                    const SizedBox(height: 30),
 
-                    Expanded(
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: confirmButtonColor,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(32),
-                          ),
-                        ),
-                        onPressed: () => Get.back(result: true),
-                        child: CricketText(
-                          text: confirmButtonName,
-                          style: Get.context?.textTheme.titleLarge?.copyWith(
-                            color: Get.theme.colorScheme.onPrimary,
-                          ),
-                        ),
+                    if (assetName != null && assetName.isNotEmpty) ...[
+                      assetName.endsWith('.json')
+                          ? Lottie.asset(
+                              assetName,
+                              height: 100,
+                              width: 100,
+                            )
+                          : CricketImage(
+                              source: CricketImageSource.asset(assetName),
+                              height: 100,
+                              width: 100,
+                              fit: BoxFit.scaleDown,
+                              color: Get.theme.colorScheme.onSurface,
+                            ),
+                      const SizedBox(height: 24),
+                    ],
+
+                    // Slots the app text theme actually defines, with an explicit
+                    // colour: displayMedium and headlineSmall are not customised,
+                    // so they fell back to Material's 45px/24px near-black — huge
+                    // in light mode and unreadable on the dark sheet.
+                    CricketText(
+                      text: title,
+                      textAlign: TextAlign.center,
+                      style: Get.context?.textTheme.headlineMedium,
+                    ),
+
+                    const SizedBox(height: 8),
+
+                    CricketText(
+                      text: message,
+                      textAlign: TextAlign.center,
+                      maxLines: 5,
+                      style: Get.context?.textTheme.bodyLarge?.copyWith(
+                        color: Get.theme.colorScheme.onSurfaceVariant,
                       ),
+                    ),
+
+                    const SizedBox(height: 24),
+
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      spacing: 14,
+                      children: [
+                        if (!hideCancelButton)
+                          Expanded(
+                            child: CricketOutlinedButton(
+                              buttonName:
+                                  cancelButtonName ?? TranslationKeys.cancel.tr,
+                              onPressed: () => Get.back(result: false),
+                            ),
+                          ),
+
+                        Expanded(
+                          child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: confirmButtonColor,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(32),
+                              ),
+                            ),
+                            onPressed: () => Get.back(result: true),
+                            child: CricketText(
+                              text: confirmButtonName,
+                              style: Get.context?.textTheme.titleMedium
+                                  ?.copyWith(
+                                    color: Get.theme.colorScheme.onPrimary,
+                                  ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    Container(
+                      height: 20 + Get.mediaQuery.viewPadding.bottom,
+                      color: Get.theme.colorScheme.surface,
                     ),
                   ],
                 ),
-
-                Container(
-                  height: 20 + Get.mediaQuery.viewPadding.bottom,
-                  color: Get.theme.colorScheme.surface,
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),
