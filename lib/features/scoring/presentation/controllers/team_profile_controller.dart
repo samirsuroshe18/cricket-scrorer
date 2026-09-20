@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:cricket_scorer/config/routes/app_routes.dart';
 import 'package:cricket_scorer/core/error/cricket_failure.dart';
+import 'package:cricket_scorer/core/global/widgets/dialogue/custom_dialog.dart';
 import 'package:cricket_scorer/core/global/widgets/snackbars/cricket_snackbar.dart';
 import 'package:cricket_scorer/core/network/models/cricket_response.dart';
 import 'package:cricket_scorer/core/utils/either_util.dart';
@@ -193,9 +194,15 @@ class TeamProfileController extends GetxController {
   /// the viewer has no assign-authority on this match at all, which the
   /// sheet caller treats the same as any other failure: don't open it.
   Future<List<MatchUserRef>?> loadScorerCandidates(String matchId) async {
+    // The assign sheet only opens once this returns, and the actions sheet
+    // that launched it has already closed — without a loader the screen just
+    // sits there for the length of the request. Hidden before the failure
+    // snackbar below, not after: hide() closes every snackbar.
+    CricketLoaderDialog.show();
     final response = await getScorerCandidatesUseCase(
       params: GetScorerCandidatesParams(matchId: matchId),
     );
+    CricketLoaderDialog.hide();
     if (response.isResult) {
       return response.result.data?.candidates ?? [];
     }
@@ -207,9 +214,16 @@ class TeamProfileController extends GetxController {
   /// scorer, and patches the cached list entry in place so the card's
   /// label updates without a full reload.
   Future<bool> assignScorer(String matchId, String? scorerId) async {
+    // The assign sheet is still open behind this, so a tap on a name would
+    // otherwise look like nothing happened until the request returned. The
+    // loader is hidden before the failure snackbar below, not after: hide()
+    // closes every snackbar, and the sheet is closed by the caller only once
+    // this returns, so the loader route is already gone by then.
+    CricketLoaderDialog.show();
     final response = await assignScorerUseCase(
       params: AssignScorerParams(matchId: matchId, scorerId: scorerId),
     );
+    CricketLoaderDialog.hide();
     if (!response.isResult) {
       CricketSnackbar.showErrorMessage(response.fallback.message);
       return false;

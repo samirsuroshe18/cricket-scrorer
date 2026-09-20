@@ -574,4 +574,9 @@ class TranslationKeys {
   static const String homeSyncConflictOne = 'home_sync_conflict_one';
   static const String homeSyncConflictMany = 'home_sync_conflict_many';
   static const String homeRefreshFailed = 'home_refresh_failed';
+  static const String matchesSectionActive = 'matches_section_active';
+  static const String matchesSectionPast = 'matches_section_past';
+  static const String showAllMatches = 'show_all_matches';
+  static const String loadMoreMatches = 'load_more_matches';
+  static const String matchesOverOne = 'matches_over_one';
 }

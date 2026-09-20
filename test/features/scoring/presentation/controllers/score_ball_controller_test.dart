@@ -209,7 +209,7 @@ class _OfflineMatchRepository implements MatchRepository {
 
   @override
   Future<Either<CricketResponse<MatchHistoryRes>, CricketFailure>>
-  getMatchHistory({required int page, required int limit}) async {
+  getMatchHistory({required int page, required int limit, List<String>? statuses}) async {
     throw UnimplementedError('Not exercised in this test.');
   }
 
@@ -551,7 +551,7 @@ class _MixedMatchRepository implements MatchRepository {
 
   @override
   Future<Either<CricketResponse<MatchHistoryRes>, CricketFailure>>
-  getMatchHistory({required int page, required int limit}) async {
+  getMatchHistory({required int page, required int limit, List<String>? statuses}) async {
     throw UnimplementedError('Not exercised in this test.');
   }
 
@@ -771,7 +771,7 @@ class _RecordingMatchRepository implements MatchRepository {
 
   @override
   Future<Either<CricketResponse<MatchHistoryRes>, CricketFailure>>
-  getMatchHistory({required int page, required int limit}) async {
+  getMatchHistory({required int page, required int limit, List<String>? statuses}) async {
     throw UnimplementedError('Not exercised in this test.');
   }
 
@@ -1159,7 +1159,7 @@ class _ServerSimulatingMatchRepository implements MatchRepository {
 
   @override
   Future<Either<CricketResponse<MatchHistoryRes>, CricketFailure>>
-  getMatchHistory({required int page, required int limit}) async {
+  getMatchHistory({required int page, required int limit, List<String>? statuses}) async {
     throw UnimplementedError('Not exercised in this test.');
   }
 
@@ -1381,7 +1381,7 @@ class _RuleBlockingMatchRepository implements MatchRepository {
 
   @override
   Future<Either<CricketResponse<MatchHistoryRes>, CricketFailure>>
-  getMatchHistory({required int page, required int limit}) async {
+  getMatchHistory({required int page, required int limit, List<String>? statuses}) async {
     throw UnimplementedError('Not exercised in this test.');
   }
 
@@ -3960,7 +3960,7 @@ class _LockTransitionMatchRepository implements MatchRepository {
 
   @override
   Future<Either<CricketResponse<MatchHistoryRes>, CricketFailure>>
-  getMatchHistory({required int page, required int limit}) =>
+  getMatchHistory({required int page, required int limit, List<String>? statuses}) =>
       throw UnimplementedError('Not exercised in this test.');
 
   @override

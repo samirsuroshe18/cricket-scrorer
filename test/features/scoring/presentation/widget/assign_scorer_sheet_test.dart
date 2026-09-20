@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cricket_scorer/config/theme/app_theme.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/create_match_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/match_history_res.dart';
@@ -23,8 +25,7 @@ void main() {
     required MatchHistoryItem item,
     required Future<List<MatchUserRef>?> Function(String matchId)
     loadCandidates,
-    required Future<bool> Function(String matchId, String? scorerId)
-    onAssign,
+    required Future<bool> Function(String matchId, String? scorerId) onAssign,
   }) async {
     await tester.pumpWidget(
       GetMaterialApp(
@@ -184,7 +185,9 @@ void main() {
 
       await pumpOpenButton(
         tester: tester,
-        item: _item(assignedScorer: MatchUserRef(id: 'user-1', name: 'Raj Patel')),
+        item: _item(
+          assignedScorer: MatchUserRef(id: 'user-1', name: 'Raj Patel'),
+        ),
         loadCandidates: (_) async => [
           MatchUserRef(id: 'user-1', name: 'Raj Patel'),
         ],
@@ -209,6 +212,71 @@ void main() {
       expect(find.text('scorer_unassigned'), findsOneWidget);
       expect(find.text('scorer_assigned'), findsNothing);
       await drainSnackbar(tester);
+    },
+  );
+
+  testWidgets(
+    'tapping a name closes the sheet first, and only then does the request '
+    'run — the sheet is never left open over the loader',
+    (tester) async {
+      final request = Completer<bool>();
+      var assignCalls = 0;
+
+      await pumpOpenButton(
+        tester: tester,
+        item: _item(),
+        loadCandidates: (_) async => [
+          MatchUserRef(id: 'user-1', name: 'Raj Patel'),
+        ],
+        onAssign: (_, _) {
+          assignCalls += 1;
+          return request.future;
+        },
+      );
+      expect(find.text('assign_scorer'), findsOneWidget);
+
+      await tester.tap(find.text('Raj Patel'));
+      for (var i = 0; i < 40; i++) {
+        await tester.pump(const Duration(milliseconds: 16));
+      }
+
+      // The request has started and is still in flight, but the sheet is
+      // already gone.
+      expect(assignCalls, 1);
+      expect(find.text('assign_scorer'), findsNothing);
+      expect(find.text('Raj Patel'), findsNothing);
+      // ...and nothing has been reported as a success yet.
+      expect(find.text('scorer_assigned'), findsNothing);
+
+      request.complete(true);
+      for (var i = 0; i < 40; i++) {
+        await tester.pump(const Duration(milliseconds: 16));
+      }
+      expect(find.text('scorer_assigned'), findsOneWidget);
+      await drainSnackbar(tester);
+    },
+  );
+
+  testWidgets(
+    'a failed assignment shows no success message and does not reopen the sheet',
+    (tester) async {
+      await pumpOpenButton(
+        tester: tester,
+        item: _item(),
+        loadCandidates: (_) async => [
+          MatchUserRef(id: 'user-1', name: 'Raj Patel'),
+        ],
+        onAssign: (_, _) async => false,
+      );
+
+      await tester.tap(find.text('Raj Patel'));
+      for (var i = 0; i < 40; i++) {
+        await tester.pump(const Duration(milliseconds: 16));
+      }
+
+      expect(find.text('scorer_assigned'), findsNothing);
+      expect(find.text('scorer_unassigned'), findsNothing);
+      expect(find.text('assign_scorer'), findsNothing);
     },
   );
 }

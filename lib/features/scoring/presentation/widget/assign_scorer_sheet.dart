@@ -31,12 +31,12 @@ Future<void> showAssignScorerSheet({
     return;
   }
 
-  // Tracks which action actually succeeded so the closing snackbar says the
-  // right thing — "Scorer assigned" and "Scorer unassigned" are genuinely
-  // different outcomes for the person reading it.
-  bool wasCleared = false;
-
-  final assigned = await CustomBottomSheet.wrapBottomSheet<bool>(
+  // The sheet closes the moment a choice is made and hands that choice back;
+  // the request runs afterwards (behind the loader the controller shows), so
+  // a tap never leaves a sheet sitting open over a spinner. `scorerId` null is
+  // "remove the assignment" — "Scorer assigned" and "Scorer unassigned" are
+  // genuinely different outcomes for the person reading the snackbar.
+  final choice = await CustomBottomSheet.wrapBottomSheet<({String? scorerId})>(
     headlineText: TranslationKeys.assignScorer.tr,
     child: SingleChildScrollView(
       child: Builder(
@@ -44,6 +44,9 @@ Future<void> showAssignScorerSheet({
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // wrapBottomSheet adds no gap under the headline; 32 is the gap
+            // the other sheets use (see cricketCustomBottomSheet).
+            32.h,
             CricketText(
               text: TranslationKeys.tapToHandOffScoring.tr,
               style: context.textTheme.bodySmall?.copyWith(
@@ -55,10 +58,9 @@ Future<void> showAssignScorerSheet({
               _CandidateRow(
                 candidate: candidate,
                 isCurrentlyAssigned: candidate.id == item.assignedScorer?.id,
-                onTap: () async {
-                  final success = await onAssign(item.matchId, candidate.id);
-                  if (success) Get.back<bool>(result: true);
-                },
+                onTap: () => Get.back<({String? scorerId})>(
+                  result: (scorerId: candidate.id),
+                ),
               ),
             if (item.assignedScorer != null) ...[
               12.h,
@@ -68,13 +70,8 @@ Future<void> showAssignScorerSheet({
               12.h,
               CricketOutlinedButton(
                 buttonName: TranslationKeys.removeAssignment.tr,
-                onPressed: () async {
-                  final success = await onAssign(item.matchId, null);
-                  if (success) {
-                    wasCleared = true;
-                    Get.back<bool>(result: true);
-                  }
-                },
+                onPressed: () =>
+                    Get.back<({String? scorerId})>(result: (scorerId: null)),
               ),
             ],
           ],
@@ -83,13 +80,19 @@ Future<void> showAssignScorerSheet({
     ),
   );
 
-  if (assigned == true) {
-    CricketSnackbar.showSuccessMessage(
-      wasCleared
-          ? TranslationKeys.scorerUnassigned.tr
-          : TranslationKeys.scorerAssigned.tr,
-    );
-  }
+  // Dismissed without choosing anyone.
+  if (choice == null) return;
+
+  // A failure shows its own error snackbar from the controller (after it has
+  // hidden its loader); only success is reported here.
+  final success = await onAssign(item.matchId, choice.scorerId);
+  if (!success) return;
+
+  CricketSnackbar.showSuccessMessage(
+    choice.scorerId == null
+        ? TranslationKeys.scorerUnassigned.tr
+        : TranslationKeys.scorerAssigned.tr,
+  );
 }
 
 class _CandidateRow extends StatelessWidget {

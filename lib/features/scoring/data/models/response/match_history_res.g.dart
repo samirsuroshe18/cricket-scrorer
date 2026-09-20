@@ -109,6 +109,11 @@ MatchHistoryRes _$MatchHistoryResFromJson(Map<String, dynamic> json) =>
       page: (json['page'] as num).toInt(),
       limit: (json['limit'] as num).toInt(),
       total: (json['total'] as num).toInt(),
+      counts:
+          (json['counts'] as Map<String, dynamic>?)?.map(
+            (k, e) => MapEntry(k, (e as num).toInt()),
+          ) ??
+          {},
     );
 
 Map<String, dynamic> _$MatchHistoryResToJson(MatchHistoryRes instance) =>
@@ -117,4 +122,5 @@ Map<String, dynamic> _$MatchHistoryResToJson(MatchHistoryRes instance) =>
       'page': instance.page,
       'limit': instance.limit,
       'total': instance.total,
+      'counts': instance.counts,
     };

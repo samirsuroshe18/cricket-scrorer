@@ -42,10 +42,18 @@ class MatchApiService {
   Future<Either<ApiResponseModel, CricketFailure>> getMatchHistory({
     required int page,
     required int limit,
+    List<String>? statuses,
   }) async {
     return await apiClient.get(
       endpoint: matchEndpoint.history,
-      queryParameters: {'page': page, 'limit': limit},
+      queryParameters: {
+        'page': page,
+        'limit': limit,
+        // Comma list, e.g. `live,innings_break` — omitted entirely (not an
+        // empty value) when there is no filter.
+        if (statuses != null && statuses.isNotEmpty)
+          'status': statuses.join(','),
+      },
     );
   }
 

@@ -531,4 +531,9 @@ Map<String, String> en = {
   TranslationKeys.homeSyncConflictOne: 'Sync conflict · @match',
   TranslationKeys.homeSyncConflictMany: '@count matches have a sync conflict',
   TranslationKeys.homeRefreshFailed: 'Couldn\'t refresh',
+  TranslationKeys.matchesSectionActive: 'In progress',
+  TranslationKeys.matchesSectionPast: 'Past matches',
+  TranslationKeys.showAllMatches: 'Show all',
+  TranslationKeys.loadMoreMatches: 'Load more matches',
+  TranslationKeys.matchesOverOne: '1 over',
 };

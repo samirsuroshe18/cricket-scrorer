@@ -16,6 +16,7 @@ Future<void> confirmDeleteMatch(
     title: TranslationKeys.deleteMatchConfirmTitle.tr,
     message: TranslationKeys.deleteMatchConfirmMessage.tr,
     confirmButtonName: TranslationKeys.deleteMatch.tr,
+    isXButtonRequired: true,
   );
   if (confirmed == true) {
     await controller.deleteMatch(item);

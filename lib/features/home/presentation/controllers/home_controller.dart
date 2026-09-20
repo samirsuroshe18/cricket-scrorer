@@ -63,6 +63,34 @@ class HomeController extends GetxController {
   /// showing.
   bool _isLoadingHistory = false;
 
+  /// Matches per status across everything the user can see, from the server's
+  /// own count (independent of any filter) — what the Matches tab's chips
+  /// badge. Empty until the first response, and from a server that predates
+  /// the field, in which case the chips simply show no number.
+  final statusCounts = <String, int>{}.obs;
+
+  /// The Matches tab's status chip: `null` is "All", otherwise `live`
+  /// (which also covers `innings_break`), `upcoming`, `completed` or
+  /// `abandoned`. Filtering is done by the server *before* paginating, so a
+  /// live match on a later page is found instead of hidden.
+  final statusFilter = Rxn<String>();
+
+  /// The filtered list and its own paging state, kept apart from [matches] on
+  /// purpose: Home's dashboard reads [matches] as "the newest page of
+  /// everything" (hero, live carousel, recent results), so narrowing that
+  /// list to one status would empty half of Home.
+  final filteredMatches = <MatchHistoryItem>[].obs;
+  final isLoadingFiltered = false.obs;
+  final isLoadingMoreFiltered = false.obs;
+  final hasMoreFiltered = false.obs;
+  final filteredError = Rxn<String>();
+  int _filteredPage = 1;
+
+  /// Bumped on every filter change and refresh. A response for an older
+  /// number is dropped: tapping Live then Completed quickly must not let the
+  /// slower Live response overwrite the list Completed is showing.
+  int _filteredRequest = 0;
+
   /// The signed-in user's own cached photo/username — nothing filled in on
   /// the Complete/My Profile screen was ever shown back to the user before
   /// this, anywhere in the app. Read synchronously from the same cache
@@ -132,9 +160,133 @@ class HomeController extends GetxController {
         ),
       );
       hasMore.value = data?.hasMore ?? false;
+      _adoptCounts(data);
     } else {
       loadError.value = response.fallback.message;
     }
+  }
+
+  void _adoptCounts(MatchHistoryRes? data) {
+    final counts = data?.counts;
+    if (counts != null && counts.isNotEmpty) {
+      // A copy: RxMap.assignAll keeps the map it is handed, and this one
+      // belongs to the response model (and is const when defaulted), while
+      // deleteMatch decrements entries in place.
+      statusCounts.assignAll(Map<String, int>.of(counts));
+    }
+  }
+
+  /// The statuses a chip stands for. `live` includes `innings_break`: to a
+  /// scorer choosing what to open, an innings break is still a live match.
+  static List<String> statusesFor(String filter) =>
+      filter == 'live' ? const ['live', 'innings_break'] : [filter];
+
+  /// Picks a chip. `null` returns to "All", which is just [matches] again —
+  /// no request; anything else fetches that status's first page.
+  Future<void> selectStatusFilter(String? status) async {
+    if (status == statusFilter.value) return;
+    statusFilter.value = status;
+    if (status == null) {
+      _filteredRequest++;
+      filteredMatches.clear();
+      filteredError.value = null;
+      isLoadingFiltered.value = false;
+      isLoadingMoreFiltered.value = false;
+      return;
+    }
+    await loadFiltered();
+  }
+
+  /// First page of the active filter, replacing the filtered list — the
+  /// chip-tap and pull-to-refresh entry point.
+  Future<void> loadFiltered() async {
+    final filter = statusFilter.value;
+    if (filter == null) return;
+
+    final request = ++_filteredRequest;
+    filteredMatches.clear();
+    filteredError.value = null;
+    hasMoreFiltered.value = false;
+    isLoadingFiltered.value = true;
+    isLoadingMoreFiltered.value = false;
+    _filteredPage = 1;
+
+    final response = await getMatchHistoryUseCase(
+      params: GetMatchHistoryParams(
+        page: 1,
+        limit: _pageSize,
+        statuses: statusesFor(filter),
+      ),
+    );
+
+    if (request != _filteredRequest) return;
+    isLoadingFiltered.value = false;
+
+    if (response.isResult) {
+      final data = response.result.data;
+      filteredMatches.assignAll(
+        (data?.matches ?? []).where(
+          (match) => !deletingMatchIds.contains(match.matchId),
+        ),
+      );
+      hasMoreFiltered.value = data?.hasMore ?? false;
+      _adoptCounts(data);
+    } else {
+      filteredError.value = response.fallback.message;
+    }
+  }
+
+  /// Next page of the active filter. A no-op while a load is in flight or
+  /// nothing is left, same as [loadMore].
+  Future<void> loadMoreFiltered() async {
+    final filter = statusFilter.value;
+    if (filter == null ||
+        isLoadingFiltered.value ||
+        isLoadingMoreFiltered.value ||
+        !hasMoreFiltered.value) {
+      return;
+    }
+
+    final request = _filteredRequest;
+    isLoadingMoreFiltered.value = true;
+
+    final response = await getMatchHistoryUseCase(
+      params: GetMatchHistoryParams(
+        page: _filteredPage + 1,
+        limit: _pageSize,
+        statuses: statusesFor(filter),
+      ),
+    );
+
+    if (request != _filteredRequest) return;
+    isLoadingMoreFiltered.value = false;
+
+    if (response.isResult) {
+      final data = response.result.data;
+      if (data != null) {
+        filteredMatches.addAll(
+          data.matches.where(
+            (match) => !deletingMatchIds.contains(match.matchId),
+          ),
+        );
+        hasMoreFiltered.value = data.hasMore;
+        _filteredPage += 1;
+      }
+    } else {
+      // Same choice as [loadMore]: leave `hasMoreFiltered` alone so a
+      // transient failure doesn't hide the rest of the list.
+      CricketSnackbar.showErrorMessage(response.fallback.message);
+    }
+  }
+
+  /// Pull-to-refresh on the Matches tab: the unfiltered first page (which
+  /// also refreshes the counts and Home's own view) and, when a chip is
+  /// active, that chip's list.
+  Future<void> refreshMatches() {
+    return Future.wait([
+      loadHistory(),
+      if (statusFilter.value != null) loadFiltered(),
+    ]);
   }
 
   /// Appends the next page — the list's own scroll-to-bottom trigger. A
@@ -212,6 +364,11 @@ class HomeController extends GetxController {
 
     if (response.isResult) {
       matches.removeWhere((match) => match.matchId == item.matchId);
+      filteredMatches.removeWhere((match) => match.matchId == item.matchId);
+      final counted = statusCounts[item.status];
+      if (counted != null && counted > 0) {
+        statusCounts[item.status] = counted - 1;
+      }
     } else {
       CricketSnackbar.showErrorMessage(response.fallback.message);
     }
@@ -222,9 +379,15 @@ class HomeController extends GetxController {
   /// the viewer has no assign-authority on this match at all, which the
   /// sheet caller treats the same as any other failure: don't open it.
   Future<List<MatchUserRef>?> loadScorerCandidates(String matchId) async {
+    // The assign sheet only opens once this returns, and the actions sheet
+    // that launched it has already closed — without a loader the screen just
+    // sits there for the length of the request. Hidden before the failure
+    // snackbar below, not after: hide() closes every snackbar.
+    CricketLoaderDialog.show();
     final response = await getScorerCandidatesUseCase(
       params: GetScorerCandidatesParams(matchId: matchId),
     );
+    CricketLoaderDialog.hide();
     if (response.isResult) {
       return response.result.data?.candidates ?? [];
     }
@@ -236,18 +399,26 @@ class HomeController extends GetxController {
   /// scorer, and patches the cached list entry in place so the card's
   /// label updates without a full reload.
   Future<bool> assignScorer(String matchId, String? scorerId) async {
+    // The assign sheet is still open behind this, so a tap on a name would
+    // otherwise look like nothing happened until the request returned. The
+    // loader is hidden before the failure snackbar below, not after: hide()
+    // closes every snackbar, and the sheet is closed by the caller only once
+    // this returns, so the loader route is already gone by then.
+    CricketLoaderDialog.show();
     final response = await assignScorerUseCase(
       params: AssignScorerParams(matchId: matchId, scorerId: scorerId),
     );
+    CricketLoaderDialog.hide();
     if (!response.isResult) {
       CricketSnackbar.showErrorMessage(response.fallback.message);
       return false;
     }
-    final index = matches.indexWhere((item) => item.matchId == matchId);
-    if (index != -1) {
-      matches[index] = matches[index].copyWith(
-        assignedScorer: response.result.data?.assignedScorer,
-      );
+    final assigned = response.result.data?.assignedScorer;
+    for (final list in [matches, filteredMatches]) {
+      final index = list.indexWhere((item) => item.matchId == matchId);
+      if (index != -1) {
+        list[index] = list[index].copyWith(assignedScorer: assigned);
+      }
     }
     return true;
   }

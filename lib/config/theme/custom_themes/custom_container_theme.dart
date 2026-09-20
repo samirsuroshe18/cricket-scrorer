@@ -22,7 +22,11 @@ class CustomContainerTheme {
   static BottomSheetThemeData lightBottomSheetTheme = BottomSheetThemeData(
     backgroundColor: CustomColorScheme.lightColorScheme.surface,
     elevation: 0,
-    showDragHandle: true,
+    // Off: every sheet here is a transparent GetX route whose visible surface
+    // is its own rounded container (often under an X button), so the theme's
+    // handle floated as an orphan dash above it — and most of these sheets
+    // aren't draggable anyway.
+    showDragHandle: false,
     dragHandleColor: CustomColorScheme.lightColorScheme.outline,
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(
@@ -73,7 +77,11 @@ class CustomContainerTheme {
   static BottomSheetThemeData darkBottomSheetTheme = BottomSheetThemeData(
     backgroundColor: CustomColorScheme.darkColorScheme.surface,
     elevation: 0,
-    showDragHandle: true,
+    // Off: every sheet here is a transparent GetX route whose visible surface
+    // is its own rounded container (often under an X button), so the theme's
+    // handle floated as an orphan dash above it — and most of these sheets
+    // aren't draggable anyway.
+    showDragHandle: false,
     dragHandleColor: CustomColorScheme.darkColorScheme.outline,
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(

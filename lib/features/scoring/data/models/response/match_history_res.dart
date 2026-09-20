@@ -208,11 +208,19 @@ class MatchHistoryRes {
   final int limit;
   final int total;
 
+  /// Matches per status (`upcoming`/`live`/`innings_break`/`completed`/
+  /// `abandoned`) across everything the caller can see, independent of any
+  /// `?status` filter — so a chip can badge "Live 3" while the list under it
+  /// shows something else. Empty from a server that predates the field.
+  @JsonKey(defaultValue: <String, int>{})
+  final Map<String, int> counts;
+
   MatchHistoryRes({
     required this.matches,
     required this.page,
     required this.limit,
     required this.total,
+    this.counts = const {},
   });
 
   /// Whether a subsequent page exists — the pull-to-refresh list's "load

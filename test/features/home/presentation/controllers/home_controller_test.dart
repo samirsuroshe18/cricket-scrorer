@@ -223,6 +223,19 @@ class _FakeMatchRepository implements MatchRepository {
   /// not just that its result didn't win.
   int historyCallCount = 0;
 
+  /// Every `getMatchHistory` call, so a test can assert which page and
+  /// which server-side statuses were actually requested.
+  final historyCalls = <({int page, List<String>? statuses})>[];
+
+  /// When set, decides the response per call (checked ahead of
+  /// [historyCompleter] and [historyResponse]) — the way a test gives the
+  /// filtered request a different answer from the unfiltered one.
+  Future<Either<CricketResponse<MatchHistoryRes>, CricketFailure>> Function(
+    int page,
+    List<String>? statuses,
+  )?
+  historyResponder;
+
   /// Set by a test that needs to observe the in-flight window instead of an
   /// instantaneous resolve — [deleteMatch] awaits this future when present,
   /// checked ahead of [deleteResponse].
@@ -231,8 +244,11 @@ class _FakeMatchRepository implements MatchRepository {
 
   @override
   Future<Either<CricketResponse<MatchHistoryRes>, CricketFailure>>
-  getMatchHistory({required int page, required int limit}) async {
+  getMatchHistory({required int page, required int limit, List<String>? statuses}) async {
     historyCallCount += 1;
+    historyCalls.add((page: page, statuses: statuses));
+    final responder = historyResponder;
+    if (responder != null) return responder(page, statuses);
     final completer = historyCompleter;
     if (completer != null) return completer.future;
     final response = historyResponse;
@@ -814,4 +830,210 @@ void main() {
       expect(controller.isLoading.value, isFalse);
     },
   );
+
+  group('server-side status filter', () {
+    Either<CricketResponse<MatchHistoryRes>, CricketFailure> page({
+      required List<MatchHistoryItem> matches,
+      int pageNumber = 1,
+      int total = 0,
+      Map<String, int> counts = const {},
+    }) => Either.result(
+      CricketResponse(
+        message: 'ok',
+        data: MatchHistoryRes(
+          matches: matches,
+          page: pageNumber,
+          limit: 20,
+          total: total == 0 ? matches.length : total,
+          counts: counts,
+        ),
+      ),
+    );
+
+    test('picking Live asks the server for live and innings_break', () async {
+      repo.historyResponder = (_, statuses) async =>
+          page(matches: [_item('live-1'), _item('break-1', status: 'innings_break')]);
+
+      await controller.selectStatusFilter('live');
+
+      expect(repo.historyCalls.single.page, 1);
+      expect(repo.historyCalls.single.statuses, ['live', 'innings_break']);
+      expect(controller.filteredMatches.map((m) => m.matchId), [
+        'live-1',
+        'break-1',
+      ]);
+      expect(controller.isLoadingFiltered.value, isFalse);
+    });
+
+    test('other chips ask for exactly their own status', () async {
+      repo.historyResponder = (_, _) async => page(matches: const []);
+
+      await controller.selectStatusFilter('completed');
+
+      expect(repo.historyCalls.single.statuses, ['completed']);
+    });
+
+    test('the filtered list never touches the list Home reads', () async {
+      repo.historyResponder = (_, statuses) async => statuses == null
+          ? page(matches: [_item('a'), _item('b', status: 'completed')])
+          : page(matches: [_item('b', status: 'completed')]);
+      await controller.loadHistory();
+
+      await controller.selectStatusFilter('completed');
+
+      expect(controller.matches.map((m) => m.matchId), ['a', 'b']);
+      expect(controller.filteredMatches.map((m) => m.matchId), ['b']);
+    });
+
+    test('returning to All clears the filter without a request', () async {
+      repo.historyResponder = (_, _) async => page(matches: [_item('x')]);
+      await controller.selectStatusFilter('live');
+      final calls = repo.historyCalls.length;
+
+      await controller.selectStatusFilter(null);
+
+      expect(controller.statusFilter.value, isNull);
+      expect(controller.filteredMatches, isEmpty);
+      expect(repo.historyCalls.length, calls);
+    });
+
+    test('re-selecting the active chip does not refetch', () async {
+      repo.historyResponder = (_, _) async => page(matches: [_item('x')]);
+      await controller.selectStatusFilter('live');
+
+      await controller.selectStatusFilter('live');
+
+      expect(repo.historyCalls.length, 1);
+    });
+
+    test('load more pages within the same filter', () async {
+      repo.historyResponder = (pageNumber, _) async => pageNumber == 1
+          ? page(matches: [_item('one')], total: 21)
+          : page(matches: [_item('two')], pageNumber: 2, total: 21);
+      await controller.selectStatusFilter('upcoming');
+      expect(controller.hasMoreFiltered.value, isTrue);
+
+      await controller.loadMoreFiltered();
+
+      expect(repo.historyCalls.last.page, 2);
+      expect(repo.historyCalls.last.statuses, ['upcoming']);
+      expect(controller.filteredMatches.map((m) => m.matchId), ['one', 'two']);
+    });
+
+    test('load more is a no-op with nothing left', () async {
+      repo.historyResponder = (_, _) async => page(matches: [_item('only')]);
+      await controller.selectStatusFilter('upcoming');
+      final calls = repo.historyCalls.length;
+
+      await controller.loadMoreFiltered();
+
+      expect(repo.historyCalls.length, calls);
+    });
+
+    test('a slow answer for an earlier chip cannot overwrite a later one', () async {
+      final slowLive =
+          Completer<Either<CricketResponse<MatchHistoryRes>, CricketFailure>>();
+      repo.historyResponder = (_, statuses) {
+        if (statuses!.contains('live')) return slowLive.future;
+        return Future.value(page(matches: [_item('done', status: 'completed')]));
+      };
+
+      final liveFuture = controller.selectStatusFilter('live');
+      await controller.selectStatusFilter('completed');
+      slowLive.complete(page(matches: [_item('stale-live')]));
+      await liveFuture;
+
+      expect(controller.statusFilter.value, 'completed');
+      expect(controller.filteredMatches.map((m) => m.matchId), ['done']);
+    });
+
+    test('a failed filtered load sets filteredError, not the All error', () async {
+      repo.historyResponder = (_, _) async =>
+          Either.fallback(
+            CricketServerErrorFailure(statusCode: 500, message: 'boom'),
+          );
+
+      await controller.selectStatusFilter('live');
+
+      expect(controller.filteredError.value, 'boom');
+      expect(controller.loadError.value, isNull);
+      expect(controller.filteredMatches, isEmpty);
+    });
+
+    test('counts come from the server response and survive a filter', () async {
+      const counts = {
+        'upcoming': 1,
+        'live': 2,
+        'innings_break': 1,
+        'completed': 5,
+        'abandoned': 0,
+      };
+      repo.historyResponder = (_, _) async =>
+          page(matches: [_item('a')], counts: counts);
+
+      await controller.loadHistory();
+      await controller.selectStatusFilter('completed');
+
+      expect(controller.statusCounts, counts);
+    });
+
+    test('a response without counts leaves the known counts alone', () async {
+      repo.historyResponder = (_, statuses) async => statuses == null
+          ? page(matches: [_item('a')], counts: const {'live': 3})
+          : page(matches: [_item('b')]);
+      await controller.loadHistory();
+
+      await controller.selectStatusFilter('live');
+
+      expect(controller.statusCounts['live'], 3);
+    });
+
+    test('deleting removes the card from both lists and drops its count', () async {
+      repo.historyResponder = (_, _) async => page(
+        matches: [_item('gone'), _item('kept')],
+        counts: const {'live': 2},
+      );
+      await controller.loadHistory();
+      await controller.selectStatusFilter('live');
+      repo.deleteResponse = Either.result(
+        CricketResponse(message: 'ok', data: DeleteMatchRes(matchId: 'gone')),
+      );
+
+      await controller.deleteMatch(_item('gone'));
+
+      expect(controller.matches.map((m) => m.matchId), ['kept']);
+      expect(controller.filteredMatches.map((m) => m.matchId), ['kept']);
+      expect(controller.statusCounts['live'], 1);
+    });
+
+    test('assigning a scorer patches the filtered list too', () async {
+      repo.historyResponder = (_, _) async => page(matches: [_item('m')]);
+      await controller.loadHistory();
+      await controller.selectStatusFilter('live');
+      repo.assignScorerResponse = Either.result(
+        CricketResponse(
+          message: 'ok',
+          data: AssignScorerRes(
+            matchId: 'm',
+            assignedScorer: MatchUserRef(id: 'u', name: 'Raj'),
+          ),
+        ),
+      );
+
+      await controller.assignScorer('m', 'u');
+
+      expect(controller.matches.first.assignedScorer?.name, 'Raj');
+      expect(controller.filteredMatches.first.assignedScorer?.name, 'Raj');
+    });
+
+    test('refreshMatches reloads All and the active filter', () async {
+      repo.historyResponder = (_, _) async => page(matches: [_item('x')]);
+      await controller.selectStatusFilter('live');
+      repo.historyCalls.clear();
+
+      await controller.refreshMatches();
+
+      expect(repo.historyCalls.map((c) => c.statuses), containsAll([null, ['live', 'innings_break']]));
+    });
+  });
 }
