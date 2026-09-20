@@ -67,7 +67,6 @@ class _WatchMatchBottomSheetState extends State<WatchMatchBottomSheet> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          32.h,
           CricketText(
             text: TranslationKeys.enterMatchCodeDescription.tr,
             style: Theme.of(context).textTheme.bodyMedium,
