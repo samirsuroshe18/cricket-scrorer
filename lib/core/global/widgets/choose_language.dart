@@ -61,7 +61,7 @@ class ChooseLanguageState extends State<ChooseLanguage> {
       children: [
         Expanded(
           child: ListView.separated(
-            padding: const EdgeInsets.only(top: 32, bottom: 32),
+            padding: const EdgeInsets.only(bottom: 32),
             itemCount: languageList.length,
             separatorBuilder: (_, _) => 16.h,
             itemBuilder: (context, index) {

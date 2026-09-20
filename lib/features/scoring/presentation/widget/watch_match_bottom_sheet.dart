@@ -26,7 +26,7 @@ class WatchMatchBottomSheet extends StatefulWidget {
     return CustomBottomSheet.cricketCustomBottomSheet<void>(
       headlineText: TranslationKeys.watchLiveMatch.tr,
       isDismissible: true,
-      heightFactor: 0.45,
+      heightFactor: 0.5,
       child: const WatchMatchBottomSheet(),
     );
   }
@@ -71,7 +71,7 @@ class _WatchMatchBottomSheetState extends State<WatchMatchBottomSheet> {
             text: TranslationKeys.enterMatchCodeDescription.tr,
             style: Theme.of(context).textTheme.bodyMedium,
           ),
-          16.h,
+          24.h,
           CricketTextField(
             controller: _controller,
             labelText: TranslationKeys.matchCode.tr,

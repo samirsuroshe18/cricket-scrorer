@@ -70,6 +70,7 @@ class CustomBottomSheet {
                   CricketHeadlineWithFixedOutline(
                     headlineText: headlineText,
                   ),
+                  32.h,
 
                   Expanded(child: child),
                 ],
