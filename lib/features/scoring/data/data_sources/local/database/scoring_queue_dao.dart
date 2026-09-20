@@ -122,6 +122,15 @@ class ScoringQueueDao extends DatabaseAccessor<ScoringQueueDatabase>
         .watch();
   }
 
+  /// Every queued row across every match and innings — for the Home
+  /// dashboard's "waiting to sync" strip, which has no single match to scope
+  /// to. Read-only; [watchQueue] stays the one the scoring console uses.
+  Stream<List<QueuedSyncEvent>> watchAllQueued() {
+    return (select(
+      queuedSyncEvents,
+    )..orderBy([(row) => OrderingTerm.asc(row.id)])).watch();
+  }
+
   Future<List<QueuedSyncEvent>> pendingEvents({
     required String matchId,
     required int inningsNumber,

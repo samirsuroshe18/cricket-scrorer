@@ -131,7 +131,7 @@ class _MatchesTabState extends State<MatchesTab> {
                 return false;
               },
               child: ListView.separated(
-                padding: 16.p,
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 44),
                 itemCount: filtered.length + 1,
                 separatorBuilder: (_, _) => 12.h,
                 itemBuilder: (context, index) {

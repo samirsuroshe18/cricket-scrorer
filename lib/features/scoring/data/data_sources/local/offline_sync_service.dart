@@ -165,6 +165,19 @@ class OfflineSyncService extends GetxService {
         .listen((rows) => historyCount.value = rows.length);
   }
 
+  /// Every queued row across all matches, as `(matchId, isBall)` pairs — what
+  /// Home needs to say "N balls waiting to sync" without knowing which match
+  /// is open. Independent of [watch]: it neither reads nor disturbs the
+  /// per-match counters the scoring console relies on.
+  Stream<List<({String matchId, bool isBall})>> watchAllQueued() {
+    return dao.watchAllQueued().map(
+      (rows) => [
+        for (final row in rows)
+          (matchId: row.matchId, isBall: row.eventType == SyncEventType.ball),
+      ],
+    );
+  }
+
   /// Stops watching a match's queue — does NOT stop background flush
   /// attempts already in flight, and a later [watch] for the same innings
   /// picks the queue up exactly where it was.

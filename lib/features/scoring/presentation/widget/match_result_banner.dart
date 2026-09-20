@@ -5,6 +5,22 @@ import 'package:cricket_scorer/features/scoring/data/models/response/match_resul
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+/// The one sentence describing a decided match — "Mumbai won by 24 runs" or
+/// the tie line. Top-level so the Home dashboard's result rows word a result
+/// exactly as [MatchResultBanner] does: two copies of this composition are
+/// how the same match ends up described two ways.
+String matchResultText(
+  MatchResultInfo result,
+  String Function(String sideLabel) nameFor,
+) {
+  if (result.isTie) return TranslationKeys.matchTied.tr;
+  final unit = result.marginType == 'wickets'
+      ? TranslationKeys.wickets.tr.toLowerCase()
+      : TranslationKeys.runsWord.tr;
+  return '${nameFor(result.winner)} ${TranslationKeys.wonBy.tr} '
+      '${result.margin} $unit';
+}
+
 /// Composed client-side from [MatchResultInfo.winner]/`marginType`/`margin` —
 /// the server sends no description sentence on purpose, see docs/api.md's
 /// note on why. `winner`/`marginType` are the only server-decided facts here;
@@ -16,18 +32,18 @@ import 'package:get/get.dart';
 /// `ScorecardRes`, the spectator's off `PublicMatchInfo`, and neither carries
 /// the other's shape.
 class MatchResultBanner extends StatelessWidget {
-  const MatchResultBanner({super.key, required this.result, required this.nameFor});
+  const MatchResultBanner({
+    super.key,
+    required this.result,
+    required this.nameFor,
+  });
 
   final MatchResultInfo result;
   final String Function(String sideLabel) nameFor;
 
   @override
   Widget build(BuildContext context) {
-    final text = result.isTie
-        ? TranslationKeys.matchTied.tr
-        : '${nameFor(result.winner)} ${TranslationKeys.wonBy.tr} '
-              '${result.margin} '
-              '${result.marginType == 'wickets' ? TranslationKeys.wickets.tr.toLowerCase() : TranslationKeys.runsWord.tr}';
+    final text = matchResultText(result, nameFor);
 
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),

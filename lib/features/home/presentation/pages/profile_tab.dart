@@ -27,7 +27,7 @@ class ProfileTab extends StatelessWidget {
       appBar: CustomAppBar(title: TranslationKeys.navProfile.tr),
       body: SafeArea(
         child: ListView(
-          padding: 16.p,
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 44),
           children: [
             Obx(() {
               final user = controller.currentUserProfile.value;
