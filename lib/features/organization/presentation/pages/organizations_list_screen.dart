@@ -3,11 +3,11 @@ import 'package:cricket_scorer/core/extensions/space_extension.dart';
 import 'package:cricket_scorer/core/extensions/theme_x.dart';
 import 'package:cricket_scorer/core/global/widgets/bootom_sheets/custom_bottomsheet.dart';
 import 'package:cricket_scorer/core/global/widgets/cricket_button.dart';
+import 'package:cricket_scorer/core/global/widgets/cricket_entity_avatar.dart';
+import 'package:cricket_scorer/core/global/widgets/cricket_grouped_card.dart';
 import 'package:cricket_scorer/core/global/widgets/cricket_text.dart';
 import 'package:cricket_scorer/core/global/widgets/cricket_text_field.dart';
 import 'package:cricket_scorer/core/global/widgets/custom_app_bar.dart';
-import 'package:cricket_scorer/core/global/widgets/images/cricket_image.dart';
-import 'package:cricket_scorer/core/global/widgets/images/cricket_image_source.dart';
 import 'package:cricket_scorer/core/global/widgets/snackbars/cricket_snackbar.dart';
 import 'package:cricket_scorer/core/translations/translation_keys.dart';
 import 'package:cricket_scorer/features/organization/data/models/response/organization_summary_res.dart';
@@ -188,10 +188,12 @@ class OrganizationMessageState extends StatelessWidget {
   }
 }
 
-/// Public so `TeamsTab`'s Organizations section can reuse the exact same
-/// card instead of duplicating it.
-class OrganizationCard extends StatelessWidget {
-  const OrganizationCard({required this.org, this.onLeave, super.key});
+/// One organization as a tappable row: logo or monogram, name, how big it is,
+/// and the caller's role. Public so `TeamsTab` can stack several inside one
+/// `CricketGroupedCard`; [OrganizationCard] wraps a single one for this
+/// screen. Needs a Material ancestor for its ripple, which the card provides.
+class OrganizationRow extends StatelessWidget {
+  const OrganizationRow({required this.org, this.onLeave, super.key});
 
   final OrganizationSummaryRes org;
 
@@ -200,64 +202,21 @@ class OrganizationCard extends StatelessWidget {
   /// never by this row-level shortcut.
   final VoidCallback? onLeave;
 
-  /// Initials of the first two words of the name — same derivation
-  /// `_TeamHeader._monogram` uses on `TeamProfileScreen`, minus the
-  /// `shortName` branch (an org has no equivalent field).
-  String _monogram() {
-    final words = org.name.trim().split(RegExp(r'\s+'));
-    final letters = words.take(2).map((w) => w.isEmpty ? '' : w[0]).join();
-    return letters.isEmpty ? '?' : letters.toUpperCase();
-  }
-
-  /// The uploaded logo when present (`OrganizationDetailScreen`'s owner-only
-  /// upload is the only writer of it), else the same monogram fallback this
-  /// card always showed.
-  Widget _avatar(BuildContext context) {
-    final logoUrl = org.logoUrl;
-    if (logoUrl == null || logoUrl.isEmpty) {
-      return CircleAvatar(
-        radius: 22,
-        backgroundColor: context.colors.chipBackground,
-        child: CricketText(
-          text: _monogram(),
-          style: context.textTheme.titleSmall?.copyWith(
-            color: context.colorScheme.primary,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-      );
-    }
-
-    return CircleAvatar(
-      radius: 22,
-      backgroundColor: context.colors.chipBackground,
-      child: ClipOval(
-        child: CricketImage(
-          source: CricketImageSource.network(logoUrl),
-          width: 44,
-          height: 44,
-          fit: BoxFit.cover,
-        ),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final isOwner = org.myRole == 'owner';
+    final scheme = context.colorScheme;
 
-    return Material(
-      color: context.colorScheme.surfaceContainerHighest,
-      borderRadius: 12.radius,
-      child: InkWell(
-        borderRadius: 12.radius,
-        onTap: () =>
-            Get.toNamed<dynamic>(AppRoutes.organizationDetailPath(org.id)),
+    return InkWell(
+      onTap: () =>
+          Get.toNamed<dynamic>(AppRoutes.organizationDetailPath(org.id)),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(minHeight: 64),
         child: Padding(
-          padding: 16.p,
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
           child: Row(
             children: [
-              _avatar(context),
+              CricketEntityAvatar(name: org.name, logoUrl: org.logoUrl),
               12.w,
               Expanded(
                 child: Column(
@@ -269,62 +228,38 @@ class OrganizationCard extends StatelessWidget {
                       textOverflow: TextOverflow.ellipsis,
                       style: context.textTheme.titleSmall,
                     ),
-                    4.h,
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          Icons.groups_outlined,
-                          size: 14,
-                          color: context.colorScheme.onSurfaceVariant,
-                        ),
-                        4.w,
-                        CricketText(
-                          text:
-                              '${org.memberCount} ${TranslationKeys.members.tr}',
-                          style: context.textTheme.bodySmall?.copyWith(
-                            color: context.colorScheme.onSurfaceVariant,
-                          ),
-                        ),
-                        12.w,
-                        Icon(
-                          Icons.shield_outlined,
-                          size: 14,
-                          color: context.colorScheme.onSurfaceVariant,
-                        ),
-                        4.w,
-                        CricketText(
-                          text: '${org.teamCount} ${TranslationKeys.teams.tr}',
-                          style: context.textTheme.bodySmall?.copyWith(
-                            color: context.colorScheme.onSurfaceVariant,
-                          ),
-                        ),
-                      ],
+                    2.h,
+                    CricketText(
+                      text:
+                          '${org.memberCount} ${TranslationKeys.members.tr}, '
+                          '${org.teamCount} ${TranslationKeys.teams.tr}',
+                      maxLines: 2,
+                      textOverflow: TextOverflow.ellipsis,
+                      style: context.textTheme.bodySmall?.copyWith(
+                        color: scheme.onSurfaceVariant,
+                      ),
                     ),
                   ],
                 ),
               ),
               8.w,
+              // The owner pill is filled with the ink colour (the same
+              // treatment as a selected filter chip); a member's is outlined.
               Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 8,
-                  vertical: 4,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
-                  color: isOwner
-                      ? context.colors.statusInfo.withValues(alpha: 0.12)
-                      : null,
-                  border: isOwner
-                      ? null
-                      : Border.all(color: context.colorScheme.outline),
+                  color: isOwner ? scheme.onSurface : null,
+                  border: Border.all(
+                    color: isOwner ? scheme.onSurface : scheme.outline,
+                  ),
                   borderRadius: 8.radius,
                 ),
                 child: CricketText(
-                  text: org.myRole,
+                  text: isOwner
+                      ? TranslationKeys.roleOwner.tr
+                      : TranslationKeys.roleMember.tr,
                   style: context.textTheme.labelSmall?.copyWith(
-                    color: isOwner
-                        ? context.colors.statusInfo
-                        : context.colorScheme.onSurfaceVariant,
+                    color: isOwner ? scheme.surface : scheme.onSurfaceVariant,
                     fontWeight: isOwner ? FontWeight.w600 : null,
                   ),
                 ),
@@ -345,12 +280,28 @@ class OrganizationCard extends StatelessWidget {
               Icon(
                 Icons.chevron_right,
                 size: 18,
-                color: context.colorScheme.onSurfaceVariant,
+                color: scheme.onSurfaceVariant,
               ),
             ],
           ),
         ),
       ),
+    );
+  }
+}
+
+/// A single [OrganizationRow] on its own card — the full Organizations
+/// screen lists these one per organization.
+class OrganizationCard extends StatelessWidget {
+  const OrganizationCard({required this.org, this.onLeave, super.key});
+
+  final OrganizationSummaryRes org;
+  final VoidCallback? onLeave;
+
+  @override
+  Widget build(BuildContext context) {
+    return CricketGroupedCard(
+      children: [OrganizationRow(org: org, onLeave: onLeave)],
     );
   }
 }
