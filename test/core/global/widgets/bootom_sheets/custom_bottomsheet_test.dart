@@ -125,4 +125,70 @@ void main() {
       },
     );
   }
+
+  // wrapBottomSheet put the child flush under the headline, so each caller
+  // either cramped its first widget against it or padded by hand.
+  group('wrapBottomSheet headline gap', () {
+    Future<void> openWrapped(
+      WidgetTester tester, {
+      bool isHeadlineVisible = true,
+    }) async {
+      tester.view.physicalSize = const Size(400, 900);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+
+      await tester.pumpWidget(
+        GetMaterialApp(
+          theme: AppTheme.darkTheme,
+          home: Builder(
+            builder: (context) => TextButton(
+              onPressed: () => CustomBottomSheet.wrapBottomSheet<void>(
+                headlineText: 'Assign scorer',
+                isHeadlineVisible: isHeadlineVisible,
+                child: const SizedBox(key: Key('content'), height: 40),
+              ),
+              child: const Text('open'),
+            ),
+          ),
+        ),
+      );
+      await tester.tap(find.text('open'));
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('leaves 32 between the headline and the child', (
+      tester,
+    ) async {
+      await openWrapped(tester);
+
+      final headline = tester.getRect(find.text('Assign scorer'));
+      final content = tester.getRect(find.byKey(const Key('content')));
+      final headlineRow = tester.getRect(
+        find
+            .ancestor(
+              of: find.text('Assign scorer'),
+              matching: find.byType(Row),
+            )
+            .first,
+      );
+
+      expect(headline.bottom, lessThanOrEqualTo(headlineRow.bottom));
+      expect(content.top - headlineRow.bottom, 32);
+    });
+
+    testWidgets('adds no gap when the headline is hidden', (tester) async {
+      await openWrapped(tester, isHeadlineVisible: false);
+
+      expect(find.text('Assign scorer'), findsNothing);
+      final content = tester.getRect(find.byKey(const Key('content')));
+      // Sheet top padding 20 + inner 20 + 4 handle, then the child directly.
+      final sheet = tester.getRect(
+        find.ancestor(
+          of: find.byKey(const Key('content')),
+          matching: find.byType(Container),
+        ).last,
+      );
+      expect(content.top - sheet.top, 20 + 20 + 4);
+    });
+  });
 }

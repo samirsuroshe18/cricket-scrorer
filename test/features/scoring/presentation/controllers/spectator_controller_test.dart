@@ -172,7 +172,7 @@ class _FakeMatchRepository implements MatchRepository {
 
   @override
   Future<Either<CricketResponse<MatchHistoryRes>, CricketFailure>>
-  getMatchHistory({required int page, required int limit, List<String>? statuses}) =>
+  getMatchHistory({required int page, required int limit, List<String>? statuses, String? query}) =>
       throw UnimplementedError('Not exercised in this test.');
 
   @override

@@ -20,7 +20,6 @@ class ChoosePhotoOption extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          32.h,
           CricketButton(
             onPressed: onCameraCallback,
             buttonText: TranslationKeys.camera.tr,

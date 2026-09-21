@@ -579,4 +579,8 @@ class TranslationKeys {
   static const String showAllMatches = 'show_all_matches';
   static const String loadMoreMatches = 'load_more_matches';
   static const String matchesOverOne = 'matches_over_one';
+  static const String searchMatches = 'search_matches';
+  static const String searchMatchesHint = 'search_matches_hint';
+  static const String clearSearch = 'clear_search';
+  static const String noSearchResults = 'no_search_results';
 }

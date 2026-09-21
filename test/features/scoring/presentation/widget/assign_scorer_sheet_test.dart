@@ -7,6 +7,7 @@ import 'package:cricket_scorer/features/scoring/presentation/widget/assign_score
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 MatchHistoryItem _item({MatchUserRef? assignedScorer}) => MatchHistoryItem(
   matchId: 'match-1',
@@ -257,8 +258,10 @@ void main() {
     },
   );
 
+  // The controller has already toasted the reason; reopening the sheet makes
+  // a retry one tap instead of "reopen the menu, tap Assign scorer, wait".
   testWidgets(
-    'a failed assignment shows no success message and does not reopen the sheet',
+    'a failed assignment shows no success message and reopens the sheet',
     (tester) async {
       await pumpOpenButton(
         tester: tester,
@@ -276,7 +279,70 @@ void main() {
 
       expect(find.text('scorer_assigned'), findsNothing);
       expect(find.text('scorer_unassigned'), findsNothing);
-      expect(find.text('assign_scorer'), findsNothing);
+      expect(find.text('assign_scorer'), findsOneWidget);
+      expect(find.text('Raj Patel'), findsOneWidget);
     },
   );
+
+  testWidgets(
+    'retrying from the reopened sheet assigns and reports success',
+    (tester) async {
+      final results = [false, true];
+      var calls = 0;
+
+      await pumpOpenButton(
+        tester: tester,
+        item: _item(),
+        loadCandidates: (_) async => [
+          MatchUserRef(id: 'user-1', name: 'Raj Patel'),
+        ],
+        onAssign: (_, _) async => results[calls++],
+      );
+
+      await tester.tap(find.text('Raj Patel'));
+      for (var i = 0; i < 40; i++) {
+        await tester.pump(const Duration(milliseconds: 16));
+      }
+      expect(find.text('Raj Patel'), findsOneWidget); // reopened
+
+      await tapAndAwaitSnackbar(tester, find.text('Raj Patel'));
+
+      expect(calls, 2);
+      expect(find.text('scorer_assigned'), findsOneWidget);
+      expect(find.text('assign_scorer'), findsNothing);
+      await drainSnackbar(tester);
+    },
+  );
+
+  testWidgets('dismissing the reopened sheet makes no further request', (
+    tester,
+  ) async {
+    var calls = 0;
+
+    await pumpOpenButton(
+      tester: tester,
+      item: _item(),
+      loadCandidates: (_) async => [
+        MatchUserRef(id: 'user-1', name: 'Raj Patel'),
+      ],
+      onAssign: (_, _) async {
+        calls += 1;
+        return false;
+      },
+    );
+
+    await tester.tap(find.text('Raj Patel'));
+    for (var i = 0; i < 40; i++) {
+      await tester.pump(const Duration(milliseconds: 16));
+    }
+    expect(find.text('assign_scorer'), findsOneWidget);
+
+    await tester.tap(find.byIcon(LucideIcons.circleX));
+    for (var i = 0; i < 40; i++) {
+      await tester.pump(const Duration(milliseconds: 16));
+    }
+
+    expect(calls, 1);
+    expect(find.text('assign_scorer'), findsNothing);
+  });
 }

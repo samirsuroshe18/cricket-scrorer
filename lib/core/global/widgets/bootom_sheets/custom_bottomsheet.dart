@@ -139,6 +139,9 @@ class CustomBottomSheet {
                     CricketHeadlineWithFixedOutline(
                       headlineText: headlineText,
                     ),
+                    // Same gap cricketCustomBottomSheet leaves; callers must
+                    // not add their own or it doubles.
+                    32.h,
                   ] else ...[
                     Container(
                       height: 4,
