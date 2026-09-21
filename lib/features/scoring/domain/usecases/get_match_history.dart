@@ -12,7 +12,15 @@ class GetMatchHistoryParams {
   /// Server-side status filter; null or empty means every status.
   final List<String>? statuses;
 
-  const GetMatchHistoryParams({this.page = 1, this.limit = 20, this.statuses});
+  /// Server-side team-name search; null or blank means no search.
+  final String? query;
+
+  const GetMatchHistoryParams({
+    this.page = 1,
+    this.limit = 20,
+    this.statuses,
+    this.query,
+  });
 }
 
 class GetMatchHistoryUseCase
@@ -34,6 +42,7 @@ class GetMatchHistoryUseCase
       page: resolved.page,
       limit: resolved.limit,
       statuses: resolved.statuses,
+      query: resolved.query,
     );
   }
 }

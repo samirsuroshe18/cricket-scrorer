@@ -536,4 +536,8 @@ Map<String, String> en = {
   TranslationKeys.showAllMatches: 'Show all',
   TranslationKeys.loadMoreMatches: 'Load more matches',
   TranslationKeys.matchesOverOne: '1 over',
+  TranslationKeys.searchMatches: 'Search matches',
+  TranslationKeys.searchMatchesHint: 'Search by team name',
+  TranslationKeys.clearSearch: 'Clear search',
+  TranslationKeys.noSearchResults: 'No matches for "@query"',
 };

@@ -19,6 +19,7 @@ import 'package:cricket_scorer/features/scoring/domain/usecases/delete_match.dar
 import 'package:cricket_scorer/features/scoring/domain/usecases/get_match_history.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/get_scorer_candidates.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/assign_scorer.dart';
+import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 
 /// The statuses `_promptIfNeeded` can still resume a console from — an
@@ -91,6 +92,27 @@ class HomeController extends GetxController {
   /// slower Live response overwrite the list Completed is showing.
   int _filteredRequest = 0;
 
+  /// The Matches tab's committed team-name search — trimmed, and empty when
+  /// there is none. It is what the server was (or is being) asked for, not
+  /// the raw text in the field: typing goes through [updateSearch], which
+  /// waits for a pause first.
+  final searchQuery = ''.obs;
+
+  /// How long typing must pause before a search is sent.
+  @visibleForTesting
+  Duration searchDebounce = const Duration(milliseconds: 350);
+  Timer? _searchTimer;
+
+  /// The per-status counts of the unfiltered list. [statusCounts] follows
+  /// the search while one is active (so the chips describe the results), and
+  /// this is what it returns to when the search is cleared.
+  Map<String, int> _globalCounts = const {};
+
+  /// Whether the Matches tab is reading [filteredMatches] rather than
+  /// [matches]: a chip is picked, a search is active, or both.
+  bool get isFiltering =>
+      statusFilter.value != null || searchQuery.value.isNotEmpty;
+
   /// The signed-in user's own cached photo/username — nothing filled in on
   /// the Complete/My Profile screen was ever shown back to the user before
   /// this, anywhere in the app. Read synchronously from the same cache
@@ -98,6 +120,12 @@ class HomeController extends GetxController {
   /// now refreshes on save), not fetched here, so opening Home never waits
   /// on a network call just to draw the app bar.
   final currentUserProfile = Rx<User?>(null);
+
+  @override
+  void onClose() {
+    _searchTimer?.cancel();
+    super.onClose();
+  }
 
   @override
   void onInit() {
@@ -160,20 +188,24 @@ class HomeController extends GetxController {
         ),
       );
       hasMore.value = data?.hasMore ?? false;
-      _adoptCounts(data);
+      _adoptCounts(data, global: true);
     } else {
       loadError.value = response.fallback.message;
     }
   }
 
-  void _adoptCounts(MatchHistoryRes? data) {
+  /// [global] marks a response to the unfiltered request: those counts are
+  /// remembered, but only shown while no search is active — during one the
+  /// chips describe the search's results, which a filtered response carries.
+  void _adoptCounts(MatchHistoryRes? data, {bool global = false}) {
     final counts = data?.counts;
-    if (counts != null && counts.isNotEmpty) {
-      // A copy: RxMap.assignAll keeps the map it is handed, and this one
-      // belongs to the response model (and is const when defaulted), while
-      // deleteMatch decrements entries in place.
-      statusCounts.assignAll(Map<String, int>.of(counts));
-    }
+    if (counts == null || counts.isEmpty) return;
+    if (global) _globalCounts = Map<String, int>.of(counts);
+    if (global && searchQuery.value.isNotEmpty) return;
+    // A copy: RxMap.assignAll keeps the map it is handed, and this one
+    // belongs to the response model (and is const when defaulted), while
+    // deleteMatch decrements entries in place.
+    statusCounts.assignAll(Map<String, int>.of(counts));
   }
 
   /// The statuses a chip stands for. `live` includes `innings_break`: to a
@@ -182,16 +214,54 @@ class HomeController extends GetxController {
       filter == 'live' ? const ['live', 'innings_break'] : [filter];
 
   /// Picks a chip. `null` returns to "All", which is just [matches] again —
-  /// no request; anything else fetches that status's first page.
+  /// no request — unless a search is active, in which case it is that
+  /// search across every status; anything else fetches that status's first
+  /// page.
   Future<void> selectStatusFilter(String? status) async {
     if (status == statusFilter.value) return;
     statusFilter.value = status;
-    if (status == null) {
-      _filteredRequest++;
-      filteredMatches.clear();
-      filteredError.value = null;
-      isLoadingFiltered.value = false;
-      isLoadingMoreFiltered.value = false;
+    if (!isFiltering) {
+      _resetFiltered();
+      return;
+    }
+    await loadFiltered();
+  }
+
+  void _resetFiltered() {
+    _filteredRequest++;
+    filteredMatches.clear();
+    filteredError.value = null;
+    hasMoreFiltered.value = false;
+    isLoadingFiltered.value = false;
+    isLoadingMoreFiltered.value = false;
+  }
+
+  /// The search field's `onChanged`. Typing is debounced into one request
+  /// for the final text; emptying the field applies at once, since going
+  /// back to the full list needs no server round trip.
+  void updateSearch(String raw) {
+    _searchTimer?.cancel();
+    final query = raw.trim();
+    if (query.isEmpty) {
+      unawaited(applySearch(''));
+      return;
+    }
+    _searchTimer = Timer(searchDebounce, () => unawaited(applySearch(query)));
+  }
+
+  /// Commits [raw] as the search now (see [updateSearch] for the debounced
+  /// path) and fetches its first page — or, when it is empty and no chip is
+  /// active, returns to [matches] without a request.
+  Future<void> applySearch(String raw) async {
+    _searchTimer?.cancel();
+    final query = raw.trim();
+    if (query == searchQuery.value) return;
+    searchQuery.value = query;
+    if (query.isEmpty) {
+      statusCounts.assignAll(Map<String, int>.of(_globalCounts));
+    }
+    if (!isFiltering) {
+      _resetFiltered();
       return;
     }
     await loadFiltered();
@@ -200,8 +270,9 @@ class HomeController extends GetxController {
   /// First page of the active filter, replacing the filtered list — the
   /// chip-tap and pull-to-refresh entry point.
   Future<void> loadFiltered() async {
+    if (!isFiltering) return;
     final filter = statusFilter.value;
-    if (filter == null) return;
+    final query = searchQuery.value;
 
     final request = ++_filteredRequest;
     filteredMatches.clear();
@@ -215,7 +286,8 @@ class HomeController extends GetxController {
       params: GetMatchHistoryParams(
         page: 1,
         limit: _pageSize,
-        statuses: statusesFor(filter),
+        statuses: filter == null ? null : statusesFor(filter),
+        query: query.isEmpty ? null : query,
       ),
     );
 
@@ -240,7 +312,8 @@ class HomeController extends GetxController {
   /// nothing is left, same as [loadMore].
   Future<void> loadMoreFiltered() async {
     final filter = statusFilter.value;
-    if (filter == null ||
+    final query = searchQuery.value;
+    if (!isFiltering ||
         isLoadingFiltered.value ||
         isLoadingMoreFiltered.value ||
         !hasMoreFiltered.value) {
@@ -254,7 +327,8 @@ class HomeController extends GetxController {
       params: GetMatchHistoryParams(
         page: _filteredPage + 1,
         limit: _pageSize,
-        statuses: statusesFor(filter),
+        statuses: filter == null ? null : statusesFor(filter),
+        query: query.isEmpty ? null : query,
       ),
     );
 
@@ -285,7 +359,7 @@ class HomeController extends GetxController {
   Future<void> refreshMatches() {
     return Future.wait([
       loadHistory(),
-      if (statusFilter.value != null) loadFiltered(),
+      if (isFiltering) loadFiltered(),
     ]);
   }
 
@@ -368,6 +442,10 @@ class HomeController extends GetxController {
       final counted = statusCounts[item.status];
       if (counted != null && counted > 0) {
         statusCounts[item.status] = counted - 1;
+      }
+      final globalCounted = _globalCounts[item.status];
+      if (globalCounted != null && globalCounted > 0) {
+        _globalCounts = {..._globalCounts, item.status: globalCounted - 1};
       }
     } else {
       CricketSnackbar.showErrorMessage(response.fallback.message);

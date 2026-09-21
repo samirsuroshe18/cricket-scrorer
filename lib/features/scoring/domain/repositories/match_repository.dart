@@ -184,12 +184,15 @@ abstract class MatchRepository {
   /// decides whether tapping it reopens the scoring console or the result
   /// screen. [statuses], when non-empty, filters server-side before
   /// paginating (`?status=live,innings_break`), so `total`/`hasMore` describe
-  /// the filtered set.
+  /// the filtered set. [query], when non-blank, keeps only matches with a
+  /// team whose name or short name contains it (`?q=`), and the response's
+  /// per-status `counts` follow the search.
   Future<Either<CricketResponse<MatchHistoryRes>, CricketFailure>>
   getMatchHistory({
     required int page,
     required int limit,
     List<String>? statuses,
+    String? query,
   });
 
   /// `POST /v1/match/:matchId/abandon` — a live/innings-break match that will

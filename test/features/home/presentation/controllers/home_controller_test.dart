@@ -225,7 +225,7 @@ class _FakeMatchRepository implements MatchRepository {
 
   /// Every `getMatchHistory` call, so a test can assert which page and
   /// which server-side statuses were actually requested.
-  final historyCalls = <({int page, List<String>? statuses})>[];
+  final historyCalls = <({int page, List<String>? statuses, String? query})>[];
 
   /// When set, decides the response per call (checked ahead of
   /// [historyCompleter] and [historyResponse]) — the way a test gives the
@@ -244,9 +244,9 @@ class _FakeMatchRepository implements MatchRepository {
 
   @override
   Future<Either<CricketResponse<MatchHistoryRes>, CricketFailure>>
-  getMatchHistory({required int page, required int limit, List<String>? statuses}) async {
+  getMatchHistory({required int page, required int limit, List<String>? statuses, String? query}) async {
     historyCallCount += 1;
-    historyCalls.add((page: page, statuses: statuses));
+    historyCalls.add((page: page, statuses: statuses, query: query));
     final responder = historyResponder;
     if (responder != null) return responder(page, statuses);
     final completer = historyCompleter;
@@ -1035,5 +1035,224 @@ void main() {
 
       expect(repo.historyCalls.map((c) => c.statuses), containsAll([null, ['live', 'innings_break']]));
     });
+  });
+
+  group('team-name search', () {
+    Either<CricketResponse<MatchHistoryRes>, CricketFailure> page({
+      required List<MatchHistoryItem> matches,
+      int total = 0,
+      Map<String, int> counts = const {},
+    }) => Either.result(
+      CricketResponse(
+        message: 'ok',
+        data: MatchHistoryRes(
+          matches: matches,
+          page: 1,
+          limit: 20,
+          total: total == 0 ? matches.length : total,
+          counts: counts,
+        ),
+      ),
+    );
+
+    setUp(() => controller.searchDebounce = const Duration(milliseconds: 10));
+
+    Future<void> settleDebounce() =>
+        Future<void>.delayed(const Duration(milliseconds: 60));
+
+    test('a query asks the server, across every status', () async {
+      repo.historyResponder = (_, _) async => page(matches: [_item('m1')]);
+
+      await controller.applySearch('mumbai');
+
+      expect(repo.historyCalls.single.query, 'mumbai');
+      expect(repo.historyCalls.single.statuses, isNull);
+      expect(controller.filteredMatches.map((m) => m.matchId), ['m1']);
+    });
+
+    test('the query is trimmed, and combines with a chip', () async {
+      repo.historyResponder = (_, _) async => page(matches: [_item('m1')]);
+      await controller.selectStatusFilter('completed');
+      repo.historyCalls.clear();
+
+      await controller.applySearch('  mumbai  ');
+
+      expect(repo.historyCalls.single.query, 'mumbai');
+      expect(repo.historyCalls.single.statuses, ['completed']);
+    });
+
+    test('typing is debounced into one request for the last text', () async {
+      repo.historyResponder = (_, _) async => page(matches: [_item('m1')]);
+
+      controller.updateSearch('m');
+      controller.updateSearch('mu');
+      controller.updateSearch('mum');
+      expect(repo.historyCalls, isEmpty);
+      await settleDebounce();
+
+      expect(repo.historyCalls.length, 1);
+      expect(repo.historyCalls.single.query, 'mum');
+    });
+
+    test(
+      'clearing needs no wait and no request when no chip is active',
+      () async {
+        repo.historyResponder = (_, _) async => page(matches: [_item('m1')]);
+        await controller.applySearch('mumbai');
+        repo.historyCalls.clear();
+
+        controller.updateSearch('   ');
+
+        expect(controller.searchQuery.value, '');
+        expect(controller.filteredMatches, isEmpty);
+        expect(repo.historyCalls, isEmpty);
+      },
+    );
+
+    test(
+      'clearing with a chip active reloads that chip without the query',
+      () async {
+        repo.historyResponder = (_, _) async => page(matches: [_item('m1')]);
+        await controller.selectStatusFilter('live');
+        await controller.applySearch('mumbai');
+        repo.historyCalls.clear();
+
+        await controller.applySearch('');
+
+        expect(repo.historyCalls.single.query, isNull);
+        expect(repo.historyCalls.single.statuses, ['live', 'innings_break']);
+      },
+    );
+
+    test('picking All while searching keeps the search', () async {
+      repo.historyResponder = (_, _) async => page(matches: [_item('m1')]);
+      await controller.selectStatusFilter('live');
+      await controller.applySearch('mumbai');
+      repo.historyCalls.clear();
+
+      await controller.selectStatusFilter(null);
+
+      expect(controller.statusFilter.value, isNull);
+      expect(repo.historyCalls.single.query, 'mumbai');
+      expect(repo.historyCalls.single.statuses, isNull);
+    });
+
+    test('load more keeps the query', () async {
+      repo.historyResponder = (pageNumber, _) async => pageNumber == 1
+          ? page(matches: [_item('a')], total: 21)
+          : page(matches: [_item('b')], total: 21);
+      await controller.applySearch('mumbai');
+
+      await controller.loadMoreFiltered();
+
+      expect(repo.historyCalls.last.page, 2);
+      expect(repo.historyCalls.last.query, 'mumbai');
+    });
+
+    test(
+      'chip counts follow the search, then return to the full counts',
+      () async {
+        repo.historyResponder = (_, _) async {
+          final q = repo.historyCalls.last.query;
+          return page(
+            matches: [_item('m1')],
+            counts: q == null
+                ? const {'live': 7, 'completed': 17}
+                : const {'live': 1},
+          );
+        };
+        await controller.loadHistory();
+
+        await controller.applySearch('mumbai');
+        expect(controller.statusCounts, {'live': 1});
+
+        await controller.applySearch('');
+        expect(controller.statusCounts, {'live': 7, 'completed': 17});
+      },
+    );
+
+    test(
+      'a refresh during a search does not overwrite the search counts',
+      () async {
+        repo.historyResponder = (_, _) async {
+          final q = repo.historyCalls.last.query;
+          return page(
+            matches: [_item('m1')],
+            counts: q == null ? const {'live': 7} : const {'live': 1},
+          );
+        };
+        await controller.loadHistory();
+        await controller.applySearch('mumbai');
+
+        await controller.refreshMatches();
+
+        expect(controller.statusCounts, {'live': 1});
+      },
+    );
+
+    test(
+      'a slow answer for an earlier query cannot overwrite a later one',
+      () async {
+        final slow =
+            Completer<
+              Either<CricketResponse<MatchHistoryRes>, CricketFailure>
+            >();
+        repo.historyResponder = (_, _) {
+          if (repo.historyCalls.last.query == 'mum') return slow.future;
+          return Future.value(page(matches: [_item('chennai')]));
+        };
+
+        final first = controller.applySearch('mum');
+        await controller.applySearch('chennai');
+        slow.complete(page(matches: [_item('stale')]));
+        await first;
+
+        expect(controller.filteredMatches.map((m) => m.matchId), ['chennai']);
+      },
+    );
+
+    test('refresh reloads the searched list', () async {
+      repo.historyResponder = (_, _) async => page(matches: [_item('m1')]);
+      await controller.applySearch('mumbai');
+      repo.historyCalls.clear();
+
+      await controller.refreshMatches();
+
+      expect(
+        repo.historyCalls.map((c) => c.query),
+        containsAll(<String?>[null, 'mumbai']),
+      );
+    });
+
+    test('a failed search sets filteredError and keeps the query', () async {
+      repo.historyResponder = (_, _) async => Either.fallback(
+        CricketServerErrorFailure(statusCode: 500, message: 'boom'),
+      );
+
+      await controller.applySearch('mumbai');
+
+      expect(controller.filteredError.value, 'boom');
+      expect(controller.searchQuery.value, 'mumbai');
+    });
+
+    test(
+      'deleting while searching drops the card from the searched list',
+      () async {
+        repo.historyResponder = (_, _) async =>
+            page(matches: [_item('gone'), _item('kept')]);
+        await controller.loadHistory();
+        await controller.applySearch('mumbai');
+        repo.deleteResponse = Either.result(
+          CricketResponse(
+            message: 'ok',
+            data: DeleteMatchRes(matchId: 'gone'),
+          ),
+        );
+
+        await controller.deleteMatch(_item('gone'));
+
+        expect(controller.filteredMatches.map((m) => m.matchId), ['kept']);
+      },
+    );
   });
 }

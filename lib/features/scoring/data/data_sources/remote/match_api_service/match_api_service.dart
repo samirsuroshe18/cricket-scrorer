@@ -43,6 +43,7 @@ class MatchApiService {
     required int page,
     required int limit,
     List<String>? statuses,
+    String? query,
   }) async {
     return await apiClient.get(
       endpoint: matchEndpoint.history,
@@ -53,6 +54,8 @@ class MatchApiService {
         // empty value) when there is no filter.
         if (statuses != null && statuses.isNotEmpty)
           'status': statuses.join(','),
+        // Team-name search; omitted when blank.
+        if (query != null && query.trim().isNotEmpty) 'q': query.trim(),
       },
     );
   }

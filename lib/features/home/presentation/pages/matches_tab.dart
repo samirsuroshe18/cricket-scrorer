@@ -15,6 +15,7 @@ import 'package:cricket_scorer/features/home/presentation/widgets/match_list_row
 import 'package:cricket_scorer/features/home/presentation/widgets/matches_skeleton.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/match_history_res.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 
 /// The full match list — the same `HomeController` fetch, infinite scroll and
@@ -23,13 +24,57 @@ import 'package:get/get.dart';
 /// just that status (`HomeController.selectStatusFilter`), so a live match on
 /// a later page is found rather than hidden, and the chips' counts come from
 /// the server too. "All" is the same list Home reads.
-class MatchesTab extends StatelessWidget {
+///
+/// The search icon turns the title into a team-name search field. It is
+/// server-side for the same reason as the filter — the list is paged, so
+/// searching what happens to be loaded would miss matches — and it composes
+/// with the chips: the chips then count, and filter, the search's results.
+class MatchesTab extends StatefulWidget {
   const MatchesTab({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final controller = Get.find<HomeController>();
+  State<MatchesTab> createState() => _MatchesTabState();
+}
 
+class _MatchesTabState extends State<MatchesTab> {
+  late final HomeController controller = Get.find<HomeController>();
+  late final TextEditingController _text = TextEditingController(
+    text: controller.searchQuery.value,
+  );
+  late final FocusNode _focus = FocusNode();
+
+  /// Open from the start when a search is already active, so leaving the tab
+  /// and coming back doesn't show a filtered list under no visible search.
+  late bool _searching = controller.searchQuery.value.isNotEmpty;
+
+  @override
+  void dispose() {
+    _text.dispose();
+    _focus.dispose();
+    super.dispose();
+  }
+
+  void _open() {
+    setState(() => _searching = true);
+    _focus.requestFocus();
+  }
+
+  void _close() {
+    _text.clear();
+    unawaited(controller.applySearch(''));
+    _focus.unfocus();
+    setState(() => _searching = false);
+  }
+
+  void _clear() {
+    _text.clear();
+    unawaited(controller.applySearch(''));
+    _focus.requestFocus();
+    setState(() {});
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
         bottom: false,
@@ -37,15 +82,50 @@ class MatchesTab extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
-              child: Semantics(
-                header: true,
-                child: CricketText(
-                  text: TranslationKeys.navMatches.tr,
-                  style: context.homeText(22, weight: FontWeight.w600),
-                ),
-              ),
+              padding: const EdgeInsets.fromLTRB(16, 4, 8, 4),
+              child: _searching
+                  ? _SearchField(
+                      controller: _text,
+                      focusNode: _focus,
+                      onChanged: (value) {
+                        controller.updateSearch(value);
+                        setState(() {});
+                      },
+                      onSubmitted: (value) =>
+                          unawaited(controller.applySearch(value)),
+                      onClear: _clear,
+                      onClose: _close,
+                    )
+                  : Row(
+                      children: [
+                        Expanded(
+                          child: Semantics(
+                            header: true,
+                            child: CricketText(
+                              text: TranslationKeys.navMatches.tr,
+                              style: context.homeText(
+                                22,
+                                weight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ),
+                        IconButton(
+                          tooltip: TranslationKeys.searchMatches.tr,
+                          constraints: const BoxConstraints(
+                            minWidth: 44,
+                            minHeight: 44,
+                          ),
+                          onPressed: _open,
+                          icon: Icon(
+                            Icons.search_rounded,
+                            color: context.colorScheme.onSurface,
+                          ),
+                        ),
+                      ],
+                    ),
             ),
+            8.h,
             Obx(() {
               final counts = controller.statusCounts;
               final hasLive = counts.isNotEmpty
@@ -116,7 +196,11 @@ class _MatchesBody extends StatelessWidget {
   Widget build(BuildContext context) {
     return Obx(() {
       final filter = controller.statusFilter.value;
-      final isAll = filter == null;
+      final query = controller.searchQuery.value;
+      // Which list is on screen: a chip or a search means the server-filtered
+      // one. Sections (in progress / past) still apply to "All" + a search.
+      final isAll = !controller.isFiltering;
+      final showSections = filter == null;
       final items = (isAll ? controller.matches : controller.filteredMatches)
           .toList();
       final loading = isAll
@@ -156,6 +240,12 @@ class _MatchesBody extends StatelessWidget {
               if (isAll) ...[
                 120.h,
                 const EmptyMatchesState(),
+              ] else if (query.isNotEmpty) ...[
+                48.h,
+                _SearchEmptyState(
+                  query: query,
+                  onClear: () => unawaited(controller.applySearch('')),
+                ),
               ] else ...[
                 48.h,
                 _FilteredEmptyState(
@@ -171,7 +261,7 @@ class _MatchesBody extends StatelessWidget {
 
       final uid = currentUserId();
       final List<({String? title, List<MatchHistoryItem> items})> sections =
-          isAll
+          showSections
           ? [
               (
                 title: TranslationKeys.matchesSectionActive.tr,
@@ -443,6 +533,117 @@ class _LoadMoreButton extends StatelessWidget {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _SearchField extends StatelessWidget {
+  const _SearchField({
+    required this.controller,
+    required this.focusNode,
+    required this.onChanged,
+    required this.onSubmitted,
+    required this.onClear,
+    required this.onClose,
+  });
+
+  final TextEditingController controller;
+  final FocusNode focusNode;
+  final ValueChanged<String> onChanged;
+  final ValueChanged<String> onSubmitted;
+  final VoidCallback onClear;
+  final VoidCallback onClose;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        IconButton(
+          tooltip: TranslationKeys.cancel.tr,
+          constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
+          onPressed: onClose,
+          icon: Icon(
+            Icons.arrow_back_rounded,
+            color: context.colorScheme.onSurface,
+          ),
+        ),
+        Expanded(
+          child: TextField(
+            controller: controller,
+            focusNode: focusNode,
+            autofocus: true,
+            textInputAction: TextInputAction.search,
+            // A team name is at most 50 characters (the backend's cap), so
+            // anything longer can never match.
+            inputFormatters: [LengthLimitingTextInputFormatter(50)],
+            style: context.homeText(16),
+            cursorColor: context.colorScheme.onSurface,
+            onChanged: onChanged,
+            onSubmitted: onSubmitted,
+            decoration: InputDecoration(
+              hintText: TranslationKeys.searchMatchesHint.tr,
+              hintStyle: context
+                  .homeText(16)
+                  .copyWith(color: context.colorScheme.onSurfaceVariant),
+              border: InputBorder.none,
+              enabledBorder: InputBorder.none,
+              focusedBorder: InputBorder.none,
+              filled: false,
+              isDense: true,
+              contentPadding: const EdgeInsets.symmetric(vertical: 12),
+            ),
+          ),
+        ),
+        if (controller.text.isNotEmpty)
+          IconButton(
+            tooltip: TranslationKeys.clearSearch.tr,
+            constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
+            onPressed: onClear,
+            icon: Icon(
+              Icons.close_rounded,
+              color: context.colorScheme.onSurfaceVariant,
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+class _SearchEmptyState extends StatelessWidget {
+  const _SearchEmptyState({required this.query, required this.onClear});
+
+  final String query;
+  final VoidCallback onClear;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: 24.p,
+      child: Column(
+        children: [
+          Icon(
+            Icons.search_off_rounded,
+            size: 56,
+            color: context.colorScheme.onSurfaceVariant,
+          ),
+          16.h,
+          CricketText(
+            text: TranslationKeys.noSearchResults.trParams({'query': query}),
+            style: context.textTheme.titleMedium,
+            textAlign: TextAlign.center,
+          ),
+          8.h,
+          TextButton(
+            onPressed: onClear,
+            child: CricketText(
+              text: TranslationKeys.clearSearch.tr,
+              style: context
+                  .homeText(14, weight: FontWeight.w600)
+                  .copyWith(decoration: TextDecoration.underline),
+            ),
+          ),
+        ],
       ),
     );
   }
