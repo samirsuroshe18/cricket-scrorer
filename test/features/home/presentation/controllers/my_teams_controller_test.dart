@@ -194,4 +194,127 @@ void main() {
       expect(getMyTeams.calls, 0);
     });
   });
+
+  group('createTeam after a create that succeeded', () {
+    test(
+      'the new team is in the list even when the reload after it fails',
+      () async {
+        getMyTeams.response = Either.fallback(
+          CricketServerErrorFailure(statusCode: 500, message: 'down'),
+        );
+
+        final error = await controller.createTeam(name: 'Sunday Sixers');
+
+        expect(error, isNull);
+        expect(controller.teams.map((t) => t.id), ['t1']);
+        expect(controller.loadError.value, 'down');
+      },
+    );
+
+    test('it goes to the top and keeps the teams already there', () async {
+      controller.teams.assignAll([TeamSummary(id: 'old', name: 'Office XI')]);
+      getMyTeams.response = Either.fallback(
+        CricketServerErrorFailure(statusCode: 500, message: 'down'),
+      );
+
+      await controller.createTeam(name: 'Sunday Sixers');
+
+      expect(controller.teams.map((t) => t.id), ['t1', 'old']);
+    });
+
+    test('an organization team shows its organization until the reload '
+        'arrives', () async {
+      getMyTeams.response = Either.fallback(
+        CricketServerErrorFailure(statusCode: 500, message: 'down'),
+      );
+
+      await controller.createTeam(
+        name: 'Riverside U19',
+        organizationId: 'org-1',
+        organizationName: 'Riverside CC',
+      );
+
+      final team = controller.teams.single;
+      expect(team.id, 't2');
+      expect(team.organization?.id, 'org-1');
+      expect(team.organization?.name, 'Riverside CC');
+    });
+
+    test('an organization team without a known organization name shows no '
+        'organization rather than a blank one', () async {
+      getMyTeams.response = Either.fallback(
+        CricketServerErrorFailure(statusCode: 500, message: 'down'),
+      );
+
+      await controller.createTeam(name: 'Riverside U19', organizationId: 'o');
+
+      expect(controller.teams.single.organization, isNull);
+    });
+
+    test(
+      'the server list replaces the local copy when the reload works',
+      () async {
+        getMyTeams.response = Either.result(
+          CricketResponse(
+            message: 'ok',
+            data: MyTeamsRes(
+              teams: [
+                TeamSummary(id: 't1', name: 'Sunday Sixers', shortName: 'SS'),
+              ],
+            ),
+          ),
+        );
+
+        await controller.createTeam(name: 'Sunday Sixers');
+
+        expect(controller.teams, hasLength(1));
+        expect(controller.teams.single.shortName, 'SS');
+      },
+    );
+  });
+
+  group('createTeam after a failure', () {
+    test('with no response from the server it reloads, so a retry sees a team '
+        'the lost response may have created', () async {
+      createTeam.response = Either.fallback(
+        CricketNoInternetFailure(message: 'offline'),
+      );
+
+      final error = await controller.createTeam(name: 'Sunday Sixers');
+
+      expect(error, 'offline');
+      expect(getMyTeams.calls, 1);
+    });
+
+    test('a 5xx response reloads too', () async {
+      createTeam.response = Either.fallback(
+        CricketServerErrorFailure(statusCode: 503, message: 'busy'),
+      );
+
+      final error = await controller.createTeam(name: 'Sunday Sixers');
+
+      expect(error, 'busy');
+      expect(getMyTeams.calls, 1);
+    });
+
+    test('a 4xx response does not reload: the server said no', () async {
+      createTeam.response = Either.fallback(
+        CricketBadRequestFailure(statusCode: 400, message: 'bad'),
+      );
+
+      await controller.createTeam(name: 'x');
+
+      expect(getMyTeams.calls, 0);
+    });
+
+    test('a failure adds nothing to the list', () async {
+      createTeam.response = Either.fallback(
+        CricketNoInternetFailure(message: 'offline'),
+      );
+
+      await controller.createTeam(name: 'Sunday Sixers');
+
+      expect(controller.teams, isEmpty);
+    });
+  });
 }
