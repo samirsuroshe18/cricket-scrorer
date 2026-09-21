@@ -9,6 +9,10 @@ class MatchEndpoint {
   /// team" picker on `CreateMatchScreen`.
   final String myTeams = '/v1/team';
 
+  /// `POST /v1/team` — creates a standalone team owned by the caller.
+  /// Organization-owned teams use `OrganizationEndpoint.createTeam` instead.
+  final String createTeam = '/v1/team';
+
   /// `GET /v1/team/:teamId` — always a server-generated ObjectId hex string,
   /// same as `startInnings`/`scoreBall`/etc.'s `matchId` above; no encoding
   /// needed, unlike `publicMatch`'s user-suppliable `code`.

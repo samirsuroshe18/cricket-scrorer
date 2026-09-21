@@ -7,8 +7,11 @@ import 'package:cricket_scorer/features/scoring/data/data_sources/remote/match_a
 import 'package:cricket_scorer/features/scoring/data/data_sources/remote/match_socket_service/match_socket_service.dart';
 import 'package:cricket_scorer/features/scoring/data/match_endpoint.dart';
 import 'package:cricket_scorer/features/scoring/data/repositories/match_repository_impl.dart';
+import 'package:cricket_scorer/features/scoring/data/repositories/team_repository_impl.dart';
 import 'package:cricket_scorer/features/scoring/domain/repositories/match_repository.dart';
+import 'package:cricket_scorer/features/scoring/domain/repositories/team_repository.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/create_match.dart';
+import 'package:cricket_scorer/features/scoring/domain/usecases/create_team.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/score_ball.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/select_bowler.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/start_innings.dart';
@@ -130,6 +133,16 @@ class ScoringInjection {
 
     Get.lazyPut<GetMyTeamsUseCase>(
       () => GetMyTeamsUseCase(matchRepository: Get.find<MatchRepository>()),
+      fenix: true,
+    );
+
+    Get.lazyPut<TeamRepository>(
+      () => TeamRepositoryImpl(matchApiService: Get.find<MatchApiService>()),
+      fenix: true,
+    );
+
+    Get.lazyPut<CreateTeamUseCase>(
+      () => CreateTeamUseCase(teamRepository: Get.find<TeamRepository>()),
       fenix: true,
     );
 
