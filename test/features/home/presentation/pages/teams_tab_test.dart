@@ -8,11 +8,13 @@ import 'package:cricket_scorer/features/home/presentation/widgets/home_status_st
 import 'package:cricket_scorer/features/home/presentation/widgets/team_row.dart';
 import 'package:cricket_scorer/features/organization/data/models/response/organization_summary_res.dart';
 import 'package:cricket_scorer/features/organization/domain/usecases/create_organization.dart';
+import 'package:cricket_scorer/features/organization/domain/usecases/create_organization_team.dart';
 import 'package:cricket_scorer/features/organization/domain/usecases/get_my_organizations.dart';
 import 'package:cricket_scorer/features/organization/domain/usecases/remove_organization_member.dart';
 import 'package:cricket_scorer/features/organization/presentation/controllers/organizations_list_controller.dart';
 import 'package:cricket_scorer/features/organization/presentation/pages/organizations_list_screen.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/my_teams_res.dart';
+import 'package:cricket_scorer/features/scoring/domain/usecases/create_team.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/get_my_teams.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -42,10 +44,27 @@ class _FakeRemoveMember implements RemoveOrganizationMemberUseCase {
       throw UnimplementedError('Not exercised in this test.');
 }
 
+class _FakeCreateTeam implements CreateTeamUseCase {
+  @override
+  dynamic noSuchMethod(Invocation invocation) =>
+      throw UnimplementedError('Not exercised in this test.');
+}
+
+class _FakeCreateOrganizationTeam implements CreateOrganizationTeamUseCase {
+  @override
+  dynamic noSuchMethod(Invocation invocation) =>
+      throw UnimplementedError('Not exercised in this test.');
+}
+
 /// Holds whatever state a test sets and only counts reloads, so the tab's
 /// rendering is exercised without a network.
 class _TeamsController extends MyTeamsController {
-  _TeamsController() : super(getMyTeamsUseCase: _FakeGetMyTeams());
+  _TeamsController()
+    : super(
+        getMyTeamsUseCase: _FakeGetMyTeams(),
+        createTeamUseCase: _FakeCreateTeam(),
+        createOrganizationTeamUseCase: _FakeCreateOrganizationTeam(),
+      );
 
   int reloads = 0;
 
