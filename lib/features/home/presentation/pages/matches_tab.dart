@@ -6,6 +6,8 @@ import 'package:cricket_scorer/core/global/widgets/cricket_text.dart';
 import 'package:cricket_scorer/core/translations/translation_keys.dart';
 import 'package:cricket_scorer/core/utils/current_user.dart';
 import 'package:cricket_scorer/features/home/presentation/controllers/home_controller.dart';
+import 'package:cricket_scorer/features/home/presentation/widgets/home_search_empty_state.dart';
+import 'package:cricket_scorer/features/home/presentation/widgets/home_search_field.dart';
 import 'package:cricket_scorer/features/home/presentation/widgets/home_section_header.dart';
 import 'package:cricket_scorer/features/home/presentation/widgets/home_state_placeholders.dart';
 import 'package:cricket_scorer/features/home/presentation/widgets/home_status_strip.dart';
@@ -15,7 +17,6 @@ import 'package:cricket_scorer/features/home/presentation/widgets/match_list_row
 import 'package:cricket_scorer/features/home/presentation/widgets/matches_skeleton.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/match_history_res.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 
 /// The full match list — the same `HomeController` fetch, infinite scroll and
@@ -84,9 +85,13 @@ class _MatchesTabState extends State<MatchesTab> {
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 4, 8, 4),
               child: _searching
-                  ? _SearchField(
+                  ? HomeSearchField(
                       controller: _text,
                       focusNode: _focus,
+                      hintText: TranslationKeys.searchMatchesHint.tr,
+                      // A team name is at most 50 characters (the backend's
+                      // cap), so anything longer can never match.
+                      maxLength: 50,
                       onChanged: (value) {
                         controller.updateSearch(value);
                         setState(() {});
@@ -242,8 +247,10 @@ class _MatchesBody extends StatelessWidget {
                 const EmptyMatchesState(),
               ] else if (query.isNotEmpty) ...[
                 48.h,
-                _SearchEmptyState(
-                  query: query,
+                HomeSearchEmptyState(
+                  message: TranslationKeys.noSearchResults.trParams({
+                    'query': query,
+                  }),
                   onClear: () => unawaited(controller.applySearch('')),
                 ),
               ] else ...[
@@ -533,117 +540,6 @@ class _LoadMoreButton extends StatelessWidget {
             ),
           ),
         ),
-      ),
-    );
-  }
-}
-
-class _SearchField extends StatelessWidget {
-  const _SearchField({
-    required this.controller,
-    required this.focusNode,
-    required this.onChanged,
-    required this.onSubmitted,
-    required this.onClear,
-    required this.onClose,
-  });
-
-  final TextEditingController controller;
-  final FocusNode focusNode;
-  final ValueChanged<String> onChanged;
-  final ValueChanged<String> onSubmitted;
-  final VoidCallback onClear;
-  final VoidCallback onClose;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        IconButton(
-          tooltip: TranslationKeys.cancel.tr,
-          constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
-          onPressed: onClose,
-          icon: Icon(
-            Icons.arrow_back_rounded,
-            color: context.colorScheme.onSurface,
-          ),
-        ),
-        Expanded(
-          child: TextField(
-            controller: controller,
-            focusNode: focusNode,
-            autofocus: true,
-            textInputAction: TextInputAction.search,
-            // A team name is at most 50 characters (the backend's cap), so
-            // anything longer can never match.
-            inputFormatters: [LengthLimitingTextInputFormatter(50)],
-            style: context.homeText(16),
-            cursorColor: context.colorScheme.onSurface,
-            onChanged: onChanged,
-            onSubmitted: onSubmitted,
-            decoration: InputDecoration(
-              hintText: TranslationKeys.searchMatchesHint.tr,
-              hintStyle: context
-                  .homeText(16)
-                  .copyWith(color: context.colorScheme.onSurfaceVariant),
-              border: InputBorder.none,
-              enabledBorder: InputBorder.none,
-              focusedBorder: InputBorder.none,
-              filled: false,
-              isDense: true,
-              contentPadding: const EdgeInsets.symmetric(vertical: 12),
-            ),
-          ),
-        ),
-        if (controller.text.isNotEmpty)
-          IconButton(
-            tooltip: TranslationKeys.clearSearch.tr,
-            constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
-            onPressed: onClear,
-            icon: Icon(
-              Icons.close_rounded,
-              color: context.colorScheme.onSurfaceVariant,
-            ),
-          ),
-      ],
-    );
-  }
-}
-
-class _SearchEmptyState extends StatelessWidget {
-  const _SearchEmptyState({required this.query, required this.onClear});
-
-  final String query;
-  final VoidCallback onClear;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: 24.p,
-      child: Column(
-        children: [
-          Icon(
-            Icons.search_off_rounded,
-            size: 56,
-            color: context.colorScheme.onSurfaceVariant,
-          ),
-          16.h,
-          CricketText(
-            text: TranslationKeys.noSearchResults.trParams({'query': query}),
-            style: context.textTheme.titleMedium,
-            textAlign: TextAlign.center,
-          ),
-          8.h,
-          TextButton(
-            onPressed: onClear,
-            child: CricketText(
-              text: TranslationKeys.clearSearch.tr,
-              style: context
-                  .homeText(14, weight: FontWeight.w600)
-                  .copyWith(decoration: TextDecoration.underline),
-            ),
-          ),
-        ],
       ),
     );
   }
