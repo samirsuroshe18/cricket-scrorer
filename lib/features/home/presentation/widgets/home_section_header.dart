@@ -1,3 +1,4 @@
+import 'package:cricket_scorer/core/extensions/space_extension.dart';
 import 'package:cricket_scorer/core/global/widgets/cricket_text.dart';
 import 'package:cricket_scorer/core/translations/translation_keys.dart';
 import 'package:cricket_scorer/features/home/presentation/widgets/home_style.dart';
@@ -9,10 +10,23 @@ import 'package:get/get.dart';
 /// heavier than the spec — this one is a 15px title and a 12px muted link
 /// that still gets a full 44px-tall tap area.
 class HomeSectionHeader extends StatelessWidget {
-  const HomeSectionHeader({required this.title, this.onSeeAll, super.key});
+  const HomeSectionHeader({
+    required this.title,
+    this.count,
+    this.onSeeAll,
+    this.trailing,
+    super.key,
+  });
 
   final String title;
+
+  /// How many items the section holds, shown muted beside the title.
+  final int? count;
   final VoidCallback? onSeeAll;
+
+  /// An action at the end of the row (a 44px icon button, say) — for a
+  /// section that has something to add rather than something more to see.
+  final Widget? trailing;
 
   @override
   Widget build(BuildContext context) {
@@ -22,14 +36,32 @@ class HomeSectionHeader extends StatelessWidget {
         Expanded(
           child: Semantics(
             header: true,
-            child: CricketText(
-              text: title,
-              maxLines: 1,
-              textOverflow: TextOverflow.ellipsis,
-              style: context.homeText(15, weight: FontWeight.w600),
+            child: Row(
+              children: [
+                Flexible(
+                  child: CricketText(
+                    text: title,
+                    maxLines: 1,
+                    textOverflow: TextOverflow.ellipsis,
+                    style: context.homeText(15, weight: FontWeight.w600),
+                  ),
+                ),
+                if (count != null) ...[
+                  6.w,
+                  CricketText(
+                    text: '$count',
+                    style: context.homeText(
+                      13,
+                      color: context.homeMuted,
+                      tabular: true,
+                    ),
+                  ),
+                ],
+              ],
             ),
           ),
         ),
+        ?trailing,
         if (onSeeAll != null)
           InkWell(
             onTap: onSeeAll,

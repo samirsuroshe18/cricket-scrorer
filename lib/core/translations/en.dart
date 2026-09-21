@@ -449,6 +449,8 @@ Map<String, String> en = {
   TranslationKeys.filterAll: 'All',
   TranslationKeys.myTeams: 'My teams',
   TranslationKeys.myTeamsEmptyHint: 'Teams you play for will show up here.',
+  TranslationKeys.roleOwner: 'Owner',
+  TranslationKeys.roleMember: 'Member',
   TranslationKeys.joinByCode: 'Join by Code',
   TranslationKeys.updateTeamLogo: 'Update logo',
   TranslationKeys.teamLogoUpdated: 'Team logo updated',
