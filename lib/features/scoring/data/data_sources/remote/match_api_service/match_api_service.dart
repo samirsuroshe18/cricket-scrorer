@@ -4,6 +4,7 @@ import 'package:cricket_scorer/core/network/models/api_response_model.dart';
 import 'package:cricket_scorer/core/utils/either_util.dart';
 import 'package:cricket_scorer/features/scoring/data/match_endpoint.dart';
 import 'package:cricket_scorer/features/scoring/data/models/request/create_match_req.dart';
+import 'package:cricket_scorer/features/scoring/data/models/request/create_team_req.dart';
 import 'package:cricket_scorer/features/scoring/data/models/request/score_ball_req.dart';
 import 'package:cricket_scorer/features/scoring/data/models/request/select_bowler_req.dart';
 import 'package:cricket_scorer/features/scoring/data/models/request/start_innings_req.dart';
@@ -63,6 +64,16 @@ class MatchApiService {
   /// `GET /v1/team` — the caller's own teams.
   Future<Either<ApiResponseModel, CricketFailure>> getMyTeams() async {
     return await apiClient.get(endpoint: matchEndpoint.myTeams);
+  }
+
+  /// `POST /v1/team` — creates a standalone team owned by the caller.
+  Future<Either<ApiResponseModel, CricketFailure>> createTeam({
+    required CreateTeamReq params,
+  }) async {
+    return await apiClient.post(
+      endpoint: matchEndpoint.createTeam,
+      data: params.toJson(),
+    );
   }
 
   /// `GET /v1/team/:teamId` — display name plus roster. `verifyJwt` plus a

@@ -8,9 +8,11 @@ import 'package:cricket_scorer/features/home/presentation/controllers/main_shell
 import 'package:cricket_scorer/features/home/presentation/controllers/my_stats_controller.dart';
 import 'package:cricket_scorer/features/home/presentation/controllers/my_teams_controller.dart';
 import 'package:cricket_scorer/features/organization/domain/usecases/create_organization.dart';
+import 'package:cricket_scorer/features/organization/domain/usecases/create_organization_team.dart';
 import 'package:cricket_scorer/features/organization/domain/usecases/get_my_organizations.dart';
 import 'package:cricket_scorer/features/organization/domain/usecases/remove_organization_member.dart';
 import 'package:cricket_scorer/features/organization/presentation/controllers/organizations_list_controller.dart';
+import 'package:cricket_scorer/features/scoring/domain/usecases/create_team.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/delete_match.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/get_match_history.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/get_my_career_stats.dart';
@@ -60,7 +62,12 @@ class HomeBinding extends Bindings {
     );
 
     Get.lazyPut(
-      () => MyTeamsController(getMyTeamsUseCase: Get.find<GetMyTeamsUseCase>()),
+      () => MyTeamsController(
+        getMyTeamsUseCase: Get.find<GetMyTeamsUseCase>(),
+        createTeamUseCase: Get.find<CreateTeamUseCase>(),
+        createOrganizationTeamUseCase:
+            Get.find<CreateOrganizationTeamUseCase>(),
+      ),
     );
 
     Get.lazyPut(
