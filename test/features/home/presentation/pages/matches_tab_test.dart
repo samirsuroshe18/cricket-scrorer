@@ -43,6 +43,26 @@ class _FakeHome extends GetxController implements HomeController {
   final hasMoreFiltered = false.obs;
   @override
   final filteredError = Rxn<String>();
+  @override
+  final searchQuery = ''.obs;
+
+  @override
+  bool get isFiltering =>
+      statusFilter.value != null || searchQuery.value.isNotEmpty;
+
+  /// What the field asked for: `updateSearch` is the debounced typing path,
+  /// `applySearch` the immediate one (clear/close).
+  final typed = <String>[];
+  final applied = <String>[];
+
+  @override
+  void updateSearch(String raw) => typed.add(raw);
+
+  @override
+  Future<void> applySearch(String raw) async {
+    applied.add(raw);
+    searchQuery.value = raw.trim();
+  }
 
   /// Every chip the tab asked for, in order (`null` is All). The fake only
   /// records and flips [statusFilter]; the filtered list is seeded by the
@@ -386,5 +406,141 @@ void main() {
     );
     expect(material.shape, isA<StadiumBorder>());
     expect(material.clipBehavior, Clip.antiAlias);
+  });
+
+  group('team-name search', () {
+    Finder field() => find.byType(TextField);
+
+    testWidgets('the search icon opens a focused field with the hint', (
+      tester,
+    ) async {
+      home.matches.assignAll([_match('a', innings: _innings())]);
+      await pump(tester);
+      expect(field(), findsNothing);
+
+      await tester.tap(find.byTooltip('search_matches'));
+      await tester.pump();
+
+      expect(field(), findsOneWidget);
+      expect(find.text('search_matches_hint'), findsOneWidget);
+      expect(
+        tester.widget<TextField>(field()).focusNode!.hasFocus,
+        isTrue,
+      );
+    });
+
+    testWidgets('typing goes to the debounced controller path', (tester) async {
+      await pump(tester);
+      await tester.tap(find.byTooltip('search_matches'));
+      await tester.pump();
+
+      await tester.enterText(field(), 'mumb');
+
+      expect(home.typed, ['mumb']);
+      expect(home.applied, isEmpty);
+    });
+
+    testWidgets('the field caps input at 50 characters, like a team name', (
+      tester,
+    ) async {
+      await pump(tester);
+      await tester.tap(find.byTooltip('search_matches'));
+      await tester.pump();
+
+      await tester.enterText(field(), 'x' * 80);
+
+      expect(tester.widget<TextField>(field()).controller!.text.length, 50);
+    });
+
+    testWidgets('an active search reopens with its text', (tester) async {
+      home.searchQuery.value = 'mumbai';
+      home.filteredMatches.assignAll([_match('found')]);
+      await pump(tester);
+
+      expect(field(), findsOneWidget);
+      expect(
+        tester.widget<TextField>(field()).controller!.text,
+        'mumbai',
+      );
+    });
+
+    testWidgets('clear empties the field at once and stays open', (
+      tester,
+    ) async {
+      home.searchQuery.value = 'mumbai';
+      home.filteredMatches.assignAll([_match('found')]);
+      await pump(tester);
+
+      await tester.tap(find.byTooltip('clear_search'));
+      await tester.pump();
+
+      expect(home.applied, ['']);
+      expect(tester.widget<TextField>(field()).controller!.text, isEmpty);
+      expect(field(), findsOneWidget);
+      expect(find.byTooltip('clear_search'), findsNothing);
+    });
+
+    testWidgets('closing search clears it and brings the title back', (
+      tester,
+    ) async {
+      home.searchQuery.value = 'mumbai';
+      home.filteredMatches.assignAll([_match('found')]);
+      await pump(tester);
+      expect(find.text('nav_matches'), findsNothing);
+
+      await tester.tap(find.byTooltip('cancel'));
+      await tester.pump();
+
+      expect(home.applied, ['']);
+      expect(field(), findsNothing);
+      expect(find.text('nav_matches'), findsOneWidget);
+    });
+
+    testWidgets('results are the searched list, still split into sections', (
+      tester,
+    ) async {
+      home.matches.assignAll([_match('other', status: 'completed')]);
+      home.searchQuery.value = 'alpha';
+      home.filteredMatches.assignAll([
+        _match('past', status: 'completed'),
+        _match('now', innings: _innings()),
+      ]);
+      await pump(tester);
+
+      expect(find.text('Alpha now'), findsOneWidget);
+      expect(find.text('Alpha past'), findsOneWidget);
+      expect(find.text('Alpha other'), findsNothing);
+      expect(find.text('matches_section_active'), findsOneWidget);
+      expect(find.text('matches_section_past'), findsOneWidget);
+    });
+
+    testWidgets('no results names the search and offers to clear it', (
+      tester,
+    ) async {
+      home.matches.assignAll([_match('a', innings: _innings())]);
+      home.searchQuery.value = 'zzz';
+      await pump(tester);
+
+      expect(find.byType(MatchListRow), findsNothing);
+      expect(find.textContaining('no_search_results'), findsOneWidget);
+
+      await tester.tap(find.text('clear_search').last);
+      await tester.pump();
+      expect(home.applied, ['']);
+    });
+
+    testWidgets('a search keeps the chip counts and chips usable', (
+      tester,
+    ) async {
+      home.searchQuery.value = 'alpha';
+      home.statusCounts.assignAll({'live': 1});
+      home.filteredMatches.assignAll([_match('now', innings: _innings())]);
+      await pump(tester);
+
+      await tester.tap(chip('status_live'));
+      await tester.pump();
+
+      expect(home.selected, ['live']);
+    });
   });
 }

@@ -403,9 +403,15 @@ class MatchRepositoryImpl extends MatchRepository {
     required int page,
     required int limit,
     List<String>? statuses,
+    String? query,
   }) async {
     Either<ApiResponseModel, CricketFailure> response = await matchApiService
-        .getMatchHistory(page: page, limit: limit, statuses: statuses);
+        .getMatchHistory(
+          page: page,
+          limit: limit,
+          statuses: statuses,
+          query: query,
+        );
     if (response.isResult) {
       return Either.result(
         CricketResponse(

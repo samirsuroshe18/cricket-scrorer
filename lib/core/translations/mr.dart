@@ -534,4 +534,8 @@ Map<String, String> mr = {
   TranslationKeys.showAllMatches: 'सर्व दाखवा',
   TranslationKeys.loadMoreMatches: 'आणखी सामने लोड करा',
   TranslationKeys.matchesOverOne: '1 षटक',
+  TranslationKeys.searchMatches: 'सामने शोधा',
+  TranslationKeys.searchMatchesHint: 'संघाच्या नावाने शोधा',
+  TranslationKeys.clearSearch: 'शोध साफ करा',
+  TranslationKeys.noSearchResults: '"@query" साठी सामने सापडले नाहीत',
 };

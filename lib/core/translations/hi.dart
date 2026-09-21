@@ -536,4 +536,8 @@ Map<String, String> hi = {
   TranslationKeys.showAllMatches: 'सभी दिखाएं',
   TranslationKeys.loadMoreMatches: 'और मैच लोड करें',
   TranslationKeys.matchesOverOne: '1 ओवर',
+  TranslationKeys.searchMatches: 'मैच खोजें',
+  TranslationKeys.searchMatchesHint: 'टीम के नाम से खोजें',
+  TranslationKeys.clearSearch: 'खोज हटाएँ',
+  TranslationKeys.noSearchResults: '"@query" के लिए कोई मैच नहीं',
 };

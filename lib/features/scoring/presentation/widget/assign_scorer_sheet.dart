@@ -36,7 +36,32 @@ Future<void> showAssignScorerSheet({
   // a tap never leaves a sheet sitting open over a spinner. `scorerId` null is
   // "remove the assignment" — "Scorer assigned" and "Scorer unassigned" are
   // genuinely different outcomes for the person reading the snackbar.
-  final choice = await CustomBottomSheet.wrapBottomSheet<({String? scorerId})>(
+  while (true) {
+    final choice = await _pickScorer(item, candidates);
+
+    // Dismissed without choosing anyone.
+    if (choice == null) return;
+
+    // A failure shows its own error snackbar from the controller (after it
+    // has hidden its loader), and the sheet comes straight back so a retry is
+    // one tap; only success is reported here. Dismissing it ends the loop.
+    final success = await onAssign(item.matchId, choice.scorerId);
+    if (!success) continue;
+
+    CricketSnackbar.showSuccessMessage(
+      choice.scorerId == null
+          ? TranslationKeys.scorerUnassigned.tr
+          : TranslationKeys.scorerAssigned.tr,
+    );
+    return;
+  }
+}
+
+Future<({String? scorerId})?> _pickScorer(
+  MatchHistoryItem item,
+  List<MatchUserRef> candidates,
+) {
+  return CustomBottomSheet.wrapBottomSheet<({String? scorerId})>(
     headlineText: TranslationKeys.assignScorer.tr,
     child: SingleChildScrollView(
       child: Builder(
@@ -44,9 +69,6 @@ Future<void> showAssignScorerSheet({
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // wrapBottomSheet adds no gap under the headline; 32 is the gap
-            // the other sheets use (see cricketCustomBottomSheet).
-            32.h,
             CricketText(
               text: TranslationKeys.tapToHandOffScoring.tr,
               style: context.textTheme.bodySmall?.copyWith(
@@ -78,20 +100,6 @@ Future<void> showAssignScorerSheet({
         ),
       ),
     ),
-  );
-
-  // Dismissed without choosing anyone.
-  if (choice == null) return;
-
-  // A failure shows its own error snackbar from the controller (after it has
-  // hidden its loader); only success is reported here.
-  final success = await onAssign(item.matchId, choice.scorerId);
-  if (!success) return;
-
-  CricketSnackbar.showSuccessMessage(
-    choice.scorerId == null
-        ? TranslationKeys.scorerUnassigned.tr
-        : TranslationKeys.scorerAssigned.tr,
   );
 }
 
