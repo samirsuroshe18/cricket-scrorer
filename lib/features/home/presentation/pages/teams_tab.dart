@@ -8,6 +8,7 @@ import 'package:cricket_scorer/core/global/widgets/cricket_grouped_card.dart';
 import 'package:cricket_scorer/core/global/widgets/cricket_text.dart';
 import 'package:cricket_scorer/core/translations/translation_keys.dart';
 import 'package:cricket_scorer/features/home/presentation/controllers/my_teams_controller.dart';
+import 'package:cricket_scorer/features/home/presentation/widgets/create_team_sheet.dart';
 import 'package:cricket_scorer/features/home/presentation/widgets/home_empty_card.dart';
 import 'package:cricket_scorer/features/home/presentation/widgets/home_list_skeleton.dart';
 import 'package:cricket_scorer/features/home/presentation/widgets/home_search_empty_state.dart';
@@ -208,6 +209,16 @@ class _TeamsTabState extends State<TeamsTab> {
                       all.length > _collapsedTeamCount
                   ? () => setState(() => _showAllTeams = true)
                   : null,
+              trailing: IconButton(
+                tooltip: TranslationKeys.createTeam.tr,
+                constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
+                onPressed: () =>
+                    showCreateTeamSheet(teams: myTeams, orgs: orgs),
+                icon: Icon(
+                  Icons.add_rounded,
+                  color: context.colorScheme.onSurface,
+                ),
+              ),
             ),
             4.h,
             if (loading)
@@ -225,6 +236,12 @@ class _TeamsTabState extends State<TeamsTab> {
                 HomeEmptyCard(
                   icon: Icons.groups_outlined,
                   message: TranslationKeys.myTeamsEmptyHint.tr,
+                  action: CricketButton(
+                    buttonText: TranslationKeys.createTeam.tr,
+                    onPressed: () =>
+                        showCreateTeamSheet(teams: myTeams, orgs: orgs),
+                    width: 220,
+                  ),
                 ),
             ],
           ],

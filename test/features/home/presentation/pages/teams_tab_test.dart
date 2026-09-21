@@ -2,6 +2,7 @@ import 'package:cricket_scorer/config/theme/app_theme.dart';
 import 'package:cricket_scorer/core/translations/translation_keys.dart';
 import 'package:cricket_scorer/features/home/presentation/controllers/my_teams_controller.dart';
 import 'package:cricket_scorer/features/home/presentation/pages/teams_tab.dart';
+import 'package:cricket_scorer/features/home/presentation/widgets/create_team_sheet.dart';
 import 'package:cricket_scorer/features/home/presentation/widgets/home_list_skeleton.dart';
 import 'package:cricket_scorer/features/home/presentation/widgets/home_search_empty_state.dart';
 import 'package:cricket_scorer/features/home/presentation/widgets/home_status_strip.dart';
@@ -384,6 +385,80 @@ void main() {
 
       expect(find.byType(HomeStatusStrip), findsOneWidget);
       expect(find.byType(HomeSearchEmptyState), findsNothing);
+    });
+  });
+
+  group('create team', () {
+    testWidgets('the My teams header has a "+" that opens the sheet', (
+      tester,
+    ) async {
+      teams.teams.assignAll(_teams(2));
+      await pumpTab(tester);
+
+      await tester.tap(find.byTooltip(TranslationKeys.createTeam.tr));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(CreateTeamForm), findsOneWidget);
+    });
+
+    testWidgets('the empty state offers a Create team button that opens '
+        'the sheet', (tester) async {
+      await pumpTab(tester);
+
+      expect(find.text(TranslationKeys.myTeamsEmptyHint.tr), findsOneWidget);
+
+      await tester.tap(find.text(TranslationKeys.createTeam.tr));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(CreateTeamForm), findsOneWidget);
+    });
+
+    testWidgets('the sheet lists only organizations the caller owns', (
+      tester,
+    ) async {
+      orgs.organizations.assignAll([
+        OrganizationSummaryRes(
+          id: 'o1',
+          name: 'Riverside CC',
+          myRole: 'owner',
+          memberCount: 3,
+          teamCount: 1,
+        ),
+        OrganizationSummaryRes(
+          id: 'o2',
+          name: 'Gully Cricket League',
+          myRole: 'member',
+          memberCount: 40,
+          teamCount: 8,
+        ),
+      ]);
+      teams.teams.assignAll(_teams(1));
+      await pumpTab(tester);
+
+      await tester.tap(find.byTooltip(TranslationKeys.createTeam.tr));
+      await tester.pumpAndSettle();
+
+      final chips = find.descendant(
+        of: find.byType(CreateTeamForm),
+        matching: find.byType(ChoiceChip),
+      );
+      expect(chips, findsNWidgets(2), reason: 'Independent + the owned org');
+      expect(
+        find.descendant(
+          of: find.byType(CreateTeamForm),
+          matching: find.text('Gully Cricket League'),
+        ),
+        findsNothing,
+      );
+    });
+
+    testWidgets('a failed teams load still offers the "+" but shows no '
+        'empty-state button', (tester) async {
+      teams.loadError.value = 'boom';
+      await pumpTab(tester);
+
+      expect(find.byTooltip(TranslationKeys.createTeam.tr), findsOneWidget);
+      expect(find.text(TranslationKeys.createTeam.tr), findsNothing);
     });
   });
 }
