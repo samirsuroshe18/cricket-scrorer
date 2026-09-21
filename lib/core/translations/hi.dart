@@ -80,7 +80,7 @@ Map<String, String> hi = {
   TranslationKeys.getStarted: 'शुरू करें',
   TranslationKeys.next: 'अगला',
   TranslationKeys.verifyYourAccount: 'अपना खाता सत्यापित करें',
-  TranslationKeys.otpVerificationDesc: 'हमने @target पर ६-अंकीय कोड भेजा है',
+  TranslationKeys.otpVerificationDesc: 'हमने @target पर 6-अंकीय कोड भेजा है',
   TranslationKeys.verify: 'सत्यापित करें',
   TranslationKeys.resend: 'पुनः भेजें',
   TranslationKeys.resendCodeIn: 'कोड पुनः भेजें  ',
