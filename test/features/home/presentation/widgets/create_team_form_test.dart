@@ -41,7 +41,15 @@ class _TeamsController extends MyTeamsController {
         createOrganizationTeamUseCase: _Unused3(),
       );
 
-  final calls = <({String name, String? shortName, String? organizationId})>[];
+  final calls =
+      <
+        ({
+          String name,
+          String? shortName,
+          String? organizationId,
+          String? organizationName,
+        })
+      >[];
   Completer<String?>? pending;
   String? result;
 
@@ -50,11 +58,13 @@ class _TeamsController extends MyTeamsController {
     required String name,
     String? shortName,
     String? organizationId,
+    String? organizationName,
   }) {
     calls.add((
       name: name,
       shortName: shortName,
       organizationId: organizationId,
+      organizationName: organizationName,
     ));
     return pending?.future ?? Future.value(result);
   }
@@ -72,12 +82,14 @@ void main() {
   late _TeamsController teams;
   String? createdIn;
   var createdCalls = 0;
+  final orgNotified = <String>[];
 
   setUp(() {
     Get.testMode = true;
     teams = _TeamsController()..isLoading.value = false;
     createdIn = null;
     createdCalls = 0;
+    orgNotified.clear();
   });
 
   tearDown(Get.reset);
@@ -102,6 +114,7 @@ void main() {
                 createdCalls++;
                 createdIn = organizationId;
               },
+              onOrganizationTeamCreated: orgNotified.add,
             ),
           ),
         ),
@@ -397,5 +410,132 @@ void main() {
     await tester.pump();
 
     expect(tester.takeException(), isNull);
+  });
+
+  group('after a failed create', () {
+    Future<void> failOnce(
+      WidgetTester tester, {
+      List<OrganizationSummaryRes> owned = const [],
+    }) async {
+      teams.result = 'A team name can be at most 50 characters';
+      await pumpForm(tester, owned: owned);
+      await tester.enterText(field(0), 'Sunday Sixers');
+      await tapCreate(tester);
+      await tester.pump();
+      expect(
+        find.text('A team name can be at most 50 characters'),
+        findsOneWidget,
+      );
+    }
+
+    testWidgets('the server message clears when the name is edited', (
+      tester,
+    ) async {
+      await failOnce(tester);
+
+      await tester.enterText(field(0), 'Sunday Sixers XI');
+      await tester.pump();
+
+      expect(
+        find.text('A team name can be at most 50 characters'),
+        findsNothing,
+      );
+    });
+
+    testWidgets('the server message clears when the short name is edited', (
+      tester,
+    ) async {
+      await failOnce(tester);
+
+      await tester.enterText(field(1), 'SS');
+      await tester.pump();
+
+      expect(
+        find.text('A team name can be at most 50 characters'),
+        findsNothing,
+      );
+    });
+
+    testWidgets('the server message clears when another Belongs to is '
+        'chosen', (tester) async {
+      await failOnce(tester, owned: [_org('o1', 'Riverside CC')]);
+
+      await tester.tap(find.text('Riverside CC'));
+      await tester.pump();
+
+      expect(
+        find.text('A team name can be at most 50 characters'),
+        findsNothing,
+      );
+    });
+  });
+
+  group('organization teams', () {
+    testWidgets('the chosen organization is passed by id and by name', (
+      tester,
+    ) async {
+      await pumpForm(tester, owned: [_org('o1', 'Riverside CC')]);
+      await tester.enterText(field(0), 'Riverside U19');
+      await tester.tap(find.text('Riverside CC'));
+      await tester.pump();
+
+      await tapCreate(tester);
+      await tester.pump();
+
+      expect(teams.calls.single.organizationId, 'o1');
+      expect(teams.calls.single.organizationName, 'Riverside CC');
+    });
+
+    testWidgets('the organization is told about the new team', (tester) async {
+      await pumpForm(tester, owned: [_org('o1', 'Riverside CC')]);
+      await tester.enterText(field(0), 'Riverside U19');
+      await tester.tap(find.text('Riverside CC'));
+      await tester.pump();
+
+      await tapCreate(tester);
+      await tester.pump();
+
+      expect(orgNotified, ['o1']);
+    });
+
+    testWidgets('an independent team tells no organization', (tester) async {
+      await pumpForm(tester, owned: [_org('o1', 'Riverside CC')]);
+      await tester.enterText(field(0), 'Sunday Sixers');
+
+      await tapCreate(tester);
+      await tester.pump();
+
+      expect(orgNotified, isEmpty);
+    });
+
+    testWidgets('the organization is still told when the sheet was closed '
+        'while the request ran', (tester) async {
+      teams.pending = Completer<String?>();
+      await pumpForm(tester, owned: [_org('o1', 'Riverside CC')]);
+      await tester.enterText(field(0), 'Riverside U19');
+      await tester.tap(find.text('Riverside CC'));
+      await tester.pump();
+      await tapCreate(tester);
+
+      await tester.pumpWidget(const SizedBox.shrink());
+      teams.pending!.complete(null);
+      await tester.pump();
+
+      expect(orgNotified, ['o1']);
+      expect(createdCalls, 0, reason: 'a closed sheet is not closed again');
+    });
+
+    testWidgets('a failed create tells no organization', (tester) async {
+      teams.result = 'nope';
+      await pumpForm(tester, owned: [_org('o1', 'Riverside CC')]);
+      await tester.enterText(field(0), 'Riverside U19');
+      await tester.tap(find.text('Riverside CC'));
+      await tester.pump();
+
+      await tapCreate(tester);
+      await tester.pump();
+
+      expect(orgNotified, isEmpty);
+    });
   });
 }

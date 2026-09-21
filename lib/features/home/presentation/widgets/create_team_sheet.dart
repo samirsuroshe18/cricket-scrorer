@@ -37,10 +37,11 @@ Future<void> showCreateTeamSheet({
     child: CreateTeamForm(
       teams: teams,
       ownedOrganizations: owned,
-      onCreated: (organizationId) {
-        if (organizationId != null) unawaited(orgs.loadOrganizations());
-        Get.back<bool>(result: true);
-      },
+      // Reloads the organizations (its team count changed) even if the sheet
+      // was closed before the request finished; the sheet itself closes only
+      // if it is still open.
+      onOrganizationTeamCreated: (_) => unawaited(orgs.loadOrganizations()),
+      onCreated: (_) => Get.back<bool>(result: true),
     ),
   );
 
@@ -57,6 +58,7 @@ class CreateTeamForm extends StatefulWidget {
     required this.teams,
     required this.ownedOrganizations,
     required this.onCreated,
+    this.onOrganizationTeamCreated,
     super.key,
   });
 
@@ -70,6 +72,10 @@ class CreateTeamForm extends StatefulWidget {
   /// under (null for an independent team). Not called if the form was
   /// disposed while the request ran.
   final void Function(String? organizationId) onCreated;
+
+  /// Called with the organization id whenever a team was created under one,
+  /// even if the sheet was closed while the request ran.
+  final void Function(String organizationId)? onOrganizationTeamCreated;
 
   @override
   State<CreateTeamForm> createState() => _CreateTeamFormState();
@@ -90,6 +96,13 @@ class _CreateTeamFormState extends State<CreateTeamForm> {
     _name.dispose();
     _shortName.dispose();
     super.dispose();
+  }
+
+  String? get _selectedOrganizationName {
+    for (final org in widget.ownedOrganizations) {
+      if (org.id == _organizationId) return org.name;
+    }
+    return null;
   }
 
   Future<void> _submit() async {
@@ -130,18 +143,26 @@ class _CreateTeamFormState extends State<CreateTeamForm> {
       _serverError = null;
     });
 
+    final organizationId = _organizationId;
     final error = await widget.teams.createTeam(
       name: name,
       shortName: shortName.isEmpty ? null : shortName,
-      organizationId: _organizationId,
+      organizationId: organizationId,
+      organizationName: _selectedOrganizationName,
     );
+
+    // The organization's team count changed whether or not the sheet is still
+    // open, so this runs before the mounted check.
+    if (error == null && organizationId != null) {
+      widget.onOrganizationTeamCreated?.call(organizationId);
+    }
 
     // The sheet may have been closed while the request ran; touching it or
     // popping a route now would act on whatever is on screen instead.
     if (!mounted) return;
 
     if (error == null) {
-      widget.onCreated(_organizationId);
+      widget.onCreated(organizationId);
       return;
     }
     setState(() {
@@ -172,7 +193,12 @@ class _CreateTeamFormState extends State<CreateTeamForm> {
             maxLength: _maxTeamNameLength,
             isRequired: true,
             onChanged: (_) {
-              if (_nameError != null) setState(() => _nameError = null);
+              if (_nameError != null || _serverError != null) {
+                setState(() {
+                  _nameError = null;
+                  _serverError = null;
+                });
+              }
             },
           ),
           if (_nameError != null) ...[
@@ -188,8 +214,11 @@ class _CreateTeamFormState extends State<CreateTeamForm> {
             maxLength: _maxShortNameLength,
             textCapitalization: TextCapitalization.characters,
             onChanged: (_) {
-              if (_shortNameError != null) {
-                setState(() => _shortNameError = null);
+              if (_shortNameError != null || _serverError != null) {
+                setState(() {
+                  _shortNameError = null;
+                  _serverError = null;
+                });
               }
             },
           ),
@@ -213,13 +242,19 @@ class _CreateTeamFormState extends State<CreateTeamForm> {
                 ChoiceChip(
                   label: CricketText(text: TranslationKeys.teamIndependent.tr),
                   selected: _organizationId == null,
-                  onSelected: (_) => setState(() => _organizationId = null),
+                  onSelected: (_) => setState(() {
+                    _organizationId = null;
+                    _serverError = null;
+                  }),
                 ),
                 for (final org in widget.ownedOrganizations)
                   ChoiceChip(
                     label: CricketText(text: org.name),
                     selected: _organizationId == org.id,
-                    onSelected: (_) => setState(() => _organizationId = org.id),
+                    onSelected: (_) => setState(() {
+                      _organizationId = org.id;
+                      _serverError = null;
+                    }),
                   ),
               ],
             ),
