@@ -44,9 +44,6 @@ Future<void> showAssignScorerSheet({
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // wrapBottomSheet adds no gap under the headline; 32 is the gap
-            // the other sheets use (see cricketCustomBottomSheet).
-            32.h,
             CricketText(
               text: TranslationKeys.tapToHandOffScoring.tr,
               style: context.textTheme.bodySmall?.copyWith(
