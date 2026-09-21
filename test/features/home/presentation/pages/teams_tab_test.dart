@@ -3,6 +3,7 @@ import 'package:cricket_scorer/core/translations/translation_keys.dart';
 import 'package:cricket_scorer/features/home/presentation/controllers/my_teams_controller.dart';
 import 'package:cricket_scorer/features/home/presentation/pages/teams_tab.dart';
 import 'package:cricket_scorer/features/home/presentation/widgets/home_list_skeleton.dart';
+import 'package:cricket_scorer/features/home/presentation/widgets/home_search_empty_state.dart';
 import 'package:cricket_scorer/features/home/presentation/widgets/home_status_strip.dart';
 import 'package:cricket_scorer/features/home/presentation/widgets/team_row.dart';
 import 'package:cricket_scorer/features/organization/data/models/response/organization_summary_res.dart';
@@ -202,5 +203,168 @@ void main() {
     expect(find.text(TranslationKeys.roleOwner.tr), findsOneWidget);
     expect(find.text(TranslationKeys.roleMember.tr), findsNWidgets(2));
     expect(find.text('owner'), findsNothing, reason: 'never the raw role');
+  });
+
+  group('search', () {
+    void seedTeamsAndOrgs() {
+      teams.teams.assignAll([
+        TeamSummary(
+          id: 't1',
+          name: 'Mumbai Indians',
+          organization: OrganizationRef(id: 'o1', name: 'Shivaji Park CC'),
+        ),
+        TeamSummary(
+          id: 't2',
+          name: 'Thane Warriors',
+          organization: OrganizationRef(id: 'o1', name: 'Shivaji Park CC'),
+        ),
+        TeamSummary(id: 't3', name: 'Sunday Sixers'),
+      ]);
+      orgs.organizations.assignAll([
+        OrganizationSummaryRes(
+          id: 'o1',
+          name: 'Shivaji Park CC',
+          myRole: 'owner',
+          memberCount: 12,
+          teamCount: 2,
+        ),
+        OrganizationSummaryRes(
+          id: 'o2',
+          name: 'Gully Cricket League',
+          myRole: 'member',
+          memberCount: 40,
+          teamCount: 8,
+        ),
+      ]);
+    }
+
+    Future<void> openSearch(WidgetTester tester) async {
+      await tester.tap(find.byTooltip(TranslationKeys.search.tr));
+      await tester.pump();
+    }
+
+    Future<void> type(WidgetTester tester, String text) async {
+      await tester.enterText(find.byType(TextField), text);
+      await tester.pump();
+    }
+
+    testWidgets('the icon opens a field in place, not another screen', (
+      tester,
+    ) async {
+      seedTeamsAndOrgs();
+      await pumpTab(tester);
+
+      await openSearch(tester);
+
+      expect(tester.takeException(), isNull);
+      expect(find.byType(TeamsTab), findsOneWidget);
+      expect(find.byType(TextField), findsOneWidget);
+      expect(find.text(TranslationKeys.searchTeamsHint.tr), findsOneWidget);
+      expect(find.byType(TeamRow), findsNWidgets(3), reason: 'nothing typed');
+    });
+
+    testWidgets('filters teams by their own name', (tester) async {
+      seedTeamsAndOrgs();
+      await pumpTab(tester);
+      await openSearch(tester);
+
+      await type(tester, 'mumbai');
+
+      expect(find.byType(TeamRow), findsOneWidget);
+      expect(find.text('Mumbai Indians'), findsOneWidget);
+      expect(
+        find.byType(OrganizationRow),
+        findsNothing,
+        reason: 'no organization matches, so the section is dropped',
+      );
+    });
+
+    testWidgets('finds a team through its organization name', (tester) async {
+      seedTeamsAndOrgs();
+      await pumpTab(tester);
+      await openSearch(tester);
+
+      await type(tester, 'shivaji');
+
+      expect(find.byType(TeamRow), findsNWidgets(2));
+      expect(find.byType(OrganizationRow), findsOneWidget);
+    });
+
+    testWidgets('ignores case and surrounding spaces', (tester) async {
+      seedTeamsAndOrgs();
+      await pumpTab(tester);
+      await openSearch(tester);
+
+      await type(tester, '  SUNDAY ');
+
+      expect(find.byType(TeamRow), findsOneWidget);
+      expect(find.text('Sunday Sixers'), findsOneWidget);
+    });
+
+    testWidgets('shows every match rather than stopping at four', (
+      tester,
+    ) async {
+      teams.teams.assignAll(_teams(6));
+      await pumpTab(tester);
+      await openSearch(tester);
+
+      await type(tester, 'team');
+
+      expect(find.byType(TeamRow), findsNWidgets(6));
+      expect(find.text(TranslationKeys.seeAll.tr), findsNothing);
+    });
+
+    testWidgets('a search with no match says so, and Clear brings the lists '
+        'back', (tester) async {
+      seedTeamsAndOrgs();
+      await pumpTab(tester);
+      await openSearch(tester);
+
+      await type(tester, 'zzz');
+
+      expect(find.byType(TeamRow), findsNothing);
+      expect(find.byType(OrganizationRow), findsNothing);
+      expect(
+        find.text(
+          TranslationKeys.noTeamsSearchResults.trParams({'query': 'zzz'}),
+        ),
+        findsOneWidget,
+      );
+
+      await tester.tap(find.text(TranslationKeys.clearSearch.tr).last);
+      await tester.pump();
+
+      expect(find.byType(TeamRow), findsNWidgets(3));
+      expect(find.byType(OrganizationRow), findsNWidgets(2));
+    });
+
+    testWidgets('the back arrow closes the field and restores the lists', (
+      tester,
+    ) async {
+      seedTeamsAndOrgs();
+      await pumpTab(tester);
+      await openSearch(tester);
+      await type(tester, 'mumbai');
+
+      await tester.tap(find.byTooltip(TranslationKeys.cancel.tr));
+      await tester.pump();
+
+      expect(find.byType(TextField), findsNothing);
+      expect(find.text(TranslationKeys.navTeams.tr), findsOneWidget);
+      expect(find.byType(TeamRow), findsNWidgets(3));
+    });
+
+    testWidgets('never claims "nothing found" while a load has failed', (
+      tester,
+    ) async {
+      teams.loadError.value = 'boom';
+      await pumpTab(tester);
+      await openSearch(tester);
+
+      await type(tester, 'zzz');
+
+      expect(find.byType(HomeStatusStrip), findsOneWidget);
+      expect(find.byType(HomeSearchEmptyState), findsNothing);
+    });
   });
 }

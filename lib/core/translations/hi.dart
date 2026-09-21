@@ -451,6 +451,8 @@ Map<String, String> hi = {
   TranslationKeys.myTeamsEmptyHint: 'आपकी टीमें यहाँ दिखाई देंगी।',
   TranslationKeys.roleOwner: 'मालिक',
   TranslationKeys.roleMember: 'सदस्य',
+  TranslationKeys.searchTeamsHint: 'टीम और संगठन खोजें',
+  TranslationKeys.noTeamsSearchResults: '"@query" के लिए कुछ नहीं मिला',
   TranslationKeys.joinByCode: 'कोड से जुड़ें',
   TranslationKeys.updateTeamLogo: 'लोगो बदलें',
   TranslationKeys.teamLogoUpdated: 'टीम का लोगो अपडेट हुआ',

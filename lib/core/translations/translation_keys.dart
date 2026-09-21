@@ -504,6 +504,8 @@ class TranslationKeys {
   static const String myTeamsEmptyHint = 'my_teams_empty_hint';
   static const String roleOwner = 'role_owner';
   static const String roleMember = 'role_member';
+  static const String searchTeamsHint = 'search_teams_hint';
+  static const String noTeamsSearchResults = 'no_teams_search_results';
   static const String joinByCode = 'join_by_code';
   static const String startFirstMatch = 'start_first_match';
   static const String noFilteredMatches = 'no_filtered_matches';
