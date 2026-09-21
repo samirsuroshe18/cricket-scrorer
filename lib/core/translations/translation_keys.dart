@@ -511,6 +511,8 @@ class TranslationKeys {
   static const String teamIndependent = 'team_independent';
   static const String teamNameExists = 'team_name_exists';
   static const String teamCreated = 'team_created';
+  static const String teamNameTooLong = 'team_name_too_long';
+  static const String teamShortNameTooLong = 'team_short_name_too_long';
   static const String joinByCode = 'join_by_code';
   static const String startFirstMatch = 'start_first_match';
   static const String noFilteredMatches = 'no_filtered_matches';

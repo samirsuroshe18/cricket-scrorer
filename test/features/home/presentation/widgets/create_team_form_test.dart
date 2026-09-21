@@ -291,4 +291,111 @@ void main() {
 
     expect(tester.takeException(), isNull);
   });
+
+  group('length is counted the way the server counts it', () {
+    // The field's counter and formatter count user-perceived characters
+    // (graphemes); the backend and Mongoose count UTF-16 code units. A
+    // Devanagari or emoji name can be under the limit on screen and over it
+    // on the wire.
+    const longDevanagari =
+        'टीमचे नाव जास्तीत जास्त पन्नास अक्षरांचे असू शकते ओके';
+
+    test('the fixtures really differ between the two ways of counting', () {
+      expect(longDevanagari.characters.length, lessThanOrEqualTo(50));
+      expect(longDevanagari.length, greaterThan(50));
+      expect('🏏🏏🏏'.characters.length, lessThanOrEqualTo(5));
+      expect('🏏🏏🏏'.length, greaterThan(5));
+    });
+
+    testWidgets('a name over 50 UTF-16 units is rejected before any request', (
+      tester,
+    ) async {
+      await pumpForm(tester);
+      await tester.enterText(field(0), longDevanagari);
+
+      await tapCreate(tester);
+
+      expect(find.text(TranslationKeys.teamNameTooLong.tr), findsOneWidget);
+      expect(teams.calls, isEmpty);
+    });
+
+    testWidgets('a short name over 5 UTF-16 units is rejected before any '
+        'request', (tester) async {
+      await pumpForm(tester);
+      await tester.enterText(field(0), 'Sunday Sixers');
+      await tester.enterText(field(1), '🏏🏏🏏');
+
+      await tapCreate(tester);
+
+      expect(
+        find.text(TranslationKeys.teamShortNameTooLong.tr),
+        findsOneWidget,
+      );
+      expect(teams.calls, isEmpty);
+    });
+
+    testWidgets('exactly 50 units and exactly 5 units are accepted', (
+      tester,
+    ) async {
+      await pumpForm(tester);
+      await tester.enterText(field(0), 'a' * 50);
+      await tester.enterText(field(1), 'abcde');
+
+      await tapCreate(tester);
+      await tester.pump();
+
+      expect(teams.calls, hasLength(1));
+      expect(find.text(TranslationKeys.teamNameTooLong.tr), findsNothing);
+    });
+
+    testWidgets('the short-name error clears when the field is edited', (
+      tester,
+    ) async {
+      await pumpForm(tester);
+      await tester.enterText(field(0), 'Sunday Sixers');
+      await tester.enterText(field(1), '🏏🏏🏏');
+      await tapCreate(tester);
+
+      await tester.enterText(field(1), 'SS');
+      await tester.pump();
+
+      expect(find.text(TranslationKeys.teamShortNameTooLong.tr), findsNothing);
+    });
+  });
+
+  testWidgets('in a short sheet the form scrolls instead of overflowing', (
+    tester,
+  ) async {
+    tester.view
+      ..physicalSize = const Size(800, 1600)
+      ..devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    await tester.pumpWidget(
+      GetMaterialApp(
+        theme: AppTheme.lightTheme,
+        home: Scaffold(
+          body: Align(
+            alignment: Alignment.bottomCenter,
+            // The height a phone leaves for the sheet once the keyboard is up;
+            // no scroll view around it, as in the real sheet.
+            child: SizedBox(
+              height: 260,
+              child: CreateTeamForm(
+                teams: teams,
+                ownedOrganizations: [_org('o1', 'Riverside CC')],
+                onCreated: (_) {},
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    expect(tester.takeException(), isNull);
+
+    await tester.ensureVisible(find.text(TranslationKeys.createTeam.tr));
+    await tester.pump();
+
+    expect(tester.takeException(), isNull);
+  });
 }

@@ -15,6 +15,11 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 /// Longest team name / short name the backend accepts (`Team` schema).
+///
+/// The backend counts UTF-16 code units (`String.length`), while a text
+/// field's counter and formatter count user-perceived characters, so a
+/// Devanagari or emoji value can look under the limit and still be over it on
+/// the wire. The form therefore checks `String.length` itself before sending.
 const _maxTeamNameLength = 50;
 const _maxShortNameLength = 5;
 
@@ -76,6 +81,7 @@ class _CreateTeamFormState extends State<CreateTeamForm> {
 
   String? _organizationId;
   String? _nameError;
+  String? _shortNameError;
   String? _serverError;
   bool _busy = false;
 
@@ -94,6 +100,17 @@ class _CreateTeamFormState extends State<CreateTeamForm> {
       setState(() => _nameError = TranslationKeys.teamNameRequired.tr);
       return;
     }
+    if (name.length > _maxTeamNameLength) {
+      setState(() => _nameError = TranslationKeys.teamNameTooLong.tr);
+      return;
+    }
+    final shortName = _shortName.text.trim();
+    if (shortName.length > _maxShortNameLength) {
+      setState(
+        () => _shortNameError = TranslationKeys.teamShortNameTooLong.tr,
+      );
+      return;
+    }
     final taken = widget.teams.teams.any(
       (team) => team.name.trim().toLowerCase() == name.toLowerCase(),
     );
@@ -106,10 +123,10 @@ class _CreateTeamFormState extends State<CreateTeamForm> {
       return;
     }
 
-    final shortName = _shortName.text.trim();
     setState(() {
       _busy = true;
       _nameError = null;
+      _shortNameError = null;
       _serverError = null;
     });
 
@@ -140,79 +157,92 @@ class _CreateTeamFormState extends State<CreateTeamForm> {
       color: scheme.error,
     );
 
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        CricketTextField(
-          controller: _name,
-          hintText: TranslationKeys.teamName.tr,
-          labelText: TranslationKeys.teamName.tr,
-          prefixIcon: const Icon(Icons.shield_outlined),
-          maxLength: _maxTeamNameLength,
-          isRequired: true,
-          onChanged: (_) {
-            if (_nameError != null) setState(() => _nameError = null);
-          },
-        ),
-        if (_nameError != null) ...[
-          4.h,
-          CricketText(text: _nameError!, style: errorStyle),
-        ],
-        12.h,
-        CricketTextField(
-          controller: _shortName,
-          hintText: TranslationKeys.teamShortName.tr,
-          labelText: TranslationKeys.teamShortName.tr,
-          prefixIcon: const Icon(Icons.short_text),
-          maxLength: _maxShortNameLength,
-          textCapitalization: TextCapitalization.characters,
-        ),
-        if (widget.ownedOrganizations.isNotEmpty) ...[
-          16.h,
-          CricketText(
-            text: TranslationKeys.teamBelongsTo.tr,
-            style: context.textTheme.bodyMedium?.copyWith(
-              color: scheme.onSurfaceVariant,
-            ),
+    // Scrolls so that, with the keyboard up on a short phone, the sheet
+    // shrinks around the form instead of overflowing and clipping Create.
+    return SingleChildScrollView(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          CricketTextField(
+            controller: _name,
+            hintText: TranslationKeys.teamName.tr,
+            labelText: TranslationKeys.teamName.tr,
+            prefixIcon: const Icon(Icons.shield_outlined),
+            maxLength: _maxTeamNameLength,
+            isRequired: true,
+            onChanged: (_) {
+              if (_nameError != null) setState(() => _nameError = null);
+            },
           ),
-          8.h,
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              ChoiceChip(
-                label: CricketText(text: TranslationKeys.teamIndependent.tr),
-                selected: _organizationId == null,
-                onSelected: (_) => setState(() => _organizationId = null),
-              ),
-              for (final org in widget.ownedOrganizations)
-                ChoiceChip(
-                  label: CricketText(text: org.name),
-                  selected: _organizationId == org.id,
-                  onSelected: (_) => setState(() => _organizationId = org.id),
-                ),
-            ],
-          ),
-        ],
-        if (_serverError != null) ...[
+          if (_nameError != null) ...[
+            4.h,
+            CricketText(text: _nameError!, style: errorStyle),
+          ],
           12.h,
-          CricketText(text: _serverError!, style: errorStyle),
+          CricketTextField(
+            controller: _shortName,
+            hintText: TranslationKeys.teamShortName.tr,
+            labelText: TranslationKeys.teamShortName.tr,
+            prefixIcon: const Icon(Icons.short_text),
+            maxLength: _maxShortNameLength,
+            textCapitalization: TextCapitalization.characters,
+            onChanged: (_) {
+              if (_shortNameError != null) {
+                setState(() => _shortNameError = null);
+              }
+            },
+          ),
+          if (_shortNameError != null) ...[
+            4.h,
+            CricketText(text: _shortNameError!, style: errorStyle),
+          ],
+          if (widget.ownedOrganizations.isNotEmpty) ...[
+            16.h,
+            CricketText(
+              text: TranslationKeys.teamBelongsTo.tr,
+              style: context.textTheme.bodyMedium?.copyWith(
+                color: scheme.onSurfaceVariant,
+              ),
+            ),
+            8.h,
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                ChoiceChip(
+                  label: CricketText(text: TranslationKeys.teamIndependent.tr),
+                  selected: _organizationId == null,
+                  onSelected: (_) => setState(() => _organizationId = null),
+                ),
+                for (final org in widget.ownedOrganizations)
+                  ChoiceChip(
+                    label: CricketText(text: org.name),
+                    selected: _organizationId == org.id,
+                    onSelected: (_) => setState(() => _organizationId = org.id),
+                  ),
+              ],
+            ),
+          ],
+          if (_serverError != null) ...[
+            12.h,
+            CricketText(text: _serverError!, style: errorStyle),
+          ],
+          20.h,
+          CricketButton(
+            buttonText: TranslationKeys.createTeam.tr,
+            isDisabled: _busy,
+            prefixIcon: _busy
+                ? const SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : null,
+            onPressed: _submit,
+          ),
         ],
-        20.h,
-        CricketButton(
-          buttonText: TranslationKeys.createTeam.tr,
-          isDisabled: _busy,
-          prefixIcon: _busy
-              ? const SizedBox(
-                  width: 16,
-                  height: 16,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                )
-              : null,
-          onPressed: _submit,
-        ),
-      ],
+      ),
     );
   }
 }
