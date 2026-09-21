@@ -506,6 +506,11 @@ class TranslationKeys {
   static const String roleMember = 'role_member';
   static const String searchTeamsHint = 'search_teams_hint';
   static const String noTeamsSearchResults = 'no_teams_search_results';
+  static const String createTeam = 'create_team';
+  static const String teamBelongsTo = 'team_belongs_to';
+  static const String teamIndependent = 'team_independent';
+  static const String teamNameExists = 'team_name_exists';
+  static const String teamCreated = 'team_created';
   static const String joinByCode = 'join_by_code';
   static const String startFirstMatch = 'start_first_match';
   static const String noFilteredMatches = 'no_filtered_matches';

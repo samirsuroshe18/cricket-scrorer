@@ -1,0 +1,218 @@
+import 'dart:async';
+
+import 'package:cricket_scorer/core/extensions/space_extension.dart';
+import 'package:cricket_scorer/core/extensions/theme_x.dart';
+import 'package:cricket_scorer/core/global/widgets/bootom_sheets/custom_bottomsheet.dart';
+import 'package:cricket_scorer/core/global/widgets/cricket_button.dart';
+import 'package:cricket_scorer/core/global/widgets/cricket_text.dart';
+import 'package:cricket_scorer/core/global/widgets/cricket_text_field.dart';
+import 'package:cricket_scorer/core/global/widgets/snackbars/cricket_snackbar.dart';
+import 'package:cricket_scorer/core/translations/translation_keys.dart';
+import 'package:cricket_scorer/features/home/presentation/controllers/my_teams_controller.dart';
+import 'package:cricket_scorer/features/organization/data/models/response/organization_summary_res.dart';
+import 'package:cricket_scorer/features/organization/presentation/controllers/organizations_list_controller.dart';
+import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+
+/// Longest team name / short name the backend accepts (`Team` schema).
+const _maxTeamNameLength = 50;
+const _maxShortNameLength = 5;
+
+/// Opens the create-team sheet. When the team is created under an
+/// organization, that organization's team count changed too, so [orgs] is
+/// reloaded; [teams] reloads itself inside `MyTeamsController.createTeam`.
+Future<void> showCreateTeamSheet({
+  required MyTeamsController teams,
+  required OrganizationsListController orgs,
+}) async {
+  final owned = orgs.organizations.where((o) => o.myRole == 'owner').toList();
+
+  final created = await CustomBottomSheet.wrapBottomSheet<bool>(
+    headlineText: TranslationKeys.createTeam.tr,
+    child: CreateTeamForm(
+      teams: teams,
+      ownedOrganizations: owned,
+      onCreated: (organizationId) {
+        if (organizationId != null) unawaited(orgs.loadOrganizations());
+        Get.back<bool>(result: true);
+      },
+    ),
+  );
+
+  if (created == true) {
+    CricketSnackbar.showSuccessMessage(TranslationKeys.teamCreated.tr);
+  }
+}
+
+/// The form inside the sheet. Validation and server errors are shown next to
+/// the fields rather than as a snackbar: a GetX snackbar is a route, so a
+/// `Get.back()` after one would close the snackbar instead of this sheet.
+class CreateTeamForm extends StatefulWidget {
+  const CreateTeamForm({
+    required this.teams,
+    required this.ownedOrganizations,
+    required this.onCreated,
+    super.key,
+  });
+
+  final MyTeamsController teams;
+
+  /// Organizations the caller owns — the only ones a team can be created
+  /// under. Empty hides the "Belongs to" choice.
+  final List<OrganizationSummaryRes> ownedOrganizations;
+
+  /// Called once the team exists, with the organization id it was created
+  /// under (null for an independent team). Not called if the form was
+  /// disposed while the request ran.
+  final void Function(String? organizationId) onCreated;
+
+  @override
+  State<CreateTeamForm> createState() => _CreateTeamFormState();
+}
+
+class _CreateTeamFormState extends State<CreateTeamForm> {
+  final _name = TextEditingController();
+  final _shortName = TextEditingController();
+
+  String? _organizationId;
+  String? _nameError;
+  String? _serverError;
+  bool _busy = false;
+
+  @override
+  void dispose() {
+    _name.dispose();
+    _shortName.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submit() async {
+    if (_busy) return;
+
+    final name = _name.text.trim();
+    if (name.isEmpty) {
+      setState(() => _nameError = TranslationKeys.teamNameRequired.tr);
+      return;
+    }
+    final taken = widget.teams.teams.any(
+      (team) => team.name.trim().toLowerCase() == name.toLowerCase(),
+    );
+    if (taken) {
+      setState(
+        () => _nameError = TranslationKeys.teamNameExists.trParams({
+          'name': name,
+        }),
+      );
+      return;
+    }
+
+    final shortName = _shortName.text.trim();
+    setState(() {
+      _busy = true;
+      _nameError = null;
+      _serverError = null;
+    });
+
+    final error = await widget.teams.createTeam(
+      name: name,
+      shortName: shortName.isEmpty ? null : shortName,
+      organizationId: _organizationId,
+    );
+
+    // The sheet may have been closed while the request ran; touching it or
+    // popping a route now would act on whatever is on screen instead.
+    if (!mounted) return;
+
+    if (error == null) {
+      widget.onCreated(_organizationId);
+      return;
+    }
+    setState(() {
+      _busy = false;
+      _serverError = error;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = context.colorScheme;
+    final errorStyle = context.textTheme.bodySmall?.copyWith(
+      color: scheme.error,
+    );
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        CricketTextField(
+          controller: _name,
+          hintText: TranslationKeys.teamName.tr,
+          labelText: TranslationKeys.teamName.tr,
+          prefixIcon: const Icon(Icons.shield_outlined),
+          maxLength: _maxTeamNameLength,
+          isRequired: true,
+          onChanged: (_) {
+            if (_nameError != null) setState(() => _nameError = null);
+          },
+        ),
+        if (_nameError != null) ...[
+          4.h,
+          CricketText(text: _nameError!, style: errorStyle),
+        ],
+        12.h,
+        CricketTextField(
+          controller: _shortName,
+          hintText: TranslationKeys.teamShortName.tr,
+          labelText: TranslationKeys.teamShortName.tr,
+          prefixIcon: const Icon(Icons.short_text),
+          maxLength: _maxShortNameLength,
+          textCapitalization: TextCapitalization.characters,
+        ),
+        if (widget.ownedOrganizations.isNotEmpty) ...[
+          16.h,
+          CricketText(
+            text: TranslationKeys.teamBelongsTo.tr,
+            style: context.textTheme.bodyMedium?.copyWith(
+              color: scheme.onSurfaceVariant,
+            ),
+          ),
+          8.h,
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              ChoiceChip(
+                label: CricketText(text: TranslationKeys.teamIndependent.tr),
+                selected: _organizationId == null,
+                onSelected: (_) => setState(() => _organizationId = null),
+              ),
+              for (final org in widget.ownedOrganizations)
+                ChoiceChip(
+                  label: CricketText(text: org.name),
+                  selected: _organizationId == org.id,
+                  onSelected: (_) => setState(() => _organizationId = org.id),
+                ),
+            ],
+          ),
+        ],
+        if (_serverError != null) ...[
+          12.h,
+          CricketText(text: _serverError!, style: errorStyle),
+        ],
+        20.h,
+        CricketButton(
+          buttonText: TranslationKeys.createTeam.tr,
+          isDisabled: _busy,
+          prefixIcon: _busy
+              ? const SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : null,
+          onPressed: _submit,
+        ),
+      ],
+    );
+  }
+}
