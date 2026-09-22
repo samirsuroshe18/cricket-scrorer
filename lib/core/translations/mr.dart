@@ -464,6 +464,11 @@ Map<String, String> mr = {
       'संक्षिप्त नाव जास्तीत जास्त 5 अक्षरांचे असू शकते',
   TranslationKeys.editTeam: 'टीम संपादित करा',
   TranslationKeys.teamUpdated: 'टीम अपडेट झाली',
+  TranslationKeys.deleteTeam: 'टीम हटवा',
+  TranslationKeys.deleteTeamConfirmTitle: 'ही टीम हटवायची का?',
+  TranslationKeys.deleteTeamConfirmMessage:
+      'त्याच्या जुन्या सामन्यांमध्ये त्याचे नाव तरीही दिसेल. हे पूर्ववत करता येणार नाही.',
+  TranslationKeys.teamDeleted: 'टीम हटवली',
   TranslationKeys.joinByCode: 'कोडने सामील व्हा',
   TranslationKeys.updateTeamLogo: 'लोगो बदला',
   TranslationKeys.teamLogoUpdated: 'संघाचा लोगो अपडेट झाला',

@@ -16,6 +16,7 @@ import 'package:cricket_scorer/features/scoring/domain/usecases/update_team.dart
 import 'package:cricket_scorer/features/scoring/domain/usecases/delete_team.dart';
 import 'package:cricket_scorer/features/scoring/presentation/bindings/team_profile_binding.dart';
 import 'package:cricket_scorer/features/scoring/presentation/pages/team_profile_screen.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart' hide Response;
 
@@ -166,4 +167,82 @@ void main() {
       expect(find.text('Mumbai Indians'), findsNothing);
     },
   );
+
+  testWidgets('shows the edit/delete actions when canManage is true', (
+    tester,
+  ) async {
+    Get.put<GetTeamProfileUseCase>(
+      _MultiTeamProfileUseCase({
+        'team-1': TeamProfileRes(
+          teamId: 'team-1',
+          name: 'Mumbai Indians',
+          canManage: true,
+          roster: const [],
+        ),
+      }),
+    );
+    Get.put<GetTeamMatchesUseCase>(_EmptyMatchesUseCase());
+    Get.put<GetScorerCandidatesUseCase>(_UnusedGetScorerCandidatesUseCase());
+    Get.put<AssignScorerUseCase>(_UnusedAssignScorerUseCase());
+    Get.put<UpdateTeamLogoUseCase>(_UnusedUpdateTeamLogoUseCase());
+    Get.put<UpdateTeamUseCase>(_UnusedUpdateTeamUseCase());
+    Get.put<DeleteTeamUseCase>(_UnusedDeleteTeamUseCase());
+
+    await tester.pumpWidget(
+      GetMaterialApp(
+        theme: AppTheme.lightTheme,
+        initialRoute: AppRoutes.teamProfilePath('team-1'),
+        getPages: [
+          GetPage(
+            name: AppRoutes.teamProfile,
+            page: () => const TeamProfileScreen(),
+            binding: TeamProfileBinding(),
+          ),
+        ],
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.byIcon(Icons.edit_outlined), findsOneWidget);
+    expect(find.byIcon(Icons.delete_outline), findsOneWidget);
+  });
+
+  testWidgets('hides the edit/delete actions when canManage is false', (
+    tester,
+  ) async {
+    Get.put<GetTeamProfileUseCase>(
+      _MultiTeamProfileUseCase({
+        'team-1': TeamProfileRes(
+          teamId: 'team-1',
+          name: 'Mumbai Indians',
+          canManage: false,
+          roster: const [],
+        ),
+      }),
+    );
+    Get.put<GetTeamMatchesUseCase>(_EmptyMatchesUseCase());
+    Get.put<GetScorerCandidatesUseCase>(_UnusedGetScorerCandidatesUseCase());
+    Get.put<AssignScorerUseCase>(_UnusedAssignScorerUseCase());
+    Get.put<UpdateTeamLogoUseCase>(_UnusedUpdateTeamLogoUseCase());
+    Get.put<UpdateTeamUseCase>(_UnusedUpdateTeamUseCase());
+    Get.put<DeleteTeamUseCase>(_UnusedDeleteTeamUseCase());
+
+    await tester.pumpWidget(
+      GetMaterialApp(
+        theme: AppTheme.lightTheme,
+        initialRoute: AppRoutes.teamProfilePath('team-1'),
+        getPages: [
+          GetPage(
+            name: AppRoutes.teamProfile,
+            page: () => const TeamProfileScreen(),
+            binding: TeamProfileBinding(),
+          ),
+        ],
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.byIcon(Icons.edit_outlined), findsNothing);
+    expect(find.byIcon(Icons.delete_outline), findsNothing);
+  });
 }

@@ -18,6 +18,7 @@ import 'package:cricket_scorer/core/utils/current_user.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/team_profile_res.dart';
 import 'package:cricket_scorer/features/scoring/presentation/controllers/team_profile_controller.dart';
 import 'package:cricket_scorer/features/scoring/presentation/widget/assign_scorer_sheet.dart';
+import 'package:cricket_scorer/features/scoring/presentation/widget/edit_team_sheet.dart';
 import 'package:cricket_scorer/features/scoring/presentation/widget/match_history_card.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -45,8 +46,9 @@ class _TeamProfileScreenState extends State<TeamProfileScreen> {
   // to — reintroducing the same wrong-team failure the tagged lazyPut here
   // was added to fix.
   late final String _teamId = Get.parameters['teamId']?.trim() ?? '';
-  late final TeamProfileController controller =
-      Get.find<TeamProfileController>(tag: _teamId);
+  late final TeamProfileController controller = Get.find<TeamProfileController>(
+    tag: _teamId,
+  );
   late final String _currentUserId = currentUserId();
 
   final ImagePicker _picker = ImagePicker();
@@ -98,10 +100,58 @@ class _TeamProfileScreenState extends State<TeamProfileScreen> {
     }
   }
 
+  Future<void> _editTeam(TeamProfileRes data) async {
+    await showEditTeamSheet(
+      controller: controller,
+      currentName: data.name,
+      currentShortName: data.shortName,
+    );
+  }
+
+  Future<void> _confirmDeleteTeam() async {
+    final confirmed = await CustomBottomSheet.warningBottomSheet<bool>(
+      title: TranslationKeys.deleteTeamConfirmTitle.tr,
+      message: TranslationKeys.deleteTeamConfirmMessage.tr,
+      confirmButtonName: TranslationKeys.deleteTeam.tr,
+    );
+    if (confirmed != true) return;
+
+    final error = await controller.deleteTeam();
+    if (error == null) {
+      CricketSnackbar.showSuccessMessage(TranslationKeys.teamDeleted.tr);
+      Get.back<dynamic>();
+    } else {
+      CricketSnackbar.showErrorMessage(error);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: CustomAppBar(title: TranslationKeys.teamProfile.tr),
+      appBar: CustomAppBar(
+        title: TranslationKeys.teamProfile.tr,
+        actions: [
+          Obx(() {
+            final data = controller.profile.value;
+            if (data == null || !data.canManage) {
+              return const SizedBox.shrink();
+            }
+            return Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.edit_outlined),
+                  onPressed: () => unawaited(_editTeam(data)),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.delete_outline),
+                  onPressed: () => unawaited(_confirmDeleteTeam()),
+                ),
+              ],
+            );
+          }),
+        ],
+      ),
       body: SafeArea(
         child: Obx(() {
           final loading = controller.isLoadingProfile.value;
@@ -383,7 +433,8 @@ class _RosterRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final (roleLabel, roleColor) = _role(context);
-    final isUnknownRole = player.role != 'batsman' &&
+    final isUnknownRole =
+        player.role != 'batsman' &&
         player.role != 'bowler' &&
         player.role != 'allrounder' &&
         player.role != 'wicketkeeper';

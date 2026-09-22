@@ -465,6 +465,11 @@ Map<String, String> hi = {
       'संक्षिप्त नाम अधिकतम 5 अक्षरों का हो सकता है',
   TranslationKeys.editTeam: 'टीम संपादित करें',
   TranslationKeys.teamUpdated: 'टीम अपडेट हुई',
+  TranslationKeys.deleteTeam: 'टीम हटाएं',
+  TranslationKeys.deleteTeamConfirmTitle: 'क्या इस टीम को हटाना है?',
+  TranslationKeys.deleteTeamConfirmMessage:
+      'इसके पुराने मैचों में इसका नाम फिर भी दिखेगा। यह पूर्ववत नहीं किया जा सकता।',
+  TranslationKeys.teamDeleted: 'टीम हटाई गई',
   TranslationKeys.joinByCode: 'कोड से जुड़ें',
   TranslationKeys.updateTeamLogo: 'लोगो बदलें',
   TranslationKeys.teamLogoUpdated: 'टीम का लोगो अपडेट हुआ',

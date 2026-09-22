@@ -515,6 +515,10 @@ class TranslationKeys {
   static const String teamShortNameTooLong = 'team_short_name_too_long';
   static const String editTeam = 'edit_team';
   static const String teamUpdated = 'team_updated';
+  static const String deleteTeam = 'delete_team';
+  static const String deleteTeamConfirmTitle = 'delete_team_confirm_title';
+  static const String deleteTeamConfirmMessage = 'delete_team_confirm_message';
+  static const String teamDeleted = 'team_deleted';
   static const String joinByCode = 'join_by_code';
   static const String startFirstMatch = 'start_first_match';
   static const String noFilteredMatches = 'no_filtered_matches';
