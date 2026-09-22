@@ -10,12 +10,15 @@ import 'package:cricket_scorer/core/utils/either_util.dart';
 import 'package:cricket_scorer/core/translations/translation_keys.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/create_match_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/match_history_res.dart';
+import 'package:cricket_scorer/features/scoring/data/models/request/create_team_req.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/team_profile_res.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/get_team_matches.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/get_team_profile.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/get_scorer_candidates.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/assign_scorer.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/update_team_logo.dart';
+import 'package:cricket_scorer/features/scoring/domain/usecases/update_team.dart';
+import 'package:cricket_scorer/features/scoring/domain/usecases/delete_team.dart';
 import 'package:get/get.dart';
 
 /// The same still-live/terminal split `HomeController.openMatch` routes on —
@@ -36,6 +39,8 @@ class TeamProfileController extends GetxController {
   final GetScorerCandidatesUseCase getScorerCandidatesUseCase;
   final AssignScorerUseCase assignScorerUseCase;
   final UpdateTeamLogoUseCase updateTeamLogoUseCase;
+  final UpdateTeamUseCase updateTeamUseCase;
+  final DeleteTeamUseCase deleteTeamUseCase;
 
   TeamProfileController({
     required this.teamId,
@@ -44,6 +49,8 @@ class TeamProfileController extends GetxController {
     required this.getScorerCandidatesUseCase,
     required this.assignScorerUseCase,
     required this.updateTeamLogoUseCase,
+    required this.updateTeamUseCase,
+    required this.deleteTeamUseCase,
   });
 
   static const int _pageSize = 20;
@@ -121,6 +128,37 @@ class TeamProfileController extends GetxController {
     }
     await loadProfile();
     return true;
+  }
+
+  /// Renames (and/or re-sets the short name of) the team, then re-fetches
+  /// the profile so the new values show immediately — same
+  /// refresh-after-write shape as [updateLogo]. Returns the server's own
+  /// already-localized message on failure (e.g. a 403 for a team the
+  /// caller can no longer manage), null on success.
+  Future<String?> updateTeam({required String name, String? shortName}) async {
+    final response = await updateTeamUseCase(
+      params: UpdateTeamParams(
+        teamId: teamId,
+        req: CreateTeamReq(name: name, shortName: shortName),
+      ),
+    );
+    if (!response.isResult) return response.fallback.message;
+    await loadProfile();
+    return null;
+  }
+
+  /// Soft-deletes the team. Returns the server's own already-localized
+  /// message on failure — in particular the 409 refusal reasons
+  /// (TEAM_IN_ACTIVE_MATCH/TEAM_IN_TOURNAMENT), which the caller shows
+  /// verbatim rather than a generic error — null on success. Does not touch
+  /// [profile]: the screen navigates away on success instead of re-rendering
+  /// a deleted team's profile.
+  Future<String?> deleteTeam() async {
+    final response = await deleteTeamUseCase(
+      params: DeleteTeamParams(teamId: teamId),
+    );
+    if (!response.isResult) return response.fallback.message;
+    return null;
   }
 
   /// First page, replacing whatever list is already showing — same shape as

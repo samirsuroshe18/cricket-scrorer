@@ -3,6 +3,8 @@ import 'package:cricket_scorer/features/scoring/domain/usecases/get_team_profile
 import 'package:cricket_scorer/features/scoring/domain/usecases/get_scorer_candidates.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/assign_scorer.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/update_team_logo.dart';
+import 'package:cricket_scorer/features/scoring/domain/usecases/update_team.dart';
+import 'package:cricket_scorer/features/scoring/domain/usecases/delete_team.dart';
 import 'package:cricket_scorer/features/scoring/presentation/controllers/team_profile_controller.dart';
 import 'package:get/get.dart';
 
@@ -18,6 +20,8 @@ class TeamProfileBinding extends Bindings {
         getScorerCandidatesUseCase: Get.find<GetScorerCandidatesUseCase>(),
         assignScorerUseCase: Get.find<AssignScorerUseCase>(),
         updateTeamLogoUseCase: Get.find<UpdateTeamLogoUseCase>(),
+        updateTeamUseCase: Get.find<UpdateTeamUseCase>(),
+        deleteTeamUseCase: Get.find<DeleteTeamUseCase>(),
       ),
       tag: teamId,
     );

@@ -12,6 +12,8 @@ import 'package:cricket_scorer/features/scoring/domain/usecases/get_team_profile
 import 'package:cricket_scorer/features/scoring/domain/usecases/get_scorer_candidates.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/assign_scorer.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/update_team_logo.dart';
+import 'package:cricket_scorer/features/scoring/domain/usecases/update_team.dart';
+import 'package:cricket_scorer/features/scoring/domain/usecases/delete_team.dart';
 import 'package:cricket_scorer/features/scoring/presentation/bindings/team_profile_binding.dart';
 import 'package:cricket_scorer/features/scoring/presentation/pages/team_profile_screen.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -84,6 +86,18 @@ class _UnusedUpdateTeamLogoUseCase implements UpdateTeamLogoUseCase {
       throw UnimplementedError('Not exercised in this test.');
 }
 
+class _UnusedUpdateTeamUseCase implements UpdateTeamUseCase {
+  @override
+  dynamic noSuchMethod(Invocation invocation) =>
+      throw UnimplementedError('Not exercised in this test.');
+}
+
+class _UnusedDeleteTeamUseCase implements DeleteTeamUseCase {
+  @override
+  dynamic noSuchMethod(Invocation invocation) =>
+      throw UnimplementedError('Not exercised in this test.');
+}
+
 void main() {
   setUp(() {
     Get.testMode = true;
@@ -124,6 +138,8 @@ void main() {
       Get.put<GetScorerCandidatesUseCase>(_UnusedGetScorerCandidatesUseCase());
       Get.put<AssignScorerUseCase>(_UnusedAssignScorerUseCase());
       Get.put<UpdateTeamLogoUseCase>(_UnusedUpdateTeamLogoUseCase());
+      Get.put<UpdateTeamUseCase>(_UnusedUpdateTeamUseCase());
+      Get.put<DeleteTeamUseCase>(_UnusedDeleteTeamUseCase());
 
       await tester.pumpWidget(
         GetMaterialApp(
