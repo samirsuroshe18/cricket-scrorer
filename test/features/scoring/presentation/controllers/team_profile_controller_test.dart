@@ -9,11 +9,14 @@ import 'package:cricket_scorer/features/scoring/data/models/response/match_histo
 import 'package:cricket_scorer/features/scoring/data/models/response/team_profile_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/scorer_candidates_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/assign_scorer_res.dart';
+import 'package:cricket_scorer/features/scoring/data/models/response/created_team_res.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/get_team_matches.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/get_team_profile.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/get_scorer_candidates.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/assign_scorer.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/update_team_logo.dart';
+import 'package:cricket_scorer/features/scoring/domain/usecases/update_team.dart';
+import 'package:cricket_scorer/features/scoring/domain/usecases/delete_team.dart';
 import 'package:cricket_scorer/features/scoring/presentation/controllers/team_profile_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -118,6 +121,44 @@ class _FakeUpdateTeamLogoUseCase implements UpdateTeamLogoUseCase {
       throw UnimplementedError('Not exercised in this test.');
 }
 
+class _FakeUpdateTeamUseCase implements UpdateTeamUseCase {
+  Either<CricketResponse<CreatedTeamRes>, CricketFailure>? response;
+  UpdateTeamParams? lastParams;
+
+  @override
+  Future<Either<CricketResponse<CreatedTeamRes>, CricketFailure>> call({
+    UpdateTeamParams? params,
+  }) async {
+    lastParams = params;
+    final result = response;
+    if (result == null) throw UnimplementedError('Not exercised in this test.');
+    return result;
+  }
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) =>
+      throw UnimplementedError('Not exercised in this test.');
+}
+
+class _FakeDeleteTeamUseCase implements DeleteTeamUseCase {
+  Either<CricketResponse<void>, CricketFailure>? response;
+  DeleteTeamParams? lastParams;
+
+  @override
+  Future<Either<CricketResponse<void>, CricketFailure>> call({
+    DeleteTeamParams? params,
+  }) async {
+    lastParams = params;
+    final result = response;
+    if (result == null) throw UnimplementedError('Not exercised in this test.');
+    return result;
+  }
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) =>
+      throw UnimplementedError('Not exercised in this test.');
+}
+
 MatchHistoryItem _item(String matchId) => MatchHistoryItem(
   matchId: matchId,
   teamA: TeamRef(id: 'team-1', name: 'Mumbai Indians'),
@@ -134,6 +175,8 @@ void main() {
   late _FakeGetScorerCandidatesUseCase scorerCandidatesUseCase;
   late _FakeAssignScorerUseCase assignScorerUseCase;
   late _FakeUpdateTeamLogoUseCase updateTeamLogoUseCase;
+  late _FakeUpdateTeamUseCase updateTeamUseCase;
+  late _FakeDeleteTeamUseCase deleteTeamUseCase;
   late TeamProfileController controller;
 
   setUp(() {
@@ -143,6 +186,8 @@ void main() {
     scorerCandidatesUseCase = _FakeGetScorerCandidatesUseCase();
     assignScorerUseCase = _FakeAssignScorerUseCase();
     updateTeamLogoUseCase = _FakeUpdateTeamLogoUseCase();
+    updateTeamUseCase = _FakeUpdateTeamUseCase();
+    deleteTeamUseCase = _FakeDeleteTeamUseCase();
     controller = TeamProfileController(
       teamId: 'team-1',
       getTeamProfileUseCase: profileUseCase,
@@ -150,6 +195,8 @@ void main() {
       getScorerCandidatesUseCase: scorerCandidatesUseCase,
       assignScorerUseCase: assignScorerUseCase,
       updateTeamLogoUseCase: updateTeamLogoUseCase,
+      updateTeamUseCase: updateTeamUseCase,
+      deleteTeamUseCase: deleteTeamUseCase,
     );
   });
 
@@ -162,6 +209,7 @@ void main() {
         data: TeamProfileRes(
           teamId: 'team-1',
           name: 'Mumbai Indians',
+          canManage: true,
           roster: const [],
         ),
       ),
@@ -204,6 +252,7 @@ void main() {
             data: TeamProfileRes(
               teamId: 'team-1',
               name: 'Mumbai Indians',
+              canManage: true,
               roster: const [],
             ),
           ),
@@ -380,6 +429,8 @@ void main() {
         getScorerCandidatesUseCase: _FakeGetScorerCandidatesUseCase(),
         assignScorerUseCase: _FakeAssignScorerUseCase(),
         updateTeamLogoUseCase: _FakeUpdateTeamLogoUseCase(),
+        updateTeamUseCase: _FakeUpdateTeamUseCase(),
+        deleteTeamUseCase: _FakeDeleteTeamUseCase(),
       );
       profileUseCaseA.response = Either.result(
         CricketResponse(
@@ -387,6 +438,7 @@ void main() {
           data: TeamProfileRes(
             teamId: 'team-1',
             name: 'Mumbai Indians',
+            canManage: true,
             roster: const [],
           ),
         ),
@@ -401,6 +453,8 @@ void main() {
         getScorerCandidatesUseCase: _FakeGetScorerCandidatesUseCase(),
         assignScorerUseCase: _FakeAssignScorerUseCase(),
         updateTeamLogoUseCase: _FakeUpdateTeamLogoUseCase(),
+        updateTeamUseCase: _FakeUpdateTeamUseCase(),
+        deleteTeamUseCase: _FakeDeleteTeamUseCase(),
       );
       profileUseCaseB.response = Either.result(
         CricketResponse(
@@ -408,6 +462,7 @@ void main() {
           data: TeamProfileRes(
             teamId: 'team-2',
             name: 'Chennai Super Kings',
+            canManage: true,
             roster: const [],
           ),
         ),
@@ -473,6 +528,7 @@ void main() {
       teamId: 'team-1',
       name: 'Mumbai Indians',
       logoUrl: logoUrl,
+      canManage: true,
       roster: const [],
     );
 
@@ -530,5 +586,103 @@ void main() {
         expect(controller.profile.value?.logoUrl, isNull);
       },
     );
+  });
+
+  group('updateTeam', () {
+    test('reloads the profile and returns null on success', () async {
+      profileUseCase.response = Either.result(
+        CricketResponse(
+          message: 'ok',
+          data: TeamProfileRes(
+            teamId: 'team-1',
+            name: 'Old Name',
+            canManage: true,
+            roster: const [],
+          ),
+        ),
+      );
+      await controller.loadProfile();
+
+      updateTeamUseCase.response = Either.result(
+        CricketResponse(
+          message: 'ok',
+          data: CreatedTeamRes(id: 'team-1', name: 'New Name'),
+        ),
+      );
+      profileUseCase.response = Either.result(
+        CricketResponse(
+          message: 'ok',
+          data: TeamProfileRes(
+            teamId: 'team-1',
+            name: 'New Name',
+            canManage: true,
+            roster: const [],
+          ),
+        ),
+      );
+
+      final error = await controller.updateTeam(name: 'New Name');
+
+      expect(error, isNull);
+      expect(updateTeamUseCase.lastParams?.teamId, 'team-1');
+      expect(updateTeamUseCase.lastParams?.req.name, 'New Name');
+      expect(controller.profile.value?.name, 'New Name');
+    });
+
+    test(
+      'returns the server message and leaves the profile alone on failure',
+      () async {
+        profileUseCase.response = Either.result(
+          CricketResponse(
+            message: 'ok',
+            data: TeamProfileRes(
+              teamId: 'team-1',
+              name: 'Old Name',
+              canManage: true,
+              roster: const [],
+            ),
+          ),
+        );
+        await controller.loadProfile();
+
+        updateTeamUseCase.response = Either.fallback(
+          CricketForbiddenErrorFailure(
+            statusCode: 403,
+            message: "You can't manage that team",
+          ),
+        );
+
+        final error = await controller.updateTeam(name: 'New Name');
+
+        expect(error, "You can't manage that team");
+        expect(controller.profile.value?.name, 'Old Name');
+      },
+    );
+  });
+
+  group('deleteTeam', () {
+    test('returns null on success', () async {
+      deleteTeamUseCase.response = Either.result(
+        const CricketResponse(message: 'ok', data: null),
+      );
+
+      final error = await controller.deleteTeam();
+
+      expect(error, isNull);
+      expect(deleteTeamUseCase.lastParams?.teamId, 'team-1');
+    });
+
+    test('returns the server message on a 409 refusal', () async {
+      deleteTeamUseCase.response = Either.fallback(
+        CricketConflictFailure(
+          statusCode: 409,
+          message: 'That team is in an upcoming or live match',
+        ),
+      );
+
+      final error = await controller.deleteTeam();
+
+      expect(error, 'That team is in an upcoming or live match');
+    });
   });
 }

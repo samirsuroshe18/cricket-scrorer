@@ -33,6 +33,7 @@ TeamProfileRes _$TeamProfileResFromJson(Map<String, dynamic> json) =>
           : OrganizationRef.fromJson(
               json['organization'] as Map<String, dynamic>,
             ),
+      canManage: json['canManage'] as bool,
       roster: (json['roster'] as List<dynamic>)
           .map((e) => TeamRosterPlayer.fromJson(e as Map<String, dynamic>))
           .toList(),
@@ -45,5 +46,6 @@ Map<String, dynamic> _$TeamProfileResToJson(TeamProfileRes instance) =>
       'shortName': instance.shortName,
       'logoUrl': instance.logoUrl,
       'organization': instance.organization?.toJson(),
+      'canManage': instance.canManage,
       'roster': instance.roster.map((e) => e.toJson()).toList(),
     };

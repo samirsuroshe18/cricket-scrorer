@@ -463,6 +463,13 @@ Map<String, String> en = {
   TranslationKeys.teamNameTooLong: 'A team name can be at most 50 characters',
   TranslationKeys.teamShortNameTooLong:
       'A short name can be at most 5 characters',
+  TranslationKeys.editTeam: 'Edit team',
+  TranslationKeys.teamUpdated: 'Team updated',
+  TranslationKeys.deleteTeam: 'Delete team',
+  TranslationKeys.deleteTeamConfirmTitle: 'Delete this team?',
+  TranslationKeys.deleteTeamConfirmMessage:
+      'Its past matches will still show its name. This can\'t be undone.',
+  TranslationKeys.teamDeleted: 'Team deleted',
   TranslationKeys.joinByCode: 'Join by Code',
   TranslationKeys.updateTeamLogo: 'Update logo',
   TranslationKeys.teamLogoUpdated: 'Team logo updated',

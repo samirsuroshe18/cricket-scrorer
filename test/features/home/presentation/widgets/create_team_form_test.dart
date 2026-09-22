@@ -7,6 +7,7 @@ import 'package:cricket_scorer/features/home/presentation/widgets/create_team_sh
 import 'package:cricket_scorer/features/organization/data/models/response/organization_summary_res.dart';
 import 'package:cricket_scorer/features/organization/domain/usecases/create_organization_team.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/my_teams_res.dart';
+import 'package:cricket_scorer/features/scoring/domain/team_field_limits.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/create_team.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/get_my_teams.dart';
 import 'package:flutter/material.dart';
@@ -303,6 +304,11 @@ void main() {
     );
 
     expect(tester.takeException(), isNull);
+  });
+
+  test('the form uses the shared team field length limits', () {
+    expect(maxTeamNameLength, 50);
+    expect(maxShortNameLength, 5);
   });
 
   group('length is counted the way the server counts it', () {

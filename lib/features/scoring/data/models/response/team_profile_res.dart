@@ -50,6 +50,11 @@ class TeamProfileRes {
   /// Cloudinary URL from `POST /v1/team/:teamId/logo`, or `null`.
   final String? logoUrl;
   final OrganizationRef? organization;
+
+  /// True only for who may rename/delete this team — the team's creator
+  /// (standalone) or its organization's owner (organization team). Everyone
+  /// else who can open this profile can still view it and change its logo.
+  final bool canManage;
   final List<TeamRosterPlayer> roster;
 
   TeamProfileRes({
@@ -58,6 +63,7 @@ class TeamProfileRes {
     this.shortName,
     this.logoUrl,
     this.organization,
+    required this.canManage,
     required this.roster,
   });
 

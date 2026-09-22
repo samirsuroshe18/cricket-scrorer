@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:cricket_scorer/config/routes/app_routes.dart';
 import 'package:cricket_scorer/config/theme/app_theme.dart';
 import 'package:cricket_scorer/core/global/widgets/cricket_grouped_card.dart';
 import 'package:cricket_scorer/features/home/presentation/widgets/team_row.dart';
@@ -98,5 +101,47 @@ void main() {
     );
 
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('calls onReturn after navigating back from the team profile', (
+    tester,
+  ) async {
+    var returned = false;
+
+    await tester.pumpWidget(
+      GetMaterialApp(
+        theme: AppTheme.lightTheme,
+        initialRoute: '/home',
+        getPages: [
+          GetPage(
+            name: '/home',
+            page: () => Scaffold(
+              body: CricketGroupedCard(
+                children: [
+                  TeamRow(
+                    team: TeamSummary(id: 't1', name: 'Mumbai Indians'),
+                    onReturn: () => returned = true,
+                  ),
+                ],
+              ),
+            ),
+          ),
+          GetPage(
+            name: AppRoutes.teamProfile,
+            page: () {
+              // Pops itself right back, standing in for a real profile
+              // screen the test has no reason to render.
+              scheduleMicrotask(() => Get.back<dynamic>());
+              return const Scaffold(body: SizedBox());
+            },
+          ),
+        ],
+      ),
+    );
+
+    await tester.tap(find.byType(TeamRow));
+    await tester.pumpAndSettle();
+
+    expect(returned, isTrue);
   });
 }

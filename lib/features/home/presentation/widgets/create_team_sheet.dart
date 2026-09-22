@@ -11,17 +11,9 @@ import 'package:cricket_scorer/core/translations/translation_keys.dart';
 import 'package:cricket_scorer/features/home/presentation/controllers/my_teams_controller.dart';
 import 'package:cricket_scorer/features/organization/data/models/response/organization_summary_res.dart';
 import 'package:cricket_scorer/features/organization/presentation/controllers/organizations_list_controller.dart';
+import 'package:cricket_scorer/features/scoring/domain/team_field_limits.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-
-/// Longest team name / short name the backend accepts (`Team` schema).
-///
-/// The backend counts UTF-16 code units (`String.length`), while a text
-/// field's counter and formatter count user-perceived characters, so a
-/// Devanagari or emoji value can look under the limit and still be over it on
-/// the wire. The form therefore checks `String.length` itself before sending.
-const _maxTeamNameLength = 50;
-const _maxShortNameLength = 5;
 
 /// Opens the create-team sheet. When the team is created under an
 /// organization, that organization's team count changed too, so [orgs] is
@@ -113,12 +105,12 @@ class _CreateTeamFormState extends State<CreateTeamForm> {
       setState(() => _nameError = TranslationKeys.teamNameRequired.tr);
       return;
     }
-    if (name.length > _maxTeamNameLength) {
+    if (name.length > maxTeamNameLength) {
       setState(() => _nameError = TranslationKeys.teamNameTooLong.tr);
       return;
     }
     final shortName = _shortName.text.trim();
-    if (shortName.length > _maxShortNameLength) {
+    if (shortName.length > maxShortNameLength) {
       setState(
         () => _shortNameError = TranslationKeys.teamShortNameTooLong.tr,
       );
@@ -190,7 +182,7 @@ class _CreateTeamFormState extends State<CreateTeamForm> {
             hintText: TranslationKeys.teamName.tr,
             labelText: TranslationKeys.teamName.tr,
             prefixIcon: const Icon(Icons.shield_outlined),
-            maxLength: _maxTeamNameLength,
+            maxLength: maxTeamNameLength,
             isRequired: true,
             onChanged: (_) {
               if (_nameError != null || _serverError != null) {
@@ -211,7 +203,7 @@ class _CreateTeamFormState extends State<CreateTeamForm> {
             hintText: TranslationKeys.teamShortName.tr,
             labelText: TranslationKeys.teamShortName.tr,
             prefixIcon: const Icon(Icons.short_text),
-            maxLength: _maxShortNameLength,
+            maxLength: maxShortNameLength,
             textCapitalization: TextCapitalization.characters,
             onChanged: (_) {
               if (_shortNameError != null || _serverError != null) {

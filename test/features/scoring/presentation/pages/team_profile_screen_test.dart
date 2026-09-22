@@ -12,8 +12,11 @@ import 'package:cricket_scorer/features/scoring/domain/usecases/get_team_profile
 import 'package:cricket_scorer/features/scoring/domain/usecases/get_scorer_candidates.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/assign_scorer.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/update_team_logo.dart';
+import 'package:cricket_scorer/features/scoring/domain/usecases/update_team.dart';
+import 'package:cricket_scorer/features/scoring/domain/usecases/delete_team.dart';
 import 'package:cricket_scorer/features/scoring/presentation/bindings/team_profile_binding.dart';
 import 'package:cricket_scorer/features/scoring/presentation/pages/team_profile_screen.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart' hide Response;
 
@@ -84,6 +87,35 @@ class _UnusedUpdateTeamLogoUseCase implements UpdateTeamLogoUseCase {
       throw UnimplementedError('Not exercised in this test.');
 }
 
+class _UnusedUpdateTeamUseCase implements UpdateTeamUseCase {
+  @override
+  dynamic noSuchMethod(Invocation invocation) =>
+      throw UnimplementedError('Not exercised in this test.');
+}
+
+class _UnusedDeleteTeamUseCase implements DeleteTeamUseCase {
+  @override
+  dynamic noSuchMethod(Invocation invocation) =>
+      throw UnimplementedError('Not exercised in this test.');
+}
+
+/// Always succeeds — for the regression test proving the screen pops back
+/// on a successful delete rather than getting stuck behind the success
+/// snackbar (a GetX snackbar is itself a route; `Get.back()` called while
+/// one is still open closes the snackbar, not the screen underneath it).
+class _SucceedingDeleteTeamUseCase implements DeleteTeamUseCase {
+  @override
+  Future<Either<CricketResponse<void>, CricketFailure>> call({
+    DeleteTeamParams? params,
+  }) async {
+    return Either.result(const CricketResponse(message: 'ok', data: null));
+  }
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) =>
+      throw UnimplementedError('Not exercised in this test.');
+}
+
 void main() {
   setUp(() {
     Get.testMode = true;
@@ -109,11 +141,13 @@ void main() {
           'team-1': TeamProfileRes(
             teamId: 'team-1',
             name: 'Mumbai Indians',
+            canManage: true,
             roster: const [],
           ),
           'team-2': TeamProfileRes(
             teamId: 'team-2',
             name: 'Chennai Super Kings',
+            canManage: true,
             roster: const [],
           ),
         }),
@@ -122,6 +156,8 @@ void main() {
       Get.put<GetScorerCandidatesUseCase>(_UnusedGetScorerCandidatesUseCase());
       Get.put<AssignScorerUseCase>(_UnusedAssignScorerUseCase());
       Get.put<UpdateTeamLogoUseCase>(_UnusedUpdateTeamLogoUseCase());
+      Get.put<UpdateTeamUseCase>(_UnusedUpdateTeamUseCase());
+      Get.put<DeleteTeamUseCase>(_UnusedDeleteTeamUseCase());
 
       await tester.pumpWidget(
         GetMaterialApp(
@@ -146,6 +182,139 @@ void main() {
 
       expect(find.text('Chennai Super Kings'), findsOneWidget);
       expect(find.text('Mumbai Indians'), findsNothing);
+    },
+  );
+
+  testWidgets('shows the edit/delete actions when canManage is true', (
+    tester,
+  ) async {
+    Get.put<GetTeamProfileUseCase>(
+      _MultiTeamProfileUseCase({
+        'team-1': TeamProfileRes(
+          teamId: 'team-1',
+          name: 'Mumbai Indians',
+          canManage: true,
+          roster: const [],
+        ),
+      }),
+    );
+    Get.put<GetTeamMatchesUseCase>(_EmptyMatchesUseCase());
+    Get.put<GetScorerCandidatesUseCase>(_UnusedGetScorerCandidatesUseCase());
+    Get.put<AssignScorerUseCase>(_UnusedAssignScorerUseCase());
+    Get.put<UpdateTeamLogoUseCase>(_UnusedUpdateTeamLogoUseCase());
+    Get.put<UpdateTeamUseCase>(_UnusedUpdateTeamUseCase());
+    Get.put<DeleteTeamUseCase>(_UnusedDeleteTeamUseCase());
+
+    await tester.pumpWidget(
+      GetMaterialApp(
+        theme: AppTheme.lightTheme,
+        initialRoute: AppRoutes.teamProfilePath('team-1'),
+        getPages: [
+          GetPage(
+            name: AppRoutes.teamProfile,
+            page: () => const TeamProfileScreen(),
+            binding: TeamProfileBinding(),
+          ),
+        ],
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.byIcon(Icons.edit_outlined), findsOneWidget);
+    expect(find.byIcon(Icons.delete_outline), findsOneWidget);
+  });
+
+  testWidgets('hides the edit/delete actions when canManage is false', (
+    tester,
+  ) async {
+    Get.put<GetTeamProfileUseCase>(
+      _MultiTeamProfileUseCase({
+        'team-1': TeamProfileRes(
+          teamId: 'team-1',
+          name: 'Mumbai Indians',
+          canManage: false,
+          roster: const [],
+        ),
+      }),
+    );
+    Get.put<GetTeamMatchesUseCase>(_EmptyMatchesUseCase());
+    Get.put<GetScorerCandidatesUseCase>(_UnusedGetScorerCandidatesUseCase());
+    Get.put<AssignScorerUseCase>(_UnusedAssignScorerUseCase());
+    Get.put<UpdateTeamLogoUseCase>(_UnusedUpdateTeamLogoUseCase());
+    Get.put<UpdateTeamUseCase>(_UnusedUpdateTeamUseCase());
+    Get.put<DeleteTeamUseCase>(_UnusedDeleteTeamUseCase());
+
+    await tester.pumpWidget(
+      GetMaterialApp(
+        theme: AppTheme.lightTheme,
+        initialRoute: AppRoutes.teamProfilePath('team-1'),
+        getPages: [
+          GetPage(
+            name: AppRoutes.teamProfile,
+            page: () => const TeamProfileScreen(),
+            binding: TeamProfileBinding(),
+          ),
+        ],
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.byIcon(Icons.edit_outlined), findsNothing);
+    expect(find.byIcon(Icons.delete_outline), findsNothing);
+  });
+
+  testWidgets(
+    'deleting the team pops back to the previous screen, not just the snackbar',
+    (tester) async {
+      Get.put<GetTeamProfileUseCase>(
+        _MultiTeamProfileUseCase({
+          'team-1': TeamProfileRes(
+            teamId: 'team-1',
+            name: 'Mumbai Indians',
+            canManage: true,
+            roster: const [],
+          ),
+        }),
+      );
+      Get.put<GetTeamMatchesUseCase>(_EmptyMatchesUseCase());
+      Get.put<GetScorerCandidatesUseCase>(_UnusedGetScorerCandidatesUseCase());
+      Get.put<AssignScorerUseCase>(_UnusedAssignScorerUseCase());
+      Get.put<UpdateTeamLogoUseCase>(_UnusedUpdateTeamLogoUseCase());
+      Get.put<UpdateTeamUseCase>(_UnusedUpdateTeamUseCase());
+      Get.put<DeleteTeamUseCase>(_SucceedingDeleteTeamUseCase());
+
+      await tester.pumpWidget(
+        GetMaterialApp(
+          theme: AppTheme.lightTheme,
+          initialRoute: '/home',
+          getPages: [
+            GetPage(
+              name: '/home',
+              page: () => const Scaffold(body: Text('home stub')),
+            ),
+            GetPage(
+              name: AppRoutes.teamProfile,
+              page: () => const TeamProfileScreen(),
+              binding: TeamProfileBinding(),
+            ),
+          ],
+        ),
+      );
+      unawaited(Get.toNamed<dynamic>(AppRoutes.teamProfilePath('team-1')));
+      await tester.pumpAndSettle();
+      expect(find.text('Mumbai Indians'), findsOneWidget);
+
+      await tester.tap(find.byIcon(Icons.delete_outline));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('delete_team').last);
+      await tester.pumpAndSettle();
+
+      expect(find.text('home stub'), findsOneWidget);
+      expect(find.text('Mumbai Indians'), findsNothing);
+
+      // Drain the success snackbar's timer before the tree is torn down.
+      await tester.pump(const Duration(seconds: 4));
+      await tester.pumpAndSettle();
     },
   );
 }
