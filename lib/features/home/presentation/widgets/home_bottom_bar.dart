@@ -3,6 +3,8 @@ import 'package:cricket_scorer/core/extensions/theme_x.dart';
 import 'package:cricket_scorer/core/global/widgets/cricket_text.dart';
 import 'package:cricket_scorer/features/home/presentation/widgets/home_style.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter/widget_previews.dart';
 
 class HomeNavItem {
   const HomeNavItem({
@@ -69,23 +71,7 @@ class HomeBottomBar extends StatelessWidget {
               button: true,
               label: actionLabel,
               excludeSemantics: true,
-              child: GestureDetector(
-                onTap: onAction,
-                child: Container(
-                  width: 52,
-                  height: 52,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: context.colorScheme.primary,
-                    border: Border.all(color: page, width: 4),
-                  ),
-                  child: const Icon(
-                    Icons.add_rounded,
-                    size: 24,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
+              child: _DockedActionButton(borderColor: page, onTap: onAction),
             ),
           ),
         ],
@@ -105,35 +91,183 @@ class HomeBottomBar extends StatelessWidget {
         label: item.label,
         excludeSemantics: true,
         child: InkWell(
-          onTap: () => onSelect(index),
+          onTap: () {
+            if (!selected) HapticFeedback.selectionClick();
+            onSelect(index);
+          },
           borderRadius: 12.radius,
           child: ConstrainedBox(
             constraints: const BoxConstraints(minHeight: 48),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  selected ? item.activeIcon : item.icon,
-                  size: 22,
-                  color: ink,
-                ),
-                2.h,
-                CricketText(
-                  text: item.label,
-                  maxLines: 1,
-                  textOverflow: TextOverflow.ellipsis,
-                  style: context.homeText(
-                    11,
-                    weight: selected ? FontWeight.w600 : FontWeight.w400,
-                    color: ink,
-                  ),
-                ),
-              ],
+            child: TweenAnimationBuilder<Color?>(
+              tween: ColorTween(end: ink),
+              duration: Durations.short3,
+              curve: Easing.standard,
+              builder: (context, color, _) {
+                return Column(
+                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    AnimatedContainer(
+                      duration: Durations.short3,
+                      curve: Easing.standard,
+                      width: 42,
+                      height: 30,
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        color: selected
+                            ? context.homeSelectedPillTint
+                            : Colors.transparent,
+                        borderRadius: 16.radius,
+                      ),
+                      child: Icon(
+                        selected ? item.activeIcon : item.icon,
+                        size: 22,
+                        color: color,
+                      ),
+                    ),
+                    2.h,
+                    CricketText(
+                      text: item.label,
+                      maxLines: 1,
+                      textOverflow: TextOverflow.ellipsis,
+                      style: context.homeText(
+                        11,
+                        weight: selected ? FontWeight.w600 : FontWeight.w400,
+                        color: color,
+                      ),
+                    ),
+                  ],
+                );
+              },
             ),
           ),
         ),
       ),
     );
   }
+}
+
+/// The docked "+" action: its own press-scale and ripple, since it carries
+/// more visual weight than the four tab items either side of it and had no
+/// tap feedback at all — the tab items get InkWell's ripple for free, this
+/// button previously got none.
+class _DockedActionButton extends StatefulWidget {
+  const _DockedActionButton({required this.borderColor, required this.onTap});
+
+  final Color borderColor;
+  final VoidCallback onTap;
+
+  @override
+  State<_DockedActionButton> createState() => _DockedActionButtonState();
+}
+
+class _DockedActionButtonState extends State<_DockedActionButton> {
+  bool _pressed = false;
+
+  void _setPressed(bool value) => setState(() => _pressed = value);
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedScale(
+      scale: _pressed ? 0.92 : 1,
+      duration: Durations.short2,
+      curve: Easing.standard,
+      child: Container(
+        width: 52,
+        height: 52,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: context.colorScheme.primary,
+          border: Border.all(color: widget.borderColor, width: 4),
+          boxShadow: [
+            BoxShadow(
+              color: context.homeActionShadowColor,
+              blurRadius: 14,
+              offset: const Offset(0, 6),
+            ),
+          ],
+        ),
+        child: ClipOval(
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTapDown: (_) => _setPressed(true),
+              onTapCancel: () => _setPressed(false),
+              onTapUp: (_) => _setPressed(false),
+              onTap: () {
+                HapticFeedback.lightImpact();
+                widget.onTap();
+              },
+              child: Icon(
+                Icons.add_rounded,
+                size: 24,
+                color: context.colorScheme.onPrimary,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+@_MultiPreviewBrightness(name: 'Home bottom bar')
+Widget homeBottomBarPreview() => const _HomeBottomBarPreview();
+
+class _HomeBottomBarPreview extends StatefulWidget {
+  const _HomeBottomBarPreview();
+
+  @override
+  State<_HomeBottomBarPreview> createState() => _HomeBottomBarPreviewState();
+}
+
+class _HomeBottomBarPreviewState extends State<_HomeBottomBarPreview> {
+  int _index = 0;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: const Center(child: Text('Tap a tab or the + button')),
+      bottomNavigationBar: HomeBottomBar(
+        currentIndex: _index,
+        onSelect: (index) => setState(() => _index = index),
+        actionLabel: 'Start match',
+        onAction: () {},
+        items: const [
+          HomeNavItem(
+            icon: Icons.home_outlined,
+            activeIcon: Icons.home_rounded,
+            label: 'Home',
+          ),
+          HomeNavItem(
+            icon: Icons.sports_cricket_outlined,
+            activeIcon: Icons.sports_cricket,
+            label: 'Matches',
+          ),
+          HomeNavItem(
+            icon: Icons.groups_outlined,
+            activeIcon: Icons.groups_rounded,
+            label: 'Teams',
+          ),
+          HomeNavItem(
+            icon: Icons.person_outline_rounded,
+            activeIcon: Icons.person_rounded,
+            label: 'Profile',
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+final class _MultiPreviewBrightness extends MultiPreview {
+  const _MultiPreviewBrightness({required this.name});
+
+  final String name;
+
+  @override
+  List<Preview> get previews => const [
+    Preview(brightness: Brightness.light),
+    Preview(brightness: Brightness.dark),
+  ];
 }
