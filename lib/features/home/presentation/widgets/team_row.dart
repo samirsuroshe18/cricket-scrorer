@@ -12,16 +12,24 @@ import 'package:get/get.dart';
 /// the team's profile. Sits inside a `CricketGroupedCard`, which supplies the
 /// surface the tap ripple paints on.
 class TeamRow extends StatelessWidget {
-  const TeamRow({required this.team, super.key});
+  const TeamRow({required this.team, this.onReturn, super.key});
 
   final TeamSummary team;
+
+  /// Called after returning from this team's profile screen — a rename or
+  /// delete there doesn't otherwise propagate back to this row's cached
+  /// list. Optional: a caller with nothing to refresh passes nothing.
+  final VoidCallback? onReturn;
 
   @override
   Widget build(BuildContext context) {
     final organization = team.organization;
 
     return InkWell(
-      onTap: () => Get.toNamed<dynamic>(AppRoutes.teamProfilePath(team.id)),
+      onTap: () async {
+        await Get.toNamed<dynamic>(AppRoutes.teamProfilePath(team.id));
+        onReturn?.call();
+      },
       child: ConstrainedBox(
         constraints: const BoxConstraints(minHeight: 64),
         child: Padding(

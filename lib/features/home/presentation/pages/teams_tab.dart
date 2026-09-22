@@ -230,7 +230,10 @@ class _TeamsTabState extends State<TeamsTab> {
               ],
               if (shown.isNotEmpty)
                 CricketGroupedCard(
-                  children: [for (final team in visible) TeamRow(team: team)],
+                  children: [
+                    for (final team in visible)
+                      TeamRow(team: team, onReturn: myTeams.loadMyTeams),
+                  ],
                 )
               else if (!failed)
                 HomeEmptyCard(
