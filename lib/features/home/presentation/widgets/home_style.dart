@@ -20,6 +20,15 @@ extension HomeStyle on BuildContext {
   /// too dim there, so dark mode uses the lighter tint.
   Color get homeLiveText => isDark ? AppColor.softRed : colorScheme.primary;
 
+  /// The soft tint behind the selected bottom-nav item — a hint of
+  /// [homeLiveText], not a filled chip.
+  Color get homeSelectedPillTint => homeLiveText.withValues(alpha: 0.1);
+
+  /// The lift under the docked "+" action, tinted to the button's own fill
+  /// instead of a generic grey drop shadow.
+  Color get homeActionShadowColor =>
+      colorScheme.primary.withValues(alpha: 0.35);
+
   /// Body text at an exact size, so the dashboard can match its spec rather
   /// than snap to the nearest text-theme slot. Derives from the theme's body
   /// style so the family and locale-aware fallbacks come along.
