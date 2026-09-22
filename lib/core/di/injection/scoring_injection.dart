@@ -12,6 +12,8 @@ import 'package:cricket_scorer/features/scoring/domain/repositories/match_reposi
 import 'package:cricket_scorer/features/scoring/domain/repositories/team_repository.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/create_match.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/create_team.dart';
+import 'package:cricket_scorer/features/scoring/domain/usecases/update_team.dart';
+import 'package:cricket_scorer/features/scoring/domain/usecases/delete_team.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/score_ball.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/select_bowler.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/start_innings.dart';
@@ -143,6 +145,16 @@ class ScoringInjection {
 
     Get.lazyPut<CreateTeamUseCase>(
       () => CreateTeamUseCase(teamRepository: Get.find<TeamRepository>()),
+      fenix: true,
+    );
+
+    Get.lazyPut<UpdateTeamUseCase>(
+      () => UpdateTeamUseCase(teamRepository: Get.find<TeamRepository>()),
+      fenix: true,
+    );
+
+    Get.lazyPut<DeleteTeamUseCase>(
+      () => DeleteTeamUseCase(teamRepository: Get.find<TeamRepository>()),
       fenix: true,
     );
 

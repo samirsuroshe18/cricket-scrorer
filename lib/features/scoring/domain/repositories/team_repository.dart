@@ -12,4 +12,16 @@ abstract class TeamRepository {
   Future<Either<CricketResponse<CreatedTeamRes>, CricketFailure>> createTeam({
     required CreateTeamReq params,
   });
+
+  /// `PATCH /v1/team/:teamId` — rename/re-set the short name of a team the
+  /// caller manages. `params` is the same request shape as [createTeam]'s.
+  Future<Either<CricketResponse<CreatedTeamRes>, CricketFailure>> updateTeam({
+    required String teamId,
+    required CreateTeamReq params,
+  });
+
+  /// `DELETE /v1/team/:teamId` — soft-deletes a team the caller manages.
+  Future<Either<CricketResponse<void>, CricketFailure>> deleteTeam({
+    required String teamId,
+  });
 }

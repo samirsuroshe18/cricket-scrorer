@@ -76,6 +76,25 @@ class MatchApiService {
     );
   }
 
+  /// `PATCH /v1/team/:teamId` — rename and/or re-set the short name of a
+  /// team the caller manages. Same body shape as [createTeam].
+  Future<Either<ApiResponseModel, CricketFailure>> updateTeam({
+    required String teamId,
+    required CreateTeamReq params,
+  }) async {
+    return await apiClient.patch(
+      endpoint: matchEndpoint.teamProfile(teamId),
+      data: params.toJson(),
+    );
+  }
+
+  /// `DELETE /v1/team/:teamId` — soft-deletes a team the caller manages.
+  Future<Either<ApiResponseModel, CricketFailure>> deleteTeam({
+    required String teamId,
+  }) async {
+    return await apiClient.delete(endpoint: matchEndpoint.teamProfile(teamId));
+  }
+
   /// `GET /v1/team/:teamId` — display name plus roster. `verifyJwt` plus a
   /// `createdBy` ownership check server-side, same shape as [getScorecard].
   Future<Either<ApiResponseModel, CricketFailure>> getTeamProfile({

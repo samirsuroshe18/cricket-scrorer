@@ -31,4 +31,39 @@ class TeamRepositoryImpl extends TeamRepository {
       return Either.fallback(response.fallback);
     }
   }
+
+  @override
+  Future<Either<CricketResponse<CreatedTeamRes>, CricketFailure>> updateTeam({
+    required String teamId,
+    required CreateTeamReq params,
+  }) async {
+    final Either<ApiResponseModel, CricketFailure> response =
+        await matchApiService.updateTeam(teamId: teamId, params: params);
+    if (response.isResult) {
+      return Either.result(
+        CricketResponse(
+          data: CreatedTeamRes.fromJson(
+            response.result.data as Map<String, dynamic>,
+          ),
+          message: response.result.message,
+        ),
+      );
+    } else {
+      return Either.fallback(response.fallback);
+    }
+  }
+
+  @override
+  Future<Either<CricketResponse<void>, CricketFailure>> deleteTeam({
+    required String teamId,
+  }) async {
+    final response = await matchApiService.deleteTeam(teamId: teamId);
+    if (response.isResult) {
+      return Either.result(
+        CricketResponse(data: null, message: response.result.message),
+      );
+    } else {
+      return Either.fallback(response.fallback);
+    }
+  }
 }
