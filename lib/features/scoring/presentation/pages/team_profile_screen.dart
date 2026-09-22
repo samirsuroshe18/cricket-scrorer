@@ -118,8 +118,13 @@ class _TeamProfileScreenState extends State<TeamProfileScreen> {
 
     final error = await controller.deleteTeam();
     if (error == null) {
-      CricketSnackbar.showSuccessMessage(TranslationKeys.teamDeleted.tr);
+      // Pop before showing the snackbar, not after: a GetX snackbar is
+      // itself a route, so `Get.back()` called while one is still open
+      // closes the snackbar instead of this screen (see the sibling
+      // `showEditTeamSheet`, which pops via `onUpdated` before its caller
+      // shows `teamUpdated`, for the same reason).
       Get.back<dynamic>();
+      CricketSnackbar.showSuccessMessage(TranslationKeys.teamDeleted.tr);
     } else {
       CricketSnackbar.showErrorMessage(error);
     }
