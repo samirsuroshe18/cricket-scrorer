@@ -462,6 +462,8 @@ Map<String, String> mr = {
       'टीमचे नाव जास्तीत जास्त 50 अक्षरांचे असू शकते',
   TranslationKeys.teamShortNameTooLong:
       'संक्षिप्त नाव जास्तीत जास्त 5 अक्षरांचे असू शकते',
+  TranslationKeys.editTeam: 'टीम संपादित करा',
+  TranslationKeys.teamUpdated: 'टीम अपडेट झाली',
   TranslationKeys.joinByCode: 'कोडने सामील व्हा',
   TranslationKeys.updateTeamLogo: 'लोगो बदला',
   TranslationKeys.teamLogoUpdated: 'संघाचा लोगो अपडेट झाला',

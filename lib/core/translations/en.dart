@@ -463,6 +463,8 @@ Map<String, String> en = {
   TranslationKeys.teamNameTooLong: 'A team name can be at most 50 characters',
   TranslationKeys.teamShortNameTooLong:
       'A short name can be at most 5 characters',
+  TranslationKeys.editTeam: 'Edit team',
+  TranslationKeys.teamUpdated: 'Team updated',
   TranslationKeys.joinByCode: 'Join by Code',
   TranslationKeys.updateTeamLogo: 'Update logo',
   TranslationKeys.teamLogoUpdated: 'Team logo updated',
