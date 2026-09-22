@@ -162,6 +162,7 @@ void main() {
         data: TeamProfileRes(
           teamId: 'team-1',
           name: 'Mumbai Indians',
+          canManage: true,
           roster: const [],
         ),
       ),
@@ -204,6 +205,7 @@ void main() {
             data: TeamProfileRes(
               teamId: 'team-1',
               name: 'Mumbai Indians',
+              canManage: true,
               roster: const [],
             ),
           ),
@@ -387,6 +389,7 @@ void main() {
           data: TeamProfileRes(
             teamId: 'team-1',
             name: 'Mumbai Indians',
+            canManage: true,
             roster: const [],
           ),
         ),
@@ -408,6 +411,7 @@ void main() {
           data: TeamProfileRes(
             teamId: 'team-2',
             name: 'Chennai Super Kings',
+            canManage: true,
             roster: const [],
           ),
         ),
@@ -473,6 +477,7 @@ void main() {
       teamId: 'team-1',
       name: 'Mumbai Indians',
       logoUrl: logoUrl,
+      canManage: true,
       roster: const [],
     );
 

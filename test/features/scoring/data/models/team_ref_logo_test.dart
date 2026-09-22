@@ -35,11 +35,13 @@ void main() {
         'teamId': 't1',
         'name': 'A',
         'logoUrl': 'https://x/y.png',
+        'canManage': true,
         'roster': <dynamic>[],
       });
       final without = TeamProfileRes.fromJson({
         'teamId': 't1',
         'name': 'A',
+        'canManage': true,
         'roster': <dynamic>[],
       });
 

@@ -109,11 +109,13 @@ void main() {
           'team-1': TeamProfileRes(
             teamId: 'team-1',
             name: 'Mumbai Indians',
+            canManage: true,
             roster: const [],
           ),
           'team-2': TeamProfileRes(
             teamId: 'team-2',
             name: 'Chennai Super Kings',
+            canManage: true,
             roster: const [],
           ),
         }),
