@@ -12,7 +12,7 @@ AuctionSetupRes _$AuctionSetupResFromJson(Map<String, dynamic> json) =>
       minSquadSize: (json['minSquadSize'] as num?)?.toInt(),
       maxSquadSize: (json['maxSquadSize'] as num?)?.toInt(),
       categoryCaps: (json['categoryCaps'] as Map<String, dynamic>?)?.map(
-        (k, v) => MapEntry(k, (v as num).toInt()),
+        (k, e) => MapEntry(k, (e as num).toInt()),
       ),
       owners: (json['owners'] as List<dynamic>)
           .map((e) => AuctionOwnerRes.fromJson(e as Map<String, dynamic>))
