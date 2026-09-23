@@ -6,6 +6,7 @@ import 'package:cricket_scorer/core/extensions/theme_x.dart';
 import 'package:cricket_scorer/core/global/widgets/cricket_text.dart';
 import 'package:cricket_scorer/core/translations/translation_keys.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 
 /// An animated coin the scorer taps to decide the toss, for a match with no
@@ -17,12 +18,30 @@ import 'package:get/get.dart';
 /// Entirely self-contained: owns its own [AnimationController] and idle/
 /// flipping/landed state. The only thing that leaves this widget is
 /// [onResult] once a flip settles — everything about *how* it settles is
-/// private to this file.
+/// private to this file. Shared by `CreateMatchScreen` and
+/// `start_fixture_match_sheet` — both use the exact same coin.
 class CoinFlip extends StatefulWidget {
-  const CoinFlip({super.key, required this.onResult});
+  const CoinFlip({
+    super.key,
+    required this.onResult,
+    this.size = 96,
+    this.teamAName,
+    this.teamBName,
+  });
 
   /// Called once per completed flip with `'teamA'` or `'teamB'`.
   final ValueChanged<String> onResult;
+
+  /// Face diameter — callers with tighter width (a small phone) can shrink
+  /// this; the caption below scales with it.
+  final double size;
+
+  /// The real picked team names, shown on the coin faces instead of the
+  /// generic "Team A"/"Team B" strings once a caller has them — null or
+  /// blank falls back to those translations, so `start_fixture_match_sheet`
+  /// (which never had team names at this point in its flow) is unaffected.
+  final String? teamAName;
+  final String? teamBName;
 
   @override
   State<CoinFlip> createState() => _CoinFlipState();
@@ -46,7 +65,7 @@ class _CoinFlipState extends State<CoinFlip>
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1100),
+      duration: const Duration(milliseconds: 1300),
     );
   }
 
@@ -71,6 +90,7 @@ class _CoinFlipState extends State<CoinFlip>
     // false don't land in the same frame.
     if (mounted) setState(() {});
 
+    unawaited(HapticFeedback.mediumImpact());
     widget.onResult(_target!);
   }
 
@@ -89,11 +109,15 @@ class _CoinFlipState extends State<CoinFlip>
           child: AnimatedBuilder(
             animation: _controller,
             builder: (context, child) {
-              final angle = _controller.isAnimating || _controller.isCompleted
-                  ? Curves.easeOutCubic.transform(_controller.value) *
-                        _halfTurns *
-                        pi
+              // A short, brisk spin (constant speed) that only settles into
+              // the coin's own gentle rock in the final stretch — a bounce
+              // over the *whole* flip would swing past upright mid-spin,
+              // which reads as wrong, not lively.
+              final progress =
+                  _controller.isAnimating || _controller.isCompleted
+                  ? Curves.easeOutBack.transform(_controller.value)
                   : 0.0;
+              final angle = progress * _halfTurns * pi;
               final normalized = angle % (2 * pi);
               final showingA = normalized <= pi / 2 || normalized >= 3 * pi / 2;
 
@@ -104,15 +128,18 @@ class _CoinFlipState extends State<CoinFlip>
                   ..rotateY(angle),
                 child: _CoinFace(
                   label: showingA
-                      ? TranslationKeys.teamA.tr
-                      : TranslationKeys.teamB.tr,
+                      ? (widget.teamAName?.trim().isNotEmpty ?? false
+                            ? widget.teamAName!.trim()
+                            : TranslationKeys.teamA.tr)
+                      : (widget.teamBName?.trim().isNotEmpty ?? false
+                            ? widget.teamBName!.trim()
+                            : TranslationKeys.teamB.tr),
                   // The rotation above mirrors whichever face is on the far
                   // side — without counter-flipping it here, Team B's label
                   // would render backwards for half of every spin.
                   mirrored: !showingA,
-                  color: showingA
-                      ? context.colorScheme.primaryContainer
-                      : context.colorScheme.secondaryContainer,
+                  color: showingA ? context.colors.teamA : context.colors.teamB,
+                  size: widget.size,
                 ),
               );
             },
@@ -138,28 +165,50 @@ class _CoinFace extends StatelessWidget {
     required this.label,
     required this.mirrored,
     required this.color,
+    required this.size,
   });
 
   final String label;
   final bool mirrored;
   final Color color;
+  final double size;
 
   @override
   Widget build(BuildContext context) {
     final face = Container(
-      width: 96,
-      height: 96,
+      width: size,
+      height: size,
       alignment: Alignment.center,
-      padding: const EdgeInsets.all(8),
+      padding: EdgeInsets.all(size * 0.08),
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: color,
-        border: Border.all(color: context.colorScheme.outline, width: 2),
+        color: context.colors.chipBackground,
+        border: Border.all(color: context.colors.coinRim, width: 3),
+        boxShadow: [
+          BoxShadow(
+            color: context.colors.coinRim.withValues(alpha: 0.35),
+            blurRadius: 0,
+            spreadRadius: 0,
+            offset: const Offset(0, 3),
+          ),
+        ],
       ),
-      child: CricketText(
-        text: label,
-        style: context.textTheme.titleMedium,
-        textAlign: TextAlign.center,
+      // Bold and sized as WCAG large text (>=18.66px bold), so the team
+      // color — not guaranteed 4.5:1 at body size — only needs to clear the
+      // lower 3:1 bar. FittedBox is a safety net for a longer translation;
+      // every current en/hi/mr label fits at full size.
+      child: FittedBox(
+        fit: BoxFit.scaleDown,
+        child: CricketText(
+          text: label,
+          style: TextStyle(
+            fontSize: size * 0.2,
+            fontWeight: FontWeight.w700,
+            color: color,
+          ),
+          textAlign: TextAlign.center,
+          maxLines: 1,
+        ),
       ),
     );
 

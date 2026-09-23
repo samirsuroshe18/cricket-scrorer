@@ -12,8 +12,15 @@ import 'package:cricket_scorer/features/scoring/data/models/response/create_matc
 import 'package:cricket_scorer/features/scoring/data/models/response/my_teams_res.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/create_match.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/get_my_teams.dart';
+import 'package:cricket_scorer/features/scoring/presentation/controllers/select_team_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+
+/// The overs quick-pick pills on the Match format card. `custom` means "the
+/// field is free text, no pill is the source of truth" — set both when a
+/// pill is tapped and when the field's own text drifts away from the
+/// selected pill's value (see [_handleOversTextChanged]).
+enum OversPreset { custom, five, t20, odi }
 
 class CreateMatchController extends GetxController {
   final CreateMatchUseCase createMatchUseCase;
@@ -28,18 +35,19 @@ class CreateMatchController extends GetxController {
   final teamBController = TextEditingController();
   final oversController = TextEditingController();
 
-  /// The caller's own teams, for the "reuse an existing team" chip picker.
-  /// A failure loading these just leaves the picker empty — free-text team
-  /// creation still works either way, so it is not surfaced as an error.
-  final myTeams = <TeamSummary>[].obs;
-  final isLoadingTeams = true.obs;
-
   /// Non-null exactly while side A's field holds a selected, existing
   /// team's own name untouched — see [_handleTeamATextChanged]. Null means
   /// free-text mode: submitting creates a brand-new team from whatever name
   /// is typed, today's original behavior.
   final selectedTeamAId = Rxn<String>();
   final selectedTeamBId = Rxn<String>();
+
+  final selectedOversPreset = OversPreset.five.obs;
+  static const Map<OversPreset, String> _oversPresetValues = {
+    OversPreset.five: '5',
+    OversPreset.t20: '20',
+    OversPreset.odi: '50',
+  };
 
   /// `teamA` / `teamB` / null (toss skipped — [CoinFlip] never tapped).
   /// Set only from [CoinFlip.onResult]; never tapped directly, unlike
@@ -83,79 +91,168 @@ class CreateMatchController extends GetxController {
     super.onInit();
     teamAController.addListener(_handleTeamATextChanged);
     teamBController.addListener(_handleTeamBTextChanged);
-    unawaited(_loadMyTeams());
+    oversController.text = _oversPresetValues[OversPreset.five]!;
+    oversController.addListener(_handleOversTextChanged);
   }
 
-  Future<void> _loadMyTeams() async {
-    isLoadingTeams.value = true;
-    final response = await getMyTeamsUseCase();
-    isLoadingTeams.value = false;
-    if (response.isResult) {
-      myTeams.assignAll(response.result.data?.teams ?? const []);
-    }
-  }
+  /// The selected team's own logo — `null` in free-text mode, or when the
+  /// selected team never had one uploaded. Purely presentational (the Teams
+  /// banner's avatar); [createMatch] never reads these.
+  String? selectedTeamALogoUrl;
+  String? selectedTeamBLogoUrl;
 
-  String? _nameOf(String? teamId) {
-    if (teamId == null) return null;
-    for (final team in myTeams) {
-      if (team.id == teamId) return team.name;
-    }
-    return null;
-  }
+  /// The name selection last set, so the listeners below can tell a
+  /// programmatic `.text = team.name` assignment (matches, no-op) apart from
+  /// the scorer editing over it or picking a different suggestion (doesn't
+  /// match, clears the selection). Unlike the old chip picker, search
+  /// results are ephemeral — nothing keeps a full team list around to look
+  /// the name back up by id — so the name is captured at selection time
+  /// instead.
+  String? _selectedTeamAName;
+  String? _selectedTeamBName;
 
-  /// Clears [selectedTeamAId] the moment the field's text stops matching the
-  /// selected team's own name — whether that's the scorer manually retyping
-  /// over it, or [clearTeamASelection]'s own `.clear()` call. A
-  /// programmatic `.text = team.name` assignment from [selectTeamA] always
-  /// matches, so it never triggers this.
   void _handleTeamATextChanged() {
-    final selectedId = selectedTeamAId.value;
-    if (selectedId == null) return;
-    if (teamAController.text != _nameOf(selectedId)) {
+    if (selectedTeamAId.value == null) return;
+    if (teamAController.text != _selectedTeamAName) {
       selectedTeamAId.value = null;
+      _selectedTeamAName = null;
+      selectedTeamALogoUrl = null;
     }
   }
 
   void _handleTeamBTextChanged() {
-    final selectedId = selectedTeamBId.value;
-    if (selectedId == null) return;
-    if (teamBController.text != _nameOf(selectedId)) {
+    if (selectedTeamBId.value == null) return;
+    if (teamBController.text != _selectedTeamBName) {
       selectedTeamBId.value = null;
+      _selectedTeamBName = null;
+      selectedTeamBLogoUrl = null;
     }
   }
 
-  /// Tapping the already-selected chip again is the explicit "clear
-  /// selection" action; tapping a different chip replaces the selection.
   void selectTeamA(TeamSummary team) {
-    if (selectedTeamAId.value == team.id) {
-      clearTeamASelection();
-      return;
-    }
     selectedTeamAId.value = team.id;
-    teamAController.text = team.name;
-  }
-
-  void clearTeamASelection() {
-    selectedTeamAId.value = null;
-    teamAController.clear();
+    _selectedTeamAName = team.name;
+    selectedTeamALogoUrl = team.logoUrl;
+    teamAController.value = TextEditingValue(
+      text: team.name,
+      selection: TextSelection.collapsed(offset: team.name.length),
+    );
   }
 
   void selectTeamB(TeamSummary team) {
-    if (selectedTeamBId.value == team.id) {
-      clearTeamBSelection();
-      return;
-    }
     selectedTeamBId.value = team.id;
-    teamBController.text = team.name;
+    _selectedTeamBName = team.name;
+    selectedTeamBLogoUrl = team.logoUrl;
+    teamBController.value = TextEditingValue(
+      text: team.name,
+      selection: TextSelection.collapsed(offset: team.name.length),
+    );
   }
 
-  void clearTeamBSelection() {
+  /// Free-text mode — the picker screen returned a typed name with no
+  /// matching team, so submitting will create a brand-new team from it,
+  /// exactly like leaving the old inline field on free text did.
+  void setTeamAFreeText(String name) {
+    selectedTeamAId.value = null;
+    _selectedTeamAName = null;
+    selectedTeamALogoUrl = null;
+    teamAController.text = name;
+  }
+
+  void setTeamBFreeText(String name) {
     selectedTeamBId.value = null;
-    teamBController.clear();
+    _selectedTeamBName = null;
+    selectedTeamBLogoUrl = null;
+    teamBController.text = name;
+  }
+
+  /// Pushes [AppRoutes.selectTeam] and applies whatever comes back — an
+  /// existing team (`is TeamSummary`) via [selectTeamA], or a confirmed new
+  /// name (`is String`) via [setTeamAFreeText]. `null` means the scorer
+  /// backed out without picking anything, so the field is left untouched.
+  Future<void> onTapTeamA() async {
+    final result = await Get.toNamed<dynamic>(
+      AppRoutes.selectTeam,
+      arguments: SelectTeamArgs(
+        title: TranslationKeys.selectTeamATitle.tr,
+        initialQuery: teamAController.text,
+      ),
+    );
+    if (result is TeamSummary) {
+      selectTeamA(result);
+    } else if (result is String && result.trim().isNotEmpty) {
+      setTeamAFreeText(result.trim());
+    }
+  }
+
+  Future<void> onTapTeamB() async {
+    final result = await Get.toNamed<dynamic>(
+      AppRoutes.selectTeam,
+      arguments: SelectTeamArgs(
+        title: TranslationKeys.selectTeamBTitle.tr,
+        initialQuery: teamBController.text,
+      ),
+    );
+    if (result is TeamSummary) {
+      selectTeamB(result);
+    } else if (result is String && result.trim().isNotEmpty) {
+      setTeamBFreeText(result.trim());
+    }
+  }
+
+  /// Trades everything about side A and side B — name, selection and logo.
+  /// The id/name/logo are set *before* the controller text, so the
+  /// text-changed listeners above (which clear a selection the moment the
+  /// field's text stops matching it) see the freshly swapped text already
+  /// matching the freshly swapped name, and leave it alone.
+  void swapTeams() {
+    final aText = teamAController.text;
+    final bText = teamBController.text;
+    final aId = selectedTeamAId.value;
+    final bId = selectedTeamBId.value;
+    final aName = _selectedTeamAName;
+    final bName = _selectedTeamBName;
+    final aLogo = selectedTeamALogoUrl;
+    final bLogo = selectedTeamBLogoUrl;
+
+    selectedTeamAId.value = bId;
+    _selectedTeamAName = bName;
+    selectedTeamALogoUrl = bLogo;
+    selectedTeamBId.value = aId;
+    _selectedTeamBName = aName;
+    selectedTeamBLogoUrl = aLogo;
+
+    teamAController.text = bText;
+    teamBController.text = aText;
+  }
+
+  void selectOversPreset(OversPreset preset) {
+    selectedOversPreset.value = preset;
+    final value = _oversPresetValues[preset];
+    if (value != null) oversController.text = value;
+  }
+
+  void _handleOversTextChanged() {
+    final current = selectedOversPreset.value;
+    if (current == OversPreset.custom) return;
+    if (oversController.text != _oversPresetValues[current]) {
+      selectedOversPreset.value = OversPreset.custom;
+    }
   }
 
   Future<void> createMatch() async {
+    // Team A/B no longer live inside the Form — they're picked by
+    // navigating to SelectTeamScreen rather than typed into a FormField —
+    // so they're validated explicitly here with the same [validateTeamName]
+    // the old inline fields used, instead of via formKey.currentState.
+    // Overs is still a real FormField, so this still gates on it.
     if (!formKey.currentState!.validate()) {
+      return;
+    }
+    final teamAFieldError = validateTeamName(teamAController.text);
+    final teamBFieldError = validateTeamName(teamBController.text);
+    if (teamAFieldError != null || teamBFieldError != null) {
+      CricketSnackbar.showAlertMessage(teamAFieldError ?? teamBFieldError!);
       return;
     }
 

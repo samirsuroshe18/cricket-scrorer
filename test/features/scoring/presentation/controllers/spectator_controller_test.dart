@@ -18,6 +18,7 @@ import 'package:cricket_scorer/features/scoring/data/models/response/match_histo
 import 'package:cricket_scorer/features/scoring/data/models/response/match_abandoned_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/match_complete_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/my_teams_res.dart';
+import 'package:cricket_scorer/features/scoring/domain/team_owner_filter.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/my_career_stats_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/over_complete_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/public_match_res.dart';
@@ -176,7 +177,12 @@ class _FakeMatchRepository implements MatchRepository {
       throw UnimplementedError('Not exercised in this test.');
 
   @override
-  Future<Either<CricketResponse<MyTeamsRes>, CricketFailure>> getMyTeams() =>
+  Future<Either<CricketResponse<MyTeamsRes>, CricketFailure>> getMyTeams({
+    String? search,
+    int page = 1,
+    int limit = 20,
+    TeamOwnerFilter? owner,
+  }) =>
       throw UnimplementedError('Not exercised in this test.');
 
   @override

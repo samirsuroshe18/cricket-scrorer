@@ -35,7 +35,15 @@ MyTeamsRes _$MyTeamsResFromJson(Map<String, dynamic> json) => MyTeamsRes(
   teams: (json['teams'] as List<dynamic>)
       .map((e) => TeamSummary.fromJson(e as Map<String, dynamic>))
       .toList(),
+  page: (json['page'] as num).toInt(),
+  limit: (json['limit'] as num).toInt(),
+  total: (json['total'] as num).toInt(),
 );
 
 Map<String, dynamic> _$MyTeamsResToJson(MyTeamsRes instance) =>
-    <String, dynamic>{'teams': instance.teams.map((e) => e.toJson()).toList()};
+    <String, dynamic>{
+      'teams': instance.teams.map((e) => e.toJson()).toList(),
+      'page': instance.page,
+      'limit': instance.limit,
+      'total': instance.total,
+    };

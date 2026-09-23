@@ -53,35 +53,23 @@ class _RecordingCreateMatchUseCase implements CreateMatchUseCase {
       throw UnimplementedError('Not exercised in this test.');
 }
 
-class _FakeGetMyTeamsUseCase implements GetMyTeamsUseCase {
-  List<TeamSummary> teams = const [];
-
-  @override
-  Future<Either<CricketResponse<MyTeamsRes>, CricketFailure>> call({
-    void params,
-  }) async => Either.result(
-    CricketResponse(message: 'ok', data: MyTeamsRes(teams: teams)),
-  );
-
+/// Never actually called by these tests — SelectTeamScreen owns its own
+/// GetMyTeamsUseCase call now; CreateMatchController only reacts to
+/// whatever that screen hands back via Get.back(result: ...).
+class _UnusedGetMyTeamsUseCase implements GetMyTeamsUseCase {
   @override
   dynamic noSuchMethod(Invocation invocation) =>
       throw UnimplementedError('Not exercised in this test.');
 }
 
 void main() {
-  late _FakeGetMyTeamsUseCase getMyTeamsUseCase;
   late CreateMatchController controller;
 
   setUp(() {
     Get.testMode = true;
-    getMyTeamsUseCase = _FakeGetMyTeamsUseCase()
-      ..teams = [
-        TeamSummary(id: 'team-1', name: 'Mumbai Indians'),
-        TeamSummary(id: 'team-2', name: 'Chennai Super Kings'),
-      ];
     controller = CreateMatchController(
       createMatchUseCase: _UnusedCreateMatchUseCase(),
-      getMyTeamsUseCase: getMyTeamsUseCase,
+      getMyTeamsUseCase: _UnusedGetMyTeamsUseCase(),
     );
     controller.onInit();
   });
@@ -91,54 +79,234 @@ void main() {
     Get.reset();
   });
 
-  test('onInit loads the caller\'s own teams', () async {
-    await Future<void>.delayed(Duration.zero);
-    expect(controller.myTeams.map((t) => t.id), ['team-1', 'team-2']);
+  test('overs defaults to the 5-over preset on init', () {
+    expect(controller.oversController.text, '5');
+    expect(controller.selectedOversPreset.value, OversPreset.five);
   });
 
-  test('selecting a team sets its id and fills the name field', () async {
-    await Future<void>.delayed(Duration.zero);
+  test('selecting a team sets its id, logo and fills the name field', () async {
+    final team = TeamSummary(
+      id: 'team-1',
+      name: 'Mumbai Indians',
+      logoUrl: 'https://example.com/mi.png',
+    );
 
-    controller.selectTeamA(controller.myTeams.first);
+    controller.selectTeamA(team);
 
     expect(controller.selectedTeamAId.value, 'team-1');
     expect(controller.teamAController.text, 'Mumbai Indians');
+    expect(controller.selectedTeamALogoUrl, 'https://example.com/mi.png');
   });
 
-  test('retyping the field after a selection clears the selected id', () async {
-    await Future<void>.delayed(Duration.zero);
-
-    controller.selectTeamA(controller.myTeams.first);
+  test('retyping the field after a selection clears the selected id and logo', () async {
+    controller.selectTeamA(
+      TeamSummary(id: 'team-1', name: 'Mumbai Indians', logoUrl: 'x'),
+    );
     controller.teamAController.text = 'Something else';
 
     expect(controller.selectedTeamAId.value, isNull);
+    expect(controller.selectedTeamALogoUrl, isNull);
   });
 
-  test('tapping the same chip again clears the selection and the field', () async {
-    await Future<void>.delayed(Duration.zero);
+  test('selecting a second team replaces the first selection', () async {
+    controller.selectTeamA(TeamSummary(id: 'team-1', name: 'Mumbai Indians'));
+    controller.selectTeamA(TeamSummary(id: 'team-2', name: 'Chennai Super Kings'));
 
-    final team = controller.myTeams.first;
-    controller.selectTeamA(team);
-    controller.selectTeamA(team);
+    expect(controller.selectedTeamAId.value, 'team-2');
+    expect(controller.teamAController.text, 'Chennai Super Kings');
+  });
+
+  test('setTeamAFreeText clears any selection and sets the typed name', () {
+    controller.selectTeamA(TeamSummary(id: 'team-1', name: 'Mumbai Indians'));
+
+    controller.setTeamAFreeText('Brand New Team');
 
     expect(controller.selectedTeamAId.value, isNull);
-    expect(controller.teamAController.text, isEmpty);
+    expect(controller.selectedTeamALogoUrl, isNull);
+    expect(controller.teamAController.text, 'Brand New Team');
   });
 
-  // Neither of the two tests above ever calls createMatch() — the fake
-  // there always throws. This is the one integration seam those tests
-  // don't cover: that a selected chip's id actually reaches the outgoing
-  // request, not just the local selection state. createMatch() reads
-  // formKey.currentState, so this needs a real mounted Form rather than a
-  // bare unit test.
+  group('swapTeams', () {
+    test('trades typed names between two free-text sides', () {
+      controller.setTeamAFreeText('Alpha');
+      controller.setTeamBFreeText('Bravo');
+
+      controller.swapTeams();
+
+      expect(controller.teamAController.text, 'Bravo');
+      expect(controller.teamBController.text, 'Alpha');
+    });
+
+    test('trades selected-team ids and logos along with the names', () {
+      controller.selectTeamA(
+        TeamSummary(id: 'team-1', name: 'Mumbai Indians', logoUrl: 'mi.png'),
+      );
+      controller.setTeamBFreeText('New Opponent');
+
+      controller.swapTeams();
+
+      expect(controller.teamAController.text, 'New Opponent');
+      expect(controller.selectedTeamAId.value, isNull);
+      expect(controller.selectedTeamALogoUrl, isNull);
+
+      expect(controller.teamBController.text, 'Mumbai Indians');
+      expect(controller.selectedTeamBId.value, 'team-1');
+      expect(controller.selectedTeamBLogoUrl, 'mi.png');
+    });
+
+    test('a swapped-in selection survives its own text-changed listener', () {
+      // Regression guard: swapTeams sets id/name/logo *before* the
+      // controller text, specifically so the text-changed listener (which
+      // clears a selection the moment the field stops matching it) sees the
+      // new text already matching the new name and leaves it alone.
+      controller.selectTeamA(TeamSummary(id: 'team-1', name: 'Mumbai Indians'));
+      controller.selectTeamB(TeamSummary(id: 'team-2', name: 'Chennai Super Kings'));
+
+      controller.swapTeams();
+
+      expect(controller.selectedTeamAId.value, 'team-2');
+      expect(controller.selectedTeamBId.value, 'team-1');
+    });
+  });
+
+  group('overs presets', () {
+    test('tapping T20 sets the field to 20 and marks the preset selected', () {
+      controller.selectOversPreset(OversPreset.t20);
+
+      expect(controller.oversController.text, '20');
+      expect(controller.selectedOversPreset.value, OversPreset.t20);
+    });
+
+    test('tapping Custom leaves the field as-is for manual entry', () {
+      controller.oversController.text = '15';
+
+      controller.selectOversPreset(OversPreset.custom);
+
+      expect(controller.oversController.text, '15');
+      expect(controller.selectedOversPreset.value, OversPreset.custom);
+    });
+
+    test('editing the field away from the selected preset falls back to custom', () {
+      controller.selectOversPreset(OversPreset.t20);
+
+      controller.oversController.text = '18';
+
+      expect(controller.selectedOversPreset.value, OversPreset.custom);
+    });
+  });
+
+  group('onTapTeamA/onTapTeamB navigation', () {
+    Widget wrap({required VoidCallback onTap, required GetPageBuilder pickerPage}) {
+      return GetMaterialApp(
+        theme: AppTheme.lightTheme,
+        home: Scaffold(
+          body: TextButton(onPressed: onTap, child: const Text('open picker')),
+        ),
+        getPages: [GetPage(name: AppRoutes.selectTeam, page: pickerPage)],
+      );
+    }
+
+    testWidgets('applies an existing team the picker returns', (tester) async {
+      final picked = TeamSummary(id: 'team-9', name: 'Picked FC', logoUrl: 'p.png');
+      await tester.pumpWidget(
+        wrap(
+          onTap: controller.onTapTeamA,
+          pickerPage: () {
+            WidgetsBinding.instance.addPostFrameCallback(
+              (_) => Get.back(result: picked),
+            );
+            return const Scaffold(body: SizedBox());
+          },
+        ),
+      );
+
+      await tester.tap(find.text('open picker'));
+      await tester.pumpAndSettle();
+
+      expect(controller.selectedTeamAId.value, 'team-9');
+      expect(controller.teamAController.text, 'Picked FC');
+      expect(controller.selectedTeamALogoUrl, 'p.png');
+    });
+
+    testWidgets('treats a returned String as a confirmed new team name', (tester) async {
+      await tester.pumpWidget(
+        wrap(
+          onTap: controller.onTapTeamB,
+          pickerPage: () {
+            WidgetsBinding.instance.addPostFrameCallback(
+              (_) => Get.back(result: 'Brand New XI'),
+            );
+            return const Scaffold(body: SizedBox());
+          },
+        ),
+      );
+
+      await tester.tap(find.text('open picker'));
+      await tester.pumpAndSettle();
+
+      expect(controller.selectedTeamBId.value, isNull);
+      expect(controller.teamBController.text, 'Brand New XI');
+    });
+
+    testWidgets('backing out with no result leaves the field untouched', (tester) async {
+      controller.setTeamAFreeText('Already Here');
+      await tester.pumpWidget(
+        wrap(
+          onTap: controller.onTapTeamA,
+          pickerPage: () {
+            WidgetsBinding.instance.addPostFrameCallback((_) => Get.back<dynamic>());
+            return const Scaffold(body: SizedBox());
+          },
+        ),
+      );
+
+      await tester.tap(find.text('open picker'));
+      await tester.pumpAndSettle();
+
+      expect(controller.teamAController.text, 'Already Here');
+    });
+  });
+
+  group('createMatch() team-name validation', () {
+    testWidgets('an empty Team A blocks submission with the required message', (
+      tester,
+    ) async {
+      final recordingUseCase = _RecordingCreateMatchUseCase();
+      final widgetController = CreateMatchController(
+        createMatchUseCase: recordingUseCase,
+        getMyTeamsUseCase: _UnusedGetMyTeamsUseCase(),
+      );
+      widgetController.onInit();
+      await tester.pumpWidget(
+        GetMaterialApp(
+          theme: AppTheme.lightTheme,
+          home: Form(key: widgetController.formKey, child: const SizedBox()),
+        ),
+      );
+      await tester.pump();
+
+      widgetController.setTeamBFreeText('Chennai Super Kings');
+      // Team A left blank.
+
+      unawaited(widgetController.createMatch());
+      await tester.pumpAndSettle();
+
+      expect(recordingUseCase.lastRequest, isNull);
+      widgetController.onClose();
+    });
+  });
+
+  // This is the one integration seam the unit tests above don't cover: that
+  // a selected team's id actually reaches the outgoing request, not just
+  // the local selection state. createMatch() reads formKey.currentState, so
+  // this needs a real mounted Form rather than a bare unit test.
   testWidgets(
     'createMatch() sends the selected team\'s id, not its typed name, as teamAId',
     (tester) async {
       final recordingUseCase = _RecordingCreateMatchUseCase();
       final widgetController = CreateMatchController(
         createMatchUseCase: recordingUseCase,
-        getMyTeamsUseCase: _FakeGetMyTeamsUseCase()
-          ..teams = [TeamSummary(id: 'team-1', name: 'Mumbai Indians')],
+        getMyTeamsUseCase: _UnusedGetMyTeamsUseCase(),
       );
       widgetController.onInit();
       await tester.pumpWidget(
@@ -161,7 +329,9 @@ void main() {
       // it needs a pump() to advance the fake clock, or it hangs forever.
       await tester.pump();
 
-      widgetController.selectTeamA(widgetController.myTeams.first);
+      widgetController.selectTeamA(
+        TeamSummary(id: 'team-1', name: 'Mumbai Indians'),
+      );
       widgetController.teamBController.text = 'Chennai Super Kings';
       widgetController.oversController.text = '20';
 

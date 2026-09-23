@@ -40,6 +40,7 @@ import 'package:cricket_scorer/features/scoring/data/models/request/update_playe
 import 'package:cricket_scorer/features/scoring/data/models/response/player_profile_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/match_bowlers_res.dart';
 import 'package:cricket_scorer/features/scoring/domain/repositories/match_repository.dart';
+import 'package:cricket_scorer/features/scoring/domain/team_owner_filter.dart';
 
 class MatchRepositoryImpl extends MatchRepository {
   final MatchApiService matchApiService;
@@ -427,10 +428,14 @@ class MatchRepositoryImpl extends MatchRepository {
   }
 
   @override
-  Future<Either<CricketResponse<MyTeamsRes>, CricketFailure>>
-  getMyTeams() async {
+  Future<Either<CricketResponse<MyTeamsRes>, CricketFailure>> getMyTeams({
+    String? search,
+    int page = 1,
+    int limit = 20,
+    TeamOwnerFilter? owner,
+  }) async {
     Either<ApiResponseModel, CricketFailure> response = await matchApiService
-        .getMyTeams();
+        .getMyTeams(search: search, page: page, limit: limit, owner: owner);
     if (response.isResult) {
       return Either.result(
         CricketResponse(
