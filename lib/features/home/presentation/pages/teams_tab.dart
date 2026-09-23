@@ -228,14 +228,25 @@ class _TeamsTabState extends State<TeamsTab> {
                 _refreshFailedStrip(myTeams.loadMyTeams),
                 if (shown.isNotEmpty) 12.h,
               ],
-              if (shown.isNotEmpty)
+              if (shown.isNotEmpty) ...[
                 CricketGroupedCard(
                   children: [
                     for (final team in visible)
                       TeamRow(team: team, onReturn: myTeams.loadMyTeams),
                   ],
-                )
-              else if (!failed)
+                ),
+                // Only once the list is expanded in place and unfiltered —
+                // filtering only narrows what's already loaded (see the
+                // class doc comment), so a "load more" affordance under a
+                // filtered result would promise a search this app doesn't do.
+                if (!_isFiltering && _showAllTeams && myTeams.hasMore.value) ...[
+                  8.h,
+                  _LoadMoreTeamsButton(
+                    isLoading: myTeams.isLoadingMore.value,
+                    onTap: () => unawaited(myTeams.loadMoreTeams()),
+                  ),
+                ],
+              ] else if (!failed)
                 HomeEmptyCard(
                   icon: Icons.groups_outlined,
                   message: TranslationKeys.myTeamsEmptyHint.tr,
@@ -353,6 +364,45 @@ class _TeamsTabState extends State<TeamsTab> {
       message: TranslationKeys.homeRefreshFailed.tr,
       actionLabel: TranslationKeys.retry.tr,
       onTap: () => unawaited(reload()),
+    );
+  }
+}
+
+/// A tap fallback for the "See all" team list, which lives inside a `Column`
+/// rather than a scrollable list of its own — same role as `matches_tab`'s
+/// `_LoadMoreButton`, whose scroll-to-bottom trigger doesn't apply here.
+class _LoadMoreTeamsButton extends StatelessWidget {
+  const _LoadMoreTeamsButton({required this.isLoading, required this.onTap});
+
+  final bool isLoading;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: Ink(
+        decoration: context.homeCardDecoration(alwaysBordered: true),
+        child: InkWell(
+          onTap: isLoading ? null : onTap,
+          borderRadius: 12.radius,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(minHeight: 48),
+            child: Center(
+              child: isLoading
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : CricketText(
+                      text: TranslationKeys.loadMoreTeams.tr,
+                      style: context.homeText(14),
+                    ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

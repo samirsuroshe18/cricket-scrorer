@@ -1,4 +1,5 @@
 import 'package:cricket_scorer/core/error/cricket_failure.dart';
+import 'package:cricket_scorer/core/global/widgets/snackbars/cricket_snackbar.dart';
 import 'package:cricket_scorer/features/organization/data/models/request/create_organization_team_req.dart';
 import 'package:cricket_scorer/features/organization/domain/usecases/create_organization_team.dart';
 import 'package:cricket_scorer/features/scoring/data/models/request/create_team_req.dart';
@@ -23,9 +24,14 @@ class MyTeamsController extends GetxController {
     required this.createOrganizationTeamUseCase,
   });
 
+  static const int _pageSize = 20;
+
   final teams = <TeamSummary>[].obs;
   final isLoading = true.obs;
+  final isLoadingMore = false.obs;
+  final hasMore = true.obs;
   final loadError = Rxn<String>();
+  int _page = 1;
 
   @override
   void onInit() {
@@ -33,18 +39,56 @@ class MyTeamsController extends GetxController {
     loadMyTeams();
   }
 
+  /// First page — also what a pull-to-refresh and a post-create reload fall
+  /// back to, so either one collapses whatever was paged in via
+  /// [loadMoreTeams] back to page 1. Same reset-on-refresh behavior as
+  /// `HomeController.loadHistory`.
   Future<void> loadMyTeams() async {
     isLoading.value = true;
     loadError.value = null;
+    _page = 1;
 
-    final response = await getMyTeamsUseCase();
+    final response = await getMyTeamsUseCase(
+      params: const GetMyTeamsParams(page: 1, limit: _pageSize),
+    );
 
     isLoading.value = false;
 
     if (response.isResult) {
-      teams.assignAll(response.result.data?.teams ?? []);
+      final data = response.result.data;
+      teams.assignAll(data?.teams ?? []);
+      hasMore.value = data?.hasMore ?? false;
     } else {
       loadError.value = response.fallback.message;
+    }
+  }
+
+  /// Appends the next page — the "See all" list's own load-more affordance.
+  /// A no-op while a load is already in flight or nothing is left, rather
+  /// than a disabled affordance the caller has to notice. Same shape as
+  /// `HomeController.loadMore`/`TeamProfileController.loadMoreMatches`.
+  Future<void> loadMoreTeams() async {
+    if (isLoadingMore.value || !hasMore.value) return;
+    isLoadingMore.value = true;
+
+    final response = await getMyTeamsUseCase(
+      params: GetMyTeamsParams(page: _page + 1, limit: _pageSize),
+    );
+
+    isLoadingMore.value = false;
+
+    if (response.isResult) {
+      final data = response.result.data;
+      if (data != null) {
+        teams.addAll(data.teams);
+        hasMore.value = data.hasMore;
+        _page += 1;
+      }
+    } else {
+      // Left `hasMore` untouched on purpose: a transient failure shouldn't
+      // permanently hide the rest of the list. Tapping load-more again
+      // retries rather than needing a dedicated retry affordance.
+      CricketSnackbar.showErrorMessage(response.fallback.message);
     }
   }
 
