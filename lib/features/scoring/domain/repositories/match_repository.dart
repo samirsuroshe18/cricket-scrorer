@@ -35,6 +35,7 @@ import 'package:cricket_scorer/features/scoring/data/models/response/match_bowle
 import 'package:cricket_scorer/features/scoring/data/models/response/assign_scorer_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/request/update_player_req.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/player_profile_res.dart';
+import 'package:cricket_scorer/features/scoring/domain/team_owner_filter.dart';
 
 abstract class MatchRepository {
   Future<Either<CricketResponse<CreateMatchRes>, CricketFailure>> createMatch({
@@ -209,9 +210,17 @@ abstract class MatchRepository {
     required String matchId,
   });
 
-  /// `GET /v1/team` — the caller's own teams, source for the "reuse this
-  /// team" picker on match creation.
-  Future<Either<CricketResponse<MyTeamsRes>, CricketFailure>> getMyTeams();
+  /// `GET /v1/team` — a page of the caller's own teams, source for the
+  /// team-search field on match creation. `search` narrows by name/shortName
+  /// (case-insensitive substring); omitted or blank means no filter. `owner`
+  /// narrows to teams the caller created (`mine`) or teams visible only
+  /// through organization membership (`others`); omitted means both.
+  Future<Either<CricketResponse<MyTeamsRes>, CricketFailure>> getMyTeams({
+    String? search,
+    int page = 1,
+    int limit = 20,
+    TeamOwnerFilter? owner,
+  });
 
   /// `GET /v1/team/:teamId` — display name plus the roster accumulated
   /// across every match this team has been attached to.

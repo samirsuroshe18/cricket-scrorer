@@ -11,6 +11,7 @@ import 'package:cricket_scorer/features/scoring/data/models/request/start_inning
 import 'package:cricket_scorer/features/scoring/data/models/request/sync_req.dart';
 import 'package:cricket_scorer/features/scoring/data/models/request/undo_ball_req.dart';
 import 'package:cricket_scorer/features/scoring/data/models/request/update_player_req.dart';
+import 'package:cricket_scorer/features/scoring/domain/team_owner_filter.dart';
 import 'package:dio/dio.dart' show FormData;
 
 class MatchApiService {
@@ -61,9 +62,24 @@ class MatchApiService {
     );
   }
 
-  /// `GET /v1/team` — the caller's own teams.
-  Future<Either<ApiResponseModel, CricketFailure>> getMyTeams() async {
-    return await apiClient.get(endpoint: matchEndpoint.myTeams);
+  /// `GET /v1/team` — a page of the caller's own teams. `search` maps to
+  /// `?q=`, same convention as [getMatchHistory]'s `query`; `owner` maps to
+  /// `?owner=mine|others`.
+  Future<Either<ApiResponseModel, CricketFailure>> getMyTeams({
+    String? search,
+    int page = 1,
+    int limit = 20,
+    TeamOwnerFilter? owner,
+  }) async {
+    return await apiClient.get(
+      endpoint: matchEndpoint.myTeams,
+      queryParameters: {
+        'page': page,
+        'limit': limit,
+        if (search != null && search.trim().isNotEmpty) 'q': search.trim(),
+        if (owner != null) 'owner': owner.queryValue,
+      },
+    );
   }
 
   /// `POST /v1/team` — creates a standalone team owned by the caller.

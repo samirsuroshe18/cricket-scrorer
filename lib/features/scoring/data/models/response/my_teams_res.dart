@@ -54,12 +54,30 @@ class TeamSummary {
   Map<String, dynamic> toJson() => _$TeamSummaryToJson(this);
 }
 
-/// `GET /v1/team` — the caller's own teams.
+/// `GET /v1/team` — a page of the caller's own teams, newest first.
+/// `total` is the full count regardless of `page`/`limit`, so the caller can
+/// tell whether more pages exist without a separate request.
 @JsonSerializable(explicitToJson: true)
 class MyTeamsRes {
   final List<TeamSummary> teams;
+  final int page;
+  final int limit;
+  final int total;
 
-  MyTeamsRes({required this.teams});
+  MyTeamsRes({
+    required this.teams,
+    required this.page,
+    required this.limit,
+    required this.total,
+  });
+
+  /// Whether a subsequent page exists — the "See all" list's "load more"
+  /// trigger reads this rather than comparing `teams.length` against
+  /// `limit`, which would be wrong on the exact-multiple boundary (a `total`
+  /// of exactly `page * limit` has no next page, but that comparison alone
+  /// can't tell that apart from "the next page happens to be full too").
+  /// Same reasoning as `MatchHistoryRes.hasMore`.
+  bool get hasMore => page * limit < total;
 
   factory MyTeamsRes.fromJson(Map<String, dynamic> json) =>
       _$MyTeamsResFromJson(json);

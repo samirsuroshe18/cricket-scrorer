@@ -26,6 +26,12 @@ class AppCustomColors extends ThemeExtension<AppCustomColors> {
   final Color statusInfo;
   final Color statusSuccess;
 
+  /// The toss coin's metallic edge (`CoinFlip`) — a dedicated token rather
+  /// than reusing `statusWarning`, even though both land in the same amber
+  /// family: the coin is decorative, not a severity signal, so it shouldn't
+  /// move if a future warning-color change is only about warnings.
+  final Color coinRim;
+
   const AppCustomColors({
     required this.liveCard,
     required this.premiumCard,
@@ -43,6 +49,7 @@ class AppCustomColors extends ThemeExtension<AppCustomColors> {
     required this.statusWarning,
     required this.statusInfo,
     required this.statusSuccess,
+    required this.coinRim,
   });
 
   @override
@@ -63,6 +70,7 @@ class AppCustomColors extends ThemeExtension<AppCustomColors> {
     Color? statusWarning,
     Color? statusInfo,
     Color? statusSuccess,
+    Color? coinRim,
   }) {
     return AppCustomColors(
       liveCard: liveCard ?? this.liveCard,
@@ -81,6 +89,7 @@ class AppCustomColors extends ThemeExtension<AppCustomColors> {
       statusWarning: statusWarning ?? this.statusWarning,
       statusInfo: statusInfo ?? this.statusInfo,
       statusSuccess: statusSuccess ?? this.statusSuccess,
+      coinRim: coinRim ?? this.coinRim,
     );
   }
 
@@ -108,6 +117,7 @@ class AppCustomColors extends ThemeExtension<AppCustomColors> {
       statusWarning: Color.lerp(statusWarning, other.statusWarning, t)!,
       statusInfo: Color.lerp(statusInfo, other.statusInfo, t)!,
       statusSuccess: Color.lerp(statusSuccess, other.statusSuccess, t)!,
+      coinRim: Color.lerp(coinRim, other.coinRim, t)!,
     );
   }
 }

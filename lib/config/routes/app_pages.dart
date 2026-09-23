@@ -22,6 +22,7 @@ import 'package:cricket_scorer/features/home/presentation/pages/main_shell_scree
 import 'package:cricket_scorer/features/home/presentation/pages/settings_screen.dart';
 import 'package:cricket_scorer/features/notifications/presentation/pages/notifications_screen.dart';
 import 'package:cricket_scorer/features/scoring/presentation/bindings/create_match_binding.dart';
+import 'package:cricket_scorer/features/scoring/presentation/bindings/select_team_binding.dart';
 import 'package:cricket_scorer/features/scoring/presentation/bindings/result_binding.dart';
 import 'package:cricket_scorer/features/scoring/presentation/bindings/player_stats_binding.dart';
 import 'package:cricket_scorer/features/scoring/presentation/bindings/score_ball_binding.dart';
@@ -29,6 +30,7 @@ import 'package:cricket_scorer/features/scoring/presentation/bindings/spectator_
 import 'package:cricket_scorer/features/scoring/presentation/bindings/team_profile_binding.dart';
 import 'package:cricket_scorer/features/scoring/presentation/bindings/claim_player_binding.dart';
 import 'package:cricket_scorer/features/scoring/presentation/pages/create_match_screen.dart';
+import 'package:cricket_scorer/features/scoring/presentation/pages/select_team_screen.dart';
 import 'package:cricket_scorer/features/scoring/presentation/pages/result_screen.dart';
 import 'package:cricket_scorer/features/scoring/presentation/pages/player_stats_screen.dart';
 import 'package:cricket_scorer/features/scoring/presentation/pages/claim_player_screen.dart';
@@ -121,6 +123,11 @@ abstract class AppPages {
       name: AppRoutes.createMatch,
       page: () => const CreateMatchScreen(),
       binding: CreateMatchBinding(),
+    ),
+    GetPage(
+      name: AppRoutes.selectTeam,
+      page: () => const SelectTeamScreen(),
+      binding: SelectTeamBinding(),
     ),
     GetPage(
       name: AppRoutes.scoreBall,

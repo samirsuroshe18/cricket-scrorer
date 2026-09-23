@@ -45,6 +45,8 @@ dependencies:
   uuid: ^4.6.0
   app_links: ^6.4.0
   pinput: ^6.0.2
+  # Search-as-you-type team picker on the create-match screen.
+  flutter_typeahead: ^6.0.0
 
 dev_dependencies:
   flutter_test:

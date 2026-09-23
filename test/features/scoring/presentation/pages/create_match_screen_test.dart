@@ -1,7 +1,6 @@
+import 'package:cricket_scorer/config/routes/app_routes.dart';
 import 'package:cricket_scorer/config/theme/app_theme.dart';
-import 'package:cricket_scorer/core/error/cricket_failure.dart';
-import 'package:cricket_scorer/core/network/models/cricket_response.dart';
-import 'package:cricket_scorer/core/utils/either_util.dart';
+import 'package:cricket_scorer/core/translations/translation_keys.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/my_teams_res.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/create_match.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/get_my_teams.dart';
@@ -11,65 +10,133 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart';
 
-/// Never actually invoked — this test only exercises the form's input
-/// fields, never taps submit.
+/// Never actually invoked — these tests never tap submit.
 class _UnusedCreateMatchUseCase implements CreateMatchUseCase {
   @override
   dynamic noSuchMethod(Invocation invocation) =>
       throw UnimplementedError('Not exercised in this test.');
 }
 
-/// Returns an empty team list — this test only exercises the form's text
-/// fields, never the chip picker.
-class _EmptyGetMyTeamsUseCase implements GetMyTeamsUseCase {
-  @override
-  Future<Either<CricketResponse<MyTeamsRes>, CricketFailure>> call({
-    void params,
-  }) async =>
-      Either.result(CricketResponse(message: 'ok', data: MyTeamsRes(teams: const [])));
-
+/// Never actually invoked — the Teams banner no longer searches directly;
+/// that moved to SelectTeamScreen's own controller.
+class _UnusedGetMyTeamsUseCase implements GetMyTeamsUseCase {
   @override
   dynamic noSuchMethod(Invocation invocation) =>
       throw UnimplementedError('Not exercised in this test.');
 }
 
-// The backend's Team.name schema caps at 50 characters (maxlength: 50);
-// player/bowler name fields already cap client-side at the same limit via
-// `maxLength: 50`, but the team-name fields never did, so a name over 50
-// characters passed this form cleanly and only failed on the backend's own
-// validation -- the "clean client success, confusing backend 400" class of
-// bug the password-length mismatch was.
 void main() {
-  testWidgets(
-    'team name fields cap input at 50 characters, matching Team.name\'s '
-    'backend maxlength',
-    (WidgetTester tester) async {
-      Get.put<CreateMatchController>(
-        CreateMatchController(
-          createMatchUseCase: _UnusedCreateMatchUseCase(),
-          getMyTeamsUseCase: _EmptyGetMyTeamsUseCase(),
-        ),
-      );
+  setUp(() => Get.testMode = true);
+  tearDown(Get.reset);
 
-      await tester.pumpWidget(
-        GetMaterialApp(
-          theme: AppTheme.lightTheme,
-          home: const CreateMatchScreen(),
-        ),
-      );
+  testWidgets('shows a placeholder row for each side before anything is picked', (
+    tester,
+  ) async {
+    Get.put<CreateMatchController>(
+      CreateMatchController(
+        createMatchUseCase: _UnusedCreateMatchUseCase(),
+        getMyTeamsUseCase: _UnusedGetMyTeamsUseCase(),
+      ),
+    );
 
-      final tooLongName = 'A' * 60;
-      final teamAField = find.byType(TextFormField).first;
+    await tester.pumpWidget(
+      GetMaterialApp(theme: AppTheme.lightTheme, home: const CreateMatchScreen()),
+    );
 
-      await tester.enterText(teamAField, tooLongName);
-      await tester.pump();
+    // "Team A"/"Team B" also label the toss coin's faces elsewhere on this
+    // screen, so these are scoped to the Teams-section rows specifically.
+    expect(
+      find.descendant(
+        of: find.byKey(const Key('teamsSection_teamARow')),
+        matching: find.text(TranslationKeys.teamA.tr),
+      ),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(
+        of: find.byKey(const Key('teamsSection_teamBRow')),
+        matching: find.text(TranslationKeys.teamB.tr),
+      ),
+      findsOneWidget,
+    );
+    expect(find.text(TranslationKeys.tapToSelectTeam.tr), findsNWidgets(2));
+  });
 
-      expect(
-        Get.find<CreateMatchController>().teamAController.text.length,
-        lessThanOrEqualTo(50),
-      );
+  testWidgets('the row reflects a team selected on the controller', (tester) async {
+    final controller = Get.put<CreateMatchController>(
+      CreateMatchController(
+        createMatchUseCase: _UnusedCreateMatchUseCase(),
+        getMyTeamsUseCase: _UnusedGetMyTeamsUseCase(),
+      ),
+    );
 
-      Get.reset();
-    },
-  );
+    await tester.pumpWidget(
+      GetMaterialApp(theme: AppTheme.lightTheme, home: const CreateMatchScreen()),
+    );
+
+    controller.selectTeamA(TeamSummary(id: 'team-1', name: 'Mumbai Indians'));
+    await tester.pump();
+
+    // Also appears on the toss coin's face now that CoinFlip is fed the real
+    // team names, so this is scoped to the Teams row specifically.
+    expect(
+      find.descendant(
+        of: find.byKey(const Key('teamsSection_teamARow')),
+        matching: find.text('Mumbai Indians'),
+      ),
+      findsOneWidget,
+    );
+    // Team A's placeholder is gone; Team B's is still there.
+    expect(find.text(TranslationKeys.tapToSelectTeam.tr), findsOneWidget);
+  });
+
+  testWidgets('tapping the Team A row opens SelectTeamScreen', (tester) async {
+    Get.put<CreateMatchController>(
+      CreateMatchController(
+        createMatchUseCase: _UnusedCreateMatchUseCase(),
+        getMyTeamsUseCase: _UnusedGetMyTeamsUseCase(),
+      ),
+    );
+
+    await tester.pumpWidget(
+      GetMaterialApp(
+        theme: AppTheme.lightTheme,
+        home: const CreateMatchScreen(),
+        getPages: [
+          GetPage(
+            name: AppRoutes.selectTeam,
+            page: () => const Scaffold(body: Text('picker screen')),
+          ),
+        ],
+      ),
+    );
+
+    await tester.tap(find.byKey(const Key('teamsSection_teamARow')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('picker screen'), findsOneWidget);
+  });
+
+  testWidgets('swapping with only Team A filled moves it to Team B', (tester) async {
+    final controller = Get.put<CreateMatchController>(
+      CreateMatchController(
+        createMatchUseCase: _UnusedCreateMatchUseCase(),
+        getMyTeamsUseCase: _UnusedGetMyTeamsUseCase(),
+      ),
+    );
+
+    await tester.pumpWidget(
+      GetMaterialApp(theme: AppTheme.lightTheme, home: const CreateMatchScreen()),
+    );
+
+    controller.selectTeamA(TeamSummary(id: 'team-1', name: 'Mumbai Indians'));
+    await tester.pump();
+
+    await tester.tap(find.byTooltip(TranslationKeys.swapTeams.tr));
+    await tester.pump();
+
+    expect(find.text(TranslationKeys.tapToSelectTeam.tr), findsOneWidget);
+    expect(find.text('Mumbai Indians'), findsOneWidget);
+    expect(controller.selectedTeamBId.value, 'team-1');
+  });
 }

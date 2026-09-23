@@ -30,6 +30,9 @@ class AppCustomColorsPalette {
     // WCAG AA) to ~4.7:1 — matches statusWarning's existing precedent of a
     // deliberately darker light-mode shade for use as foreground/text.
     statusSuccess: Color(0xff1A8449),
+    // 4.22:1 against white — a darker gold than statusWarning so the coin
+    // reads as metal, not as a warning color reused.
+    coinRim: Color(0xff9C7519),
   );
 
   static const dark = AppCustomColors(
@@ -54,5 +57,7 @@ class AppCustomColorsPalette {
     statusWarning: Color(0xffFFB84D),
     statusInfo: Color(0xff4D99FF),
     statusSuccess: Color(0xff38D980),
+    // 9.14:1 against the dark card surface.
+    coinRim: Color(0xffF2C14E),
   );
 }

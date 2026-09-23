@@ -23,6 +23,7 @@ import 'package:cricket_scorer/features/scoring/data/models/response/match_histo
 import 'package:cricket_scorer/features/scoring/data/models/response/match_abandoned_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/match_complete_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/my_teams_res.dart';
+import 'package:cricket_scorer/features/scoring/domain/team_owner_filter.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/my_career_stats_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/over_complete_res.dart';
 import 'package:cricket_scorer/features/scoring/data/scoring_constants.dart';
@@ -214,7 +215,12 @@ class _OfflineMatchRepository implements MatchRepository {
   }
 
   @override
-  Future<Either<CricketResponse<MyTeamsRes>, CricketFailure>> getMyTeams() =>
+  Future<Either<CricketResponse<MyTeamsRes>, CricketFailure>> getMyTeams({
+    String? search,
+    int page = 1,
+    int limit = 20,
+    TeamOwnerFilter? owner,
+  }) =>
       throw UnimplementedError('Not exercised in this test.');
 
   @override
@@ -556,7 +562,12 @@ class _MixedMatchRepository implements MatchRepository {
   }
 
   @override
-  Future<Either<CricketResponse<MyTeamsRes>, CricketFailure>> getMyTeams() =>
+  Future<Either<CricketResponse<MyTeamsRes>, CricketFailure>> getMyTeams({
+    String? search,
+    int page = 1,
+    int limit = 20,
+    TeamOwnerFilter? owner,
+  }) =>
       throw UnimplementedError('Not exercised in this test.');
 
   @override
@@ -776,7 +787,12 @@ class _RecordingMatchRepository implements MatchRepository {
   }
 
   @override
-  Future<Either<CricketResponse<MyTeamsRes>, CricketFailure>> getMyTeams() =>
+  Future<Either<CricketResponse<MyTeamsRes>, CricketFailure>> getMyTeams({
+    String? search,
+    int page = 1,
+    int limit = 20,
+    TeamOwnerFilter? owner,
+  }) =>
       throw UnimplementedError('Not exercised in this test.');
 
   @override
@@ -1164,7 +1180,12 @@ class _ServerSimulatingMatchRepository implements MatchRepository {
   }
 
   @override
-  Future<Either<CricketResponse<MyTeamsRes>, CricketFailure>> getMyTeams() =>
+  Future<Either<CricketResponse<MyTeamsRes>, CricketFailure>> getMyTeams({
+    String? search,
+    int page = 1,
+    int limit = 20,
+    TeamOwnerFilter? owner,
+  }) =>
       throw UnimplementedError('Not exercised in this test.');
 
   @override
@@ -1386,7 +1407,12 @@ class _RuleBlockingMatchRepository implements MatchRepository {
   }
 
   @override
-  Future<Either<CricketResponse<MyTeamsRes>, CricketFailure>> getMyTeams() =>
+  Future<Either<CricketResponse<MyTeamsRes>, CricketFailure>> getMyTeams({
+    String? search,
+    int page = 1,
+    int limit = 20,
+    TeamOwnerFilter? owner,
+  }) =>
       throw UnimplementedError('Not exercised in this test.');
 
   @override
@@ -3964,7 +3990,12 @@ class _LockTransitionMatchRepository implements MatchRepository {
       throw UnimplementedError('Not exercised in this test.');
 
   @override
-  Future<Either<CricketResponse<MyTeamsRes>, CricketFailure>> getMyTeams() =>
+  Future<Either<CricketResponse<MyTeamsRes>, CricketFailure>> getMyTeams({
+    String? search,
+    int page = 1,
+    int limit = 20,
+    TeamOwnerFilter? owner,
+  }) =>
       throw UnimplementedError('Not exercised in this test.');
 
   @override

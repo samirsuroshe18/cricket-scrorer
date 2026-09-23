@@ -174,7 +174,24 @@ class TranslationKeys {
   static const String teamNameRequired = 'team_name_required';
   static const String invalidOvers = 'invalid_overs';
   static const String teamNamesMustDiffer = 'team_names_must_differ';
-  static const String reuseExistingTeam = 'reuse_existing_team';
+
+  /// Create-match screen sections and the team-search field
+  static const String matchSectionTeams = 'match_section_teams';
+  static const String matchSectionFormat = 'match_section_format';
+  static const String searchOrAddTeam = 'search_or_add_team';
+  static const String matchVersus = 'match_versus';
+  static const String teamSearchNoMatch = 'team_search_no_match';
+  static const String filterYourTeams = 'filter_your_teams';
+  static const String filterOpponent = 'filter_opponent';
+  static const String oversPresetCustom = 'overs_preset_custom';
+  static const String oversPresetFive = 'overs_preset_five';
+  static const String oversPresetT20 = 'overs_preset_t20';
+  static const String oversPresetOdi = 'overs_preset_odi';
+  static const String selectTeamATitle = 'select_team_a_title';
+  static const String selectTeamBTitle = 'select_team_b_title';
+  static const String useAsNewTeam = 'use_as_new_team';
+  static const String swapTeams = 'swap_teams';
+  static const String tapToSelectTeam = 'tap_to_select_team';
 
   /// Toss (optional at match creation)
   static const String tossOptional = 'toss_optional';
@@ -184,6 +201,8 @@ class TranslationKeys {
   static const String tossDecision = 'toss_decision';
   static const String bat = 'bat';
   static const String bowl = 'bowl';
+  static const String batFirst = 'bat_first';
+  static const String bowlFirst = 'bowl_first';
   static const String tossIncomplete = 'toss_incomplete';
   static const String wonTheToss = 'won_the_toss';
   static const String electedTo = 'elected_to';
@@ -502,6 +521,7 @@ class TranslationKeys {
   static const String filterAll = 'filter_all';
   static const String myTeams = 'my_teams_section';
   static const String myTeamsEmptyHint = 'my_teams_empty_hint';
+  static const String loadMoreTeams = 'load_more_teams';
   static const String roleOwner = 'role_owner';
   static const String roleMember = 'role_member';
   static const String searchTeamsHint = 'search_teams_hint';
