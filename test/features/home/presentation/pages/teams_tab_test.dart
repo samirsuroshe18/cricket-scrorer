@@ -68,9 +68,13 @@ class _TeamsController extends MyTeamsController {
       );
 
   int reloads = 0;
+  int loadMores = 0;
 
   @override
   Future<void> loadMyTeams() async => reloads++;
+
+  @override
+  Future<void> loadMoreTeams() async => loadMores++;
 }
 
 class _OrgsController extends OrganizationsListController {
@@ -200,6 +204,63 @@ void main() {
 
     expect(find.byType(TeamRow), findsNWidgets(4));
     expect(find.text(TranslationKeys.seeAll.tr), findsNothing);
+  });
+
+  group('load more teams', () {
+    testWidgets('appears once expanded when the server has more, and loads '
+        'the next page on tap', (tester) async {
+      teams.teams.assignAll(_teams(6));
+      teams.hasMore.value = true;
+      await pumpTab(tester);
+      await tester.tap(find.text(TranslationKeys.seeAll.tr));
+      await tester.pump();
+      expect(find.text(TranslationKeys.loadMoreTeams.tr), findsOneWidget);
+
+      await tester.tap(find.text(TranslationKeys.loadMoreTeams.tr));
+      await tester.pump();
+
+      expect(teams.loadMores, 1);
+    });
+
+    testWidgets('is absent once every team is already loaded', (
+      tester,
+    ) async {
+      teams.teams.assignAll(_teams(6));
+      teams.hasMore.value = false;
+      await pumpTab(tester);
+
+      await tester.tap(find.text(TranslationKeys.seeAll.tr));
+      await tester.pump();
+
+      expect(find.text(TranslationKeys.loadMoreTeams.tr), findsNothing);
+    });
+
+    testWidgets('stays hidden before "See all" is tapped', (tester) async {
+      teams.teams.assignAll(_teams(6));
+      teams.hasMore.value = true;
+
+      await pumpTab(tester);
+
+      expect(find.text(TranslationKeys.loadMoreTeams.tr), findsNothing);
+    });
+
+    testWidgets('stays hidden while a search filter is active', (
+      tester,
+    ) async {
+      teams.teams.assignAll(_teams(6));
+      teams.hasMore.value = true;
+      await pumpTab(tester);
+      await tester.tap(find.text(TranslationKeys.seeAll.tr));
+      await tester.pump();
+      expect(find.text(TranslationKeys.loadMoreTeams.tr), findsOneWidget);
+
+      await tester.tap(find.byTooltip(TranslationKeys.search.tr));
+      await tester.pump();
+      await tester.enterText(find.byType(TextField), 'team');
+      await tester.pump();
+
+      expect(find.text(TranslationKeys.loadMoreTeams.tr), findsNothing);
+    });
   });
 
   testWidgets('previews three organizations and links to the rest', (

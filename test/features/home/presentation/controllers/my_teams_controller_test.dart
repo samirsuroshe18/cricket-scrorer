@@ -16,17 +16,26 @@ class _FakeGetMyTeams implements GetMyTeamsUseCase {
   Either<CricketResponse<MyTeamsRes>, CricketFailure> response = Either.result(
     CricketResponse(
       message: 'ok',
-      data: MyTeamsRes(teams: []),
+      data: MyTeamsRes(teams: [], page: 1, limit: 20, total: 0),
     ),
   );
+
+  /// Overrides [response] for a specific page, keyed by
+  /// `params.page ?? 1` — lets a test answer page 1 and page 2 differently
+  /// without a stateful counter.
+  final Map<int, Either<CricketResponse<MyTeamsRes>, CricketFailure>>
+  responseByPage = {};
+
   int calls = 0;
+  final List<GetMyTeamsParams?> paramsSeen = [];
 
   @override
   Future<Either<CricketResponse<MyTeamsRes>, CricketFailure>> call({
-    void params,
+    GetMyTeamsParams? params,
   }) async {
     calls++;
-    return response;
+    paramsSeen.add(params);
+    return responseByPage[params?.page ?? 1] ?? response;
   }
 
   @override
@@ -145,6 +154,9 @@ void main() {
           message: 'ok',
           data: MyTeamsRes(
             teams: [TeamSummary(id: 't1', name: 'Sunday Sixers')],
+            page: 1,
+            limit: 20,
+            total: 1,
           ),
         ),
       );
@@ -261,6 +273,9 @@ void main() {
               teams: [
                 TeamSummary(id: 't1', name: 'Sunday Sixers', shortName: 'SS'),
               ],
+              page: 1,
+              limit: 20,
+              total: 1,
             ),
           ),
         );
@@ -315,6 +330,131 @@ void main() {
       await controller.createTeam(name: 'Sunday Sixers');
 
       expect(controller.teams, isEmpty);
+    });
+  });
+
+  group('loadMyTeams pagination', () {
+    test('requests page 1 and reports hasMore from the response', () async {
+      getMyTeams.response = Either.result(
+        CricketResponse(
+          message: 'ok',
+          data: MyTeamsRes(
+            teams: [TeamSummary(id: 't1', name: 'Sunday Sixers')],
+            page: 1,
+            limit: 20,
+            total: 21,
+          ),
+        ),
+      );
+
+      await controller.loadMyTeams();
+
+      expect(getMyTeams.paramsSeen.last?.page, 1);
+      expect(controller.hasMore.value, isTrue);
+    });
+
+    test('hasMore is false once every team is loaded', () async {
+      getMyTeams.response = Either.result(
+        CricketResponse(
+          message: 'ok',
+          data: MyTeamsRes(
+            teams: [TeamSummary(id: 't1', name: 'Sunday Sixers')],
+            page: 1,
+            limit: 20,
+            total: 1,
+          ),
+        ),
+      );
+
+      await controller.loadMyTeams();
+
+      expect(controller.hasMore.value, isFalse);
+    });
+
+    test('resets to page 1 after a previous loadMoreTeams', () async {
+      getMyTeams.response = Either.result(
+        CricketResponse(
+          message: 'ok',
+          data: MyTeamsRes(
+            teams: [TeamSummary(id: 't1', name: 'Sunday Sixers')],
+            page: 1,
+            limit: 20,
+            total: 21,
+          ),
+        ),
+      );
+      await controller.loadMyTeams();
+      getMyTeams.responseByPage[2] = Either.result(
+        CricketResponse(
+          message: 'ok',
+          data: MyTeamsRes(
+            teams: [TeamSummary(id: 't2', name: 'Office XI')],
+            page: 2,
+            limit: 20,
+            total: 21,
+          ),
+        ),
+      );
+      await controller.loadMoreTeams();
+      expect(controller.teams.map((t) => t.id), ['t1', 't2']);
+
+      await controller.loadMyTeams();
+
+      expect(getMyTeams.paramsSeen.last?.page, 1);
+      expect(controller.teams.map((t) => t.id), ['t1']);
+    });
+  });
+
+  group('loadMoreTeams', () {
+    test('appends the next page and advances past it', () async {
+      getMyTeams.response = Either.result(
+        CricketResponse(
+          message: 'ok',
+          data: MyTeamsRes(
+            teams: [TeamSummary(id: 't1', name: 'Sunday Sixers')],
+            page: 1,
+            limit: 20,
+            total: 21,
+          ),
+        ),
+      );
+      await controller.loadMyTeams();
+      getMyTeams.responseByPage[2] = Either.result(
+        CricketResponse(
+          message: 'ok',
+          data: MyTeamsRes(
+            teams: [TeamSummary(id: 't2', name: 'Office XI')],
+            page: 2,
+            limit: 20,
+            total: 21,
+          ),
+        ),
+      );
+
+      await controller.loadMoreTeams();
+
+      expect(controller.teams.map((t) => t.id), ['t1', 't2']);
+      expect(controller.hasMore.value, isFalse);
+    });
+
+    test('is a no-op with nothing left', () async {
+      getMyTeams.response = Either.result(
+        CricketResponse(
+          message: 'ok',
+          data: MyTeamsRes(
+            teams: [TeamSummary(id: 't1', name: 'Sunday Sixers')],
+            page: 1,
+            limit: 20,
+            total: 1,
+          ),
+        ),
+      );
+      await controller.loadMyTeams();
+      final calls = getMyTeams.calls;
+
+      await controller.loadMoreTeams();
+
+      expect(getMyTeams.calls, calls);
     });
   });
 }
