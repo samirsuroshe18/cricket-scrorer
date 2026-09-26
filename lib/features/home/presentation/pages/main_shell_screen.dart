@@ -31,6 +31,9 @@ class MainShellScreen extends StatelessWidget {
     return Obx(() {
       final index = shell.tabIndex.value;
       return Scaffold(
+        // The bar reserves a strip above itself for the docked "+"; extending
+        // the body under it keeps that strip transparent.
+        extendBody: true,
         body: IndexedStack(index: index, children: _tabs),
         bottomNavigationBar: HomeBottomBar(
           currentIndex: index,
