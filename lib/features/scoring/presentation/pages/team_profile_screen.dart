@@ -17,17 +17,20 @@ import 'package:cricket_scorer/core/translations/translation_keys.dart';
 import 'package:cricket_scorer/core/utils/current_user.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/team_profile_res.dart';
 import 'package:cricket_scorer/features/scoring/presentation/controllers/team_profile_controller.dart';
+import 'package:cricket_scorer/features/scoring/presentation/widget/add_player_sheet.dart';
 import 'package:cricket_scorer/features/scoring/presentation/widget/assign_scorer_sheet.dart';
+import 'package:cricket_scorer/features/scoring/presentation/widget/edit_roster_player_sheet.dart';
 import 'package:cricket_scorer/features/scoring/presentation/widget/edit_team_sheet.dart';
 import 'package:cricket_scorer/features/scoring/presentation/widget/match_history_card.dart';
+import 'package:cricket_scorer/features/scoring/presentation/widget/team_stats_strip.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 
-/// A team's roster plus its past results — reached by tapping a team's name
-/// on a `MatchHistoryCard` (home's match history, or another team's own
-/// past-results list). Not a stats page: v1 is deliberately roster + past
-/// results only, no aggregate wins/losses/win% — see docs/api.md.
+/// A team's record, roster and matches — reached by tapping a team's name on
+/// a `MatchHistoryCard` (home's match history, or another team's own matches
+/// list). The record and form come from the server (`TeamProfileRes.stats`);
+/// the matches list can be filtered by status.
 class TeamProfileScreen extends StatefulWidget {
   const TeamProfileScreen({super.key});
 
@@ -187,12 +190,26 @@ class _TeamProfileScreenState extends State<TeamProfileScreen> {
               child: ListView(
                 padding: 16.p,
                 children: [
-                  _TeamHeader(profile: data, onUpdateLogo: _pickAndUploadLogo),
+                  _TeamHeader(
+                    profile: data,
+                    onUpdateLogo: _pickAndUploadLogo,
+                    onAddPlayer: () => unawaited(
+                      showAddPlayerSheet(controller: controller),
+                    ),
+                    onEditPlayer: (player) => unawaited(
+                      showEditRosterPlayerSheet(
+                        controller: controller,
+                        player: player,
+                      ),
+                    ),
+                  ),
                   24.h,
                   CricketText(
-                    text: TranslationKeys.pastResults.tr,
+                    text: TranslationKeys.teamMatchesSection.tr,
                     style: context.textTheme.titleSmall,
                   ),
+                  12.h,
+                  _MatchFilterChips(controller: controller),
                   12.h,
                   Obx(() {
                     if (controller.isLoadingMatches.value &&
@@ -297,11 +314,54 @@ class _ErrorState extends StatelessWidget {
   }
 }
 
+/// All / Live / Upcoming / Completed — narrows the matches list server-side.
+const _matchFilters = <(String, String)>[
+  ('all', TranslationKeys.filterAll),
+  ('live', TranslationKeys.statusLive),
+  ('upcoming', TranslationKeys.statusUpcoming),
+  ('completed', TranslationKeys.statusCompleted),
+];
+
+class _MatchFilterChips extends StatelessWidget {
+  const _MatchFilterChips({required this.controller});
+
+  final TeamProfileController controller;
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Obx(() {
+        final active = controller.statusFilter.value;
+        return Row(
+          children: [
+            for (final (status, labelKey) in _matchFilters) ...[
+              ChoiceChip(
+                label: CricketText(text: labelKey.tr),
+                selected: active == status,
+                onSelected: (_) => unawaited(controller.setStatusFilter(status)),
+              ),
+              8.w,
+            ],
+          ],
+        );
+      }),
+    );
+  }
+}
+
 class _TeamHeader extends StatelessWidget {
-  const _TeamHeader({required this.profile, required this.onUpdateLogo});
+  const _TeamHeader({
+    required this.profile,
+    required this.onUpdateLogo,
+    required this.onAddPlayer,
+    required this.onEditPlayer,
+  });
 
   final TeamProfileRes profile;
   final VoidCallback onUpdateLogo;
+  final VoidCallback onAddPlayer;
+  final ValueChanged<TeamRosterPlayer> onEditPlayer;
 
   /// `shortName` if the team has one (a club almost always names one for
   /// exactly this purpose — think "MI", "CSK"), otherwise the initials of
@@ -385,11 +445,27 @@ class _TeamHeader extends StatelessWidget {
           child: CricketText(text: TranslationKeys.updateTeamLogo.tr),
         ),
         16.h,
-        CricketText(
-          text: TranslationKeys.roster.tr,
-          style: context.textTheme.bodyMedium?.copyWith(
-            color: context.colorScheme.onSurfaceVariant,
-          ),
+        if (profile.stats != null) ...[
+          TeamStatsStrip(stats: profile.stats!),
+          16.h,
+        ],
+        Row(
+          children: [
+            Expanded(
+              child: CricketText(
+                text: TranslationKeys.roster.tr,
+                style: context.textTheme.bodyMedium?.copyWith(
+                  color: context.colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ),
+            if (profile.canManage)
+              TextButton.icon(
+                onPressed: onAddPlayer,
+                icon: const Icon(Icons.person_add_alt_1_outlined, size: 18),
+                label: CricketText(text: TranslationKeys.addPlayer.tr),
+              ),
+          ],
         ),
         8.h,
         // Full width, a sibling of the header row rather than nested inside
@@ -399,7 +475,10 @@ class _TeamHeader extends StatelessWidget {
           CricketText(text: TranslationKeys.noRosterYet.tr)
         else
           for (final player in profile.roster) ...[
-            _RosterRow(player: player),
+            _RosterRow(
+              player: player,
+              onEdit: profile.canManage ? () => onEditPlayer(player) : null,
+            ),
             4.h,
           ],
       ],
@@ -408,9 +487,13 @@ class _TeamHeader extends StatelessWidget {
 }
 
 class _RosterRow extends StatelessWidget {
-  const _RosterRow({required this.player});
+  const _RosterRow({required this.player, this.onEdit});
 
   final TeamRosterPlayer player;
+
+  /// Non-null only for a viewer who can manage the team; opens the edit sheet.
+  /// A tap on the row itself still opens the player's stats.
+  final VoidCallback? onEdit;
 
   // batsman/bowler/allrounder reuse the app's status-color family — plenty
   // distinct from each other, and none of the three read as an alarm.
@@ -454,7 +537,7 @@ class _RosterRow extends StatelessWidget {
           padding: const EdgeInsets.symmetric(vertical: 6),
           child: Row(
             children: [
-              Expanded(
+              Flexible(
                 child: CricketText(
                   text: player.playerName,
                   style: context.textTheme.bodyMedium?.copyWith(
@@ -462,6 +545,21 @@ class _RosterRow extends StatelessWidget {
                   ),
                 ),
               ),
+              if (player.isCaptain) ...[
+                6.w,
+                const _LeaderBadge(
+                  label: TranslationKeys.captainShort,
+                  spoken: TranslationKeys.captain,
+                ),
+              ],
+              if (player.isViceCaptain) ...[
+                6.w,
+                const _LeaderBadge(
+                  label: TranslationKeys.viceCaptainShort,
+                  spoken: TranslationKeys.viceCaptain,
+                ),
+              ],
+              const Spacer(),
               if (player.jerseyNumber != null) ...[
                 CricketText(
                   text: '#${player.jerseyNumber}',
@@ -491,12 +589,51 @@ class _RosterRow extends StatelessWidget {
                 ),
               ),
               4.w,
-              Icon(
-                Icons.chevron_right,
-                size: 18,
-                color: context.colorScheme.onSurfaceVariant,
-              ),
+              if (onEdit != null)
+                IconButton(
+                  onPressed: onEdit,
+                  icon: const Icon(Icons.more_vert, size: 18),
+                  visualDensity: VisualDensity.compact,
+                  tooltip: TranslationKeys.editPlayer.tr,
+                )
+              else
+                Icon(
+                  Icons.chevron_right,
+                  size: 18,
+                  color: context.colorScheme.onSurfaceVariant,
+                ),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// "C" / "VC" beside a rostered player. The visible letters are decoration;
+/// screen readers get the full word.
+class _LeaderBadge extends StatelessWidget {
+  const _LeaderBadge({required this.label, required this.spoken});
+
+  final String label;
+  final String spoken;
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      label: spoken.tr,
+      excludeSemantics: true,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+        decoration: BoxDecoration(
+          color: context.colorScheme.primary.withValues(alpha: 0.12),
+          borderRadius: 6.radius,
+        ),
+        child: CricketText(
+          text: label.tr,
+          style: context.textTheme.labelSmall?.copyWith(
+            color: context.colorScheme.primary,
+            fontWeight: FontWeight.w700,
           ),
         ),
       ),

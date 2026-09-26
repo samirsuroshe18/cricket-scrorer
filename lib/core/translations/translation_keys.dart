@@ -635,4 +635,16 @@ class TranslationKeys {
   static const String wicketkeeperShort = 'wicketkeeper_short';
   static const String squadEmptyHint = 'squad_empty_hint';
   static const String removePlayer = 'remove_player';
+  static const String teamMatchesSection = 'team_matches_section';
+  static const String winPercentage = 'win_percentage';
+  static const String recentForm = 'recent_form';
+  static const String playerNameRequired = 'player_name_required';
+  static const String makeCaptain = 'make_captain';
+  static const String makeViceCaptain = 'make_vice_captain';
+  static const String removeCaptain = 'remove_captain';
+  static const String removeViceCaptain = 'remove_vice_captain';
+  static const String formWon = 'form_won';
+  static const String formLost = 'form_lost';
+  static const String formTied = 'form_tied';
+  static const String formNoResult = 'form_no_result';
 }

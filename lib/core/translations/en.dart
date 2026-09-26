@@ -627,4 +627,16 @@ Map<String, String> en = {
   TranslationKeys.squadEmptyHint:
       'No players yet — add them below, or skip and type names as you score',
   TranslationKeys.removePlayer: 'Remove player',
+  TranslationKeys.teamMatchesSection: 'Matches',
+  TranslationKeys.winPercentage: 'Win %',
+  TranslationKeys.recentForm: 'Recent form',
+  TranslationKeys.playerNameRequired: "Enter the player's name",
+  TranslationKeys.makeCaptain: 'Make captain',
+  TranslationKeys.makeViceCaptain: 'Make vice-captain',
+  TranslationKeys.removeCaptain: 'Remove as captain',
+  TranslationKeys.removeViceCaptain: 'Remove as vice-captain',
+  TranslationKeys.formWon: 'Won',
+  TranslationKeys.formLost: 'Lost',
+  TranslationKeys.formTied: 'Tied',
+  TranslationKeys.formNoResult: 'No result',
 };
