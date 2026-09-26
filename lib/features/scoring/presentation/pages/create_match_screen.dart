@@ -639,23 +639,48 @@ class _TossSection extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        Center(
-          // teamAController/teamBController aren't `.obs`, so this listens
-          // to them directly (same idiom as _TeamsProgressDots) rather than
-          // via Obx — CoinFlip keeps its own internal flip state across the
-          // rebuild since its widget identity doesn't change, only the name
-          // props do.
-          child: AnimatedBuilder(
-            animation: Listenable.merge([
-              controller.teamAController,
-              controller.teamBController,
-            ]),
-            builder: (context, _) => CoinFlip(
-              onResult: controller.recordTossWinner,
-              teamAName: controller.teamAController.text,
-              teamBName: controller.teamBController.text,
-            ),
-          ),
+        // teamAController/teamBController aren't `.obs`, so this listens to
+        // them directly (same idiom as _TeamsProgressDots) rather than via
+        // Obx. CoinFlip keeps its own internal flip state across the rebuild
+        // since its widget identity doesn't change, only the name props and
+        // the wrapping IgnorePointer/Opacity do.
+        AnimatedBuilder(
+          animation: Listenable.merge([
+            controller.teamAController,
+            controller.teamBController,
+          ]),
+          builder: (context, _) {
+            final teamsReady =
+                controller.teamAController.text.trim().isNotEmpty &&
+                controller.teamBController.text.trim().isNotEmpty;
+            return Column(
+              children: [
+                Center(
+                  child: IgnorePointer(
+                    ignoring: !teamsReady,
+                    child: Opacity(
+                      opacity: teamsReady ? 1 : 0.4,
+                      child: CoinFlip(
+                        onResult: controller.recordTossWinner,
+                        teamAName: controller.teamAController.text,
+                        teamBName: controller.teamBController.text,
+                      ),
+                    ),
+                  ),
+                ),
+                if (!teamsReady) ...[
+                  12.h,
+                  CricketText(
+                    text: TranslationKeys.tossNeedsBothTeams.tr,
+                    textAlign: TextAlign.center,
+                    style: context.textTheme.bodySmall?.copyWith(
+                      color: context.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ],
+            );
+          },
         ),
         // The decision only makes sense once a winner exists — showing it
         // beforehand would let the scorer pick bat/bowl for nobody in

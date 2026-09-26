@@ -28,14 +28,30 @@ class SelectTeamScreen extends GetView<SelectTeamController> {
         child: Column(
           children: [
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
               child: CricketTextField(
                 controller: controller.queryController,
-                hintText: TranslationKeys.searchOrAddTeam.tr,
+                // A label, not a hint: the field's decoration always carries
+                // a (floating) label, and Material hides a hint while an
+                // unfocused field has one — which left the field blank.
+                labelText: TranslationKeys.searchOrAddTeam.tr,
                 prefixIcon: const Icon(Icons.search),
+                suffixIcon: Obx(
+                  () => controller.query.value.isEmpty
+                      ? const SizedBox.shrink()
+                      : IconButton(
+                          tooltip: TranslationKeys.clearSearch.tr,
+                          icon: const Icon(Icons.close),
+                          onPressed: () {
+                            controller.queryController.clear();
+                            controller.onQueryChanged('');
+                          },
+                        ),
+                ),
                 onChanged: controller.onQueryChanged,
                 textCapitalization: TextCapitalization.words,
                 maxLength: 50,
+                hideCounter: true,
               ),
             ),
             Padding(
@@ -49,12 +65,23 @@ class SelectTeamScreen extends GetView<SelectTeamController> {
               ),
             ),
             8.h,
+            // Reserves its height so the list doesn't jump when a refetch
+            // starts; only the first load uses the full-screen spinner below.
+            SizedBox(
+              height: 2,
+              child: Obx(
+                () => controller.isLoading.value && controller.hasSearched.value
+                    ? const LinearProgressIndicator()
+                    : const SizedBox.shrink(),
+              ),
+            ),
             Expanded(
               child: Obx(() {
                 final loading = controller.isLoading.value;
                 final hasSearched = controller.hasSearched.value;
                 final results = controller.results;
-                final hasQuery = controller.query.value.trim().isNotEmpty;
+                final query = controller.query.value.trim();
+                final hasQuery = query.isNotEmpty;
 
                 if (loading && !hasSearched) {
                   return const Center(child: CircularProgressIndicator());
@@ -76,7 +103,7 @@ class SelectTeamScreen extends GetView<SelectTeamController> {
                           CricketText(
                             text: TranslationKeys.searchOrAddTeam.tr,
                             textAlign: TextAlign.center,
-                            style: context.textTheme.bodyMedium,
+                            style: context.textTheme.titleMedium,
                           ),
                         ],
                       ),
@@ -85,35 +112,62 @@ class SelectTeamScreen extends GetView<SelectTeamController> {
                 }
 
                 return ListView(
-                  padding: 16.p,
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
                   children: [
-                    if (results.isEmpty && hasQuery)
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 12),
-                        child: CricketText(
-                          text: TranslationKeys.teamSearchNoMatch.tr,
-                          style: context.textTheme.bodySmall?.copyWith(
-                            color: context.colorScheme.onSurfaceVariant,
-                          ),
-                        ),
-                      ),
-                    for (final team in results) ...[
-                      _TeamResultRow(
-                        team: team,
-                        onTap: () => controller.selectTeam(team),
-                      ),
-                      8.h,
-                    ],
-                    if (hasQuery)
+                    if (hasQuery) ...[
                       _UseAsNewTeamRow(
-                        query: controller.query.value.trim(),
+                        query: query,
                         onTap: controller.useAsNewTeam,
                       ),
+                      12.h,
+                    ],
+                    if (results.isEmpty)
+                      CricketText(
+                        text: TranslationKeys.teamSearchNoMatch.tr,
+                        style: context.textTheme.bodySmall?.copyWith(
+                          color: context.colorScheme.onSurfaceVariant,
+                        ),
+                      )
+                    else ...[
+                      _SectionLabel(
+                        text: hasQuery
+                            ? '${TranslationKeys.matchingTeams.tr} · '
+                                  '${results.length}'
+                            : TranslationKeys.recentTeams.tr,
+                      ),
+                      for (final team in results)
+                        _TeamResultRow(
+                          team: team,
+                          onTap: () => controller.selectTeam(team),
+                        ),
+                    ],
                   ],
                 );
               }),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _SectionLabel extends StatelessWidget {
+  const _SectionLabel({required this.text});
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(4, 4, 4, 4),
+      child: Semantics(
+        header: true,
+        child: CricketText(
+          text: text,
+          style: context.textTheme.labelMedium?.copyWith(
+            color: context.colorScheme.onSurfaceVariant,
+          ),
         ),
       ),
     );
@@ -128,47 +182,44 @@ class _TeamResultRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: context.colorScheme.surfaceContainerHighest,
-      borderRadius: 12.radius,
-      child: InkWell(
-        borderRadius: 12.radius,
-        onTap: onTap,
-        child: Padding(
-          padding: 12.p,
-          child: Row(
-            children: [
-              CricketEntityAvatar(
-                name: team.name,
-                logoUrl: team.logoUrl,
-                size: 36,
-              ),
-              12.w,
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    CricketText(
-                      text: team.name,
-                      style: context.textTheme.titleSmall,
-                    ),
-                    if (team.organization != null)
-                      CricketText(
-                        text: team.organization!.name,
-                        style: context.textTheme.bodySmall?.copyWith(
-                          color: context.colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-              Icon(
-                Icons.chevron_right,
-                size: 18,
-                color: context.colorScheme.onSurfaceVariant,
-              ),
-            ],
+    final org = team.organization;
+    return InkWell(
+      onTap: onTap,
+      child: Container(
+        constraints: const BoxConstraints(minHeight: 56),
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+        decoration: BoxDecoration(
+          border: Border(
+            bottom: BorderSide(color: context.colorScheme.outlineVariant),
           ),
+        ),
+        child: Row(
+          children: [
+            CricketEntityAvatar(
+              name: team.name,
+              logoUrl: team.logoUrl,
+              size: 40,
+            ),
+            12.w,
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  CricketText(
+                    text: team.name,
+                    style: context.textTheme.titleSmall,
+                  ),
+                  if (org != null)
+                    CricketText(
+                      text: org.name,
+                      style: context.textTheme.bodySmall?.copyWith(
+                        color: context.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -183,6 +234,9 @@ class _UseAsNewTeamRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Blue outline and icon carry the "action" cue; the label stays in
+    // onSurface because the light theme's secondary blue is 4.3:1 on white,
+    // just under the 4.5:1 normal-text bar.
     return Material(
       color: Colors.transparent,
       borderRadius: 12.radius,
@@ -190,21 +244,23 @@ class _UseAsNewTeamRow extends StatelessWidget {
         borderRadius: 12.radius,
         onTap: onTap,
         child: Container(
-          padding: 12.p,
+          constraints: const BoxConstraints(minHeight: 56),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           decoration: BoxDecoration(
             borderRadius: 12.radius,
             border: Border.all(color: context.colorScheme.secondary),
           ),
           child: Row(
             children: [
-              Icon(Icons.add, color: context.colorScheme.secondary),
+              Icon(
+                Icons.add_circle_outline,
+                color: context.colorScheme.secondary,
+              ),
               12.w,
               Expanded(
                 child: CricketText(
                   text: TranslationKeys.useAsNewTeam.trParams({'name': query}),
-                  style: context.textTheme.titleSmall?.copyWith(
-                    color: context.colorScheme.secondary,
-                  ),
+                  style: context.textTheme.titleSmall,
                 ),
               ),
             ],
