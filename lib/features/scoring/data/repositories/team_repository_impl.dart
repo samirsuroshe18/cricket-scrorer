@@ -6,7 +6,7 @@ import 'package:cricket_scorer/features/scoring/data/data_sources/remote/match_a
 import 'package:cricket_scorer/features/scoring/data/models/request/add_team_player_req.dart';
 import 'package:cricket_scorer/features/scoring/data/models/request/create_team_req.dart';
 import 'package:cricket_scorer/features/scoring/data/models/request/set_team_leadership_req.dart';
-import 'package:cricket_scorer/features/scoring/data/models/request/update_player_req.dart';
+import 'package:cricket_scorer/features/scoring/data/models/request/update_team_player_req.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/created_team_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/team_profile_res.dart';
 import 'package:cricket_scorer/features/scoring/domain/repositories/team_repository.dart';
@@ -88,7 +88,7 @@ class TeamRepositoryImpl extends TeamRepository {
   updatePlayer({
     required String teamId,
     required String playerId,
-    required UpdatePlayerReq params,
+    required UpdateTeamPlayerReq params,
   }) async {
     final response = await matchApiService.updateTeamPlayer(
       teamId: teamId,

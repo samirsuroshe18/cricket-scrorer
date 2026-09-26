@@ -4,7 +4,7 @@ import 'package:cricket_scorer/core/utils/either_util.dart';
 import 'package:cricket_scorer/features/scoring/data/models/request/add_team_player_req.dart';
 import 'package:cricket_scorer/features/scoring/data/models/request/create_team_req.dart';
 import 'package:cricket_scorer/features/scoring/data/models/request/set_team_leadership_req.dart';
-import 'package:cricket_scorer/features/scoring/data/models/request/update_player_req.dart';
+import 'package:cricket_scorer/features/scoring/data/models/request/update_team_player_req.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/created_team_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/team_profile_res.dart';
 
@@ -41,7 +41,7 @@ abstract class TeamRepository {
   updatePlayer({
     required String teamId,
     required String playerId,
-    required UpdatePlayerReq params,
+    required UpdateTeamPlayerReq params,
   });
 
   /// `PATCH /v1/team/:teamId` with `captainId` / `viceCaptainId`.

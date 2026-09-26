@@ -5,7 +5,7 @@ import 'package:cricket_scorer/features/scoring/data/data_sources/remote/match_a
 import 'package:cricket_scorer/features/scoring/data/models/request/add_team_player_req.dart';
 import 'package:cricket_scorer/features/scoring/data/models/request/create_team_req.dart';
 import 'package:cricket_scorer/features/scoring/data/models/request/set_team_leadership_req.dart';
-import 'package:cricket_scorer/features/scoring/data/models/request/update_player_req.dart';
+import 'package:cricket_scorer/features/scoring/data/models/request/update_team_player_req.dart';
 import 'package:cricket_scorer/features/scoring/data/repositories/team_repository_impl.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -53,7 +53,7 @@ class _FakeMatchApiService implements MatchApiService {
   Future<Either<ApiResponseModel, CricketFailure>> updateTeamPlayer({
     required String teamId,
     required String playerId,
-    required UpdatePlayerReq params,
+    required UpdateTeamPlayerReq params,
   }) async {
     lastRosterTeamId = teamId;
     lastRosterPlayerId = playerId;
@@ -184,7 +184,7 @@ void main() {
     final result = await repository.updatePlayer(
       teamId: 'team-1',
       playerId: 'p1',
-      params: UpdatePlayerReq(role: 'bowler'),
+      params: UpdateTeamPlayerReq(role: 'bowler'),
     );
 
     expect(result.result.data?.playerId, 'p1');

@@ -2,14 +2,14 @@ import 'package:cricket_scorer/core/error/cricket_failure.dart';
 import 'package:cricket_scorer/core/network/models/cricket_response.dart';
 import 'package:cricket_scorer/core/usecase/usecase.dart';
 import 'package:cricket_scorer/core/utils/either_util.dart';
-import 'package:cricket_scorer/features/scoring/data/models/request/update_player_req.dart';
+import 'package:cricket_scorer/features/scoring/data/models/request/update_team_player_req.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/team_profile_res.dart';
 import 'package:cricket_scorer/features/scoring/domain/repositories/team_repository.dart';
 
 class UpdateTeamPlayerParams {
   final String teamId;
   final String playerId;
-  final UpdatePlayerReq req;
+  final UpdateTeamPlayerReq req;
 
   UpdateTeamPlayerParams({
     required this.teamId,

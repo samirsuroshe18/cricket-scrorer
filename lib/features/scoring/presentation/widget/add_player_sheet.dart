@@ -49,6 +49,7 @@ class _AddPlayerFormState extends State<AddPlayerForm> {
   String? _role;
   String? _nameError;
   String? _jerseyError;
+  String? _serverError;
   bool _busy = false;
 
   @override
@@ -76,19 +77,23 @@ class _AddPlayerFormState extends State<AddPlayerForm> {
       _busy = true;
       _nameError = null;
       _jerseyError = null;
+      _serverError = null;
     });
 
-    final added = await widget.controller.addPlayer(
+    final error = await widget.controller.addPlayer(
       name: name,
       role: _role,
       jerseyNumber: jersey.value,
     );
 
     if (!mounted) return;
-    if (added) {
+    if (error == null) {
       widget.onAdded();
     } else {
-      setState(() => _busy = false);
+      setState(() {
+        _busy = false;
+        _serverError = error;
+      });
     }
   }
 
@@ -141,6 +146,10 @@ class _AddPlayerFormState extends State<AddPlayerForm> {
           if (_jerseyError != null) ...[
             4.h,
             CricketText(text: _jerseyError!, style: errorStyle),
+          ],
+          if (_serverError != null) ...[
+            12.h,
+            CricketText(text: _serverError!, style: errorStyle),
           ],
           20.h,
           CricketButton(

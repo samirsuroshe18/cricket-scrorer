@@ -921,19 +921,35 @@ void main() {
     },
   );
 
-  test('addPlayer refetches the profile and returns true', () async {
+  test(
+    'loadMoreMatches does nothing while the first page is still loading',
+    () async {
+      final gated = _GatedGetTeamMatchesUseCase();
+      final c = makeController(matches: gated);
+
+      final first = c.loadMatches();
+      await c.loadMoreMatches(); // hasMore is still true from construction
+
+      expect(gated.statuses, ['all']);
+
+      gated.complete(0, [_item('a')]);
+      await first;
+    },
+  );
+
+  test('addPlayer refetches the profile and returns no error', () async {
     addTeamPlayerUseCase.response = Either.result(
       CricketResponse(message: 'ok', data: rosterRow),
     );
     profileUseCase.response = profileWith();
 
-    final ok = await controller.addPlayer(
+    final error = await controller.addPlayer(
       name: 'Rohit',
       role: 'batsman',
       jerseyNumber: 45,
     );
 
-    expect(ok, isTrue);
+    expect(error, isNull);
     expect(addTeamPlayerUseCase.lastParams?.teamId, 'team-1');
     expect(addTeamPlayerUseCase.lastParams?.req.name, 'Rohit');
     expect(addTeamPlayerUseCase.lastParams?.req.role, 'batsman');
@@ -942,31 +958,20 @@ void main() {
     expect(controller.profile.value?.name, 'Mumbai Indians');
   });
 
-  testWidgets(
-    'addPlayer failure returns false, shows the server message and leaves '
-    'the profile untouched',
-    (tester) async {
-      await tester.pumpWidget(
-        GetMaterialApp(
-          theme: AppTheme.lightTheme,
-          home: const Scaffold(body: SizedBox()),
-        ),
-      );
+  test(
+    'addPlayer failure returns the server message and leaves the profile '
+    'untouched',
+    () async {
       profileUseCase.response = profileWith();
       await controller.loadProfile();
       addTeamPlayerUseCase.response = Either.fallback(
         CricketBadRequestFailure(statusCode: 400, message: 'Bad name'),
       );
 
-      final ok = await controller.addPlayer(name: 'x');
-      await tester.pump();
+      final error = await controller.addPlayer(name: 'x');
 
-      expect(ok, isFalse);
-      expect(find.text('Bad name'), findsOneWidget);
+      expect(error, 'Bad name');
       expect(controller.profile.value?.name, 'Mumbai Indians');
-
-      await tester.pump(const Duration(seconds: 10));
-      await tester.pumpAndSettle();
     },
   );
 
@@ -976,18 +981,32 @@ void main() {
     );
     profileUseCase.response = profileWith();
 
-    final ok = await controller.updatePlayer(
+    final error = await controller.updatePlayer(
       playerId: 'p1',
       role: 'bowler',
       jerseyNumber: 7,
     );
 
-    expect(ok, isTrue);
+    expect(error, isNull);
     expect(updateTeamPlayerUseCase.lastParams?.teamId, 'team-1');
     expect(updateTeamPlayerUseCase.lastParams?.playerId, 'p1');
     expect(updateTeamPlayerUseCase.lastParams?.req.role, 'bowler');
     expect(updateTeamPlayerUseCase.lastParams?.req.jerseyNumber, 7);
     expect(profileUseCase.lastTeamId, 'team-1');
+  });
+
+  test('updatePlayer can clear the jersey number', () async {
+    updateTeamPlayerUseCase.response = Either.result(
+      CricketResponse(message: 'ok', data: rosterRow),
+    );
+    profileUseCase.response = profileWith();
+
+    await controller.updatePlayer(playerId: 'p1', clearJerseyNumber: true);
+
+    final req = updateTeamPlayerUseCase.lastParams!.req;
+    expect(req.clearJerseyNumber, isTrue);
+    expect(req.toJson()['jerseyNumber'], isNull);
+    expect(req.toJson().containsKey('jerseyNumber'), isTrue);
   });
 
   test(
@@ -1005,10 +1024,13 @@ void main() {
         ),
       );
 
-      final ok = await controller.setLeader(playerId: 'p3', viceCaptain: false);
+      final error = await controller.setLeader(
+        playerId: 'p3',
+        viceCaptain: false,
+      );
 
       final req = setTeamLeadershipUseCase.lastParams!.req;
-      expect(ok, isTrue);
+      expect(error, isNull);
       expect(req.name, 'Mumbai Indians');
       expect(req.shortName, 'MI');
       expect(req.captainId, 'p3');
@@ -1057,10 +1079,10 @@ void main() {
     },
   );
 
-  test('setLeader without a loaded profile does nothing and returns false', () async {
-    final ok = await controller.setLeader(playerId: 'p3', viceCaptain: false);
+  test('setLeader without a loaded profile does nothing and reports an error', () async {
+    final error = await controller.setLeader(playerId: 'p3', viceCaptain: false);
 
-    expect(ok, isFalse);
+    expect(error, isNotNull);
     expect(setTeamLeadershipUseCase.lastParams, isNull);
   });
 }

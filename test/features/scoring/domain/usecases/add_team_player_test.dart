@@ -3,7 +3,7 @@ import 'package:cricket_scorer/core/network/models/cricket_response.dart';
 import 'package:cricket_scorer/core/utils/either_util.dart';
 import 'package:cricket_scorer/features/scoring/data/models/request/add_team_player_req.dart';
 import 'package:cricket_scorer/features/scoring/data/models/request/set_team_leadership_req.dart';
-import 'package:cricket_scorer/features/scoring/data/models/request/update_player_req.dart';
+import 'package:cricket_scorer/features/scoring/data/models/request/update_team_player_req.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/created_team_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/team_profile_res.dart';
 import 'package:cricket_scorer/features/scoring/domain/repositories/team_repository.dart';
@@ -38,7 +38,7 @@ class _RecordingTeamRepository implements TeamRepository {
   updatePlayer({
     required String teamId,
     required String playerId,
-    required UpdatePlayerReq params,
+    required UpdateTeamPlayerReq params,
   }) async {
     this.teamId = teamId;
     this.playerId = playerId;
@@ -85,7 +85,7 @@ void main() {
     'UpdateTeamPlayerUseCase forwards teamId, playerId and request',
     () async {
       final repo = _RecordingTeamRepository();
-      final req = UpdatePlayerReq(role: 'bowler');
+      final req = UpdateTeamPlayerReq(role: 'bowler');
 
       await UpdateTeamPlayerUseCase(teamRepository: repo)(
         params: UpdateTeamPlayerParams(teamId: 't1', playerId: 'p1', req: req),

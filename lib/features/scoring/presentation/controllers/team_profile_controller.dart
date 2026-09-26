@@ -13,7 +13,7 @@ import 'package:cricket_scorer/features/scoring/data/models/response/match_histo
 import 'package:cricket_scorer/features/scoring/data/models/request/add_team_player_req.dart';
 import 'package:cricket_scorer/features/scoring/data/models/request/create_team_req.dart';
 import 'package:cricket_scorer/features/scoring/data/models/request/set_team_leadership_req.dart';
-import 'package:cricket_scorer/features/scoring/data/models/request/update_player_req.dart';
+import 'package:cricket_scorer/features/scoring/data/models/request/update_team_player_req.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/team_profile_res.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/add_team_player.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/get_team_matches.dart';
@@ -242,7 +242,10 @@ class TeamProfileController extends GetxController {
 
   /// Appends the next page — same shape as `HomeController.loadMore`.
   Future<void> loadMoreMatches() async {
-    if (isLoadingMore.value || !hasMore.value) return;
+    // Also while the first page is still loading (e.g. right after a filter
+    // change): page 2 could otherwise land before page 1, be dropped by
+    // `assignAll`, and leave `_page` advanced past matches never shown.
+    if (isLoadingMore.value || _isLoadingMatches || !hasMore.value) return;
     final generation = _matchesGeneration;
     isLoadingMore.value = true;
 
@@ -278,10 +281,12 @@ class TeamProfileController extends GetxController {
     }
   }
 
-  /// Adds a player to the roster by name. Returns true on success (the profile
-  /// is re-fetched so the new row shows); on failure the server's own
-  /// localized message is shown and the profile is left untouched.
-  Future<bool> addPlayer({
+  /// Adds a player to the roster by name. Returns null on success (the profile
+  /// is re-fetched so the new row shows) or the server's own localized
+  /// message on failure — shown inline by the sheet, not as a snackbar: a
+  /// GetX snackbar is a route, so one still on screen would swallow the
+  /// `Get.back()` that closes the sheet on a successful retry.
+  Future<String?> addPlayer({
     required String name,
     String? role,
     int? jerseyNumber,
@@ -295,18 +300,23 @@ class TeamProfileController extends GetxController {
     return _afterRosterWrite(response);
   }
 
-  /// Edits a rostered player's role and/or jersey number; same
-  /// refresh-after-write contract as [addPlayer].
-  Future<bool> updatePlayer({
+  /// Edits a rostered player's role and/or jersey number ([clearJerseyNumber]
+  /// removes it); same contract as [addPlayer].
+  Future<String?> updatePlayer({
     required String playerId,
     String? role,
     int? jerseyNumber,
+    bool clearJerseyNumber = false,
   }) async {
     final response = await updateTeamPlayerUseCase(
       params: UpdateTeamPlayerParams(
         teamId: teamId,
         playerId: playerId,
-        req: UpdatePlayerReq(role: role, jerseyNumber: jerseyNumber),
+        req: UpdateTeamPlayerReq(
+          role: role,
+          jerseyNumber: jerseyNumber,
+          clearJerseyNumber: clearJerseyNumber,
+        ),
       ),
     );
     return _afterRosterWrite(response);
@@ -314,13 +324,14 @@ class TeamProfileController extends GetxController {
 
   /// Makes [playerId] the captain (or vice-captain when [viceCaptain]). If that
   /// player currently holds the other slot they are moved rather than
-  /// duplicated — the server rejects the same player in both.
-  Future<bool> setLeader({
+  /// duplicated — the server rejects the same player in both. Same contract
+  /// as [addPlayer].
+  Future<String?> setLeader({
     required String playerId,
     required bool viceCaptain,
   }) {
     final current = profile.value;
-    if (current == null) return Future.value(false);
+    if (current == null) return Future.value(TranslationKeys.somethingWentWrong.tr);
     final otherSlot = viceCaptain ? current.captainId : current.viceCaptainId;
     final keptOther = otherSlot == playerId ? null : otherSlot;
     return _writeLeaders(
@@ -330,10 +341,11 @@ class TeamProfileController extends GetxController {
     );
   }
 
-  /// Clears the captain (or vice-captain when [viceCaptain]), keeping the other.
-  Future<bool> clearLeader({required bool viceCaptain}) {
+  /// Clears the captain (or vice-captain when [viceCaptain]), keeping the
+  /// other. Same contract as [addPlayer].
+  Future<String?> clearLeader({required bool viceCaptain}) {
     final current = profile.value;
-    if (current == null) return Future.value(false);
+    if (current == null) return Future.value(TranslationKeys.somethingWentWrong.tr);
     return _writeLeaders(
       current,
       captainId: viceCaptain ? current.captainId : null,
@@ -341,7 +353,7 @@ class TeamProfileController extends GetxController {
     );
   }
 
-  Future<bool> _writeLeaders(
+  Future<String?> _writeLeaders(
     TeamProfileRes current, {
     required String? captainId,
     required String? viceCaptainId,
@@ -362,15 +374,12 @@ class TeamProfileController extends GetxController {
     return _afterRosterWrite(response);
   }
 
-  Future<bool> _afterRosterWrite<T>(
+  Future<String?> _afterRosterWrite<T>(
     Either<CricketResponse<T>, CricketFailure> response,
   ) async {
-    if (!response.isResult) {
-      CricketSnackbar.showErrorMessage(response.fallback.message);
-      return false;
-    }
+    if (!response.isResult) return response.fallback.message;
     await loadProfile();
-    return true;
+    return null;
   }
 
   /// The picker source for the assign-scorer sheet. Returns `null` (with

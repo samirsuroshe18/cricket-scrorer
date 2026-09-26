@@ -82,12 +82,19 @@ class _FakeAdd extends _Unused implements AddTeamPlayerUseCase {
 
 class _FakeUpdatePlayer extends _Unused implements UpdateTeamPlayerUseCase {
   UpdateTeamPlayerParams? lastParams;
+  String? failWith;
 
   @override
   Future<Either<CricketResponse<TeamRosterPlayer>, CricketFailure>> call({
     UpdateTeamPlayerParams? params,
   }) async {
     lastParams = params;
+    final failure = failWith;
+    if (failure != null) {
+      return Either.fallback(
+        CricketForbiddenErrorFailure(statusCode: 403, message: failure),
+      );
+    }
     return Either.result(
       CricketResponse(
         message: 'ok',
@@ -215,6 +222,30 @@ void main() {
       expect(req.jerseyNumber, 45);
     });
 
+    testWidgets(
+      'a failure shows the server message inline, and a retry that succeeds '
+      'closes the sheet',
+      (tester) async {
+        await pumpAddSheet(tester);
+        add.response = Either.fallback(
+          CricketBadRequestFailure(statusCode: 400, message: 'Bad name'),
+        );
+
+        await tester.enterText(find.byType(TextField).first, 'Rohit');
+        await tester.tap(find.text(TranslationKeys.addPlayer).last);
+        await tester.pumpAndSettle();
+
+        expect(find.text('Bad name'), findsOneWidget);
+        expect(find.byType(AddPlayerForm), findsOneWidget);
+
+        add.response = null; // the retry succeeds
+        await tester.tap(find.text(TranslationKeys.addPlayer).last);
+        await tester.pumpAndSettle();
+
+        expect(find.byType(AddPlayerForm), findsNothing);
+      },
+    );
+
     testWidgets('an unset role and jersey number are omitted', (tester) async {
       await pumpAddSheet(tester);
 
@@ -275,6 +306,43 @@ void main() {
       expect(updatePlayer.lastParams?.playerId, 'p1');
       expect(updatePlayer.lastParams?.req.role, 'bowler');
       expect(updatePlayer.lastParams?.req.jerseyNumber, 7);
+    });
+
+    testWidgets('clearing a previously set jersey number asks the server to remove it', (
+      tester,
+    ) async {
+      await pumpEditSheet(tester);
+
+      await tester.enterText(find.widgetWithText(TextField, '45'), '');
+      await tester.tap(find.text(TranslationKeys.saveChanges).last);
+      await tester.pumpAndSettle();
+
+      expect(updatePlayer.lastParams?.req.clearJerseyNumber, isTrue);
+    });
+
+    testWidgets('leaving the jersey number alone does not clear it', (
+      tester,
+    ) async {
+      await pumpEditSheet(tester);
+
+      await tester.tap(find.text(TranslationKeys.saveChanges).last);
+      await tester.pumpAndSettle();
+
+      expect(updatePlayer.lastParams?.req.clearJerseyNumber, isFalse);
+      expect(updatePlayer.lastParams?.req.jerseyNumber, 45);
+    });
+
+    testWidgets('a failed save shows the server message inline', (
+      tester,
+    ) async {
+      await pumpEditSheet(tester);
+      updatePlayer.failWith = 'Not allowed';
+
+      await tester.tap(find.text(TranslationKeys.saveChanges).last);
+      await tester.pumpAndSettle();
+
+      expect(find.text('Not allowed'), findsOneWidget);
+      expect(find.byType(EditRosterPlayerForm), findsOneWidget);
     });
 
     testWidgets('offers make captain and make vice-captain for a non-leader', (

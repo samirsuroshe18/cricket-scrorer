@@ -56,6 +56,7 @@ class _EditRosterPlayerFormState extends State<EditRosterPlayerForm> {
       ? null
       : widget.player.role;
   String? _jerseyError;
+  String? _serverError;
   bool _busy = false;
 
   @override
@@ -75,17 +76,29 @@ class _EditRosterPlayerFormState extends State<EditRosterPlayerForm> {
     setState(() {
       _busy = true;
       _jerseyError = null;
+      _serverError = null;
     });
-    final saved = await widget.controller.updatePlayer(
+    final error = await widget.controller.updatePlayer(
       playerId: widget.player.playerId,
       role: _role,
       jerseyNumber: jersey.value,
+      // An emptied field on a player who had a number means "remove it" — a
+      // bare null would be read as "leave unchanged" and silently do nothing.
+      clearJerseyNumber:
+          jersey.value == null && widget.player.jerseyNumber != null,
     );
+    _finish(error);
+  }
+
+  void _finish(String? error) {
     if (!mounted) return;
-    if (saved) {
+    if (error == null) {
       widget.onDone();
     } else {
-      setState(() => _busy = false);
+      setState(() {
+        _busy = false;
+        _serverError = error;
+      });
     }
   }
 
@@ -94,19 +107,17 @@ class _EditRosterPlayerFormState extends State<EditRosterPlayerForm> {
     required bool isCurrent,
   }) async {
     if (_busy) return;
-    setState(() => _busy = true);
-    final ok = isCurrent
+    setState(() {
+      _busy = true;
+      _serverError = null;
+    });
+    final error = isCurrent
         ? await widget.controller.clearLeader(viceCaptain: viceCaptain)
         : await widget.controller.setLeader(
             playerId: widget.player.playerId,
             viceCaptain: viceCaptain,
           );
-    if (!mounted) return;
-    if (ok) {
-      widget.onDone();
-    } else {
-      setState(() => _busy = false);
-    }
+    _finish(error);
   }
 
   @override
@@ -146,6 +157,10 @@ class _EditRosterPlayerFormState extends State<EditRosterPlayerForm> {
           if (_jerseyError != null) ...[
             4.h,
             CricketText(text: _jerseyError!, style: errorStyle),
+          ],
+          if (_serverError != null) ...[
+            12.h,
+            CricketText(text: _serverError!, style: errorStyle),
           ],
           20.h,
           CricketButton(
