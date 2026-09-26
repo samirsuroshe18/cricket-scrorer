@@ -38,44 +38,53 @@ class HomeBottomBar extends StatelessWidget {
   final String actionLabel;
   final VoidCallback onAction;
 
+  /// How far the docked action rises above the bar's top edge.
+  static const double _overhang = 30;
+
   @override
   Widget build(BuildContext context) {
     final page = context.colorScheme.surfaceContainerLowest;
     final bottomInset = MediaQuery.paddingOf(context).bottom;
 
-    return Container(
-      decoration: BoxDecoration(
-        color: page,
-        border: Border(top: BorderSide(color: context.homeLine)),
-      ),
-      padding: EdgeInsets.only(
-        top: 6,
-        bottom: bottomInset > 0 ? bottomInset : 8,
-      ),
-      child: Stack(
-        clipBehavior: Clip.none,
-        alignment: Alignment.topCenter,
-        children: [
-          Row(
-            children: [
-              _item(context, 0),
-              _item(context, 1),
-              const Expanded(child: SizedBox(height: 48)),
-              _item(context, 2),
-              _item(context, 3),
-            ],
-          ),
-          PositionedDirectional(
-            top: -30,
-            child: Semantics(
-              button: true,
-              label: actionLabel,
-              excludeSemantics: true,
-              child: _DockedActionButton(borderColor: page, onTap: onAction),
+    // The button overhangs the bar's top edge. Hit testing rejects touches
+    // outside a parent's bounds even with Clip.none, so the overhang is
+    // reserved as layout space here rather than painted outside the bounds —
+    // otherwise only the part of the circle inside the bar is tappable.
+    return Stack(
+      alignment: Alignment.topCenter,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(top: _overhang),
+          child: Container(
+            decoration: BoxDecoration(
+              color: page,
+              border: Border(top: BorderSide(color: context.homeLine)),
+            ),
+            padding: EdgeInsets.only(
+              top: 6,
+              bottom: bottomInset > 0 ? bottomInset : 8,
+            ),
+            child: Row(
+              children: [
+                _item(context, 0),
+                _item(context, 1),
+                const Expanded(child: SizedBox(height: 48)),
+                _item(context, 2),
+                _item(context, 3),
+              ],
             ),
           ),
-        ],
-      ),
+        ),
+        PositionedDirectional(
+          top: 0,
+          child: Semantics(
+            button: true,
+            label: actionLabel,
+            excludeSemantics: true,
+            child: _DockedActionButton(borderColor: page, onTap: onAction),
+          ),
+        ),
+      ],
     );
   }
 
