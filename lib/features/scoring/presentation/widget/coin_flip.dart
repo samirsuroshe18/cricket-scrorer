@@ -190,14 +190,6 @@ class _CoinFace extends StatelessWidget {
         shape: BoxShape.circle,
         color: context.colors.chipBackground,
         border: Border.all(color: context.colors.coinRim, width: 3),
-        boxShadow: [
-          BoxShadow(
-            color: context.colors.coinRim.withValues(alpha: 0.35),
-            blurRadius: 0,
-            spreadRadius: 0,
-            offset: const Offset(0, 3),
-          ),
-        ],
       ),
       // Bold and sized as WCAG large text (>=18.66px bold), so the team
       // color — not guaranteed 4.5:1 at body size — only needs to clear the
