@@ -127,7 +127,11 @@ class _CoinFlipState extends State<CoinFlip>
                   ..setEntry(3, 2, 0.001)
                   ..rotateY(angle),
                 child: _CoinFace(
-                  label: showingA
+                  // Before the first flip the coin is neutral — showing a
+                  // team here would read as "that team already won".
+                  label: _target == null
+                      ? null
+                      : showingA
                       ? (widget.teamAName?.trim().isNotEmpty ?? false
                             ? widget.teamAName!.trim()
                             : TranslationKeys.teamA.tr)
@@ -146,14 +150,15 @@ class _CoinFlipState extends State<CoinFlip>
           ),
         ),
         12.h,
-        CricketText(
-          text: _controller.isAnimating || _target == null
-              ? TranslationKeys.tapToFlip.tr
-              : TranslationKeys.tapToReflip.tr,
-          style: context.textTheme.bodySmall?.copyWith(
-            color: context.colorScheme.onSurfaceVariant,
+        FilledButton.tonalIcon(
+          onPressed: _controller.isAnimating ? null : () => unawaited(_flip()),
+          icon: const Icon(Icons.touch_app_outlined, size: 20),
+          label: Text(
+            _target == null
+                ? TranslationKeys.tapToFlip.tr
+                : TranslationKeys.tapToReflip.tr,
           ),
-          textAlign: TextAlign.center,
+          style: FilledButton.styleFrom(minimumSize: const Size(0, 44)),
         ),
       ],
     );
@@ -168,7 +173,8 @@ class _CoinFace extends StatelessWidget {
     required this.size,
   });
 
-  final String label;
+  /// Null renders the neutral, pre-flip face.
+  final String? label;
   final bool mirrored;
   final Color color;
   final double size;
@@ -184,32 +190,30 @@ class _CoinFace extends StatelessWidget {
         shape: BoxShape.circle,
         color: context.colors.chipBackground,
         border: Border.all(color: context.colors.coinRim, width: 3),
-        boxShadow: [
-          BoxShadow(
-            color: context.colors.coinRim.withValues(alpha: 0.35),
-            blurRadius: 0,
-            spreadRadius: 0,
-            offset: const Offset(0, 3),
-          ),
-        ],
       ),
       // Bold and sized as WCAG large text (>=18.66px bold), so the team
       // color — not guaranteed 4.5:1 at body size — only needs to clear the
       // lower 3:1 bar. FittedBox is a safety net for a longer translation;
       // every current en/hi/mr label fits at full size.
-      child: FittedBox(
-        fit: BoxFit.scaleDown,
-        child: CricketText(
-          text: label,
-          style: TextStyle(
-            fontSize: size * 0.2,
-            fontWeight: FontWeight.w700,
-            color: color,
-          ),
-          textAlign: TextAlign.center,
-          maxLines: 1,
-        ),
-      ),
+      child: label == null
+          ? Icon(
+              Icons.currency_rupee,
+              size: size * 0.42,
+              color: context.colors.coinRim,
+            )
+          : FittedBox(
+              fit: BoxFit.scaleDown,
+              child: CricketText(
+                text: label!,
+                style: TextStyle(
+                  fontSize: size * 0.2,
+                  fontWeight: FontWeight.w700,
+                  color: color,
+                ),
+                textAlign: TextAlign.center,
+                maxLines: 1,
+              ),
+            ),
     );
 
     if (!mirrored) return face;

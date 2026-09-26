@@ -672,19 +672,17 @@ class _TossSection extends StatelessWidget {
               : context.colors.teamB;
 
           return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              18.h,
-              CricketText(
+              16.h,
+              _TossWinnerBanner(
+                color: winnerColor,
                 text: winnerName.isEmpty
                     ? TranslationKeys.wonTheToss.tr
                     : '$winnerName ${TranslationKeys.wonTheToss.tr}',
-                style: context.textTheme.bodyMedium?.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
-                textAlign: TextAlign.center,
               ),
-              10.h,
-              _TossDecisionToggle(
+              12.h,
+              _TossDecisionTiles(
                 color: winnerColor,
                 value: controller.tossDecision.value,
                 onChanged: controller.toggleTossDecision,
@@ -697,12 +695,52 @@ class _TossSection extends StatelessWidget {
   }
 }
 
-/// The bat/bowl choice once a toss winner exists — a single filled pill in
-/// the winning side's own color instead of two independent chips, so the
-/// decision reads as "one choice for this team" rather than two unrelated
-/// options.
-class _TossDecisionToggle extends StatelessWidget {
-  const _TossDecisionToggle({
+/// "Team won the toss" — a chip tinted with the winning side's own color.
+class _TossWinnerBanner extends StatelessWidget {
+  const _TossWinnerBanner({required this.color, required this.text});
+
+  final Color color;
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: 12.radius,
+        border: Border.all(color: color),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            width: 10,
+            height: 10,
+            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+          ),
+          8.w,
+          Flexible(
+            child: CricketText(
+              text: text,
+              maxLines: 2,
+              textAlign: TextAlign.center,
+              style: context.textTheme.titleSmall?.copyWith(
+                fontWeight: FontWeight.w700,
+                color: context.colorScheme.onSurface,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// The bat/bowl choice once a toss winner exists — two equal tiles in the
+/// winning side's color, in the same language as the overs preset tiles.
+class _TossDecisionTiles extends StatelessWidget {
+  const _TossDecisionTiles({
     required this.color,
     required this.value,
     required this.onChanged,
@@ -714,47 +752,46 @@ class _TossDecisionToggle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Darkened so white text on the selected half clears 4.5:1 for both
-    // team colors in both themes — the raw teamA/teamB tokens are tuned for
-    // icons and large fills, not guaranteed against white text at this
-    // size. Verified with contrast.py: >=9.6:1 for every team/theme pair.
+    // Darkened so white text on the selected tile clears 4.5:1 for both team
+    // colors in both themes (>=9.6:1, checked with contrast.py).
     final selectedFill = HSLColor.fromColor(
       color,
     ).withLightness(0.28).toColor();
 
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        border: Border.all(color: color),
-        borderRadius: 999.radius,
-      ),
-      child: ClipRRect(
-        borderRadius: 999.radius,
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            _ToggleHalf(
+    return IntrinsicHeight(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Expanded(
+            child: _TossDecisionTile(
+              icon: Icons.sports_cricket,
               label: TranslationKeys.batFirst.tr,
               selected: value == 'bat',
               color: color,
               selectedFill: selectedFill,
               onTap: () => onChanged('bat'),
             ),
-            _ToggleHalf(
+          ),
+          8.w,
+          Expanded(
+            child: _TossDecisionTile(
+              icon: Icons.sports_baseball_outlined,
               label: TranslationKeys.bowlFirst.tr,
               selected: value == 'bowl',
               color: color,
               selectedFill: selectedFill,
               onTap: () => onChanged('bowl'),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 }
 
-class _ToggleHalf extends StatelessWidget {
-  const _ToggleHalf({
+class _TossDecisionTile extends StatelessWidget {
+  const _TossDecisionTile({
+    required this.icon,
     required this.label,
     required this.selected,
     required this.color,
@@ -762,6 +799,7 @@ class _ToggleHalf extends StatelessWidget {
     required this.onTap,
   });
 
+  final IconData icon;
   final String label;
   final bool selected;
   final Color color;
@@ -770,26 +808,55 @@ class _ToggleHalf extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
-        color: selected ? selectedFill : Colors.transparent,
-        // Sized and weighted as WCAG large text (>=18.66px bold) — the
-        // light-mode teamA token alone is 4.30:1 on white, just under the
-        // 4.5:1 normal-text bar but comfortably over the 3:1 large-text one.
-        // FittedBox is a layout safety net for a longer hi/mr translation on
-        // a narrow phone; every current label fits at full size.
-        child: FittedBox(
-          fit: BoxFit.scaleDown,
-          child: CricketText(
-            text: label,
-            maxLines: 1,
-            style: TextStyle(
-              fontSize: 19,
-              height: 1.2,
-              fontWeight: FontWeight.w700,
-              color: selected ? Colors.white : color,
+    final scheme = context.colorScheme;
+    final onFill = selected ? scheme.onPrimary : null;
+    final reduceMotion = MediaQuery.disableAnimationsOf(context);
+
+    return Semantics(
+      button: true,
+      selected: selected,
+      label: label,
+      excludeSemantics: true,
+      child: AnimatedContainer(
+        duration: reduceMotion
+            ? Duration.zero
+            : const Duration(milliseconds: 150),
+        curve: Curves.easeOut,
+        decoration: BoxDecoration(
+          color: selected ? selectedFill : scheme.surface,
+          borderRadius: 12.radius,
+          border: Border.all(color: selected ? selectedFill : color),
+        ),
+        child: Material(
+          type: MaterialType.transparency,
+          child: InkWell(
+            onTap: onTap,
+            borderRadius: 12.radius,
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(minHeight: 64),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(icon, size: 24, color: onFill ?? scheme.onSurface),
+                    4.h,
+                    FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: CricketText(
+                        text: label,
+                        maxLines: 1,
+                        style: TextStyle(
+                          fontSize: 15,
+                          height: 1.2,
+                          fontWeight: FontWeight.w700,
+                          color: onFill ?? scheme.onSurface,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ),
           ),
         ),
