@@ -190,6 +190,12 @@ void main() {
   );
 
   Future<void> pumpOpenButton(WidgetTester tester) async {
+    // The coin block (coin + flip button) plus the decision chips no longer
+    // fit the default 800x600 surface; a phone-like height keeps the start
+    // button on-screen.
+    tester.view.physicalSize = const Size(800, 900);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
     await tester.pumpWidget(
       GetMaterialApp(
         theme: AppTheme.lightTheme,
