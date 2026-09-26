@@ -19,11 +19,20 @@ class TeamRosterPlayer {
   /// `batsman` / `bowler` / `allrounder` / `wicketkeeper` / `unknown`.
   final String role;
 
+  /// Team-level defaults (`Team.captainId` / `viceCaptainId`), not the
+  /// per-match squad designations. Absent on an older server, so `false`.
+  @JsonKey(defaultValue: false)
+  final bool isCaptain;
+  @JsonKey(defaultValue: false)
+  final bool isViceCaptain;
+
   TeamRosterPlayer({
     required this.playerId,
     required this.playerName,
     this.jerseyNumber,
     required this.role,
+    this.isCaptain = false,
+    this.isViceCaptain = false,
   });
 
   factory TeamRosterPlayer.fromJson(Map<String, dynamic> json) =>
@@ -32,12 +41,48 @@ class TeamRosterPlayer {
   Map<String, dynamic> toJson() => _$TeamRosterPlayerToJson(this);
 }
 
+/// `stats` of `GET /v1/team/:teamId`, computed server-side from the team's
+/// completed matches. `form` is up to the last 5 outcomes, newest first, coded
+/// `W`/`L`/`T`/`N`.
+@JsonSerializable()
+class TeamStatsRes {
+  @JsonKey(defaultValue: 0)
+  final int played;
+  @JsonKey(defaultValue: 0)
+  final int won;
+  @JsonKey(defaultValue: 0)
+  final int lost;
+  @JsonKey(defaultValue: 0)
+  final int tied;
+  @JsonKey(defaultValue: 0)
+  final int noResult;
+  @JsonKey(defaultValue: 0.0)
+  final double winPercentage;
+  @JsonKey(defaultValue: <String>[])
+  final List<String> form;
+
+  TeamStatsRes({
+    required this.played,
+    required this.won,
+    required this.lost,
+    required this.tied,
+    required this.noResult,
+    required this.winPercentage,
+    required this.form,
+  });
+
+  factory TeamStatsRes.fromJson(Map<String, dynamic> json) =>
+      _$TeamStatsResFromJson(json);
+
+  Map<String, dynamic> toJson() => _$TeamStatsResToJson(this);
+}
+
 /// `GET /v1/team/:teamId` — a team's display identity plus every player
 /// accumulated onto its roster across every match it has been attached to
 /// (directly, or via `teamAId`/`teamBId` reuse on match creation).
 /// `roster` is `[]`, not an error, for a team no one has been rostered onto
-/// yet. Deliberately carries no aggregate stats (wins/losses/win%) — v1 is
-/// roster + past results only, see docs/api.md. `organization` is non-null
+/// yet. `stats` is null only when talking to a server that predates it.
+/// `organization` is non-null
 /// when this team belongs to one — see `TeamSummary.organization`'s own
 /// comment for why this reuses [OrganizationRef] rather than a second
 /// identical type.
@@ -56,6 +101,11 @@ class TeamProfileRes {
   /// else who can open this profile can still view it and change its logo.
   final bool canManage;
   final List<TeamRosterPlayer> roster;
+  final TeamStatsRes? stats;
+
+  /// Team-level captain / vice-captain player ids, or null when unset.
+  final String? captainId;
+  final String? viceCaptainId;
 
   TeamProfileRes({
     required this.teamId,
@@ -65,6 +115,9 @@ class TeamProfileRes {
     this.organization,
     required this.canManage,
     required this.roster,
+    this.stats,
+    this.captainId,
+    this.viceCaptainId,
   });
 
   factory TeamProfileRes.fromJson(Map<String, dynamic> json) =>
