@@ -181,6 +181,9 @@ class TranslationKeys {
   static const String searchOrAddTeam = 'search_or_add_team';
   static const String matchVersus = 'match_versus';
   static const String teamSearchNoMatch = 'team_search_no_match';
+  static const String recentTeams = 'recent_teams';
+  static const String matchingTeams = 'matching_teams';
+  static const String tossNeedsBothTeams = 'toss_needs_both_teams';
   static const String filterYourTeams = 'filter_your_teams';
   static const String filterOpponent = 'filter_opponent';
   static const String oversPresetCustom = 'overs_preset_custom';

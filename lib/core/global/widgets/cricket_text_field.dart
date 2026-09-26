@@ -10,6 +10,9 @@ class CricketTextField extends StatelessWidget {
   final Widget? suffixIcon;
   final bool obscureText;
   final int? maxLength;
+
+  /// Keeps [maxLength] enforced but drops the "n/max" counter under the field.
+  final bool hideCounter;
   final int maxLines;
   final TextInputType keyboardType;
   final TextCapitalization textCapitalization;
@@ -33,6 +36,7 @@ class CricketTextField extends StatelessWidget {
     this.prefixIcon,
     this.suffixIcon,
     this.maxLength,
+    this.hideCounter = false,
     this.maxLines = 1,
     this.obscureText = false,
     this.keyboardType = TextInputType.text,
@@ -70,6 +74,7 @@ class CricketTextField extends StatelessWidget {
       maxLines: maxLines,
       decoration: InputDecoration(
         hintText: hintText,
+        counterText: hideCounter ? '' : null,
         label: RichText(
           text: TextSpan(
             text: labelText,
