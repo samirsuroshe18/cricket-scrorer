@@ -13,6 +13,7 @@ class AppRoutes {
   static const String imagePreview = '/image_preview';
   static const String createMatch = '/create-match';
   static const String selectTeam = '/select-team';
+  static const String squad = '/squad';
   static const String scoreBall = '/score-ball';
 
   /// Registered with a GetX path parameter, matching the deep link

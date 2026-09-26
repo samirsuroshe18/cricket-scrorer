@@ -624,4 +624,15 @@ class TranslationKeys {
   static const String searchMatchesHint = 'search_matches_hint';
   static const String clearSearch = 'clear_search';
   static const String noSearchResults = 'no_search_results';
+  static const String squadTitle = 'squad_title';
+  static const String addPlayer = 'add_player';
+  static const String saveAndContinue = 'save_and_continue';
+  static const String captain = 'captain';
+  static const String viceCaptain = 'vice_captain';
+  static const String wicketkeeper = 'wicketkeeper';
+  static const String captainShort = 'captain_short';
+  static const String viceCaptainShort = 'vice_captain_short';
+  static const String wicketkeeperShort = 'wicketkeeper_short';
+  static const String squadEmptyHint = 'squad_empty_hint';
+  static const String removePlayer = 'remove_player';
 }

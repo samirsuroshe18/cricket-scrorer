@@ -22,6 +22,10 @@ class MatchEndpoint {
   /// as [history], scoped to one team.
   String teamMatches(String teamId) => '/v1/team/$teamId/matches';
 
+  /// `PUT /v1/match/:matchId/squad/:side` — `side` is `teamA` / `teamB`.
+  String saveSquad(String matchId, String side) =>
+      '/v1/match/$matchId/squad/$side';
+
   String startInnings(String matchId) => '/v1/match/$matchId/start-innings';
 
   String selectBowler(String matchId) => '/v1/match/$matchId/select-bowler';

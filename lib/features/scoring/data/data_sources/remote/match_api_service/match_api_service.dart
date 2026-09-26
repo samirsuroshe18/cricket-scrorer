@@ -5,6 +5,7 @@ import 'package:cricket_scorer/core/utils/either_util.dart';
 import 'package:cricket_scorer/features/scoring/data/match_endpoint.dart';
 import 'package:cricket_scorer/features/scoring/data/models/request/create_match_req.dart';
 import 'package:cricket_scorer/features/scoring/data/models/request/create_team_req.dart';
+import 'package:cricket_scorer/features/scoring/data/models/request/save_squad_req.dart';
 import 'package:cricket_scorer/features/scoring/data/models/request/score_ball_req.dart';
 import 'package:cricket_scorer/features/scoring/data/models/request/select_bowler_req.dart';
 import 'package:cricket_scorer/features/scoring/data/models/request/start_innings_req.dart';
@@ -149,6 +150,17 @@ class MatchApiService {
     return await apiClient.post(
       endpoint: matchEndpoint.teamLogo(teamId),
       data: params,
+    );
+  }
+
+  /// `PUT /v1/match/:matchId/squad/:side` — replaces one side's squad.
+  Future<Either<ApiResponseModel, CricketFailure>> saveSquad({
+    required String matchId,
+    required SaveSquadReq params,
+  }) async {
+    return await apiClient.put(
+      endpoint: matchEndpoint.saveSquad(matchId, params.side),
+      data: params.toJson(),
     );
   }
 
