@@ -438,15 +438,23 @@ class _MatchFormatSection extends StatelessWidget {
   final CreateMatchController controller;
 
   static const _presets = [
-    OversPreset.custom,
     OversPreset.five,
     OversPreset.t20,
     OversPreset.odi,
+    OversPreset.custom,
   ];
 
-  String _labelFor(OversPreset preset) => switch (preset) {
-    OversPreset.custom => TranslationKeys.oversPresetCustom.tr,
+  /// Big number for the fixed presets; null for custom, which shows an icon.
+  String? _valueFor(OversPreset preset) => switch (preset) {
+    OversPreset.custom => null,
     OversPreset.five => TranslationKeys.oversPresetFive.tr,
+    OversPreset.t20 => '20',
+    OversPreset.odi => '50',
+  };
+
+  String _captionFor(OversPreset preset) => switch (preset) {
+    OversPreset.custom => TranslationKeys.oversPresetCustom.tr,
+    OversPreset.five => TranslationKeys.overs.tr,
     OversPreset.t20 => TranslationKeys.oversPresetT20.tr,
     OversPreset.odi => TranslationKeys.oversPresetOdi.tr,
   };
@@ -457,9 +465,10 @@ class _MatchFormatSection extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Obx(
-          () => _OversSegmentedControl(
+          () => _OversPresetTiles(
             presets: _presets,
-            labelFor: _labelFor,
+            valueFor: _valueFor,
+            captionFor: _captionFor,
             selected: controller.selectedOversPreset.value,
             onSelected: controller.selectOversPreset,
           ),
@@ -479,100 +488,140 @@ class _MatchFormatSection extends StatelessWidget {
   }
 }
 
-/// A single-row, equal-width segmented control for the four overs presets —
-/// replaces a plain `ChoiceChip` `Wrap`, matching the bordered/filled pill
-/// language [_TossDecisionToggle] already established on the Toss card
-/// below. Not built by generalizing that widget: it's typed for exactly two
-/// team-colored halves, while this needs four `secondary`-accented ones, so
-/// nothing existing fit cleanly.
-class _OversSegmentedControl extends StatelessWidget {
-  const _OversSegmentedControl({
+/// Four equal-width preset tiles, each a separate bordered card with the
+/// overs count on top and its label below, so "5" reads as "5 overs" and
+/// the choices read as a set of options rather than one pill.
+class _OversPresetTiles extends StatelessWidget {
+  const _OversPresetTiles({
     required this.presets,
-    required this.labelFor,
+    required this.valueFor,
+    required this.captionFor,
     required this.selected,
     required this.onSelected,
   });
 
   final List<OversPreset> presets;
-  final String Function(OversPreset) labelFor;
+  final String? Function(OversPreset) valueFor;
+  final String Function(OversPreset) captionFor;
   final OversPreset selected;
   final ValueChanged<OversPreset> onSelected;
 
   @override
   Widget build(BuildContext context) {
     final accent = context.colorScheme.secondary;
-    // Darkened so white text on the selected segment clears 4.5:1 in both
-    // themes — the raw secondary token is only 4.30:1/2.87:1 against white
-    // at this size. Verified with contrast.py: 10.06:1 light, 10.17:1 dark.
+    // Darkened so white text on the selected tile clears 4.5:1 in both
+    // themes (10.06:1 light, 10.17:1 dark, checked with contrast.py).
     final selectedFill = HSLColor.fromColor(
       accent,
     ).withLightness(0.28).toColor();
 
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        border: Border.all(color: accent),
-        borderRadius: 999.radius,
-      ),
-      child: ClipRRect(
-        borderRadius: 999.radius,
-        child: Row(
-          children: [
-            for (final preset in presets)
-              Expanded(
-                child: _OversSegment(
-                  label: labelFor(preset),
-                  selected: preset == selected,
-                  color: accent,
-                  selectedFill: selectedFill,
-                  onTap: () => onSelected(preset),
-                ),
+    return IntrinsicHeight(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          for (var i = 0; i < presets.length; i++) ...[
+            if (i > 0) 8.w,
+            Expanded(
+              child: _OversPresetTile(
+                value: valueFor(presets[i]),
+                caption: captionFor(presets[i]),
+                selected: presets[i] == selected,
+                selectedFill: selectedFill,
+                onTap: () => onSelected(presets[i]),
               ),
+            ),
           ],
-        ),
+        ],
       ),
     );
   }
 }
 
-class _OversSegment extends StatelessWidget {
-  const _OversSegment({
-    required this.label,
+class _OversPresetTile extends StatelessWidget {
+  const _OversPresetTile({
+    required this.value,
+    required this.caption,
     required this.selected,
-    required this.color,
     required this.selectedFill,
     required this.onTap,
   });
 
-  final String label;
+  final String? value;
+  final String caption;
   final bool selected;
-  final Color color;
   final Color selectedFill;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 10),
-        color: selected ? selectedFill : Colors.transparent,
-        alignment: Alignment.center,
-        // Sized and weighted as WCAG large text (>=18.66px bold) — same
-        // strategy as _ToggleHalf below: the unselected secondary-on-surface
-        // pairing is 4.30:1 light / 5.34:1 dark, under the 4.5:1 normal-text
-        // bar but clear of the 3:1 large-text one. FittedBox is a layout
-        // safety net for "Custom" alongside three short labels on a narrow
-        // phone.
-        child: FittedBox(
-          fit: BoxFit.scaleDown,
-          child: CricketText(
-            text: label,
-            maxLines: 1,
-            style: TextStyle(
-              fontSize: 19,
-              height: 1.2,
-              fontWeight: FontWeight.w700,
-              color: selected ? Colors.white : color,
+    final scheme = context.colorScheme;
+    final onFill = selected ? scheme.onPrimary : null;
+    final valueColor = onFill ?? scheme.onSurface;
+    final captionColor = onFill ?? scheme.onSurfaceVariant;
+    final reduceMotion = MediaQuery.disableAnimationsOf(context);
+
+    return Semantics(
+      button: true,
+      selected: selected,
+      label: value == null ? caption : '$value $caption',
+      excludeSemantics: true,
+      child: AnimatedContainer(
+        duration: reduceMotion
+            ? Duration.zero
+            : const Duration(milliseconds: 150),
+        curve: Curves.easeOut,
+        decoration: BoxDecoration(
+          color: selected ? selectedFill : scheme.surface,
+          borderRadius: 12.radius,
+          border: Border.all(
+            color: selected ? selectedFill : scheme.secondary,
+          ),
+        ),
+        child: Material(
+          type: MaterialType.transparency,
+          child: InkWell(
+            onTap: onTap,
+            borderRadius: 12.radius,
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(minHeight: 64),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    if (value == null)
+                      Icon(Icons.edit_outlined, size: 24, color: valueColor)
+                    else
+                      FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: CricketText(
+                          text: value!,
+                          maxLines: 1,
+                          style: TextStyle(
+                            fontSize: 24,
+                            height: 1.15,
+                            fontWeight: FontWeight.w800,
+                            color: valueColor,
+                          ),
+                        ),
+                      ),
+                    2.h,
+                    FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: CricketText(
+                        text: caption,
+                        maxLines: 1,
+                        style: TextStyle(
+                          fontSize: 12,
+                          height: 1.2,
+                          fontWeight: FontWeight.w600,
+                          color: captionColor,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ),
           ),
         ),
