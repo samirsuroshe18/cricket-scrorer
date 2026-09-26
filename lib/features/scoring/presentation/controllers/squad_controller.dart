@@ -46,6 +46,15 @@ class SquadController extends GetxController {
 
   final Set<String> _dirty = {};
 
+  /// Bumped on every edit of a side. A save only clears that side's dirty
+  /// flag if no edit landed while it was in flight — otherwise the edit made
+  /// during a slow save would be reported saved and never sent.
+  final Map<String, int> _revision = {sideA: 0, sideB: 0};
+
+  /// Saves run one after another, so an older in-flight request can never
+  /// land on the server after a newer one and roll the squad back.
+  Future<void> _saveChain = Future<void>.value();
+
   Rx<SquadDraft> _draft(String forSide) => forSide == sideA ? teamA : teamB;
 
   SquadDraft get current => _draft(side.value).value;
@@ -83,7 +92,7 @@ class SquadController extends GetxController {
     for (final player in roster ?? const <TeamRosterPlayer>[]) {
       draft = draft.addPlayer(
         player.playerName,
-        role: squadRoles.contains(player.role) ? player.role : defaultSquadRole,
+        role: squadRoles.contains(player.role) ? player.role : null,
         playerId: player.playerId,
       );
     }
@@ -94,6 +103,7 @@ class SquadController extends GetxController {
     final target = _draft(side.value);
     target.value = change(target.value);
     _dirty.add(side.value);
+    _revision[side.value] = _revision[side.value]! + 1;
   }
 
   void addPlayer(String name) => _edit((d) => d.addPlayer(name));
@@ -105,9 +115,16 @@ class SquadController extends GetxController {
 
   /// Saves [forSide] if it has unsaved edits. Returns false only on a server
   /// failure, having reported it; an untouched side counts as saved.
-  Future<bool> _saveSide(String forSide, {required bool report}) async {
+  Future<bool> _saveSide(String forSide, {required bool report}) {
+    final run = _saveChain.then((_) => _send(forSide, report: report));
+    _saveChain = run.then((_) {}, onError: (_) {});
+    return run;
+  }
+
+  Future<bool> _send(String forSide, {required bool report}) async {
     if (!_dirty.contains(forSide)) return true;
 
+    final sentRevision = _revision[forSide];
     final response = await saveSquadUseCase(
       params: SaveSquadParams(
         matchId: match.matchId,
@@ -115,7 +132,7 @@ class SquadController extends GetxController {
       ),
     );
     if (response.isResult) {
-      _dirty.remove(forSide);
+      if (_revision[forSide] == sentRevision) _dirty.remove(forSide);
       return true;
     }
     if (report) showError(response.fallback.message);

@@ -10,14 +10,14 @@ SquadPlayerReq _$SquadPlayerReqFromJson(Map<String, dynamic> json) =>
     SquadPlayerReq(
       playerId: json['playerId'] as String?,
       name: json['name'] as String,
-      role: json['role'] as String,
+      role: json['role'] as String?,
     );
 
 Map<String, dynamic> _$SquadPlayerReqToJson(SquadPlayerReq instance) =>
     <String, dynamic>{
       'playerId': ?instance.playerId,
       'name': instance.name,
-      'role': instance.role,
+      'role': ?instance.role,
     };
 
 SaveSquadReq _$SaveSquadReqFromJson(Map<String, dynamic> json) => SaveSquadReq(

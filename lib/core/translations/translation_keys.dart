@@ -634,4 +634,5 @@ class TranslationKeys {
   static const String viceCaptainShort = 'vice_captain_short';
   static const String wicketkeeperShort = 'wicketkeeper_short';
   static const String squadEmptyHint = 'squad_empty_hint';
+  static const String removePlayer = 'remove_player';
 }

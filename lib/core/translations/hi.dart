@@ -624,5 +624,7 @@ Map<String, String> hi = {
   TranslationKeys.captainShort: 'क',
   TranslationKeys.viceCaptainShort: 'उक',
   TranslationKeys.wicketkeeperShort: 'वि',
-  TranslationKeys.squadEmptyHint: 'अभी कोई खिलाड़ी नहीं — नीचे जोड़ें, या स्किप करके स्कोर करते समय नाम डालें',
+  TranslationKeys.squadEmptyHint:
+      'अभी कोई खिलाड़ी नहीं — नीचे जोड़ें, या स्किप करके स्कोर करते समय नाम डालें',
+  TranslationKeys.removePlayer: 'खिलाड़ी हटाएं',
 };

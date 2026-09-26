@@ -10,10 +10,12 @@ class SquadPlayerReq {
   final String? playerId;
   final String name;
 
-  /// `batsman` / `bowler` / `allrounder`.
-  final String role;
+  /// `batsman` / `bowler` / `allrounder`, or null to leave the player's stored
+  /// role untouched — a returning player may be a `wicketkeeper` or
+  /// `unknown`, which the server can't set and must not overwrite.
+  final String? role;
 
-  SquadPlayerReq({this.playerId, required this.name, required this.role});
+  SquadPlayerReq({this.playerId, required this.name, this.role});
 
   factory SquadPlayerReq.fromJson(Map<String, dynamic> json) =>
       _$SquadPlayerReqFromJson(json);

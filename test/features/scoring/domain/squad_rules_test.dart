@@ -104,4 +104,22 @@ void main() {
       expect(draft.toRequest('teamA').players.single.playerId, 'p1');
     });
   });
+  group('a role the scorer never chose', () {
+    test('stays null through the draft and is left off the request', () {
+      final draft = SquadDraft.empty().addPlayer('Pant', role: null);
+
+      expect(draft.rows.single.role, isNull);
+      final req = draft.toRequest('teamA');
+      expect(req.players.single.role, isNull);
+      expect(req.players.single.toJson().containsKey('role'), isFalse);
+    });
+
+    test('choosing a role sets it', () {
+      final draft = SquadDraft.empty()
+          .addPlayer('Pant', role: null)
+          .setRole('Pant', 'allrounder');
+
+      expect(draft.rows.single.role, 'allrounder');
+    });
+  });
 }

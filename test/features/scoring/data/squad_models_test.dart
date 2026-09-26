@@ -18,6 +18,7 @@ void main() {
       players: [
         SquadPlayerReq(name: 'Rohit', role: 'batsman'),
         SquadPlayerReq(playerId: 'p2', name: 'Bumrah', role: 'bowler'),
+        SquadPlayerReq(name: 'Pant'),
       ],
       captain: 'Rohit',
       keeper: null,
@@ -27,6 +28,7 @@ void main() {
       'players': [
         {'name': 'Rohit', 'role': 'batsman'},
         {'playerId': 'p2', 'name': 'Bumrah', 'role': 'bowler'},
+        {'name': 'Pant'},
       ],
       'captain': 'Rohit',
     });

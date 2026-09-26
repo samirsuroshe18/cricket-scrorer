@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cricket_scorer/core/error/cricket_failure.dart';
 import 'package:cricket_scorer/core/network/models/cricket_response.dart';
 import 'package:cricket_scorer/core/utils/either_util.dart';
@@ -43,11 +45,17 @@ class _FakeSaveSquad implements SaveSquadUseCase {
   final List<SaveSquadParams> calls = [];
   bool fail = false;
 
+  /// When set, the next call waits on it — lets a test hold a save in flight.
+  Completer<void>? gate;
+
   @override
   Future<Either<CricketResponse<SquadRes>, CricketFailure>> call({
     SaveSquadParams? params,
   }) async {
     calls.add(params!);
+    final wait = gate;
+    gate = null;
+    if (wait != null) await wait.future;
     if (fail) {
       return Either.fallback(CricketFailure(message: 'server said no'));
     }
@@ -97,7 +105,7 @@ void main() {
   setUp(() => Get.testMode = true);
 
   test(
-    'seeds each side from its team roster, mapping unsupported roles to batsman',
+    'seeds each side from its team roster, leaving an unsupported role unset',
     () async {
       final controller = build(
         rosters: {
@@ -121,7 +129,7 @@ void main() {
       expect(profile.asked, ['ta', 'tb']);
       final rows = controller.teamA.value.rows;
       expect(rows.map((r) => r.name), ['Rohit', 'Pant']);
-      expect(rows.map((r) => r.role), ['bowler', 'batsman']);
+      expect(rows.map((r) => r.role), ['bowler', null]);
       expect(rows.first.playerId, 'p1');
       expect(controller.teamB.value.rows, isEmpty);
     },
@@ -223,6 +231,32 @@ void main() {
 
       expect(save.calls.map((c) => c.req.side), ['teamA']);
       expect(save.calls.single.req.players.single.playerId, 'p1');
+    },
+  );
+
+  test(
+    'an edit made while a save is in flight is still sent by Save & continue',
+    () async {
+      final controller = build();
+      controller.addPlayer('Rohit');
+      final gate = Completer<void>();
+      save.gate = gate;
+
+      // Switching away starts the quiet save of side A; the gate holds it in
+      // flight after the request (Rohit only) has been built.
+      final leaving = controller.selectSide('teamB');
+      await Future<void>.delayed(Duration.zero);
+      final returning = controller.selectSide('teamA');
+      controller.addPlayer('Zaheer');
+      gate.complete();
+      await leaving;
+      await returning;
+
+      await controller.saveAndContinue();
+
+      expect(save.calls.first.req.players.map((p) => p.name), ['Rohit']);
+      final lastForA = save.calls.lastWhere((c) => c.req.side == 'teamA');
+      expect(lastForA.req.players.map((p) => p.name), ['Rohit', 'Zaheer']);
     },
   );
 }

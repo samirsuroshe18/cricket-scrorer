@@ -66,26 +66,27 @@ class SquadPlayerRow extends StatelessWidget {
               _Badge(
                 badgeKey: Key('squad_c_${row.name}'),
                 label: TranslationKeys.captainShort.tr,
-                semantics: TranslationKeys.captain.tr,
+                semantics: '${TranslationKeys.captain.tr}, ${row.name}',
                 selected: isCaptain,
                 onTap: onCaptain,
               ),
               _Badge(
                 badgeKey: Key('squad_vc_${row.name}'),
                 label: TranslationKeys.viceCaptainShort.tr,
-                semantics: TranslationKeys.viceCaptain.tr,
+                semantics: '${TranslationKeys.viceCaptain.tr}, ${row.name}',
                 selected: isViceCaptain,
                 onTap: onViceCaptain,
               ),
               _Badge(
                 badgeKey: Key('squad_wk_${row.name}'),
                 label: TranslationKeys.wicketkeeperShort.tr,
-                semantics: TranslationKeys.wicketkeeper.tr,
+                semantics: '${TranslationKeys.wicketkeeper.tr}, ${row.name}',
                 selected: isKeeper,
                 onTap: onKeeper,
               ),
               IconButton(
                 key: Key('squad_remove_${row.name}'),
+                tooltip: '${TranslationKeys.removePlayer.tr}, ${row.name}',
                 icon: const Icon(Icons.close, size: 18),
                 onPressed: onRemove,
               ),
@@ -131,6 +132,7 @@ class _Badge extends StatelessWidget {
       label: semantics,
       button: true,
       selected: selected,
+      onTap: onTap,
       excludeSemantics: true,
       child: InkWell(
         key: badgeKey,

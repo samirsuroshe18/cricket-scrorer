@@ -199,4 +199,22 @@ void main() {
     expect(find.byKey(const Key('squad_row_Rohit')), findsOneWidget);
     expect(find.text(TranslationKeys.skip.tr), findsOneWidget);
   });
+
+  testWidgets(
+    'the C badge is reachable through semantics and names its player',
+    (tester) async {
+      final handle = tester.ensureSemantics();
+      await pump(tester);
+      await addPlayer(tester, 'Rohit');
+
+      final label = '${TranslationKeys.captain.tr}, Rohit';
+      expect(find.bySemanticsLabel(label), findsOneWidget);
+
+      tester.semantics.tap(find.semantics.byLabel(label));
+      await tester.pump();
+
+      expect(controller.current.captain, 'Rohit');
+      handle.dispose();
+    },
+  );
 }

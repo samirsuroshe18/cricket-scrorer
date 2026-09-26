@@ -9,9 +9,12 @@ class SquadRow {
   /// Set only for a returning player seeded from a team roster.
   final String? playerId;
   final String name;
-  final String role;
 
-  const SquadRow({this.playerId, required this.name, required this.role});
+  /// Null until the scorer picks one, for a seeded player whose stored role
+  /// is outside [squadRoles]; the request then leaves it alone.
+  final String? role;
+
+  const SquadRow({this.playerId, required this.name, this.role});
 
   SquadRow withRole(String value) =>
       SquadRow(playerId: playerId, name: name, role: value);
@@ -65,7 +68,7 @@ class SquadDraft {
   /// Ignores a blank name and a name already in the squad.
   SquadDraft addPlayer(
     String name, {
-    String role = defaultSquadRole,
+    String? role = defaultSquadRole,
     String? playerId,
   }) {
     final trimmed = name.trim();

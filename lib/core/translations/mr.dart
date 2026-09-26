@@ -623,5 +623,7 @@ Map<String, String> mr = {
   TranslationKeys.captainShort: 'क',
   TranslationKeys.viceCaptainShort: 'उक',
   TranslationKeys.wicketkeeperShort: 'यष्टी',
-  TranslationKeys.squadEmptyHint: 'अजून खेळाडू नाहीत — खाली जोडा, किंवा वगळा आणि स्कोअर करताना नावे टाका',
+  TranslationKeys.squadEmptyHint:
+      'अजून खेळाडू नाहीत — खाली जोडा, किंवा वगळा आणि स्कोअर करताना नावे टाका',
+  TranslationKeys.removePlayer: 'खेळाडू काढा',
 };
