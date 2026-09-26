@@ -188,6 +188,7 @@ Map<String, String> en = {
   TranslationKeys.teamSearchNoMatch: "No match — this'll create a new team",
   TranslationKeys.recentTeams: 'Recent teams',
   TranslationKeys.matchingTeams: 'Matching teams',
+  TranslationKeys.teamAlreadyPicked: 'Already picked for the other side',
   TranslationKeys.tossNeedsBothTeams: 'Choose both teams to unlock the toss',
   TranslationKeys.filterYourTeams: 'Your teams',
   TranslationKeys.filterOpponent: 'Opponent',

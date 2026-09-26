@@ -41,8 +41,10 @@ class _FakeGetMyTeamsUseCase implements GetMyTeamsUseCase {
 
 void main() {
   late _FakeGetMyTeamsUseCase useCase;
+  dynamic lastResult;
 
   setUp(() {
+    lastResult = null;
     Get.testMode = true;
     useCase = _FakeGetMyTeamsUseCase();
     Get.put<GetMyTeamsUseCase>(useCase);
@@ -54,12 +56,15 @@ void main() {
   // return a value to the caller — declared before hostApp/openPicker so
   // both closures (defined below, but only ever called from inside a test
   // body, after this line has already run) can see it.
-  dynamic lastResult;
 
   /// A host screen that pushes SelectTeamScreen and captures whatever it
   /// pops back with — mirrors how CreateMatchController actually consumes
   /// this screen's result via `Get.toNamed<dynamic>`.
-  Widget hostApp({String initialQuery = ''}) {
+  Widget hostApp({
+    String initialQuery = '',
+    String? excludeTeamId,
+    String? excludeName,
+  }) {
     return GetMaterialApp(
       theme: AppTheme.lightTheme,
       home: Builder(
@@ -71,6 +76,8 @@ void main() {
                 arguments: SelectTeamArgs(
                   title: 'Select Team A',
                   initialQuery: initialQuery,
+                  excludeTeamId: excludeTeamId,
+                  excludeName: excludeName,
                 ),
               );
               lastResult = result;
@@ -89,7 +96,10 @@ void main() {
     );
   }
 
-  Future<void> openPicker(WidgetTester tester, {String initialQuery = ''}) async {
+  Future<void> openPicker(
+    WidgetTester tester, {
+    String initialQuery = '',
+  }) async {
     await tester.pumpWidget(hostApp(initialQuery: initialQuery));
     await tester.tap(find.text('open'));
     await tester.pumpAndSettle();
@@ -107,16 +117,21 @@ void main() {
     expect(controller.queryController.text.length, lessThanOrEqualTo(50));
   });
 
-  testWidgets('shows a hint, not an error, before anything is typed with no teams', (
+  testWidgets(
+    'shows a hint, not an error, before anything is typed with no teams',
+    (
+      tester,
+    ) async {
+      await openPicker(tester);
+      await tester.pumpAndSettle();
+
+      expect(find.text(TranslationKeys.searchOrAddTeam.tr), findsWidgets);
+    },
+  );
+
+  testWidgets('typing shows matching results after the debounce', (
     tester,
   ) async {
-    await openPicker(tester);
-    await tester.pumpAndSettle();
-
-    expect(find.text(TranslationKeys.searchOrAddTeam.tr), findsWidgets);
-  });
-
-  testWidgets('typing shows matching results after the debounce', (tester) async {
     useCase.teams = [TeamSummary(id: 't1', name: 'Mumbai Indians')];
     await openPicker(tester);
 
@@ -157,6 +172,45 @@ void main() {
     expect((lastResult as TeamSummary).id, 't1');
   });
 
+  testWidgets('a team already picked for the other side is not selectable', (
+    tester,
+  ) async {
+    useCase.teams = [
+      TeamSummary(id: 't1', name: 'Mumbai Indians'),
+      TeamSummary(id: 't2', name: 'Chennai'),
+    ];
+    await tester.pumpWidget(hostApp(excludeTeamId: 't1'));
+    await tester.tap(find.text('open'));
+    await tester.pumpAndSettle();
+
+    expect(find.text(TranslationKeys.teamAlreadyPicked.tr), findsOneWidget);
+
+    await tester.tap(find.text('Mumbai Indians'), warnIfMissed: false);
+    await tester.pumpAndSettle();
+    expect(lastResult, isNull);
+
+    await tester.tap(find.text('Chennai'));
+    await tester.pumpAndSettle();
+    expect((lastResult as TeamSummary).id, 't2');
+  });
+
+  testWidgets('typing the other side\'s name offers no "use as new team" row', (
+    tester,
+  ) async {
+    useCase.teams = const [];
+    await tester.pumpWidget(hostApp(excludeName: 'Alpha'));
+    await tester.tap(find.text('open'));
+    await tester.pumpAndSettle();
+
+    await tester.enterText(find.byType(TextFormField), ' alpha ');
+    await tester.pump(const Duration(milliseconds: 500));
+
+    expect(
+      find.text(TranslationKeys.useAsNewTeam.trParams({'name': 'alpha'})),
+      findsNothing,
+    );
+  });
+
   testWidgets('tapping "use as new team" pops back with the trimmed name', (
     tester,
   ) async {
@@ -174,7 +228,9 @@ void main() {
     expect(lastResult, 'Newtown XI');
   });
 
-  testWidgets('picking a filter re-searches with that owner scope', (tester) async {
+  testWidgets('picking a filter re-searches with that owner scope', (
+    tester,
+  ) async {
     await openPicker(tester);
     await tester.pumpAndSettle();
 
@@ -184,7 +240,9 @@ void main() {
     expect(useCase.lastParams?.owner, TeamOwnerFilter.mine);
   });
 
-  testWidgets('the app bar shows the title passed in via arguments', (tester) async {
+  testWidgets('the app bar shows the title passed in via arguments', (
+    tester,
+  ) async {
     await openPicker(tester);
     await tester.pumpAndSettle();
 
