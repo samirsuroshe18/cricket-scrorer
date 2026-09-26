@@ -304,10 +304,10 @@ class CreateMatchController extends GetxController {
     if (response.isResult) {
       CricketSnackbar.showSuccessMessage(response.result.message);
       unawaited(
-        Get.toNamed<dynamic>(
-          AppRoutes.scoreBall,
-          arguments: response.result.data,
-        ),
+        // offNamed, not toNamed: the match now exists, so Back from the squad
+        // screen must not return to a Create Match form that would create a
+        // second one.
+        Get.offNamed<dynamic>(AppRoutes.squad, arguments: response.result.data),
       );
     } else {
       CricketSnackbar.showAlertMessage(response.fallback.message);

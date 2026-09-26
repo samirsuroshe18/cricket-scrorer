@@ -313,13 +313,13 @@ void main() {
         GetMaterialApp(
           theme: AppTheme.lightTheme,
           home: Form(key: widgetController.formKey, child: const SizedBox()),
-          // createMatch() navigates to AppRoutes.scoreBall on success — give
-          // it somewhere real to land rather than hanging on an unresolved
+          // createMatch() navigates to AppRoutes.squad on success — give it
+          // somewhere real to land rather than hanging on an unresolved
           // route.
           getPages: [
             GetPage(
-              name: AppRoutes.scoreBall,
-              page: () => const Scaffold(body: Text('score ball')),
+              name: AppRoutes.squad,
+              page: () => const Scaffold(body: Text('squad')),
             ),
           ],
         ),
@@ -348,6 +348,8 @@ void main() {
       expect(sent.teamAName, 'Mumbai Indians');
       expect(sent.teamBId, isNull);
       expect(sent.teamBName, 'Chennai Super Kings');
+      expect(Get.currentRoute, AppRoutes.squad);
+      expect(Get.arguments, isA<CreateMatchRes>());
 
       widgetController.onClose();
     },
