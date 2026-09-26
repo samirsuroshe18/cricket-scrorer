@@ -205,7 +205,7 @@ class _CoinFace extends StatelessWidget {
       // every current en/hi/mr label fits at full size.
       child: label == null
           ? Icon(
-              Icons.monetization_on_outlined,
+              Icons.currency_rupee,
               size: size * 0.42,
               color: context.colors.coinRim,
             )
