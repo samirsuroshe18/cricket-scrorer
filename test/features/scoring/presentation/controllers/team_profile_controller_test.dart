@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:cricket_scorer/config/theme/app_theme.dart';
@@ -10,7 +11,10 @@ import 'package:cricket_scorer/features/scoring/data/models/response/team_profil
 import 'package:cricket_scorer/features/scoring/data/models/response/scorer_candidates_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/assign_scorer_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/created_team_res.dart';
+import 'package:cricket_scorer/features/scoring/domain/usecases/add_team_player.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/get_team_matches.dart';
+import 'package:cricket_scorer/features/scoring/domain/usecases/set_team_leadership.dart';
+import 'package:cricket_scorer/features/scoring/domain/usecases/update_team_player.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/get_team_profile.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/get_scorer_candidates.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/assign_scorer.dart';
@@ -49,6 +53,7 @@ class _FakeGetTeamMatchesUseCase implements GetTeamMatchesUseCase {
   Object? throwOnCall;
   int callCount = 0;
   int? lastPage;
+  String? lastStatus;
 
   @override
   Future<Either<CricketResponse<MatchHistoryRes>, CricketFailure>> call({
@@ -56,6 +61,7 @@ class _FakeGetTeamMatchesUseCase implements GetTeamMatchesUseCase {
   }) async {
     callCount += 1;
     lastPage = params!.page;
+    lastStatus = params.status;
     final error = throwOnCall;
     if (error != null) throw error;
     final result = response;
@@ -159,6 +165,96 @@ class _FakeDeleteTeamUseCase implements DeleteTeamUseCase {
       throw UnimplementedError('Not exercised in this test.');
 }
 
+/// Every call waits on its own completer, so a test decides the order in
+/// which responses come back.
+class _GatedGetTeamMatchesUseCase implements GetTeamMatchesUseCase {
+  final statuses = <String>[];
+  final _completers =
+      <Completer<Either<CricketResponse<MatchHistoryRes>, CricketFailure>>>[];
+
+  @override
+  Future<Either<CricketResponse<MatchHistoryRes>, CricketFailure>> call({
+    GetTeamMatchesParams? params,
+  }) {
+    statuses.add(params!.status);
+    final completer =
+        Completer<Either<CricketResponse<MatchHistoryRes>, CricketFailure>>();
+    _completers.add(completer);
+    return completer.future;
+  }
+
+  void complete(int call, List<MatchHistoryItem> items) {
+    _completers[call].complete(
+      Either.result(
+        CricketResponse(
+          message: 'ok',
+          data: MatchHistoryRes(
+            matches: items,
+            page: 1,
+            limit: 20,
+            total: items.length,
+          ),
+        ),
+      ),
+    );
+  }
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) =>
+      throw UnimplementedError('Not exercised in this test.');
+}
+
+class _FakeAddTeamPlayerUseCase implements AddTeamPlayerUseCase {
+  Either<CricketResponse<TeamRosterPlayer>, CricketFailure>? response;
+  AddTeamPlayerParams? lastParams;
+
+  @override
+  Future<Either<CricketResponse<TeamRosterPlayer>, CricketFailure>> call({
+    AddTeamPlayerParams? params,
+  }) async {
+    lastParams = params;
+    return response!;
+  }
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) =>
+      throw UnimplementedError('Not exercised in this test.');
+}
+
+class _FakeUpdateTeamPlayerUseCase implements UpdateTeamPlayerUseCase {
+  Either<CricketResponse<TeamRosterPlayer>, CricketFailure>? response;
+  UpdateTeamPlayerParams? lastParams;
+
+  @override
+  Future<Either<CricketResponse<TeamRosterPlayer>, CricketFailure>> call({
+    UpdateTeamPlayerParams? params,
+  }) async {
+    lastParams = params;
+    return response!;
+  }
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) =>
+      throw UnimplementedError('Not exercised in this test.');
+}
+
+class _FakeSetTeamLeadershipUseCase implements SetTeamLeadershipUseCase {
+  Either<CricketResponse<CreatedTeamRes>, CricketFailure>? response;
+  SetTeamLeadershipParams? lastParams;
+
+  @override
+  Future<Either<CricketResponse<CreatedTeamRes>, CricketFailure>> call({
+    SetTeamLeadershipParams? params,
+  }) async {
+    lastParams = params;
+    return response!;
+  }
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) =>
+      throw UnimplementedError('Not exercised in this test.');
+}
+
 MatchHistoryItem _item(String matchId) => MatchHistoryItem(
   matchId: matchId,
   teamA: TeamRef(id: 'team-1', name: 'Mumbai Indians'),
@@ -177,7 +273,25 @@ void main() {
   late _FakeUpdateTeamLogoUseCase updateTeamLogoUseCase;
   late _FakeUpdateTeamUseCase updateTeamUseCase;
   late _FakeDeleteTeamUseCase deleteTeamUseCase;
+  late _FakeAddTeamPlayerUseCase addTeamPlayerUseCase;
+  late _FakeUpdateTeamPlayerUseCase updateTeamPlayerUseCase;
+  late _FakeSetTeamLeadershipUseCase setTeamLeadershipUseCase;
   late TeamProfileController controller;
+
+  TeamProfileController makeController({GetTeamMatchesUseCase? matches}) =>
+      TeamProfileController(
+        teamId: 'team-1',
+        getTeamProfileUseCase: profileUseCase,
+        getTeamMatchesUseCase: matches ?? matchesUseCase,
+        getScorerCandidatesUseCase: scorerCandidatesUseCase,
+        assignScorerUseCase: assignScorerUseCase,
+        updateTeamLogoUseCase: updateTeamLogoUseCase,
+        updateTeamUseCase: updateTeamUseCase,
+        deleteTeamUseCase: deleteTeamUseCase,
+        addTeamPlayerUseCase: addTeamPlayerUseCase,
+        updateTeamPlayerUseCase: updateTeamPlayerUseCase,
+        setTeamLeadershipUseCase: setTeamLeadershipUseCase,
+      );
 
   setUp(() {
     Get.testMode = true;
@@ -188,6 +302,9 @@ void main() {
     updateTeamLogoUseCase = _FakeUpdateTeamLogoUseCase();
     updateTeamUseCase = _FakeUpdateTeamUseCase();
     deleteTeamUseCase = _FakeDeleteTeamUseCase();
+    addTeamPlayerUseCase = _FakeAddTeamPlayerUseCase();
+    updateTeamPlayerUseCase = _FakeUpdateTeamPlayerUseCase();
+    setTeamLeadershipUseCase = _FakeSetTeamLeadershipUseCase();
     controller = TeamProfileController(
       teamId: 'team-1',
       getTeamProfileUseCase: profileUseCase,
@@ -197,6 +314,9 @@ void main() {
       updateTeamLogoUseCase: updateTeamLogoUseCase,
       updateTeamUseCase: updateTeamUseCase,
       deleteTeamUseCase: deleteTeamUseCase,
+      addTeamPlayerUseCase: addTeamPlayerUseCase,
+      updateTeamPlayerUseCase: updateTeamPlayerUseCase,
+      setTeamLeadershipUseCase: setTeamLeadershipUseCase,
     );
   });
 
@@ -431,6 +551,9 @@ void main() {
         updateTeamLogoUseCase: _FakeUpdateTeamLogoUseCase(),
         updateTeamUseCase: _FakeUpdateTeamUseCase(),
         deleteTeamUseCase: _FakeDeleteTeamUseCase(),
+        addTeamPlayerUseCase: _FakeAddTeamPlayerUseCase(),
+        updateTeamPlayerUseCase: _FakeUpdateTeamPlayerUseCase(),
+        setTeamLeadershipUseCase: _FakeSetTeamLeadershipUseCase(),
       );
       profileUseCaseA.response = Either.result(
         CricketResponse(
@@ -455,6 +578,9 @@ void main() {
         updateTeamLogoUseCase: _FakeUpdateTeamLogoUseCase(),
         updateTeamUseCase: _FakeUpdateTeamUseCase(),
         deleteTeamUseCase: _FakeDeleteTeamUseCase(),
+        addTeamPlayerUseCase: _FakeAddTeamPlayerUseCase(),
+        updateTeamPlayerUseCase: _FakeUpdateTeamPlayerUseCase(),
+        setTeamLeadershipUseCase: _FakeSetTeamLeadershipUseCase(),
       );
       profileUseCaseB.response = Either.result(
         CricketResponse(
@@ -684,5 +810,257 @@ void main() {
 
       expect(error, 'That team is in an upcoming or live match');
     });
+  });
+
+  Either<CricketResponse<MatchHistoryRes>, CricketFailure> matchesPage(
+    List<MatchHistoryItem> items,
+  ) => Either.result(
+    CricketResponse(
+      message: 'ok',
+      data: MatchHistoryRes(
+        matches: items,
+        page: 1,
+        limit: 20,
+        total: items.length,
+      ),
+    ),
+  );
+
+  Either<CricketResponse<TeamProfileRes>, CricketFailure> profileWith({
+    String? captainId,
+    String? viceCaptainId,
+  }) => Either.result(
+    CricketResponse(
+      message: 'ok',
+      data: TeamProfileRes(
+        teamId: 'team-1',
+        name: 'Mumbai Indians',
+        shortName: 'MI',
+        canManage: true,
+        roster: const [],
+        captainId: captainId,
+        viceCaptainId: viceCaptainId,
+      ),
+    ),
+  );
+
+  final rosterRow = TeamRosterPlayer(
+    playerId: 'p1',
+    playerName: 'Rohit',
+    role: 'batsman',
+  );
+
+  test('statusFilter starts at all', () {
+    expect(controller.statusFilter.value, 'all');
+  });
+
+  test(
+    'setStatusFilter reloads page 1 with the new status and resets hasMore',
+    () async {
+      matchesUseCase.response = matchesPage([_item('match-1')]);
+      await controller.loadMatches();
+
+      matchesUseCase.response = matchesPage([_item('live-1')]);
+      await controller.setStatusFilter('live');
+
+      expect(controller.statusFilter.value, 'live');
+      expect(matchesUseCase.lastStatus, 'live');
+      expect(matchesUseCase.lastPage, 1);
+      expect(controller.matches.map((m) => m.matchId), ['live-1']);
+      expect(controller.hasMore.value, isFalse);
+    },
+  );
+
+  test('setStatusFilter with the same value does not refetch', () async {
+    matchesUseCase.response = matchesPage([_item('match-1')]);
+    await controller.loadMatches();
+    final calls = matchesUseCase.callCount;
+
+    await controller.setStatusFilter('all');
+
+    expect(matchesUseCase.callCount, calls);
+  });
+
+  test('loadMoreMatches keeps the active status filter', () async {
+    matchesUseCase.response = Either.result(
+      CricketResponse(
+        message: 'ok',
+        data: MatchHistoryRes(
+          matches: [_item('a')],
+          page: 1,
+          limit: 1,
+          total: 2,
+        ),
+      ),
+    );
+    await controller.setStatusFilter('completed');
+    await controller.loadMoreMatches();
+
+    expect(matchesUseCase.lastStatus, 'completed');
+    expect(matchesUseCase.lastPage, 2);
+  });
+
+  test(
+    'a slow response for the previous filter does not overwrite the list '
+    'after a newer filter loads',
+    () async {
+      final gated = _GatedGetTeamMatchesUseCase();
+      final c = makeController(matches: gated);
+
+      final first = c.loadMatches(); // status all -> call 0
+      final second = c.setStatusFilter('live'); // -> call 1, while 0 in flight
+      expect(gated.statuses, ['all', 'live']);
+
+      gated.complete(1, [_item('live-1')]);
+      await second;
+      gated.complete(0, [_item('all-1'), _item('all-2')]);
+      await first;
+
+      expect(c.matches.map((m) => m.matchId), ['live-1']);
+      expect(c.isLoadingMatches.value, isFalse);
+    },
+  );
+
+  test('addPlayer refetches the profile and returns true', () async {
+    addTeamPlayerUseCase.response = Either.result(
+      CricketResponse(message: 'ok', data: rosterRow),
+    );
+    profileUseCase.response = profileWith();
+
+    final ok = await controller.addPlayer(
+      name: 'Rohit',
+      role: 'batsman',
+      jerseyNumber: 45,
+    );
+
+    expect(ok, isTrue);
+    expect(addTeamPlayerUseCase.lastParams?.teamId, 'team-1');
+    expect(addTeamPlayerUseCase.lastParams?.req.name, 'Rohit');
+    expect(addTeamPlayerUseCase.lastParams?.req.role, 'batsman');
+    expect(addTeamPlayerUseCase.lastParams?.req.jerseyNumber, 45);
+    expect(profileUseCase.lastTeamId, 'team-1');
+    expect(controller.profile.value?.name, 'Mumbai Indians');
+  });
+
+  testWidgets(
+    'addPlayer failure returns false, shows the server message and leaves '
+    'the profile untouched',
+    (tester) async {
+      await tester.pumpWidget(
+        GetMaterialApp(
+          theme: AppTheme.lightTheme,
+          home: const Scaffold(body: SizedBox()),
+        ),
+      );
+      profileUseCase.response = profileWith();
+      await controller.loadProfile();
+      addTeamPlayerUseCase.response = Either.fallback(
+        CricketBadRequestFailure(statusCode: 400, message: 'Bad name'),
+      );
+
+      final ok = await controller.addPlayer(name: 'x');
+      await tester.pump();
+
+      expect(ok, isFalse);
+      expect(find.text('Bad name'), findsOneWidget);
+      expect(controller.profile.value?.name, 'Mumbai Indians');
+
+      await tester.pump(const Duration(seconds: 10));
+      await tester.pumpAndSettle();
+    },
+  );
+
+  test('updatePlayer sends the ids and refetches the profile', () async {
+    updateTeamPlayerUseCase.response = Either.result(
+      CricketResponse(message: 'ok', data: rosterRow),
+    );
+    profileUseCase.response = profileWith();
+
+    final ok = await controller.updatePlayer(
+      playerId: 'p1',
+      role: 'bowler',
+      jerseyNumber: 7,
+    );
+
+    expect(ok, isTrue);
+    expect(updateTeamPlayerUseCase.lastParams?.teamId, 'team-1');
+    expect(updateTeamPlayerUseCase.lastParams?.playerId, 'p1');
+    expect(updateTeamPlayerUseCase.lastParams?.req.role, 'bowler');
+    expect(updateTeamPlayerUseCase.lastParams?.req.jerseyNumber, 7);
+    expect(profileUseCase.lastTeamId, 'team-1');
+  });
+
+  test(
+    'setLeader sends the current name and shortName plus both leader ids',
+    () async {
+      profileUseCase.response = profileWith(
+        captainId: 'p1',
+        viceCaptainId: 'p2',
+      );
+      await controller.loadProfile();
+      setTeamLeadershipUseCase.response = Either.result(
+        CricketResponse(
+          message: 'ok',
+          data: CreatedTeamRes(id: 'team-1', name: 'Mumbai Indians'),
+        ),
+      );
+
+      final ok = await controller.setLeader(playerId: 'p3', viceCaptain: false);
+
+      final req = setTeamLeadershipUseCase.lastParams!.req;
+      expect(ok, isTrue);
+      expect(req.name, 'Mumbai Indians');
+      expect(req.shortName, 'MI');
+      expect(req.captainId, 'p3');
+      expect(req.viceCaptainId, 'p2');
+    },
+  );
+
+  test('clearLeader sends null for that slot and keeps the other', () async {
+    profileUseCase.response = profileWith(captainId: 'p1', viceCaptainId: 'p2');
+    await controller.loadProfile();
+    setTeamLeadershipUseCase.response = Either.result(
+      CricketResponse(
+        message: 'ok',
+        data: CreatedTeamRes(id: 'team-1', name: 'Mumbai Indians'),
+      ),
+    );
+
+    await controller.clearLeader(viceCaptain: true);
+
+    final req = setTeamLeadershipUseCase.lastParams!.req;
+    expect(req.captainId, 'p1');
+    expect(req.viceCaptainId, isNull);
+  });
+
+  test(
+    'setLeader clears the other slot when promoting the player who holds it '
+    '(the server rejects the same player in both)',
+    () async {
+      profileUseCase.response = profileWith(
+        captainId: 'p1',
+        viceCaptainId: 'p2',
+      );
+      await controller.loadProfile();
+      setTeamLeadershipUseCase.response = Either.result(
+        CricketResponse(
+          message: 'ok',
+          data: CreatedTeamRes(id: 'team-1', name: 'Mumbai Indians'),
+        ),
+      );
+
+      await controller.setLeader(playerId: 'p2', viceCaptain: false);
+
+      final req = setTeamLeadershipUseCase.lastParams!.req;
+      expect(req.captainId, 'p2');
+      expect(req.viceCaptainId, isNull);
+    },
+  );
+
+  test('setLeader without a loaded profile does nothing and returns false', () async {
+    final ok = await controller.setLeader(playerId: 'p3', viceCaptain: false);
+
+    expect(ok, isFalse);
+    expect(setTeamLeadershipUseCase.lastParams, isNull);
   });
 }

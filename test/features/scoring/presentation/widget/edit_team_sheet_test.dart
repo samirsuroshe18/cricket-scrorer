@@ -4,7 +4,10 @@ import 'package:cricket_scorer/core/network/models/cricket_response.dart';
 import 'package:cricket_scorer/core/utils/either_util.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/created_team_res.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/assign_scorer.dart';
+import 'package:cricket_scorer/features/scoring/domain/usecases/add_team_player.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/delete_team.dart';
+import 'package:cricket_scorer/features/scoring/domain/usecases/set_team_leadership.dart';
+import 'package:cricket_scorer/features/scoring/domain/usecases/update_team_player.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/get_scorer_candidates.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/get_team_matches.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/get_team_profile.dart';
@@ -41,6 +44,24 @@ class _UnusedAssignScorerUseCase implements AssignScorerUseCase {
 }
 
 class _UnusedUpdateTeamLogoUseCase implements UpdateTeamLogoUseCase {
+  @override
+  dynamic noSuchMethod(Invocation invocation) =>
+      throw UnimplementedError('Not exercised in this test.');
+}
+
+class _UnusedAddTeamPlayerUseCase implements AddTeamPlayerUseCase {
+  @override
+  dynamic noSuchMethod(Invocation invocation) =>
+      throw UnimplementedError('Not exercised in this test.');
+}
+
+class _UnusedUpdateTeamPlayerUseCase implements UpdateTeamPlayerUseCase {
+  @override
+  dynamic noSuchMethod(Invocation invocation) =>
+      throw UnimplementedError('Not exercised in this test.');
+}
+
+class _UnusedSetTeamLeadershipUseCase implements SetTeamLeadershipUseCase {
   @override
   dynamic noSuchMethod(Invocation invocation) =>
       throw UnimplementedError('Not exercised in this test.');
@@ -86,6 +107,9 @@ void main() {
       updateTeamLogoUseCase: _UnusedUpdateTeamLogoUseCase(),
       updateTeamUseCase: updateTeamUseCase,
       deleteTeamUseCase: _UnusedDeleteTeamUseCase(),
+      addTeamPlayerUseCase: _UnusedAddTeamPlayerUseCase(),
+      updateTeamPlayerUseCase: _UnusedUpdateTeamPlayerUseCase(),
+      setTeamLeadershipUseCase: _UnusedSetTeamLeadershipUseCase(),
     );
 
     await tester.pumpWidget(

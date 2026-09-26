@@ -7,7 +7,10 @@ import 'package:cricket_scorer/core/network/models/cricket_response.dart';
 import 'package:cricket_scorer/core/utils/either_util.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/match_history_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/team_profile_res.dart';
+import 'package:cricket_scorer/features/scoring/domain/usecases/add_team_player.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/get_team_matches.dart';
+import 'package:cricket_scorer/features/scoring/domain/usecases/set_team_leadership.dart';
+import 'package:cricket_scorer/features/scoring/domain/usecases/update_team_player.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/get_team_profile.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/get_scorer_candidates.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/assign_scorer.dart';
@@ -116,6 +119,31 @@ class _SucceedingDeleteTeamUseCase implements DeleteTeamUseCase {
       throw UnimplementedError('Not exercised in this test.');
 }
 
+class _UnusedAddTeamPlayerUseCase implements AddTeamPlayerUseCase {
+  @override
+  dynamic noSuchMethod(Invocation invocation) =>
+      throw UnimplementedError('Not exercised in this test.');
+}
+
+class _UnusedUpdateTeamPlayerUseCase implements UpdateTeamPlayerUseCase {
+  @override
+  dynamic noSuchMethod(Invocation invocation) =>
+      throw UnimplementedError('Not exercised in this test.');
+}
+
+class _UnusedSetTeamLeadershipUseCase implements SetTeamLeadershipUseCase {
+  @override
+  dynamic noSuchMethod(Invocation invocation) =>
+      throw UnimplementedError('Not exercised in this test.');
+}
+
+/// The roster use cases TeamProfileBinding resolves; no test here exercises them.
+void _putUnusedRosterUseCases() {
+  Get.put<AddTeamPlayerUseCase>(_UnusedAddTeamPlayerUseCase());
+  Get.put<UpdateTeamPlayerUseCase>(_UnusedUpdateTeamPlayerUseCase());
+  Get.put<SetTeamLeadershipUseCase>(_UnusedSetTeamLeadershipUseCase());
+}
+
 void main() {
   setUp(() {
     Get.testMode = true;
@@ -158,6 +186,7 @@ void main() {
       Get.put<UpdateTeamLogoUseCase>(_UnusedUpdateTeamLogoUseCase());
       Get.put<UpdateTeamUseCase>(_UnusedUpdateTeamUseCase());
       Get.put<DeleteTeamUseCase>(_UnusedDeleteTeamUseCase());
+      _putUnusedRosterUseCases();
 
       await tester.pumpWidget(
         GetMaterialApp(
@@ -204,6 +233,7 @@ void main() {
     Get.put<UpdateTeamLogoUseCase>(_UnusedUpdateTeamLogoUseCase());
     Get.put<UpdateTeamUseCase>(_UnusedUpdateTeamUseCase());
     Get.put<DeleteTeamUseCase>(_UnusedDeleteTeamUseCase());
+    _putUnusedRosterUseCases();
 
     await tester.pumpWidget(
       GetMaterialApp(
@@ -243,6 +273,7 @@ void main() {
     Get.put<UpdateTeamLogoUseCase>(_UnusedUpdateTeamLogoUseCase());
     Get.put<UpdateTeamUseCase>(_UnusedUpdateTeamUseCase());
     Get.put<DeleteTeamUseCase>(_UnusedDeleteTeamUseCase());
+    _putUnusedRosterUseCases();
 
     await tester.pumpWidget(
       GetMaterialApp(
@@ -282,6 +313,7 @@ void main() {
       Get.put<UpdateTeamLogoUseCase>(_UnusedUpdateTeamLogoUseCase());
       Get.put<UpdateTeamUseCase>(_UnusedUpdateTeamUseCase());
       Get.put<DeleteTeamUseCase>(_SucceedingDeleteTeamUseCase());
+      _putUnusedRosterUseCases();
 
       await tester.pumpWidget(
         GetMaterialApp(
