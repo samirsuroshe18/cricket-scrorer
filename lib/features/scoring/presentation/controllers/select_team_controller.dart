@@ -7,12 +7,21 @@ import 'package:get/get.dart';
 
 /// Navigation arguments for [AppRoutes.selectTeam] — `title` is the app bar
 /// text ("Select Team A"/"Select Team B"), `initialQuery` seeds the search
-/// field with whatever the create-match field already held.
+/// field with whatever the create-match field already held. `excludeTeamId` /
+/// `excludeName` describe the team already chosen for the *other* side, so it
+/// can't be picked again — by id (an existing team) or by name (a typed one).
 class SelectTeamArgs {
   final String title;
   final String initialQuery;
+  final String? excludeTeamId;
+  final String? excludeName;
 
-  const SelectTeamArgs({required this.title, this.initialQuery = ''});
+  const SelectTeamArgs({
+    required this.title,
+    this.initialQuery = '',
+    this.excludeTeamId,
+    this.excludeName,
+  });
 }
 
 /// Search-as-you-type over `GET /v1/team`, same debounce/stale-response-guard
@@ -42,12 +51,34 @@ class SelectTeamController extends GetxController {
   /// doesn't have to parse them independently.
   String title = '';
 
+  String? _excludeTeamId;
+  String _excludeName = '';
+
   Timer? _debounceTimer;
+
+  /// Whether [team] is already the other side's team. Matches on id, and on
+  /// name too so a team can't sneak in when the other side was typed as free
+  /// text — the server's own `TEAM_NAMES_MUST_DIFFER` rule compares names.
+  bool isOtherSide(TeamSummary team) =>
+      (_excludeTeamId != null && team.id == _excludeTeamId) ||
+      _sameName(team.name);
+
+  /// Whether the typed query is the other side's name, so "use as new team"
+  /// would just collide with it.
+  bool get queryIsOtherSide => _sameName(query.value);
+
+  bool _sameName(String name) =>
+      _excludeName.isNotEmpty &&
+      name.trim().toLowerCase() == _excludeName.toLowerCase();
 
   @override
   void onInit() {
     super.onInit();
     final args = Get.arguments;
+    _excludeTeamId = args is SelectTeamArgs ? args.excludeTeamId : null;
+    _excludeName = args is SelectTeamArgs
+        ? (args.excludeName ?? '').trim()
+        : '';
     final initialQuery = args is SelectTeamArgs ? args.initialQuery.trim() : '';
     title = args is SelectTeamArgs ? args.title : '';
     queryController.text = initialQuery;
@@ -97,14 +128,17 @@ class SelectTeamController extends GetxController {
   /// `result is TeamSummary`, the same runtime-type-check pattern
   /// `choose_theme.dart`/`choose_language.dart` already use for their own
   /// `Get.back(result: ...)`.
-  void selectTeam(TeamSummary team) => Get.back(result: team);
+  void selectTeam(TeamSummary team) {
+    if (isOtherSide(team)) return;
+    Get.back(result: team);
+  }
 
   /// Pops back with the typed name as a plain [String] — the caller treats
   /// this as "create a new team from this name", exactly like leaving the
   /// old inline field on free text did.
   void useAsNewTeam() {
     final name = queryController.text.trim();
-    if (name.isEmpty) return;
+    if (name.isEmpty || _sameName(name)) return;
     Get.back(result: name);
   }
 

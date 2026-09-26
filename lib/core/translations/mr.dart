@@ -189,6 +189,7 @@ Map<String, String> mr = {
   TranslationKeys.teamSearchNoMatch: 'जुळत नाही — यामुळे नवीन संघ तयार होईल',
   TranslationKeys.recentTeams: 'अलीकडील संघ',
   TranslationKeys.matchingTeams: 'जुळणारे संघ',
+  TranslationKeys.teamAlreadyPicked: 'दुसऱ्या बाजूसाठी आधीच निवडला आहे',
   TranslationKeys.tossNeedsBothTeams: 'टॉससाठी दोन्ही संघ निवडा',
   TranslationKeys.filterYourTeams: 'तुमचे संघ',
   TranslationKeys.filterOpponent: 'प्रतिस्पर्धी',

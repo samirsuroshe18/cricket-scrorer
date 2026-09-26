@@ -183,6 +183,7 @@ class TranslationKeys {
   static const String teamSearchNoMatch = 'team_search_no_match';
   static const String recentTeams = 'recent_teams';
   static const String matchingTeams = 'matching_teams';
+  static const String teamAlreadyPicked = 'team_already_picked';
   static const String tossNeedsBothTeams = 'toss_needs_both_teams';
   static const String filterYourTeams = 'filter_your_teams';
   static const String filterOpponent = 'filter_opponent';
