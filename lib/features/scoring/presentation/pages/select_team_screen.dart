@@ -114,7 +114,7 @@ class SelectTeamScreen extends GetView<SelectTeamController> {
                 return ListView(
                   padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
                   children: [
-                    if (hasQuery) ...[
+                    if (hasQuery && !controller.queryIsOtherSide) ...[
                       _UseAsNewTeamRow(
                         query: query,
                         onTap: controller.useAsNewTeam,
@@ -138,6 +138,7 @@ class SelectTeamScreen extends GetView<SelectTeamController> {
                       for (final team in results)
                         _TeamResultRow(
                           team: team,
+                          unavailable: controller.isOtherSide(team),
                           onTap: () => controller.selectTeam(team),
                         ),
                     ],
@@ -175,16 +176,24 @@ class _SectionLabel extends StatelessWidget {
 }
 
 class _TeamResultRow extends StatelessWidget {
-  const _TeamResultRow({required this.team, required this.onTap});
+  const _TeamResultRow({
+    required this.team,
+    required this.onTap,
+    this.unavailable = false,
+  });
 
   final TeamSummary team;
   final VoidCallback onTap;
 
+  /// Already chosen for the other side: shown but not tappable, with the
+  /// reason where the organization would be.
+  final bool unavailable;
+
   @override
   Widget build(BuildContext context) {
     final org = team.organization;
-    return InkWell(
-      onTap: onTap,
+    final row = InkWell(
+      onTap: unavailable ? null : onTap,
       child: Container(
         constraints: const BoxConstraints(minHeight: 56),
         padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
@@ -209,7 +218,14 @@ class _TeamResultRow extends StatelessWidget {
                     text: team.name,
                     style: context.textTheme.titleSmall,
                   ),
-                  if (org != null)
+                  if (unavailable)
+                    CricketText(
+                      text: TranslationKeys.teamAlreadyPicked.tr,
+                      style: context.textTheme.bodySmall?.copyWith(
+                        color: context.colorScheme.onSurfaceVariant,
+                      ),
+                    )
+                  else if (org != null)
                     CricketText(
                       text: org.name,
                       style: context.textTheme.bodySmall?.copyWith(
@@ -223,6 +239,7 @@ class _TeamResultRow extends StatelessWidget {
         ),
       ),
     );
+    return unavailable ? Opacity(opacity: 0.5, child: row) : row;
   }
 }
 

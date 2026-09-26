@@ -176,6 +176,8 @@ class CreateMatchController extends GetxController {
       arguments: SelectTeamArgs(
         title: TranslationKeys.selectTeamATitle.tr,
         initialQuery: teamAController.text,
+        excludeTeamId: selectedTeamBId.value,
+        excludeName: teamBController.text,
       ),
     );
     if (result is TeamSummary) {
@@ -191,6 +193,8 @@ class CreateMatchController extends GetxController {
       arguments: SelectTeamArgs(
         title: TranslationKeys.selectTeamBTitle.tr,
         initialQuery: teamBController.text,
+        excludeTeamId: selectedTeamAId.value,
+        excludeName: teamAController.text,
       ),
     );
     if (result is TeamSummary) {

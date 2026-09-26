@@ -188,6 +188,7 @@ Map<String, String> hi = {
   TranslationKeys.teamSearchNoMatch: 'कोई मेल नहीं — इससे नई टीम बनेगी',
   TranslationKeys.recentTeams: 'हाल की टीमें',
   TranslationKeys.matchingTeams: 'मेल खाती टीमें',
+  TranslationKeys.teamAlreadyPicked: 'दूसरी ओर के लिए पहले से चुनी गई',
   TranslationKeys.tossNeedsBothTeams: 'टॉस के लिए दोनों टीमें चुनें',
   TranslationKeys.filterYourTeams: 'आपकी टीमें',
   TranslationKeys.filterOpponent: 'प्रतिद्वंद्वी',
