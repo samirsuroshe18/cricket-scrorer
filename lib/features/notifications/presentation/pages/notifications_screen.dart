@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cricket_scorer/core/extensions/space_extension.dart';
 import 'package:cricket_scorer/core/extensions/theme_x.dart';
 import 'package:cricket_scorer/core/global/widgets/cricket_button.dart';
@@ -19,8 +21,24 @@ const Map<String, IconData> _typeIcons = <String, IconData>{
   'lot_sold': Icons.emoji_events_outlined,
 };
 
-class NotificationsScreen extends GetView<NotificationsController> {
+class NotificationsScreen extends StatefulWidget {
   const NotificationsScreen({super.key});
+
+  @override
+  State<NotificationsScreen> createState() => _NotificationsScreenState();
+}
+
+class _NotificationsScreenState extends State<NotificationsScreen> {
+  NotificationsController get controller => Get.find<NotificationsController>();
+
+  @override
+  void initState() {
+    super.initState();
+    // The controller outlives this screen (the home shell registers it for the
+    // bell badge) and starts with `isLoading` true, so nothing but opening the
+    // screen can fetch the list; without this the spinner never resolves.
+    unawaited(controller.loadNotifications());
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -129,7 +147,9 @@ class NotificationsScreen extends GetView<NotificationsController> {
                           : const SizedBox.shrink(),
                     );
                   }
-                  return _NotificationTile(item: controller.notifications[index]);
+                  return _NotificationTile(
+                    item: controller.notifications[index],
+                  );
                 },
               ),
             ),
