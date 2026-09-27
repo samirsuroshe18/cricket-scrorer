@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:cricket_scorer/config/routes/app_routes.dart';
 import 'package:cricket_scorer/features/home/presentation/controllers/main_shell_controller.dart';
+import 'package:cricket_scorer/features/notifications/presentation/widget/player_invite_sheet.dart';
 import 'package:get/get.dart';
 
 /// Where a tap on a notification (a push, in any app state, or a row in the
@@ -15,7 +16,20 @@ import 'package:get/get.dart';
 /// route from — duplicating that from just a bare `matchId` risks the two
 /// falling out of sync. Landing on the Matches tab instead means the real
 /// card, and its already-correct routing, is one tap away.
-void navigateForNotificationData(Map<String, dynamic> data) {
+///
+/// A `player_invite` payload (`inviteId`) opens the invitee's Accept / Decline
+/// sheet instead; [showInvite] exists so a test can observe that decision
+/// without a live bottom sheet.
+void navigateForNotificationData(
+  Map<String, dynamic> data, {
+  Future<void> Function(String inviteId)? showInvite,
+}) {
+  final inviteId = data['inviteId'];
+  if (inviteId is String && inviteId.isNotEmpty) {
+    unawaited((showInvite ?? showPlayerInviteSheet)(inviteId));
+    return;
+  }
+
   final matchId = data['matchId'];
   if (matchId is String && matchId.isNotEmpty) {
     if (!Get.isRegistered<MainShellController>()) return;

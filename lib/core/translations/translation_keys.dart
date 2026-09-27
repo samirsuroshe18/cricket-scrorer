@@ -638,6 +638,12 @@ class TranslationKeys {
   static const String loadMorePlayers = 'load_more_players';
   static const String backToPlayers = 'back_to_players';
   static const String findUserByEmailHint = 'find_user_by_email_hint';
+  static const String playerInviteTitle = 'player_invite_title';
+  static const String playerInviteMessage = 'player_invite_message';
+  static const String acceptInvite = 'accept_invite';
+  static const String declineInvite = 'decline_invite';
+  static const String inviteAlreadyAccepted = 'invite_already_accepted';
+  static const String inviteAlreadyDeclined = 'invite_already_declined';
   static const String saveAndContinue = 'save_and_continue';
   static const String captain = 'captain';
   static const String viceCaptain = 'vice_captain';
