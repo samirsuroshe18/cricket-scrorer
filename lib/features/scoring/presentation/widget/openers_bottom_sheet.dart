@@ -8,6 +8,7 @@ import 'package:cricket_scorer/core/global/widgets/cricket_text.dart';
 import 'package:cricket_scorer/core/global/widgets/cricket_text_field.dart';
 import 'package:cricket_scorer/core/global/widgets/snackbars/cricket_snackbar.dart';
 import 'package:cricket_scorer/core/translations/translation_keys.dart';
+import 'package:cricket_scorer/features/scoring/data/models/response/team_profile_res.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -24,6 +25,14 @@ import 'package:get/get.dart';
 /// Driven by the server reporting no strike rather than by which screen the
 /// scorer arrived from, so it also covers resuming a match whose innings was
 /// never opened.
+///
+/// **Each opener role can be picked from a roster, not just typed** — the same
+/// chip-plus-text-field pattern `NextBowlerBottomSheet` already uses for a
+/// returning bowler. [battingRoster] backs the striker and non-striker
+/// pickers, [bowlingRoster] backs the opening-bowler picker; either can be
+/// empty (a brand-new team, or a best-effort fetch that failed), in which
+/// case that section falls back to a bare text field exactly as before —
+/// nothing here is ever a closed or mandatory list.
 class OpenersBottomSheet extends StatefulWidget {
   const OpenersBottomSheet({
     required this.onSubmit,
@@ -31,6 +40,8 @@ class OpenersBottomSheet extends StatefulWidget {
     required this.canUndo,
     required this.isUndoing,
     required this.onUndo,
+    this.battingRoster = const [],
+    this.bowlingRoster = const [],
     this.previousInningsRuns,
     this.previousInningsWickets,
     this.previousInningsOvers,
@@ -40,15 +51,29 @@ class OpenersBottomSheet extends StatefulWidget {
   /// Returns true once the innings is open. While it returns false the sheet
   /// stays up with the entered names intact, so a rejected name is corrected
   /// rather than retyped.
+  ///
+  /// Each `*Id` is what tells the server "this exact rostered player" apart
+  /// from "a new player who happens to share a name" — see [battingRoster]/
+  /// [bowlingRoster]. Sent only when the corresponding field still reads
+  /// exactly as picked; see `_submit`.
   final Future<bool> Function(
     String strikerName,
     String nonStrikerName,
-    String bowlerName,
-  )
+    String bowlerName, {
+    String? strikerId,
+    String? nonStrikerId,
+    String? bowlerId,
+  })
   onSubmit;
 
   /// Button-level loading, owned by the controller.
   final RxBool isSubmitting;
+
+  /// The batting side's roster, for the striker and non-striker pickers.
+  final List<TeamRosterPlayer> battingRoster;
+
+  /// The bowling side's roster, for the opening-bowler picker.
+  final List<TeamRosterPlayer> bowlingRoster;
 
   /// Innings 1's final score, shown above the form so a mis-tapped last ball
   /// is visible before the scorer commits to opening innings 2 — the point at
@@ -72,11 +97,21 @@ class OpenersBottomSheet extends StatefulWidget {
   final Future<bool> Function() onUndo;
 
   static Future<void> show({
-    required Future<bool> Function(String, String, String) onSubmit,
+    required Future<bool> Function(
+      String,
+      String,
+      String, {
+      String? strikerId,
+      String? nonStrikerId,
+      String? bowlerId,
+    })
+    onSubmit,
     required RxBool isSubmitting,
     required bool Function() canUndo,
     required RxBool isUndoing,
     required Future<bool> Function() onUndo,
+    List<TeamRosterPlayer> battingRoster = const [],
+    List<TeamRosterPlayer> bowlingRoster = const [],
     int? previousInningsRuns,
     int? previousInningsWickets,
     String? previousInningsOvers,
@@ -92,6 +127,8 @@ class OpenersBottomSheet extends StatefulWidget {
         canUndo: canUndo,
         isUndoing: isUndoing,
         onUndo: onUndo,
+        battingRoster: battingRoster,
+        bowlingRoster: bowlingRoster,
         previousInningsRuns: previousInningsRuns,
         previousInningsWickets: previousInningsWickets,
         previousInningsOvers: previousInningsOvers,
@@ -109,6 +146,14 @@ class _OpenersBottomSheetState extends State<OpenersBottomSheet> {
   final _bowlerController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
 
+  /// The chip most recently tapped for each role, if that role's field still
+  /// reads exactly as it left it — see `_submit`. Cleared implicitly by
+  /// comparison, not by a text listener, same as `NextBowlerBottomSheet`'s
+  /// `_picked`.
+  TeamRosterPlayer? _strikerPicked;
+  TeamRosterPlayer? _nonStrikerPicked;
+  TeamRosterPlayer? _bowlerPicked;
+
   String? _validateName(String? value) {
     if (value == null || value.trim().isEmpty) {
       return TranslationKeys.batsmanNameRequired.tr;
@@ -122,6 +167,45 @@ class _OpenersBottomSheetState extends State<OpenersBottomSheet> {
     }
     return null;
   }
+
+  void _pickStriker(TeamRosterPlayer player) {
+    setState(() {
+      _strikerController.text = player.playerName;
+      _strikerController.selection = TextSelection.collapsed(
+        offset: player.playerName.length,
+      );
+      _strikerPicked = player;
+    });
+  }
+
+  void _pickNonStriker(TeamRosterPlayer player) {
+    setState(() {
+      _nonStrikerController.text = player.playerName;
+      _nonStrikerController.selection = TextSelection.collapsed(
+        offset: player.playerName.length,
+      );
+      _nonStrikerPicked = player;
+    });
+  }
+
+  void _pickBowler(TeamRosterPlayer player) {
+    setState(() {
+      _bowlerController.text = player.playerName;
+      _bowlerController.selection = TextSelection.collapsed(
+        offset: player.playerName.length,
+      );
+      _bowlerPicked = player;
+    });
+  }
+
+  /// Only sent when the field still reads exactly as the tap left it — a
+  /// scorer who picks a chip and then edits the name is typing someone else,
+  /// and that must reach the server as a bare name, not the chip's id. Same
+  /// reasoning as `NextBowlerBottomSheet._submit`.
+  String? _idFor(TeamRosterPlayer? picked, String currentText) =>
+      (picked != null && picked.playerName == currentText)
+      ? picked.playerId
+      : null;
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
@@ -149,7 +233,15 @@ class _OpenersBottomSheetState extends State<OpenersBottomSheet> {
     // Popping this sheet's own route directly is unaffected by any overlay
     // elsewhere. See wicket_bottom_sheet.dart/next_bowler_bottom_sheet.dart
     // for the same fix applied earlier.
-    if (await widget.onSubmit(striker, nonStriker, bowler) && mounted) {
+    final success = await widget.onSubmit(
+      striker,
+      nonStriker,
+      bowler,
+      strikerId: _idFor(_strikerPicked, striker),
+      nonStrikerId: _idFor(_nonStrikerPicked, nonStriker),
+      bowlerId: _idFor(_bowlerPicked, bowler),
+    );
+    if (success && mounted) {
       Navigator.of(context).pop();
     }
   }
@@ -158,10 +250,8 @@ class _OpenersBottomSheetState extends State<OpenersBottomSheet> {
   ///
   /// This sheet is undismissable, so once it is up — meaning innings 1 has
   /// already completed — the console's own undo control is unreachable
-  /// behind it, and (per docs/api.md's undo scope) submitting this form is
-  /// the point past which undo can no longer reach back into innings 1 at
-  /// all. See next_bowler_bottom_sheet.dart's identical `_undo` for the same
-  /// reasoning applied to the over boundary.
+  /// behind it — see next_bowler_bottom_sheet.dart's identical `_undo` for
+  /// the same reasoning applied to the over boundary.
   Future<void> _undo() async {
     // Navigator.pop, not Get.back() — same snackbar hazard as `_submit`.
     if (await widget.onUndo() && mounted) {
@@ -175,6 +265,61 @@ class _OpenersBottomSheetState extends State<OpenersBottomSheet> {
     _nonStrikerController.dispose();
     _bowlerController.dispose();
     super.dispose();
+  }
+
+  /// One picker section: an optional hint + chip row drawn from [roster]
+  /// (nothing rendered when it's empty, so an unfetched/empty roster falls
+  /// back to a bare text field exactly as before), followed by the text
+  /// field itself. [isBlocked] greys a chip that's already picked for the
+  /// other opener role — never applied to the bowler picker, which has no
+  /// must-differ rule against the openers.
+  Widget _pickerSection({
+    required Key key,
+    required List<TeamRosterPlayer> roster,
+    required TextEditingController controller,
+    required void Function(TeamRosterPlayer) onPick,
+    required String labelText,
+    required String hintText,
+    required String? Function(String?) validator,
+    bool Function(TeamRosterPlayer) isBlocked = _neverBlocked,
+  }) {
+    return Column(
+      key: key,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (roster.isNotEmpty) ...[
+          CricketText(
+            text: TranslationKeys.pickPlayerOrTypeNew.tr,
+            style: context.textTheme.bodySmall?.copyWith(
+              color: context.colorScheme.onSurfaceVariant,
+            ),
+          ),
+          8.h,
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: roster.map((player) {
+              final blocked = isBlocked(player);
+              return ChoiceChip(
+                label: CricketText(text: player.playerName),
+                selected: controller.text.trim() == player.playerName,
+                onSelected: blocked ? null : (_) => onPick(player),
+              );
+            }).toList(),
+          ),
+          8.h,
+        ],
+        CricketTextField(
+          controller: controller,
+          labelText: labelText,
+          hintText: hintText,
+          textCapitalization: TextCapitalization.words,
+          maxLength: 50,
+          isRequired: true,
+          validator: validator,
+        ),
+      ],
+    );
   }
 
   @override
@@ -213,33 +358,37 @@ class _OpenersBottomSheetState extends State<OpenersBottomSheet> {
               ),
               16.h,
             ],
-            CricketTextField(
+            _pickerSection(
+              key: const ValueKey('opener-picker-striker'),
+              roster: widget.battingRoster,
               controller: _strikerController,
+              onPick: _pickStriker,
               labelText: TranslationKeys.striker.tr,
               hintText: TranslationKeys.enterStrikerName.tr,
-              textCapitalization: TextCapitalization.words,
-              maxLength: 50,
-              isRequired: true,
               validator: _validateName,
+              isBlocked: (player) =>
+                  player.playerName == _nonStrikerController.text.trim(),
             ),
             16.h,
-            CricketTextField(
+            _pickerSection(
+              key: const ValueKey('opener-picker-non-striker'),
+              roster: widget.battingRoster,
               controller: _nonStrikerController,
+              onPick: _pickNonStriker,
               labelText: TranslationKeys.nonStriker.tr,
               hintText: TranslationKeys.enterNonStrikerName.tr,
-              textCapitalization: TextCapitalization.words,
-              maxLength: 50,
-              isRequired: true,
               validator: _validateName,
+              isBlocked: (player) =>
+                  player.playerName == _strikerController.text.trim(),
             ),
             16.h,
-            CricketTextField(
+            _pickerSection(
+              key: const ValueKey('opener-picker-bowler'),
+              roster: widget.bowlingRoster,
               controller: _bowlerController,
+              onPick: _pickBowler,
               labelText: TranslationKeys.openingBowler.tr,
               hintText: TranslationKeys.enterBowlerName.tr,
-              textCapitalization: TextCapitalization.words,
-              maxLength: 50,
-              isRequired: true,
               validator: _validateBowler,
             ),
             24.h,
@@ -285,3 +434,5 @@ class _OpenersBottomSheetState extends State<OpenersBottomSheet> {
     );
   }
 }
+
+bool _neverBlocked(TeamRosterPlayer player) => false;

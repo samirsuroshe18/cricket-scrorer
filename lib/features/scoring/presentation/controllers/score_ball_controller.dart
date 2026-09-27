@@ -22,6 +22,7 @@ import 'package:cricket_scorer/features/scoring/data/models/response/over_comple
 import 'package:cricket_scorer/features/scoring/data/models/response/score_ball_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/strike.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/sync_res.dart';
+import 'package:cricket_scorer/features/scoring/data/models/response/team_profile_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/undo_ball_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/wicket.dart';
 import 'package:cricket_scorer/features/scoring/data/scoring_constants.dart';
@@ -421,7 +422,8 @@ class ScoreBallController extends GetxController {
               // innings with genuinely nothing to report yet.
               final serverPartnershipRuns = event.result.partnershipRuns;
               final serverPartnershipBalls = event.result.partnershipBalls;
-              if (serverPartnershipRuns != null && serverPartnershipBalls != null) {
+              if (serverPartnershipRuns != null &&
+                  serverPartnershipBalls != null) {
                 _partnership.startFromServerPartnership(
                   currentRuns: event.result.totalRuns,
                   currentLegalBalls: _legalBalls,
@@ -541,6 +543,42 @@ class ScoreBallController extends GetxController {
         legalDeliveries: bowler.legalDeliveries,
       );
     }
+  }
+
+  /// One team's roster for the openers picker, or `[]` on any failure. Best-
+  /// effort and silent, same reasoning as [_seedBowlerRosterFromServer]: this
+  /// only ever adds convenience chips to a picker that already works from a
+  /// bare text field, so a failed or offline fetch is not worth a snackbar —
+  /// and, unlike [matchRepository]'s other calls, [MatchRepository.getTeamProfile]
+  /// is not guaranteed to return rather than throw in every test double, so
+  /// this guards with try/catch rather than trusting `isResult` alone.
+  Future<List<TeamRosterPlayer>> _fetchRoster(String teamId) async {
+    try {
+      final response = await matchRepository.getTeamProfile(teamId: teamId);
+      if (!response.isResult) return const [];
+      return response.result.data?.roster ?? const [];
+    } catch (_) {
+      return const [];
+    }
+  }
+
+  /// The team id about to bat when the openers sheet is shown next.
+  ///
+  /// [_currentBattingTeam] holds whichever side is batting *right now* — for
+  /// the very first innings that already IS the answer, but for the
+  /// innings-1-to-2 transition it is still innings 1's batting side (nothing
+  /// updates it until the real `start-innings` call for innings 2 actually
+  /// succeeds — see [_applyInningsStarted]), so [justFinishedInnings] is what
+  /// tells this to flip it instead. Mirrors the server's own
+  /// `battingFirst`/`currentInnings === 2` derivation in `startInnings`
+  /// (match.controller.js) exactly, using the same 'teamA' fallback for a
+  /// skipped toss.
+  String _upcomingBattingTeamId({required bool justFinishedInnings}) {
+    final side = _currentBattingTeam ?? 'teamA';
+    final upcomingSide = justFinishedInnings
+        ? (side == 'teamA' ? 'teamB' : 'teamA')
+        : side;
+    return upcomingSide == 'teamA' ? match.teamA.id : match.teamB.id;
   }
 
   /// The single place the console leaves this screen. Idempotent against
@@ -747,13 +785,36 @@ class ScoreBallController extends GetxController {
           // final figures here: nothing resets them until this form actually
           // submits.
           final justFinishedInnings = isInningsComplete.value;
+          final battingTeamId = _upcomingBattingTeamId(
+            justFinishedInnings: justFinishedInnings,
+          );
+          final bowlingTeamId = battingTeamId == match.teamA.id
+              ? match.teamB.id
+              : match.teamA.id;
+          final rosters = await Future.wait([
+            _fetchRoster(battingTeamId),
+            _fetchRoster(bowlingTeamId),
+          ]);
           await OpenersBottomSheet.show(
             isSubmitting: isStartingInnings,
-            onSubmit: (strikerName, nonStrikerName, bowlerName) => startInnings(
-              strikerName: strikerName,
-              nonStrikerName: nonStrikerName,
-              bowlerName: bowlerName,
-            ),
+            battingRoster: rosters[0],
+            bowlingRoster: rosters[1],
+            onSubmit:
+                (
+                  strikerName,
+                  nonStrikerName,
+                  bowlerName, {
+                  strikerId,
+                  nonStrikerId,
+                  bowlerId,
+                }) => startInnings(
+                  strikerName: strikerName,
+                  nonStrikerName: nonStrikerName,
+                  bowlerName: bowlerName,
+                  strikerId: strikerId,
+                  nonStrikerId: nonStrikerId,
+                  bowlerId: bowlerId,
+                ),
             previousInningsRuns: justFinishedInnings ? totalRuns.value : null,
             previousInningsWickets: justFinishedInnings ? wickets.value : null,
             previousInningsOvers: justFinishedInnings ? overs.value : null,
@@ -878,7 +939,8 @@ class ScoreBallController extends GetxController {
     final existing = bowlersSeen[index];
     final upgradedId = (id != null && existing.id == null) ? id : existing.id;
     final upgradedFigures = legalDeliveries ?? existing.legalDeliveries;
-    if (upgradedId != existing.id || upgradedFigures != existing.legalDeliveries) {
+    if (upgradedId != existing.id ||
+        upgradedFigures != existing.legalDeliveries) {
       bowlersSeen[index] = BowlerRef(
         id: upgradedId,
         name: trimmed,
@@ -1466,6 +1528,9 @@ class ScoreBallController extends GetxController {
     required String strikerName,
     required String nonStrikerName,
     required String bowlerName,
+    String? strikerId,
+    String? nonStrikerId,
+    String? bowlerId,
   }) async {
     final previousInningsNumber = _currentInningsNumber;
     isStartingInnings.value = true;
@@ -1475,8 +1540,11 @@ class ScoreBallController extends GetxController {
         matchId: match.matchId,
         startInningsReq: StartInningsReq(
           strikerName: strikerName,
+          strikerId: strikerId,
           nonStrikerName: nonStrikerName,
+          nonStrikerId: nonStrikerId,
           bowlerName: bowlerName,
+          bowlerId: bowlerId,
         ),
       ),
     );

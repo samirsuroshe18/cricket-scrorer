@@ -1,47 +1,273 @@
 import 'package:cricket_scorer/config/theme/app_theme.dart';
+import 'package:cricket_scorer/core/global/widgets/cricket_button.dart';
 import 'package:cricket_scorer/core/global/widgets/snackbars/cricket_snackbar.dart';
+import 'package:cricket_scorer/features/scoring/data/models/response/team_profile_res.dart';
 import 'package:cricket_scorer/features/scoring/presentation/widget/openers_bottom_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart';
 
+typedef _OnSubmit =
+    Future<bool> Function(
+      String strikerName,
+      String nonStrikerName,
+      String bowlerName, {
+      String? strikerId,
+      String? nonStrikerId,
+      String? bowlerId,
+    });
+
 void main() {
+  final battingRoster = [
+    TeamRosterPlayer(
+      playerId: 'p-rohit',
+      playerName: 'Rohit Sharma',
+      role: 'batsman',
+    ),
+    TeamRosterPlayer(
+      playerId: 'p-ishan',
+      playerName: 'Ishan Kishan',
+      role: 'batsman',
+    ),
+  ];
+  final bowlingRoster = [
+    TeamRosterPlayer(
+      playerId: 'p-bumrah',
+      playerName: 'Jasprit Bumrah',
+      role: 'bowler',
+    ),
+  ];
+
+  Future<void> pumpSheet(
+    WidgetTester tester,
+    _OnSubmit onSubmit, {
+    List<TeamRosterPlayer> battingRoster = const [],
+    List<TeamRosterPlayer> bowlingRoster = const [],
+    bool Function() canUndo = _neverCanUndo,
+    Future<bool> Function() onUndo = _neverUndo,
+    int? previousInningsRuns,
+    int? previousInningsWickets,
+    String? previousInningsOvers,
+  }) async {
+    await tester.pumpWidget(
+      GetMaterialApp(
+        theme: AppTheme.lightTheme,
+        home: Scaffold(
+          body: Builder(
+            builder: (context) => ElevatedButton(
+              onPressed: () => OpenersBottomSheet.show(
+                onSubmit: onSubmit,
+                isSubmitting: false.obs,
+                battingRoster: battingRoster,
+                bowlingRoster: bowlingRoster,
+                canUndo: canUndo,
+                isUndoing: false.obs,
+                onUndo: onUndo,
+                previousInningsRuns: previousInningsRuns,
+                previousInningsWickets: previousInningsWickets,
+                previousInningsOvers: previousInningsOvers,
+              ),
+              child: const Text('open'),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    await tester.tap(find.text('open'));
+    await tester.pumpAndSettle();
+  }
+
+  testWidgets(
+    'shows the batting side\'s roster as chips for striker and non-striker, '
+    'and the bowling side\'s roster for the opening bowler',
+    (WidgetTester tester) async {
+      await pumpSheet(
+        tester,
+        (_, _, _, {strikerId, nonStrikerId, bowlerId}) async => true,
+        battingRoster: battingRoster,
+        bowlingRoster: bowlingRoster,
+      );
+
+      // Each batting-side player is offered for both opener roles, so their
+      // chips appear once per role's picker; the bowling side is offered
+      // only for the opening bowler.
+      expect(find.text('Rohit Sharma'), findsNWidgets(2));
+      expect(find.text('Ishan Kishan'), findsNWidgets(2));
+      expect(find.text('Jasprit Bumrah'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'tapping a striker chip fills the field and sends its id, not just the name',
+    (WidgetTester tester) async {
+      String? submittedStrikerId;
+
+      await pumpSheet(
+        tester,
+        (
+          striker,
+          nonStriker,
+          bowler, {
+          strikerId,
+          nonStrikerId,
+          bowlerId,
+        }) async {
+          submittedStrikerId = strikerId;
+          return true;
+        },
+        battingRoster: battingRoster,
+        bowlingRoster: bowlingRoster,
+      );
+
+      await tester.tap(
+        find.descendant(
+          of: find.byKey(const ValueKey('opener-picker-striker')),
+          matching: find.text('Rohit Sharma'),
+        ),
+      );
+      await tester.pump();
+      await tester.enterText(find.byType(TextFormField).at(1), 'Non-Striker');
+      await tester.enterText(find.byType(TextFormField).at(2), 'Bumrah');
+
+      await tester.ensureVisible(find.byType(CricketButton));
+      await tester.tap(find.byType(CricketButton));
+      await tester.pumpAndSettle();
+
+      expect(submittedStrikerId, 'p-rohit');
+    },
+  );
+
+  testWidgets(
+    'editing the striker name after picking a chip sends a bare name — '
+    'a scorer correcting or replacing the picked name is naming someone else',
+    (WidgetTester tester) async {
+      String? submittedStrikerName;
+      String? submittedStrikerId;
+
+      await pumpSheet(
+        tester,
+        (
+          striker,
+          nonStriker,
+          bowler, {
+          strikerId,
+          nonStrikerId,
+          bowlerId,
+        }) async {
+          submittedStrikerName = striker;
+          submittedStrikerId = strikerId;
+          return true;
+        },
+        battingRoster: battingRoster,
+        bowlingRoster: bowlingRoster,
+      );
+
+      await tester.tap(
+        find.descendant(
+          of: find.byKey(const ValueKey('opener-picker-striker')),
+          matching: find.text('Rohit Sharma'),
+        ),
+      );
+      await tester.pump();
+
+      await tester.enterText(
+        find.byType(TextFormField).at(0),
+        'Rohit G Sharma',
+      );
+      await tester.enterText(find.byType(TextFormField).at(1), 'Non-Striker');
+      await tester.enterText(find.byType(TextFormField).at(2), 'Bumrah');
+
+      await tester.ensureVisible(find.byType(CricketButton));
+      await tester.tap(find.byType(CricketButton));
+      await tester.pumpAndSettle();
+
+      expect(submittedStrikerName, 'Rohit G Sharma');
+      expect(submittedStrikerId, isNull);
+    },
+  );
+
+  testWidgets(
+    'a player already picked as striker is disabled in the non-striker chip '
+    'list — the two openers must be different people',
+    (WidgetTester tester) async {
+      await pumpSheet(
+        tester,
+        (_, _, _, {strikerId, nonStrikerId, bowlerId}) async => true,
+        battingRoster: battingRoster,
+        bowlingRoster: bowlingRoster,
+      );
+
+      await tester.tap(
+        find.descendant(
+          of: find.byKey(const ValueKey('opener-picker-striker')),
+          matching: find.text('Rohit Sharma'),
+        ),
+      );
+      await tester.pump();
+
+      final nonStrikerChip = tester.widget<ChoiceChip>(
+        find.descendant(
+          of: find.byKey(const ValueKey('opener-picker-non-striker')),
+          matching: find.widgetWithText(ChoiceChip, 'Rohit Sharma'),
+        ),
+      );
+
+      expect(
+        nonStrikerChip.onSelected,
+        isNull,
+        reason: 'Rohit Sharma is already picked as striker',
+      );
+    },
+  );
+
+  testWidgets(
+    'the opening bowler picker draws from the bowling side, not the batting '
+    'side, and has no must-differ exclusion against the openers',
+    (WidgetTester tester) async {
+      String? submittedBowlerId;
+
+      await pumpSheet(
+        tester,
+        (
+          striker,
+          nonStriker,
+          bowler, {
+          strikerId,
+          nonStrikerId,
+          bowlerId,
+        }) async {
+          submittedBowlerId = bowlerId;
+          return true;
+        },
+        battingRoster: battingRoster,
+        bowlingRoster: bowlingRoster,
+      );
+
+      await tester.enterText(find.byType(TextFormField).at(0), 'Striker');
+      await tester.enterText(find.byType(TextFormField).at(1), 'Non-Striker');
+      await tester.ensureVisible(find.text('Jasprit Bumrah'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Jasprit Bumrah'));
+      await tester.pumpAndSettle();
+
+      await tester.ensureVisible(find.byType(CricketButton));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byType(CricketButton));
+      await tester.pumpAndSettle();
+
+      expect(submittedBowlerId, 'p-bumrah');
+    },
+  );
+
   testWidgets(
     'closes once onSubmit succeeds even while a snackbar is showing — '
     'Get.back() would close the snackbar instead and leave this sheet stuck',
     (WidgetTester tester) async {
-      // A real reactive read, not a hardcoded `false` — the sheet's undo-link
-      // Obx wraps `canUndo()` and, when it short-circuits false, never reaches
-      // `isUndoing.value` either. With no Rx access at all, GetX flags the Obx
-      // as unused. Production code always has a real subscription here; this
-      // is purely to keep the bare test tree well-formed. See
-      // next_bowler_bottom_sheet_test.dart's identical comment.
-      final canUndo = false.obs;
-
-      await tester.pumpWidget(
-        GetMaterialApp(
-          theme: AppTheme.lightTheme,
-          home: Scaffold(
-            body: Builder(
-              builder: (context) {
-                return ElevatedButton(
-                  onPressed: () => OpenersBottomSheet.show(
-                    onSubmit: (_, _, _) async => true,
-                    isSubmitting: false.obs,
-                    canUndo: () => canUndo.value,
-                    isUndoing: false.obs,
-                    onUndo: () async => false,
-                  ),
-                  child: const Text('open'),
-                );
-              },
-            ),
-          ),
-        ),
+      await pumpSheet(
+        tester,
+        (_, _, _, {strikerId, nonStrikerId, bowlerId}) async => true,
       );
-
-      await tester.tap(find.text('open'));
-      await tester.pumpAndSettle();
 
       expect(
         find.byType(OpenersBottomSheet),
@@ -82,41 +308,6 @@ void main() {
     },
   );
 
-  Future<void> pumpSheet(
-    WidgetTester tester, {
-    int? previousInningsRuns,
-    int? previousInningsWickets,
-    String? previousInningsOvers,
-    required bool Function() canUndo,
-    required Future<bool> Function() onUndo,
-  }) async {
-    await tester.pumpWidget(
-      GetMaterialApp(
-        theme: AppTheme.lightTheme,
-        home: Scaffold(
-          body: Builder(
-            builder: (context) => ElevatedButton(
-              onPressed: () => OpenersBottomSheet.show(
-                onSubmit: (_, _, _) async => true,
-                isSubmitting: false.obs,
-                canUndo: canUndo,
-                isUndoing: false.obs,
-                onUndo: onUndo,
-                previousInningsRuns: previousInningsRuns,
-                previousInningsWickets: previousInningsWickets,
-                previousInningsOvers: previousInningsOvers,
-              ),
-              child: const Text('open'),
-            ),
-          ),
-        ),
-      ),
-    );
-
-    await tester.tap(find.text('open'));
-    await tester.pumpAndSettle();
-  }
-
   testWidgets(
     'shows the previous innings\' final score when supplied — the '
     'innings-1-to-2 transition, where a mis-tapped last ball should be '
@@ -125,6 +316,7 @@ void main() {
       final canUndo = false.obs;
       await pumpSheet(
         tester,
+        (_, _, _, {strikerId, nonStrikerId, bowlerId}) async => true,
         previousInningsRuns: 118,
         previousInningsWickets: 6,
         previousInningsOvers: '19.4',
@@ -148,6 +340,7 @@ void main() {
       final canUndo = false.obs;
       await pumpSheet(
         tester,
+        (_, _, _, {strikerId, nonStrikerId, bowlerId}) async => true,
         canUndo: () => canUndo.value,
         onUndo: () async => false,
       );
@@ -162,6 +355,7 @@ void main() {
       final canUndo = false.obs;
       await pumpSheet(
         tester,
+        (_, _, _, {strikerId, nonStrikerId, bowlerId}) async => true,
         previousInningsRuns: 118,
         previousInningsWickets: 6,
         previousInningsOvers: '19.4',
@@ -189,6 +383,7 @@ void main() {
 
       await pumpSheet(
         tester,
+        (_, _, _, {strikerId, nonStrikerId, bowlerId}) async => true,
         previousInningsRuns: 118,
         previousInningsWickets: 6,
         previousInningsOvers: '19.4',
@@ -215,3 +410,12 @@ void main() {
     },
   );
 }
+
+// A real reactive read, not a hardcoded `false` — the sheet's undo-link Obx
+// wraps `canUndo()` and, when it short-circuits false with no Rx access at
+// all, GetX flags the Obx as unused ("improper use of a GetX/Obx"). Shared
+// across tests that don't care about undo behaviour is safe: nothing ever
+// mutates it, and each test builds its own fresh widget tree regardless.
+final _sharedFalseObs = false.obs;
+bool _neverCanUndo() => _sharedFalseObs.value;
+Future<bool> _neverUndo() async => false;

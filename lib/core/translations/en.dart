@@ -234,6 +234,7 @@ Map<String, String> en = {
   TranslationKeys.nonStriker: 'Non-striker',
   TranslationKeys.openingBatsmen: 'Opening Batsmen',
   TranslationKeys.chooseOpeners: 'Choose the opening batsmen to start scoring',
+  TranslationKeys.pickPlayerOrTypeNew: 'Pick a player, or type a new name',
   TranslationKeys.enterStrikerName: 'Enter striker name',
   TranslationKeys.enterNonStrikerName: 'Enter non-striker name',
   TranslationKeys.startInnings: 'Start Innings',
