@@ -4,7 +4,9 @@ import 'package:cricket_scorer/core/network/models/api_response_model.dart';
 import 'package:cricket_scorer/core/utils/either_util.dart';
 import 'package:cricket_scorer/features/scoring/data/match_endpoint.dart';
 import 'package:cricket_scorer/features/scoring/data/models/request/create_match_req.dart';
+import 'package:cricket_scorer/features/scoring/data/models/request/add_team_player_req.dart';
 import 'package:cricket_scorer/features/scoring/data/models/request/create_team_req.dart';
+import 'package:cricket_scorer/features/scoring/data/models/request/set_team_leadership_req.dart';
 import 'package:cricket_scorer/features/scoring/data/models/request/save_squad_req.dart';
 import 'package:cricket_scorer/features/scoring/data/models/request/score_ball_req.dart';
 import 'package:cricket_scorer/features/scoring/data/models/request/select_bowler_req.dart';
@@ -12,6 +14,7 @@ import 'package:cricket_scorer/features/scoring/data/models/request/start_inning
 import 'package:cricket_scorer/features/scoring/data/models/request/sync_req.dart';
 import 'package:cricket_scorer/features/scoring/data/models/request/undo_ball_req.dart';
 import 'package:cricket_scorer/features/scoring/data/models/request/update_player_req.dart';
+import 'package:cricket_scorer/features/scoring/data/models/request/update_team_player_req.dart';
 import 'package:cricket_scorer/features/scoring/domain/team_owner_filter.dart';
 import 'package:dio/dio.dart' show FormData;
 
@@ -126,10 +129,50 @@ class MatchApiService {
     required String teamId,
     required int page,
     required int limit,
+    String status = 'all',
   }) async {
     return await apiClient.get(
       endpoint: matchEndpoint.teamMatches(teamId),
-      queryParameters: {'page': page, 'limit': limit},
+      // `all` is the server default, so it is left off the wire.
+      queryParameters: {
+        'page': page,
+        'limit': limit,
+        if (status != 'all') 'status': status,
+      },
+    );
+  }
+
+  /// `POST /v1/team/:teamId/players`.
+  Future<Either<ApiResponseModel, CricketFailure>> addTeamPlayer({
+    required String teamId,
+    required AddTeamPlayerReq params,
+  }) async {
+    return await apiClient.post(
+      endpoint: matchEndpoint.teamPlayers(teamId),
+      data: params.toJson(),
+    );
+  }
+
+  /// `PATCH /v1/team/:teamId/players/:playerId`.
+  Future<Either<ApiResponseModel, CricketFailure>> updateTeamPlayer({
+    required String teamId,
+    required String playerId,
+    required UpdateTeamPlayerReq params,
+  }) async {
+    return await apiClient.patch(
+      endpoint: matchEndpoint.teamPlayer(teamId, playerId),
+      data: params.toJson(),
+    );
+  }
+
+  /// `PATCH /v1/team/:teamId` carrying `captainId` / `viceCaptainId`.
+  Future<Either<ApiResponseModel, CricketFailure>> setTeamLeadership({
+    required String teamId,
+    required SetTeamLeadershipReq params,
+  }) async {
+    return await apiClient.patch(
+      endpoint: matchEndpoint.teamProfile(teamId),
+      data: params.toJson(),
     );
   }
 

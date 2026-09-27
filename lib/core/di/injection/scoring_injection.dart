@@ -15,7 +15,10 @@ import 'package:cricket_scorer/features/scoring/domain/repositories/match_reposi
 import 'package:cricket_scorer/features/scoring/domain/repositories/team_repository.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/create_match.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/create_team.dart';
+import 'package:cricket_scorer/features/scoring/domain/usecases/add_team_player.dart';
+import 'package:cricket_scorer/features/scoring/domain/usecases/set_team_leadership.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/update_team.dart';
+import 'package:cricket_scorer/features/scoring/domain/usecases/update_team_player.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/delete_team.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/score_ball.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/select_bowler.dart';
@@ -166,6 +169,18 @@ class ScoringInjection {
       fenix: true,
     );
 
+    Get.lazyPut<AddTeamPlayerUseCase>(
+      () => AddTeamPlayerUseCase(teamRepository: Get.find<TeamRepository>()),
+      fenix: true,
+    );
+    Get.lazyPut<UpdateTeamPlayerUseCase>(
+      () => UpdateTeamPlayerUseCase(teamRepository: Get.find<TeamRepository>()),
+      fenix: true,
+    );
+    Get.lazyPut<SetTeamLeadershipUseCase>(
+      () => SetTeamLeadershipUseCase(teamRepository: Get.find<TeamRepository>()),
+      fenix: true,
+    );
     Get.lazyPut<DeleteTeamUseCase>(
       () => DeleteTeamUseCase(teamRepository: Get.find<TeamRepository>()),
       fenix: true,

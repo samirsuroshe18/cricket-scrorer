@@ -11,6 +11,7 @@ class _RecordingMatchRepository implements MatchRepository {
   String? lastTeamId;
   int? lastPage;
   int? lastLimit;
+  String? lastStatus;
 
   @override
   Future<Either<CricketResponse<MatchHistoryRes>, CricketFailure>>
@@ -18,7 +19,9 @@ class _RecordingMatchRepository implements MatchRepository {
     required String teamId,
     required int page,
     required int limit,
+    String status = 'all',
   }) async {
+    lastStatus = status;
     lastTeamId = teamId;
     lastPage = page;
     lastLimit = limit;
@@ -57,5 +60,18 @@ void main() {
 
     expect(repo.lastPage, 1);
     expect(repo.lastLimit, 20);
+  });
+
+  test('forwards status to the repository and defaults to all', () async {
+    final repo = _RecordingMatchRepository();
+    final useCase = GetTeamMatchesUseCase(matchRepository: repo);
+
+    await useCase(params: const GetTeamMatchesParams(teamId: 'team-1'));
+    expect(repo.lastStatus, 'all');
+
+    await useCase(
+      params: const GetTeamMatchesParams(teamId: 'team-1', status: 'live'),
+    );
+    expect(repo.lastStatus, 'live');
   });
 }

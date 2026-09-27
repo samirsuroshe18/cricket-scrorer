@@ -230,7 +230,12 @@ abstract class MatchRepository {
   /// `GET /v1/team/:teamId/matches` — byte-for-byte the same response shape
   /// as [getMatchHistory], scoped to one team instead of the caller.
   Future<Either<CricketResponse<MatchHistoryRes>, CricketFailure>>
-  getTeamMatches({required String teamId, required int page, required int limit});
+  getTeamMatches({
+    required String teamId,
+    required int page,
+    required int limit,
+    String status = 'all',
+  });
 
   /// `PATCH /v1/team/:teamId/organization` — attach an existing standalone
   /// team the caller owns to an org the caller owns, or detach (pass

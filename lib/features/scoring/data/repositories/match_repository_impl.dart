@@ -475,9 +475,15 @@ class MatchRepositoryImpl extends MatchRepository {
     required String teamId,
     required int page,
     required int limit,
+    String status = 'all',
   }) async {
     Either<ApiResponseModel, CricketFailure> response = await matchApiService
-        .getTeamMatches(teamId: teamId, page: page, limit: limit);
+        .getTeamMatches(
+          teamId: teamId,
+          page: page,
+          limit: limit,
+          status: status,
+        );
     if (response.isResult) {
       return Either.result(
         CricketResponse(

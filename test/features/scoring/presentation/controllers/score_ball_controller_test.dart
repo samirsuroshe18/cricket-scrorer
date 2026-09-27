@@ -234,6 +234,7 @@ class _OfflineMatchRepository implements MatchRepository {
     required String teamId,
     required int page,
     required int limit,
+    String status = 'all',
   }) => throw UnimplementedError('Not exercised in this test.');
 
   @override
@@ -581,6 +582,7 @@ class _MixedMatchRepository implements MatchRepository {
     required String teamId,
     required int page,
     required int limit,
+    String status = 'all',
   }) => throw UnimplementedError('Not exercised in this test.');
 
   @override
@@ -806,6 +808,7 @@ class _RecordingMatchRepository implements MatchRepository {
     required String teamId,
     required int page,
     required int limit,
+    String status = 'all',
   }) => throw UnimplementedError('Not exercised in this test.');
 
   @override
@@ -1199,6 +1202,7 @@ class _ServerSimulatingMatchRepository implements MatchRepository {
     required String teamId,
     required int page,
     required int limit,
+    String status = 'all',
   }) => throw UnimplementedError('Not exercised in this test.');
 
   @override
@@ -1426,6 +1430,7 @@ class _RuleBlockingMatchRepository implements MatchRepository {
     required String teamId,
     required int page,
     required int limit,
+    String status = 'all',
   }) => throw UnimplementedError('Not exercised in this test.');
 
   @override
@@ -4009,6 +4014,7 @@ class _LockTransitionMatchRepository implements MatchRepository {
     required String teamId,
     required int page,
     required int limit,
+    String status = 'all',
   }) => throw UnimplementedError('Not exercised in this test.');
 
   @override

@@ -196,6 +196,7 @@ class _FakeMatchRepository implements MatchRepository {
     required String teamId,
     required int page,
     required int limit,
+    String status = 'all',
   }) => throw UnimplementedError('Not exercised in this test.');
 
   @override

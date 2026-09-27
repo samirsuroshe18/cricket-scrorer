@@ -12,6 +12,8 @@ TeamRosterPlayer _$TeamRosterPlayerFromJson(Map<String, dynamic> json) =>
       playerName: json['playerName'] as String,
       jerseyNumber: (json['jerseyNumber'] as num?)?.toInt(),
       role: json['role'] as String,
+      isCaptain: json['isCaptain'] as bool? ?? false,
+      isViceCaptain: json['isViceCaptain'] as bool? ?? false,
     );
 
 Map<String, dynamic> _$TeamRosterPlayerToJson(TeamRosterPlayer instance) =>
@@ -20,6 +22,30 @@ Map<String, dynamic> _$TeamRosterPlayerToJson(TeamRosterPlayer instance) =>
       'playerName': instance.playerName,
       'jerseyNumber': instance.jerseyNumber,
       'role': instance.role,
+      'isCaptain': instance.isCaptain,
+      'isViceCaptain': instance.isViceCaptain,
+    };
+
+TeamStatsRes _$TeamStatsResFromJson(Map<String, dynamic> json) => TeamStatsRes(
+  played: (json['played'] as num?)?.toInt() ?? 0,
+  won: (json['won'] as num?)?.toInt() ?? 0,
+  lost: (json['lost'] as num?)?.toInt() ?? 0,
+  tied: (json['tied'] as num?)?.toInt() ?? 0,
+  noResult: (json['noResult'] as num?)?.toInt() ?? 0,
+  winPercentage: (json['winPercentage'] as num?)?.toDouble() ?? 0.0,
+  form:
+      (json['form'] as List<dynamic>?)?.map((e) => e as String).toList() ?? [],
+);
+
+Map<String, dynamic> _$TeamStatsResToJson(TeamStatsRes instance) =>
+    <String, dynamic>{
+      'played': instance.played,
+      'won': instance.won,
+      'lost': instance.lost,
+      'tied': instance.tied,
+      'noResult': instance.noResult,
+      'winPercentage': instance.winPercentage,
+      'form': instance.form,
     };
 
 TeamProfileRes _$TeamProfileResFromJson(Map<String, dynamic> json) =>
@@ -37,6 +63,11 @@ TeamProfileRes _$TeamProfileResFromJson(Map<String, dynamic> json) =>
       roster: (json['roster'] as List<dynamic>)
           .map((e) => TeamRosterPlayer.fromJson(e as Map<String, dynamic>))
           .toList(),
+      stats: json['stats'] == null
+          ? null
+          : TeamStatsRes.fromJson(json['stats'] as Map<String, dynamic>),
+      captainId: json['captainId'] as String?,
+      viceCaptainId: json['viceCaptainId'] as String?,
     );
 
 Map<String, dynamic> _$TeamProfileResToJson(TeamProfileRes instance) =>
@@ -48,4 +79,7 @@ Map<String, dynamic> _$TeamProfileResToJson(TeamProfileRes instance) =>
       'organization': instance.organization?.toJson(),
       'canManage': instance.canManage,
       'roster': instance.roster.map((e) => e.toJson()).toList(),
+      'stats': instance.stats?.toJson(),
+      'captainId': instance.captainId,
+      'viceCaptainId': instance.viceCaptainId,
     };

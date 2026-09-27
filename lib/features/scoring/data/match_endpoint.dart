@@ -22,6 +22,15 @@ class MatchEndpoint {
   /// as [history], scoped to one team.
   String teamMatches(String teamId) => '/v1/team/$teamId/matches';
 
+  /// `POST /v1/team/:teamId/players` — add a player to the roster by name.
+  String teamPlayers(String teamId) => '/v1/team/$teamId/players';
+
+  /// `PATCH /v1/team/:teamId/players/:playerId` — edit a rostered player's
+  /// role / jersey number through the team (works for an org owner, unlike
+  /// the creator-only `PATCH /v1/player/:playerId`).
+  String teamPlayer(String teamId, String playerId) =>
+      '/v1/team/$teamId/players/$playerId';
+
   /// `PUT /v1/match/:matchId/squad/:side` — `side` is `teamA` / `teamB`.
   String saveSquad(String matchId, String side) =>
       '/v1/match/$matchId/squad/$side';

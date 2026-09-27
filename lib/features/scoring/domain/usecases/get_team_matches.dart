@@ -10,10 +10,14 @@ class GetTeamMatchesParams {
   final int page;
   final int limit;
 
+  /// `all` / `live` / `upcoming` / `completed` — the server's `?status=`.
+  final String status;
+
   const GetTeamMatchesParams({
     required this.teamId,
     this.page = 1,
     this.limit = 20,
+    this.status = 'all',
   });
 }
 
@@ -36,6 +40,7 @@ class GetTeamMatchesUseCase
       teamId: resolved.teamId,
       page: resolved.page,
       limit: resolved.limit,
+      status: resolved.status,
     );
   }
 }

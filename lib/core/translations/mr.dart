@@ -626,4 +626,16 @@ Map<String, String> mr = {
   TranslationKeys.squadEmptyHint:
       'अजून खेळाडू नाहीत — खाली जोडा, किंवा वगळा आणि स्कोअर करताना नावे टाका',
   TranslationKeys.removePlayer: 'खेळाडू काढा',
+  TranslationKeys.teamMatchesSection: 'सामने',
+  TranslationKeys.winPercentage: 'विजय %',
+  TranslationKeys.recentForm: 'अलीकडील कामगिरी',
+  TranslationKeys.playerNameRequired: 'खेळाडूचे नाव टाका',
+  TranslationKeys.makeCaptain: 'कर्णधार करा',
+  TranslationKeys.makeViceCaptain: 'उप-कर्णधार करा',
+  TranslationKeys.removeCaptain: 'कर्णधार पद काढा',
+  TranslationKeys.removeViceCaptain: 'उप-कर्णधार पद काढा',
+  TranslationKeys.formWon: 'जिंकला',
+  TranslationKeys.formLost: 'हरला',
+  TranslationKeys.formTied: 'बरोबरी',
+  TranslationKeys.formNoResult: 'निकाल नाही',
 };

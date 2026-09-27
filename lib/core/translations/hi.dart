@@ -627,4 +627,16 @@ Map<String, String> hi = {
   TranslationKeys.squadEmptyHint:
       'अभी कोई खिलाड़ी नहीं — नीचे जोड़ें, या स्किप करके स्कोर करते समय नाम डालें',
   TranslationKeys.removePlayer: 'खिलाड़ी हटाएं',
+  TranslationKeys.teamMatchesSection: 'मैच',
+  TranslationKeys.winPercentage: 'जीत %',
+  TranslationKeys.recentForm: 'हाल का प्रदर्शन',
+  TranslationKeys.playerNameRequired: 'खिलाड़ी का नाम दर्ज करें',
+  TranslationKeys.makeCaptain: 'कप्तान बनाएं',
+  TranslationKeys.makeViceCaptain: 'उप-कप्तान बनाएं',
+  TranslationKeys.removeCaptain: 'कप्तान पद हटाएं',
+  TranslationKeys.removeViceCaptain: 'उप-कप्तान पद हटाएं',
+  TranslationKeys.formWon: 'जीता',
+  TranslationKeys.formLost: 'हारा',
+  TranslationKeys.formTied: 'टाई',
+  TranslationKeys.formNoResult: 'कोई नतीजा नहीं',
 };

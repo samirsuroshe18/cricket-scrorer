@@ -1,8 +1,12 @@
 import 'package:cricket_scorer/core/error/cricket_failure.dart';
 import 'package:cricket_scorer/core/network/models/cricket_response.dart';
 import 'package:cricket_scorer/core/utils/either_util.dart';
+import 'package:cricket_scorer/features/scoring/data/models/request/add_team_player_req.dart';
 import 'package:cricket_scorer/features/scoring/data/models/request/create_team_req.dart';
+import 'package:cricket_scorer/features/scoring/data/models/request/set_team_leadership_req.dart';
+import 'package:cricket_scorer/features/scoring/data/models/request/update_team_player_req.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/created_team_res.dart';
+import 'package:cricket_scorer/features/scoring/data/models/response/team_profile_res.dart';
 
 /// Writes to `/v1/team`. Reads (`getMyTeams`, profile, matches) stay on
 /// `MatchRepository`; this is a separate contract so adding to it never
@@ -23,5 +27,27 @@ abstract class TeamRepository {
   /// `DELETE /v1/team/:teamId` — soft-deletes a team the caller manages.
   Future<Either<CricketResponse<void>, CricketFailure>> deleteTeam({
     required String teamId,
+  });
+
+  /// `POST /v1/team/:teamId/players` — add a player to the roster by name.
+  Future<Either<CricketResponse<TeamRosterPlayer>, CricketFailure>> addPlayer({
+    required String teamId,
+    required AddTeamPlayerReq params,
+  });
+
+  /// `PATCH /v1/team/:teamId/players/:playerId` — edit a rostered player's
+  /// role / jersey number.
+  Future<Either<CricketResponse<TeamRosterPlayer>, CricketFailure>>
+  updatePlayer({
+    required String teamId,
+    required String playerId,
+    required UpdateTeamPlayerReq params,
+  });
+
+  /// `PATCH /v1/team/:teamId` with `captainId` / `viceCaptainId`.
+  Future<Either<CricketResponse<CreatedTeamRes>, CricketFailure>>
+  setLeadership({
+    required String teamId,
+    required SetTeamLeadershipReq params,
   });
 }
