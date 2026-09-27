@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cricket_scorer/config/theme/app_theme.dart';
 import 'package:cricket_scorer/core/error/cricket_failure.dart';
 import 'package:cricket_scorer/core/network/models/cricket_response.dart';
@@ -305,6 +307,40 @@ void main() {
 
       expect(find.text('Already claimed'), findsOneWidget);
       expect(find.byType(AddPlayerPicker), findsOneWidget);
+    });
+
+    testWidgets('a lookup answered after the email was edited is discarded', (
+      tester,
+    ) async {
+      await pumpPicker(tester);
+      await openAppUsers(tester);
+      lookup.response = Either.result(
+        CricketResponse(
+          message: 'ok',
+          data: LookedUpUserRes(userId: 'u1', fullName: 'Rahul Sharma'),
+        ),
+      );
+      lookup.gate = Completer<void>();
+
+      await tester.enterText(find.byType(TextField).last, 'rahul@example.com');
+      await tester.pump();
+      await tester.tap(find.text(TranslationKeys.findUser));
+      await tester.pump(); // the lookup is now in flight
+      await tester.enterText(find.byType(TextField).last, 'other@example.com');
+      await tester.pump();
+      lookup.gate!.complete();
+      await tester.pumpAndSettle();
+
+      // The card for the old address must not appear under the new one, or
+      // tapping Invite would invite someone the scorer never asked for.
+      expect(find.text('Rahul Sharma'), findsNothing);
+      expect(find.byKey(const ValueKey('invite-user')), findsNothing);
+
+      // ...and Find is usable again for the address now in the field.
+      lookup.gate = null;
+      await tester.tap(find.text(TranslationKeys.findUser));
+      await tester.pumpAndSettle();
+      expect(lookup.calls.last.email, 'other@example.com');
     });
 
     testWidgets('editing the email clears a previous result', (tester) async {

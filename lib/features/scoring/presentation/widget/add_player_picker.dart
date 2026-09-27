@@ -72,6 +72,12 @@ class _AddPlayerPickerState extends State<AddPlayerPicker> {
   LookedUpUserRes? _found;
   String? _lookupError;
   bool _lookingUp = false;
+
+  /// Bumped whenever the email is edited or a lookup starts. A lookup only
+  /// applies if it is still the latest, so an answer for an address the scorer
+  /// has since changed can never surface a card — and an Invite button — for
+  /// someone they did not ask about.
+  int _lookupGeneration = 0;
   bool _inviting = false;
   String? _inviteError;
 
@@ -146,6 +152,7 @@ class _AddPlayerPickerState extends State<AddPlayerPicker> {
 
   Future<void> _find() async {
     if (_lookingUp) return;
+    final generation = ++_lookupGeneration;
     setState(() {
       _lookingUp = true;
       _found = null;
@@ -157,7 +164,7 @@ class _AddPlayerPickerState extends State<AddPlayerPicker> {
       _email.text,
     );
 
-    if (!mounted) return;
+    if (!mounted || generation != _lookupGeneration) return;
     setState(() {
       _lookingUp = false;
       _found = user;
@@ -369,6 +376,8 @@ class _AddPlayerPickerState extends State<AddPlayerPicker> {
           keyboardType: TextInputType.emailAddress,
           hideCounter: true,
           onChanged: (_) => setState(() {
+            _lookupGeneration++;
+            _lookingUp = false;
             _found = null;
             _lookupError = null;
             _inviteError = null;

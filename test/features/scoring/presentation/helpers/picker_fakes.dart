@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cricket_scorer/core/error/cricket_failure.dart';
 import 'package:cricket_scorer/core/network/models/cricket_response.dart';
 import 'package:cricket_scorer/core/utils/either_util.dart';
@@ -55,11 +57,16 @@ class FakeLookupUserByEmailUseCase implements LookupUserByEmailUseCase {
   Either<CricketResponse<LookedUpUserRes>, CricketFailure>? response;
   final calls = <LookupUserParams>[];
 
+  /// When set, a call waits for it to complete before answering, so a test can
+  /// hold a lookup in flight.
+  Completer<void>? gate;
+
   @override
   Future<Either<CricketResponse<LookedUpUserRes>, CricketFailure>> call({
     LookupUserParams? params,
   }) async {
     calls.add(params!);
+    await gate?.future;
     return response ?? (throw UnimplementedError('No response set.'));
   }
 
