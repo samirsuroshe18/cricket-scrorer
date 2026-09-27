@@ -617,6 +617,7 @@ Map<String, String> hi = {
   TranslationKeys.organizationLogoUpdated: 'संगठन का लोगो अपडेट हुआ',
   TranslationKeys.squadTitle: 'स्क्वाड',
   TranslationKeys.addPlayer: 'खिलाड़ी जोड़ें',
+  TranslationKeys.invited: 'आमंत्रित',
   TranslationKeys.saveAndContinue: 'सेव करें और आगे बढ़ें',
   TranslationKeys.captain: 'कप्तान',
   TranslationKeys.viceCaptain: 'उप-कप्तान',

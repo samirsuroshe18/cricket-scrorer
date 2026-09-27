@@ -616,6 +616,7 @@ Map<String, String> mr = {
   TranslationKeys.organizationLogoUpdated: 'संस्थेचा लोगो अपडेट झाला',
   TranslationKeys.squadTitle: 'स्क्वाड',
   TranslationKeys.addPlayer: 'खेळाडू जोडा',
+  TranslationKeys.invited: 'आमंत्रित',
   TranslationKeys.saveAndContinue: 'सेव्ह करा आणि पुढे जा',
   TranslationKeys.captain: 'कर्णधार',
   TranslationKeys.viceCaptain: 'उप-कर्णधार',

@@ -617,6 +617,7 @@ Map<String, String> en = {
   TranslationKeys.organizationLogoUpdated: 'Organization logo updated',
   TranslationKeys.squadTitle: 'Squad',
   TranslationKeys.addPlayer: 'Add player',
+  TranslationKeys.invited: 'Invited',
   TranslationKeys.saveAndContinue: 'Save & continue',
   TranslationKeys.captain: 'Captain',
   TranslationKeys.viceCaptain: 'Vice-captain',

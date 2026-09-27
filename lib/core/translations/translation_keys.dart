@@ -626,6 +626,7 @@ class TranslationKeys {
   static const String noSearchResults = 'no_search_results';
   static const String squadTitle = 'squad_title';
   static const String addPlayer = 'add_player';
+  static const String invited = 'invited';
   static const String saveAndContinue = 'save_and_continue';
   static const String captain = 'captain';
   static const String viceCaptain = 'vice_captain';

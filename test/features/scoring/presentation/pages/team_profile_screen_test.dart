@@ -377,7 +377,9 @@ void main() {
     TeamProfileRes profile, {
     GetTeamMatchesUseCase? matches,
   }) async {
-    Get.put<GetTeamProfileUseCase>(_MultiTeamProfileUseCase({'team-1': profile}));
+    Get.put<GetTeamProfileUseCase>(
+      _MultiTeamProfileUseCase({'team-1': profile}),
+    );
     Get.put<GetTeamMatchesUseCase>(matches ?? _EmptyMatchesUseCase());
     Get.put<GetScorerCandidatesUseCase>(_UnusedGetScorerCandidatesUseCase());
     Get.put<AssignScorerUseCase>(_UnusedAssignScorerUseCase());
@@ -501,13 +503,42 @@ void main() {
             role: 'allrounder',
             isViceCaptain: true,
           ),
-          TeamRosterPlayer(playerId: 'p3', playerName: 'Bumrah', role: 'bowler'),
+          TeamRosterPlayer(
+            playerId: 'p3',
+            playerName: 'Bumrah',
+            role: 'bowler',
+          ),
         ],
       ),
     );
 
     expect(find.text(TranslationKeys.captainShort), findsOneWidget);
     expect(find.text(TranslationKeys.viceCaptainShort), findsOneWidget);
+  });
+
+  testWidgets('roster shows the Invited chip only for a pending invite', (
+    tester,
+  ) async {
+    await pumpProfile(
+      tester,
+      profileWith(
+        roster: [
+          TeamRosterPlayer(
+            playerId: 'p1',
+            playerName: 'Rahul',
+            role: 'batsman',
+            inviteStatus: 'pending',
+          ),
+          TeamRosterPlayer(
+            playerId: 'p2',
+            playerName: 'Rohit',
+            role: 'batsman',
+          ),
+        ],
+      ),
+    );
+
+    expect(find.text(TranslationKeys.invited), findsOneWidget);
   });
 
   testWidgets('a manager sees add player and a menu on each roster row', (
@@ -517,7 +548,11 @@ void main() {
       tester,
       profileWith(
         roster: [
-          TeamRosterPlayer(playerId: 'p1', playerName: 'Rohit', role: 'batsman'),
+          TeamRosterPlayer(
+            playerId: 'p1',
+            playerName: 'Rohit',
+            role: 'batsman',
+          ),
         ],
       ),
     );
@@ -526,22 +561,29 @@ void main() {
     expect(find.byIcon(Icons.more_vert), findsOneWidget);
   });
 
-  testWidgets('add player and the row menu are hidden when canManage is false', (
-    tester,
-  ) async {
-    await pumpProfile(
+  testWidgets(
+    'add player and the row menu are hidden when canManage is false',
+    (
       tester,
-      profileWith(
-        canManage: false,
-        roster: [
-          TeamRosterPlayer(playerId: 'p1', playerName: 'Rohit', role: 'batsman'),
-        ],
-      ),
-    );
+    ) async {
+      await pumpProfile(
+        tester,
+        profileWith(
+          canManage: false,
+          roster: [
+            TeamRosterPlayer(
+              playerId: 'p1',
+              playerName: 'Rohit',
+              role: 'batsman',
+            ),
+          ],
+        ),
+      );
 
-    expect(find.text(TranslationKeys.addPlayer), findsNothing);
-    expect(find.byIcon(Icons.more_vert), findsNothing);
-  });
+      expect(find.text(TranslationKeys.addPlayer), findsNothing);
+      expect(find.byIcon(Icons.more_vert), findsNothing);
+    },
+  );
 
   testWidgets('tapping add player opens the add player sheet', (tester) async {
     await pumpProfile(tester, profileWith());

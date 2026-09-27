@@ -101,25 +101,54 @@ void main() {
     expect(res.stats?.winPercentage, 100.0);
   });
 
-  test('fromJson tolerates a legacy payload without stats or leader fields', () {
-    final res = TeamProfileRes.fromJson({
-      'teamId': 't1',
-      'name': 'Mumbai Indians',
-      'canManage': true,
-      'roster': [
-        {
-          'playerId': 'p1',
-          'playerName': 'Rahul',
-          'jerseyNumber': null,
-          'role': 'unknown',
-        },
-      ],
+  test(
+    'fromJson tolerates a legacy payload without stats or leader fields',
+    () {
+      final res = TeamProfileRes.fromJson({
+        'teamId': 't1',
+        'name': 'Mumbai Indians',
+        'canManage': true,
+        'roster': [
+          {
+            'playerId': 'p1',
+            'playerName': 'Rahul',
+            'jerseyNumber': null,
+            'role': 'unknown',
+          },
+        ],
+      });
+
+      expect(res.stats, isNull);
+      expect(res.captainId, isNull);
+      expect(res.viceCaptainId, isNull);
+      expect(res.roster.single.isCaptain, isFalse);
+      expect(res.roster.single.isViceCaptain, isFalse);
+    },
+  );
+
+  group('TeamRosterPlayer.inviteStatus', () {
+    Map<String, dynamic> row({Object? inviteStatus = _absent}) => {
+      'playerId': 'p1',
+      'playerName': 'Rahul',
+      'role': 'batsman',
+      if (!identical(inviteStatus, _absent)) 'inviteStatus': inviteStatus,
+    };
+
+    test('parses "pending"', () {
+      expect(
+        TeamRosterPlayer.fromJson(row(inviteStatus: 'pending')).inviteStatus,
+        'pending',
+      );
     });
 
-    expect(res.stats, isNull);
-    expect(res.captainId, isNull);
-    expect(res.viceCaptainId, isNull);
-    expect(res.roster.single.isCaptain, isFalse);
-    expect(res.roster.single.isViceCaptain, isFalse);
+    test('reads null and an absent key (older server) as null', () {
+      expect(
+        TeamRosterPlayer.fromJson(row(inviteStatus: null)).inviteStatus,
+        isNull,
+      );
+      expect(TeamRosterPlayer.fromJson(row()).inviteStatus, isNull);
+    });
   });
 }
+
+const Object _absent = Object();
