@@ -155,7 +155,7 @@ void main() {
       addTeamPlayerUseCase: add,
       updateTeamPlayerUseCase: updatePlayer,
       setTeamLeadershipUseCase: leadership,
-      getMyPlayersUseCase: FakeGetMyPlayersUseCase(),
+      getMyPlayersUseCase: emptyMyPlayers(),
       lookupUserByEmailUseCase: FakeLookupUserByEmailUseCase(),
       inviteTeamPlayerUseCase: FakeInviteTeamPlayerUseCase(),
     );
@@ -179,10 +179,13 @@ void main() {
 
   // `controller` is created inside pumpOpener; the closure reads it lazily,
   // at tap time.
-  Future<void> pumpAddSheet(WidgetTester tester) => pumpOpener(
-    tester,
-    () => showAddPlayerSheet(controller: controller),
-  );
+  // The sheet opens on the picker; these tests are about the create-by-name
+  // form, one tap away.
+  Future<void> pumpAddSheet(WidgetTester tester) async {
+    await pumpOpener(tester, () => showAddPlayerSheet(controller: controller));
+    await tester.tap(find.text(TranslationKeys.createNewPlayer));
+    await tester.pumpAndSettle();
+  }
 
   group('add player sheet', () {
     testWidgets('rejects an empty name and does not submit', (tester) async {
@@ -243,6 +246,9 @@ void main() {
         expect(find.byType(AddPlayerForm), findsOneWidget);
 
         add.response = null; // the retry succeeds
+        // The inline error grows the form; scroll the button back into view.
+        await tester.ensureVisible(find.text(TranslationKeys.addPlayer).last);
+        await tester.pump();
         await tester.tap(find.text(TranslationKeys.addPlayer).last);
         await tester.pumpAndSettle();
 

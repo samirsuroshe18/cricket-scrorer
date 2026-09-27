@@ -627,6 +627,17 @@ class TranslationKeys {
   static const String squadTitle = 'squad_title';
   static const String addPlayer = 'add_player';
   static const String invited = 'invited';
+  static const String myPlayers = 'my_players';
+  static const String appUsers = 'app_users';
+  static const String findUser = 'find_user';
+  static const String invite = 'invite';
+  static const String onRoster = 'on_roster';
+  static const String createNewPlayer = 'create_new_player';
+  static const String searchPlayersHint = 'search_players_hint';
+  static const String noPlayersYet = 'no_players_yet';
+  static const String loadMorePlayers = 'load_more_players';
+  static const String backToPlayers = 'back_to_players';
+  static const String findUserByEmailHint = 'find_user_by_email_hint';
   static const String saveAndContinue = 'save_and_continue';
   static const String captain = 'captain';
   static const String viceCaptain = 'vice_captain';

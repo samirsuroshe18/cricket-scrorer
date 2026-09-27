@@ -26,6 +26,7 @@ import 'package:cricket_scorer/features/scoring/presentation/pages/team_profile_
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart' hide Response;
+import 'package:cricket_scorer/features/scoring/presentation/widget/add_player_picker.dart';
 import '../helpers/picker_fakes.dart';
 
 /// Returns whichever profile matches the requested teamId — the real
@@ -168,7 +169,7 @@ void _putUnusedRosterUseCases() {
   Get.put<AddTeamPlayerUseCase>(_UnusedAddTeamPlayerUseCase());
   Get.put<UpdateTeamPlayerUseCase>(_UnusedUpdateTeamPlayerUseCase());
   Get.put<SetTeamLeadershipUseCase>(_UnusedSetTeamLeadershipUseCase());
-  Get.put<GetMyPlayersUseCase>(FakeGetMyPlayersUseCase());
+  Get.put<GetMyPlayersUseCase>(emptyMyPlayers());
   Get.put<LookupUserByEmailUseCase>(FakeLookupUserByEmailUseCase());
   Get.put<InviteTeamPlayerUseCase>(FakeInviteTeamPlayerUseCase());
 }
@@ -598,6 +599,7 @@ void main() {
     await tester.tap(find.text(TranslationKeys.addPlayer));
     await tester.pumpAndSettle();
 
-    expect(find.text(TranslationKeys.playerName), findsWidgets);
+    expect(find.byType(AddPlayerPicker), findsOneWidget);
+    expect(find.text(TranslationKeys.createNewPlayer), findsOneWidget);
   });
 }
