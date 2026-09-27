@@ -152,6 +152,7 @@ class MatchHistoryItem {
   /// unambiguous states — and treats `local` the same as `synced`: no
   /// badge, rather than incorrectly flagging every online-scored match as
   /// "not synced".
+  @JsonKey(defaultValue: 'synced')
   final String syncStatus;
 
   /// Non-null only while [status] is `live`/`innings_break` — see

@@ -22,6 +22,16 @@ class MatchEndpoint {
   /// as [history], scoped to one team.
   String teamMatches(String teamId) => '/v1/team/$teamId/matches';
 
+  /// `GET /v1/team/playing-for` — teams the caller is a linked roster player of.
+  final String playingFor = '/v1/team/playing-for';
+
+  /// `GET /v1/team/:teamId/player-view` — the read-only team profile.
+  String teamPlayerView(String teamId) => '/v1/team/$teamId/player-view';
+
+  /// `GET /v1/team/:teamId/player-view/matches`.
+  String teamPlayerViewMatches(String teamId) =>
+      '/v1/team/$teamId/player-view/matches';
+
   /// `POST /v1/team/:teamId/players` — add a player to the roster by name.
   String teamPlayers(String teamId) => '/v1/team/$teamId/players';
 
