@@ -649,6 +649,12 @@ Map<String, String> mr = {
   TranslationKeys.squadEmptyHint:
       'अजून खेळाडू नाहीत — खाली जोडा, किंवा वगळा आणि स्कोअर करताना नावे टाका',
   TranslationKeys.removePlayer: 'खेळाडू काढा',
+  TranslationKeys.removeFromTeam: 'संघातून काढा',
+  TranslationKeys.removeFromTeamConfirmTitle: 'या खेळाडूला काढायचे?',
+  TranslationKeys.removeFromTeamConfirmMessage:
+      '@player ला रोस्टरमधून काढले जाईल. त्यांच्या मागील सामन्यांच्या आकडेवारीवर परिणाम होणार नाही.',
+  TranslationKeys.playerRemovedFromTeam: 'खेळाडू काढला',
+  TranslationKeys.inviteWithdrawn: 'हे आमंत्रण मागे घेण्यात आले',
   TranslationKeys.teamMatchesSection: 'सामने',
   TranslationKeys.winPercentage: 'विजय %',
   TranslationKeys.recentForm: 'अलीकडील कामगिरी',

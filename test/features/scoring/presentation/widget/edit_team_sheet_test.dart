@@ -8,6 +8,7 @@ import 'package:cricket_scorer/features/scoring/domain/usecases/add_team_player.
 import 'package:cricket_scorer/features/scoring/domain/usecases/delete_team.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/set_team_leadership.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/update_team_player.dart';
+import 'package:cricket_scorer/features/scoring/domain/usecases/remove_team_player.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/get_scorer_candidates.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/get_team_matches.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/get_team_profile.dart';
@@ -51,6 +52,12 @@ class _UnusedUpdateTeamLogoUseCase implements UpdateTeamLogoUseCase {
 }
 
 class _UnusedAddTeamPlayerUseCase implements AddTeamPlayerUseCase {
+  @override
+  dynamic noSuchMethod(Invocation invocation) =>
+      throw UnimplementedError('Not exercised in this test.');
+}
+
+class _UnusedRemoveTeamPlayerUseCase implements RemoveTeamPlayerUseCase {
   @override
   dynamic noSuchMethod(Invocation invocation) =>
       throw UnimplementedError('Not exercised in this test.');
@@ -110,6 +117,7 @@ void main() {
       deleteTeamUseCase: _UnusedDeleteTeamUseCase(),
       addTeamPlayerUseCase: _UnusedAddTeamPlayerUseCase(),
       updateTeamPlayerUseCase: _UnusedUpdateTeamPlayerUseCase(),
+      removeTeamPlayerUseCase: _UnusedRemoveTeamPlayerUseCase(),
       setTeamLeadershipUseCase: _UnusedSetTeamLeadershipUseCase(),
       getMyPlayersUseCase: FakeGetMyPlayersUseCase(),
       lookupUserByEmailUseCase: FakeLookupUserByEmailUseCase(),

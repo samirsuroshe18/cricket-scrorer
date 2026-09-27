@@ -651,6 +651,12 @@ Map<String, String> en = {
   TranslationKeys.squadEmptyHint:
       'No players yet — add them below, or skip and type names as you score',
   TranslationKeys.removePlayer: 'Remove player',
+  TranslationKeys.removeFromTeam: 'Remove from team',
+  TranslationKeys.removeFromTeamConfirmTitle: 'Remove this player?',
+  TranslationKeys.removeFromTeamConfirmMessage:
+      '@player will be taken off the roster. Their past match stats are unaffected.',
+  TranslationKeys.playerRemovedFromTeam: 'Player removed',
+  TranslationKeys.inviteWithdrawn: 'This invite was withdrawn',
   TranslationKeys.teamMatchesSection: 'Matches',
   TranslationKeys.winPercentage: 'Win %',
   TranslationKeys.recentForm: 'Recent form',

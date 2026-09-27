@@ -656,6 +656,13 @@ class TranslationKeys {
   static const String wicketkeeperShort = 'wicketkeeper_short';
   static const String squadEmptyHint = 'squad_empty_hint';
   static const String removePlayer = 'remove_player';
+  static const String removeFromTeam = 'remove_from_team';
+  static const String removeFromTeamConfirmTitle =
+      'remove_from_team_confirm_title';
+  static const String removeFromTeamConfirmMessage =
+      'remove_from_team_confirm_message';
+  static const String playerRemovedFromTeam = 'player_removed_from_team';
+  static const String inviteWithdrawn = 'invite_withdrawn';
   static const String teamMatchesSection = 'team_matches_section';
   static const String winPercentage = 'win_percentage';
   static const String recentForm = 'recent_form';

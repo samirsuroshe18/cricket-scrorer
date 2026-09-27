@@ -651,6 +651,12 @@ Map<String, String> hi = {
   TranslationKeys.squadEmptyHint:
       'अभी कोई खिलाड़ी नहीं — नीचे जोड़ें, या स्किप करके स्कोर करते समय नाम डालें',
   TranslationKeys.removePlayer: 'खिलाड़ी हटाएं',
+  TranslationKeys.removeFromTeam: 'टीम से हटाएं',
+  TranslationKeys.removeFromTeamConfirmTitle: 'इस खिलाड़ी को हटाएं?',
+  TranslationKeys.removeFromTeamConfirmMessage:
+      '@player को रोस्टर से हटा दिया जाएगा। उनके पिछले मैच के आंकड़े प्रभावित नहीं होंगे।',
+  TranslationKeys.playerRemovedFromTeam: 'खिलाड़ी हटाया गया',
+  TranslationKeys.inviteWithdrawn: 'यह आमंत्रण वापस ले लिया गया',
   TranslationKeys.teamMatchesSection: 'मैच',
   TranslationKeys.winPercentage: 'जीत %',
   TranslationKeys.recentForm: 'हाल का प्रदर्शन',

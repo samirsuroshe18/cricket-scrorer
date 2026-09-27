@@ -111,6 +111,26 @@ class _TeamProfileScreenState extends State<TeamProfileScreen> {
     );
   }
 
+  Future<void> _confirmRemovePlayer(TeamRosterPlayer player) async {
+    final confirmed = await CustomBottomSheet.warningBottomSheet<bool>(
+      title: TranslationKeys.removeFromTeamConfirmTitle.tr,
+      message: TranslationKeys.removeFromTeamConfirmMessage.trParams({
+        'player': player.playerName,
+      }),
+      confirmButtonName: TranslationKeys.removeFromTeam.tr,
+    );
+    if (confirmed != true) return;
+
+    final error = await controller.removePlayer(playerId: player.playerId);
+    if (error == null) {
+      CricketSnackbar.showSuccessMessage(
+        TranslationKeys.playerRemovedFromTeam.tr,
+      );
+    } else {
+      CricketSnackbar.showErrorMessage(error);
+    }
+  }
+
   Future<void> _confirmDeleteTeam() async {
     final confirmed = await CustomBottomSheet.warningBottomSheet<bool>(
       title: TranslationKeys.deleteTeamConfirmTitle.tr,
@@ -202,6 +222,8 @@ class _TeamProfileScreenState extends State<TeamProfileScreen> {
                         player: player,
                       ),
                     ),
+                    onRemovePlayer: (player) =>
+                        unawaited(_confirmRemovePlayer(player)),
                   ),
                   24.h,
                   CricketText(
@@ -357,12 +379,14 @@ class _TeamHeader extends StatelessWidget {
     required this.onUpdateLogo,
     required this.onAddPlayer,
     required this.onEditPlayer,
+    required this.onRemovePlayer,
   });
 
   final TeamProfileRes profile;
   final VoidCallback onUpdateLogo;
   final VoidCallback onAddPlayer;
   final ValueChanged<TeamRosterPlayer> onEditPlayer;
+  final ValueChanged<TeamRosterPlayer> onRemovePlayer;
 
   /// `shortName` if the team has one (a club almost always names one for
   /// exactly this purpose — think "MI", "CSK"), otherwise the initials of
@@ -479,6 +503,7 @@ class _TeamHeader extends StatelessWidget {
             _RosterRow(
               player: player,
               onEdit: profile.canManage ? () => onEditPlayer(player) : null,
+              onRemove: profile.canManage ? () => onRemovePlayer(player) : null,
             ),
             4.h,
           ],
@@ -488,13 +513,15 @@ class _TeamHeader extends StatelessWidget {
 }
 
 class _RosterRow extends StatelessWidget {
-  const _RosterRow({required this.player, this.onEdit});
+  const _RosterRow({required this.player, this.onEdit, this.onRemove});
 
   final TeamRosterPlayer player;
 
-  /// Non-null only for a viewer who can manage the team; opens the edit sheet.
-  /// A tap on the row itself still opens the player's stats.
+  /// Both non-null together, only for a viewer who can manage the team — the
+  /// row's menu offers Edit and Remove from team. A tap on the row itself
+  /// still opens the player's stats.
   final VoidCallback? onEdit;
+  final VoidCallback? onRemove;
 
   // batsman/bowler/allrounder reuse the app's status-color family — plenty
   // distinct from each other, and none of the three read as an alarm.
@@ -594,12 +621,22 @@ class _RosterRow extends StatelessWidget {
                 ),
               ),
               4.w,
-              if (onEdit != null)
-                IconButton(
-                  onPressed: onEdit,
+              if (onEdit != null && onRemove != null)
+                PopupMenuButton<void>(
                   icon: const Icon(Icons.more_vert, size: 18),
-                  visualDensity: VisualDensity.compact,
-                  tooltip: TranslationKeys.editPlayer.tr,
+                  padding: EdgeInsets.zero,
+                  itemBuilder: (context) => [
+                    PopupMenuItem<void>(
+                      onTap: onEdit,
+                      child: CricketText(text: TranslationKeys.editPlayer.tr),
+                    ),
+                    PopupMenuItem<void>(
+                      onTap: onRemove,
+                      child: CricketText(
+                        text: TranslationKeys.removeFromTeam.tr,
+                      ),
+                    ),
+                  ],
                 )
               else
                 Icon(

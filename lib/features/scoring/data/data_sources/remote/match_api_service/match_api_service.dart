@@ -249,6 +249,16 @@ class MatchApiService {
   }
 
   /// `PATCH /v1/team/:teamId/players/:playerId`.
+  /// `DELETE /v1/team/:teamId/players/:playerId`.
+  Future<Either<ApiResponseModel, CricketFailure>> removeTeamPlayer({
+    required String teamId,
+    required String playerId,
+  }) async {
+    return await apiClient.delete(
+      endpoint: matchEndpoint.teamPlayer(teamId, playerId),
+    );
+  }
+
   Future<Either<ApiResponseModel, CricketFailure>> updateTeamPlayer({
     required String teamId,
     required String playerId,

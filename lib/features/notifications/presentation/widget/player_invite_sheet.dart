@@ -136,9 +136,11 @@ class _PlayerInviteSheetBodyState extends State<PlayerInviteSheetBody> {
     final invite = _invite!;
     if (!invite.isPending) {
       return CricketText(
-        text: invite.status == 'accepted'
-            ? TranslationKeys.inviteAlreadyAccepted.tr
-            : TranslationKeys.inviteAlreadyDeclined.tr,
+        text: switch (invite.status) {
+          'accepted' => TranslationKeys.inviteAlreadyAccepted.tr,
+          'cancelled' => TranslationKeys.inviteWithdrawn.tr,
+          _ => TranslationKeys.inviteAlreadyDeclined.tr,
+        },
         textAlign: TextAlign.center,
       );
     }

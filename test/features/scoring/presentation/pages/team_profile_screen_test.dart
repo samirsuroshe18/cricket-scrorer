@@ -1,3 +1,5 @@
+import 'package:cricket_scorer/core/global/widgets/cricket_text_field.dart';
+import 'package:cricket_scorer/features/scoring/domain/usecases/remove_team_player.dart';
 import 'dart:async';
 
 import 'package:cricket_scorer/config/routes/app_routes.dart';
@@ -165,13 +167,49 @@ class _UnusedSetTeamLeadershipUseCase implements SetTeamLeadershipUseCase {
 }
 
 /// The roster use cases TeamProfileBinding resolves; no test here exercises them.
-void _putUnusedRosterUseCases() {
+class _UnusedRemoveTeamPlayerUseCase implements RemoveTeamPlayerUseCase {
+  @override
+  dynamic noSuchMethod(Invocation invocation) =>
+      throw UnimplementedError('Not exercised in this test.');
+}
+
+class _RecordingRemoveTeamPlayerUseCase implements RemoveTeamPlayerUseCase {
+  _RecordingRemoveTeamPlayerUseCase({this.onRemoved});
+
+  final void Function(String playerId)? onRemoved;
+  RemoveTeamPlayerParams? lastParams;
+
+  @override
+  Future<Either<CricketResponse<void>, CricketFailure>> call({
+    RemoveTeamPlayerParams? params,
+  }) async {
+    lastParams = params;
+    onRemoved?.call(params!.playerId);
+    return Either.result(
+      const CricketResponse<void>(message: 'ok', data: null),
+    );
+  }
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) =>
+      throw UnimplementedError('Not exercised in this test.');
+}
+
+void _putUnusedRosterUseCases({RemoveTeamPlayerUseCase? removePlayer}) {
   Get.put<AddTeamPlayerUseCase>(_UnusedAddTeamPlayerUseCase());
   Get.put<UpdateTeamPlayerUseCase>(_UnusedUpdateTeamPlayerUseCase());
   Get.put<SetTeamLeadershipUseCase>(_UnusedSetTeamLeadershipUseCase());
   Get.put<GetMyPlayersUseCase>(emptyMyPlayers());
   Get.put<LookupUserByEmailUseCase>(FakeLookupUserByEmailUseCase());
   Get.put<InviteTeamPlayerUseCase>(FakeInviteTeamPlayerUseCase());
+  // A single Get.put call for this type per test: GetX's Get.put only
+  // replaces an existing registration while it is still "dirty" (unfetched),
+  // so a second Get.put for the same type is silently ignored once anything
+  // has resolved it — this is why the override lives here, not as a follow-up
+  // call in pumpProfile.
+  Get.put<RemoveTeamPlayerUseCase>(
+    removePlayer ?? _UnusedRemoveTeamPlayerUseCase(),
+  );
 }
 
 void main() {
@@ -384,6 +422,7 @@ void main() {
     WidgetTester tester,
     TeamProfileRes profile, {
     GetTeamMatchesUseCase? matches,
+    RemoveTeamPlayerUseCase? removePlayer,
   }) async {
     Get.put<GetTeamProfileUseCase>(
       _MultiTeamProfileUseCase({'team-1': profile}),
@@ -394,7 +433,7 @@ void main() {
     Get.put<UpdateTeamLogoUseCase>(_UnusedUpdateTeamLogoUseCase());
     Get.put<UpdateTeamUseCase>(_UnusedUpdateTeamUseCase());
     Get.put<DeleteTeamUseCase>(_UnusedDeleteTeamUseCase());
-    _putUnusedRosterUseCases();
+    _putUnusedRosterUseCases(removePlayer: removePlayer);
 
     await tester.pumpWidget(
       GetMaterialApp(
@@ -590,6 +629,131 @@ void main() {
 
       expect(find.text(TranslationKeys.addPlayer), findsNothing);
       expect(find.byIcon(Icons.more_vert), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'the row menu opens Edit and Remove from team, and Edit opens the edit sheet',
+    (tester) async {
+      await pumpProfile(
+        tester,
+        profileWith(
+          roster: [
+            TeamRosterPlayer(
+              playerId: 'p1',
+              playerName: 'Rohit',
+              role: 'batsman',
+            ),
+          ],
+        ),
+      );
+
+      await tester.tap(find.byIcon(Icons.more_vert));
+      await tester.pumpAndSettle();
+
+      expect(find.text(TranslationKeys.editPlayer), findsOneWidget);
+      expect(find.text(TranslationKeys.removeFromTeam), findsOneWidget);
+
+      await tester.tap(find.text(TranslationKeys.editPlayer));
+      await tester.pumpAndSettle();
+
+      expect(find.text(TranslationKeys.editPlayer), findsWidgets);
+      expect(find.byType(CricketTextField), findsWidgets);
+    },
+  );
+
+  testWidgets(
+    'Remove from team asks for confirmation and does nothing on Cancel',
+    (tester) async {
+      await pumpProfile(
+        tester,
+        profileWith(
+          roster: [
+            TeamRosterPlayer(
+              playerId: 'p1',
+              playerName: 'Rohit',
+              role: 'batsman',
+            ),
+          ],
+        ),
+      );
+
+      await tester.tap(find.byIcon(Icons.more_vert));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text(TranslationKeys.removeFromTeam));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.text(TranslationKeys.removeFromTeamConfirmTitle),
+        findsOneWidget,
+      );
+
+      await tester.tap(find.text(TranslationKeys.cancel));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Rohit'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'confirming Remove from team calls the use case and the player is gone',
+    (tester) async {
+      // A mutable backing map: the profile use case reads whatever is
+      // current in it, and the remove use case fake writes the
+      // player-removed profile into it on success — the same shape a real
+      // reload-after-write sees.
+      final profiles = {
+        'team-1': profileWith(
+          roster: [
+            TeamRosterPlayer(
+              playerId: 'p1',
+              playerName: 'Rohit',
+              role: 'batsman',
+            ),
+          ],
+        ),
+      };
+      final removeUseCase = _RecordingRemoveTeamPlayerUseCase(
+        onRemoved: (playerId) =>
+            profiles['team-1'] = profileWith(roster: const []),
+      );
+      Get.put<GetTeamProfileUseCase>(_MultiTeamProfileUseCase(profiles));
+      Get.put<GetTeamMatchesUseCase>(_EmptyMatchesUseCase());
+      Get.put<GetScorerCandidatesUseCase>(_UnusedGetScorerCandidatesUseCase());
+      Get.put<AssignScorerUseCase>(_UnusedAssignScorerUseCase());
+      Get.put<UpdateTeamLogoUseCase>(_UnusedUpdateTeamLogoUseCase());
+      Get.put<UpdateTeamUseCase>(_UnusedUpdateTeamUseCase());
+      Get.put<DeleteTeamUseCase>(_UnusedDeleteTeamUseCase());
+      _putUnusedRosterUseCases(removePlayer: removeUseCase);
+
+      await tester.pumpWidget(
+        GetMaterialApp(
+          theme: AppTheme.lightTheme,
+          initialRoute: AppRoutes.teamProfilePath('team-1'),
+          getPages: [
+            GetPage(
+              name: AppRoutes.teamProfile,
+              page: () => const TeamProfileScreen(),
+              binding: TeamProfileBinding(),
+            ),
+          ],
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byIcon(Icons.more_vert));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text(TranslationKeys.removeFromTeam));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text(TranslationKeys.removeFromTeam).last);
+      await tester.pumpAndSettle();
+
+      expect(removeUseCase.lastParams?.playerId, 'p1');
+      expect(find.text('Rohit'), findsNothing);
+
+      // Drain the success snackbar's timer before the tree is torn down.
+      await tester.pump(const Duration(seconds: 4));
+      await tester.pumpAndSettle();
     },
   );
 

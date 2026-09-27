@@ -1,3 +1,4 @@
+import 'package:cricket_scorer/features/scoring/domain/usecases/remove_team_player.dart';
 import 'dart:async';
 import 'dart:io';
 
@@ -242,6 +243,23 @@ class _FakeUpdateTeamPlayerUseCase implements UpdateTeamPlayerUseCase {
       throw UnimplementedError('Not exercised in this test.');
 }
 
+class _FakeRemoveTeamPlayerUseCase implements RemoveTeamPlayerUseCase {
+  Either<CricketResponse<void>, CricketFailure>? response;
+  RemoveTeamPlayerParams? lastParams;
+
+  @override
+  Future<Either<CricketResponse<void>, CricketFailure>> call({
+    RemoveTeamPlayerParams? params,
+  }) async {
+    lastParams = params;
+    return response!;
+  }
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) =>
+      throw UnimplementedError('Not exercised in this test.');
+}
+
 class _FakeSetTeamLeadershipUseCase implements SetTeamLeadershipUseCase {
   Either<CricketResponse<CreatedTeamRes>, CricketFailure>? response;
   SetTeamLeadershipParams? lastParams;
@@ -279,6 +297,7 @@ void main() {
   late _FakeDeleteTeamUseCase deleteTeamUseCase;
   late _FakeAddTeamPlayerUseCase addTeamPlayerUseCase;
   late _FakeUpdateTeamPlayerUseCase updateTeamPlayerUseCase;
+  late _FakeRemoveTeamPlayerUseCase removeTeamPlayerUseCase;
   late _FakeSetTeamLeadershipUseCase setTeamLeadershipUseCase;
   late FakeGetMyPlayersUseCase getMyPlayersUseCase;
   late FakeLookupUserByEmailUseCase lookupUserByEmailUseCase;
@@ -297,6 +316,7 @@ void main() {
         deleteTeamUseCase: deleteTeamUseCase,
         addTeamPlayerUseCase: addTeamPlayerUseCase,
         updateTeamPlayerUseCase: updateTeamPlayerUseCase,
+        removeTeamPlayerUseCase: removeTeamPlayerUseCase,
         setTeamLeadershipUseCase: setTeamLeadershipUseCase,
         getMyPlayersUseCase: getMyPlayersUseCase,
         lookupUserByEmailUseCase: lookupUserByEmailUseCase,
@@ -314,6 +334,7 @@ void main() {
     deleteTeamUseCase = _FakeDeleteTeamUseCase();
     addTeamPlayerUseCase = _FakeAddTeamPlayerUseCase();
     updateTeamPlayerUseCase = _FakeUpdateTeamPlayerUseCase();
+    removeTeamPlayerUseCase = _FakeRemoveTeamPlayerUseCase();
     setTeamLeadershipUseCase = _FakeSetTeamLeadershipUseCase();
     getMyPlayersUseCase = FakeGetMyPlayersUseCase();
     lookupUserByEmailUseCase = FakeLookupUserByEmailUseCase();
@@ -333,6 +354,7 @@ void main() {
       getMyPlayersUseCase: getMyPlayersUseCase,
       lookupUserByEmailUseCase: lookupUserByEmailUseCase,
       inviteTeamPlayerUseCase: inviteTeamPlayerUseCase,
+      removeTeamPlayerUseCase: removeTeamPlayerUseCase,
     );
   });
 
@@ -573,6 +595,7 @@ void main() {
         getMyPlayersUseCase: FakeGetMyPlayersUseCase(),
         lookupUserByEmailUseCase: FakeLookupUserByEmailUseCase(),
         inviteTeamPlayerUseCase: FakeInviteTeamPlayerUseCase(),
+        removeTeamPlayerUseCase: _FakeRemoveTeamPlayerUseCase(),
       );
       profileUseCaseA.response = Either.result(
         CricketResponse(
@@ -603,6 +626,7 @@ void main() {
         getMyPlayersUseCase: FakeGetMyPlayersUseCase(),
         lookupUserByEmailUseCase: FakeLookupUserByEmailUseCase(),
         inviteTeamPlayerUseCase: FakeInviteTeamPlayerUseCase(),
+        removeTeamPlayerUseCase: _FakeRemoveTeamPlayerUseCase(),
       );
       profileUseCaseB.response = Either.result(
         CricketResponse(
@@ -1169,6 +1193,35 @@ void main() {
     expect(req.clearJerseyNumber, isTrue);
     expect(req.toJson()['jerseyNumber'], isNull);
     expect(req.toJson().containsKey('jerseyNumber'), isTrue);
+  });
+
+  test(
+    'removePlayer calls the use case and reloads the profile on success',
+    () async {
+      removeTeamPlayerUseCase.response = Either.result(
+        const CricketResponse<void>(message: 'ok', data: null),
+      );
+      profileUseCase.response = profileWith();
+
+      final error = await controller.removePlayer(playerId: 'p1');
+
+      expect(error, isNull);
+      expect(removeTeamPlayerUseCase.lastParams?.teamId, 'team-1');
+      expect(removeTeamPlayerUseCase.lastParams?.playerId, 'p1');
+      expect(profileUseCase.lastTeamId, 'team-1');
+    },
+  );
+
+  test('removePlayer returns the server message on failure', () async {
+    removeTeamPlayerUseCase.response = Either.fallback(
+      CricketNotFoundErrorFailure(
+        message: "That player isn't on this team's roster",
+      ),
+    );
+
+    final error = await controller.removePlayer(playerId: 'p1');
+
+    expect(error, "That player isn't on this team's roster");
   });
 
   test(
