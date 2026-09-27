@@ -15,8 +15,10 @@ import 'package:cricket_scorer/features/organization/domain/usecases/remove_orga
 import 'package:cricket_scorer/features/organization/presentation/controllers/organizations_list_controller.dart';
 import 'package:cricket_scorer/features/organization/presentation/pages/organizations_list_screen.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/my_teams_res.dart';
+import 'package:cricket_scorer/features/scoring/data/models/response/playing_for_teams_res.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/create_team.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/get_my_teams.dart';
+import 'package:cricket_scorer/features/scoring/domain/usecases/get_playing_for_teams.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart';
@@ -45,6 +47,12 @@ class _FakeRemoveMember implements RemoveOrganizationMemberUseCase {
       throw UnimplementedError('Not exercised in this test.');
 }
 
+class _FakeGetPlayingFor implements GetPlayingForTeamsUseCase {
+  @override
+  dynamic noSuchMethod(Invocation invocation) =>
+      throw UnimplementedError('Not exercised in this test.');
+}
+
 class _FakeCreateTeam implements CreateTeamUseCase {
   @override
   dynamic noSuchMethod(Invocation invocation) =>
@@ -63,6 +71,7 @@ class _TeamsController extends MyTeamsController {
   _TeamsController()
     : super(
         getMyTeamsUseCase: _FakeGetMyTeams(),
+        getPlayingForTeamsUseCase: _FakeGetPlayingFor(),
         createTeamUseCase: _FakeCreateTeam(),
         createOrganizationTeamUseCase: _FakeCreateOrganizationTeam(),
       );
@@ -72,6 +81,9 @@ class _TeamsController extends MyTeamsController {
 
   @override
   Future<void> loadMyTeams() async => reloads++;
+
+  @override
+  Future<void> loadPlayingFor() async {}
 
   @override
   Future<void> loadMoreTeams() async => loadMores++;
@@ -133,6 +145,28 @@ void main() {
 
     expect(find.byType(HomeListSkeleton), findsNWidgets(2));
   });
+
+  testWidgets(
+    'Teams I play for is hidden while empty and lists teams once loaded',
+    (
+      tester,
+    ) async {
+      await pumpTab(tester);
+      expect(find.text(TranslationKeys.teamsIPlayFor.tr), findsNothing);
+
+      teams.playingFor.assignAll([
+        PlayingForTeam(
+          id: 'p1',
+          name: 'Mumbai Indians',
+          myPlayerName: 'Mohit Zatu',
+        ),
+      ]);
+      await tester.pump();
+
+      expect(find.text(TranslationKeys.teamsIPlayFor.tr), findsOneWidget);
+      expect(find.text('Mumbai Indians'), findsOneWidget);
+    },
+  );
 
   testWidgets('both sections empty: a hint and a create action', (
     tester,

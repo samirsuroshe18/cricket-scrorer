@@ -7,6 +7,8 @@ import 'package:cricket_scorer/features/organization/domain/usecases/create_orga
 import 'package:cricket_scorer/features/scoring/data/models/request/create_team_req.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/created_team_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/my_teams_res.dart';
+import 'package:cricket_scorer/features/scoring/data/models/response/playing_for_teams_res.dart';
+import 'package:cricket_scorer/features/scoring/domain/usecases/get_playing_for_teams.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/create_team.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/get_my_teams.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -36,6 +38,29 @@ class _FakeGetMyTeams implements GetMyTeamsUseCase {
     calls++;
     paramsSeen.add(params);
     return responseByPage[params?.page ?? 1] ?? response;
+  }
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) =>
+      throw UnimplementedError('Not exercised in this test.');
+}
+
+class _FakeGetPlayingFor implements GetPlayingForTeamsUseCase {
+  Either<CricketResponse<PlayingForTeamsRes>, CricketFailure> response =
+      Either.result(
+        CricketResponse(
+          message: 'ok',
+          data: PlayingForTeamsRes(teams: [], page: 1, limit: 20, total: 0),
+        ),
+      );
+  int calls = 0;
+
+  @override
+  Future<Either<CricketResponse<PlayingForTeamsRes>, CricketFailure>> call({
+    GetPlayingForTeamsParams? params,
+  }) async {
+    calls++;
+    return response;
   }
 
   @override
@@ -95,6 +120,7 @@ class _FakeCreateOrganizationTeam implements CreateOrganizationTeamUseCase {
 
 void main() {
   late _FakeGetMyTeams getMyTeams;
+  late _FakeGetPlayingFor getPlayingFor;
   late _FakeCreateTeam createTeam;
   late _FakeCreateOrganizationTeam createOrganizationTeam;
   late MyTeamsController controller;
@@ -102,16 +128,56 @@ void main() {
   setUp(() {
     Get.testMode = true;
     getMyTeams = _FakeGetMyTeams();
+    getPlayingFor = _FakeGetPlayingFor();
     createTeam = _FakeCreateTeam();
     createOrganizationTeam = _FakeCreateOrganizationTeam();
     controller = MyTeamsController(
       getMyTeamsUseCase: getMyTeams,
+      getPlayingForTeamsUseCase: getPlayingFor,
       createTeamUseCase: createTeam,
       createOrganizationTeamUseCase: createOrganizationTeam,
     );
   });
 
   tearDown(Get.reset);
+
+  group('loadPlayingFor', () {
+    test('fills playingFor from the server', () async {
+      getPlayingFor.response = Either.result(
+        CricketResponse(
+          message: 'ok',
+          data: PlayingForTeamsRes(
+            teams: [
+              PlayingForTeam(
+                id: 't9',
+                name: 'Mumbai Indians',
+                myPlayerName: 'Mohit Zatu',
+              ),
+            ],
+            page: 1,
+            limit: 20,
+            total: 1,
+          ),
+        ),
+      );
+
+      await controller.loadPlayingFor();
+
+      expect(controller.playingFor.single.name, 'Mumbai Indians');
+    });
+
+    test('a failure leaves My teams untouched and playingFor empty', () async {
+      getPlayingFor.response = Either.fallback(
+        CricketServerErrorFailure(message: 'boom'),
+      );
+
+      await controller.loadMyTeams();
+      await controller.loadPlayingFor();
+
+      expect(controller.playingFor, isEmpty);
+      expect(controller.loadError.value, isNull);
+    });
+  });
 
   group('createTeam', () {
     test('without an organization it uses the standalone usecase', () async {

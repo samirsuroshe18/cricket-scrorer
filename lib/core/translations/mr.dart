@@ -629,11 +629,16 @@ Map<String, String> mr = {
   TranslationKeys.backToPlayers: 'खेळाडूंकडे परत',
   TranslationKeys.findUserByEmailHint: 'त्यांच्या खात्याचा ईमेल पत्ता टाका',
   TranslationKeys.playerInviteTitle: 'संघ आमंत्रण',
-  TranslationKeys.playerInviteMessage: '@inviter यांनी तुम्हाला @team मध्ये @player म्हणून जोडले आहे. हा खेळाडू तुमच्या खात्याशी जोडण्यासाठी स्वीकारा.',
+  TranslationKeys.playerInviteMessage:
+      '@inviter यांनी तुम्हाला @team मध्ये @player म्हणून जोडले आहे. हा खेळाडू तुमच्या खात्याशी जोडण्यासाठी स्वीकारा.',
   TranslationKeys.acceptInvite: 'स्वीकारा',
   TranslationKeys.declineInvite: 'नाकारा',
   TranslationKeys.inviteAlreadyAccepted: 'तुम्ही हे आमंत्रण आधीच स्वीकारले आहे',
   TranslationKeys.inviteAlreadyDeclined: 'तुम्ही हे आमंत्रण नाकारले आहे',
+  TranslationKeys.teamsIPlayFor: 'मी ज्या संघांमध्ये खेळतो',
+  TranslationKeys.playingAs: '@player म्हणून खेळत आहात',
+  TranslationKeys.readOnlyTeamNote:
+      'तुम्ही हा संघ खेळाडू म्हणून पाहत आहात. बदल फक्त स्कोअरर करू शकतो.',
   TranslationKeys.saveAndContinue: 'सेव्ह करा आणि पुढे जा',
   TranslationKeys.captain: 'कर्णधार',
   TranslationKeys.viceCaptain: 'उप-कर्णधार',

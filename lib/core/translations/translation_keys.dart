@@ -644,6 +644,9 @@ class TranslationKeys {
   static const String declineInvite = 'decline_invite';
   static const String inviteAlreadyAccepted = 'invite_already_accepted';
   static const String inviteAlreadyDeclined = 'invite_already_declined';
+  static const String teamsIPlayFor = 'teams_i_play_for';
+  static const String playingAs = 'playing_as';
+  static const String readOnlyTeamNote = 'read_only_team_note';
   static const String saveAndContinue = 'save_and_continue';
   static const String captain = 'captain';
   static const String viceCaptain = 'vice_captain';

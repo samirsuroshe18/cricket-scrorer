@@ -16,6 +16,7 @@ import 'package:cricket_scorer/features/home/presentation/widgets/home_search_fi
 import 'package:cricket_scorer/features/home/presentation/widgets/home_section_header.dart';
 import 'package:cricket_scorer/features/home/presentation/widgets/home_status_strip.dart';
 import 'package:cricket_scorer/features/home/presentation/widgets/home_style.dart';
+import 'package:cricket_scorer/features/home/presentation/widgets/playing_for_section.dart';
 import 'package:cricket_scorer/features/home/presentation/widgets/team_row.dart';
 import 'package:cricket_scorer/features/organization/data/models/response/organization_summary_res.dart';
 import 'package:cricket_scorer/features/organization/presentation/controllers/organizations_list_controller.dart';
@@ -153,6 +154,7 @@ class _TeamsTabState extends State<TeamsTab> {
               child: RefreshIndicator(
                 onRefresh: () => Future.wait([
                   myTeams.loadMyTeams(),
+                  myTeams.loadPlayingFor(),
                   orgs.loadOrganizations(),
                 ]),
                 child: ListView(
@@ -164,6 +166,7 @@ class _TeamsTabState extends State<TeamsTab> {
                   padding: const EdgeInsets.fromLTRB(16, 8, 16, 44),
                   children: [
                     _buildMyTeams(),
+                    _buildPlayingFor(),
                     _buildOrganizations(),
                     _buildNoSearchResults(),
                   ],
@@ -239,7 +242,9 @@ class _TeamsTabState extends State<TeamsTab> {
                 // filtering only narrows what's already loaded (see the
                 // class doc comment), so a "load more" affordance under a
                 // filtered result would promise a search this app doesn't do.
-                if (!_isFiltering && _showAllTeams && myTeams.hasMore.value) ...[
+                if (!_isFiltering &&
+                    _showAllTeams &&
+                    myTeams.hasMore.value) ...[
                   8.h,
                   _LoadMoreTeamsButton(
                     isLoading: myTeams.isLoadingMore.value,
@@ -260,6 +265,28 @@ class _TeamsTabState extends State<TeamsTab> {
             ],
           ],
         ),
+      );
+    });
+  }
+
+  /// Teams run by someone else that the caller is on the roster of. Filtered
+  /// by the same search as My teams; drops out entirely when nothing matches.
+  Widget _buildPlayingFor() {
+    return Obx(() {
+      final shown = _isFiltering
+          ? myTeams.playingFor
+                .where(
+                  (team) =>
+                      team.name.toLowerCase().contains(_query) ||
+                      team.myPlayerName.toLowerCase().contains(_query),
+                )
+                .toList()
+          : myTeams.playingFor.toList();
+
+      return PlayingForSection(
+        teams: shown,
+        onTap: (teamId) =>
+            Get.toNamed<dynamic>(AppRoutes.teamPlayerViewPath(teamId)),
       );
     });
   }
