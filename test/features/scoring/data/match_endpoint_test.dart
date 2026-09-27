@@ -39,4 +39,13 @@ void main() {
       '/v1/team/665f1a2b3c4d5e6f7a8b9c01/matches',
     );
   });
+
+  test('player picker and invite endpoints start at /v1, never /api/v1', () {
+    expect(endpoint.myPlayers, '/v1/player');
+    expect(endpoint.userLookup, '/v1/user/lookup');
+    expect(endpoint.teamInvites('t1'), '/v1/team/t1/invites');
+    expect(endpoint.playerInvite('i1'), '/v1/player-invite/i1');
+    expect(endpoint.acceptPlayerInvite('i1'), '/v1/player-invite/i1/accept');
+    expect(endpoint.declinePlayerInvite('i1'), '/v1/player-invite/i1/decline');
+  });
 }

@@ -25,6 +25,26 @@ class MatchEndpoint {
   /// `POST /v1/team/:teamId/players` — add a player to the roster by name.
   String teamPlayers(String teamId) => '/v1/team/$teamId/players';
 
+  /// `GET /v1/player` — the caller's own players (the "My players" picker).
+  final String myPlayers = '/v1/player';
+
+  /// `GET /v1/user/lookup?email=` — one account by exact email.
+  final String userLookup = '/v1/user/lookup';
+
+  /// `POST /v1/team/:teamId/invites` — invite an app user onto the roster.
+  String teamInvites(String teamId) => '/v1/team/$teamId/invites';
+
+  /// `GET /v1/player-invite/:inviteId` — the invitee's view of one invite.
+  String playerInvite(String inviteId) => '/v1/player-invite/$inviteId';
+
+  /// `POST /v1/player-invite/:inviteId/accept`.
+  String acceptPlayerInvite(String inviteId) =>
+      '/v1/player-invite/$inviteId/accept';
+
+  /// `POST /v1/player-invite/:inviteId/decline`.
+  String declinePlayerInvite(String inviteId) =>
+      '/v1/player-invite/$inviteId/decline';
+
   /// `PATCH /v1/team/:teamId/players/:playerId` — edit a rostered player's
   /// role / jersey number through the team (works for an org owner, unlike
   /// the creator-only `PATCH /v1/player/:playerId`).
