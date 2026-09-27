@@ -22,6 +22,7 @@ import 'package:cricket_scorer/features/organization/data/models/response/organi
 import 'package:cricket_scorer/features/organization/presentation/controllers/organizations_list_controller.dart';
 import 'package:cricket_scorer/features/organization/presentation/pages/organizations_list_screen.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/my_teams_res.dart';
+import 'package:cricket_scorer/features/scoring/data/models/response/playing_for_teams_res.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -98,6 +99,10 @@ class _TeamsTabState extends State<TeamsTab> {
   bool _teamMatches(TeamSummary team) =>
       team.name.toLowerCase().contains(_query) ||
       (team.organization?.name.toLowerCase().contains(_query) ?? false);
+
+  bool _playingForMatches(PlayingForTeam team) =>
+      team.name.toLowerCase().contains(_query) ||
+      team.myPlayerName.toLowerCase().contains(_query);
 
   bool _organizationMatches(OrganizationSummaryRes org) =>
       org.name.toLowerCase().contains(_query);
@@ -274,13 +279,7 @@ class _TeamsTabState extends State<TeamsTab> {
   Widget _buildPlayingFor() {
     return Obx(() {
       final shown = _isFiltering
-          ? myTeams.playingFor
-                .where(
-                  (team) =>
-                      team.name.toLowerCase().contains(_query) ||
-                      team.myPlayerName.toLowerCase().contains(_query),
-                )
-                .toList()
+          ? myTeams.playingFor.where(_playingForMatches).toList()
           : myTeams.playingFor.toList();
 
       return PlayingForSection(
@@ -370,6 +369,7 @@ class _TeamsTabState extends State<TeamsTab> {
           myTeams.loadError.value != null || orgs.loadError.value != null;
       final anyMatch =
           myTeams.teams.any(_teamMatches) ||
+          myTeams.playingFor.any(_playingForMatches) ||
           orgs.organizations.any(_organizationMatches);
       if (!_isFiltering || busy || failed || anyMatch) {
         return const SizedBox.shrink();

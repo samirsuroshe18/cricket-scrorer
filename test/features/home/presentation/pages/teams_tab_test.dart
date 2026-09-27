@@ -453,6 +453,30 @@ void main() {
       expect(find.byType(OrganizationRow), findsNWidgets(2));
     });
 
+    testWidgets('a search matching only a team I play for shows it, not "no '
+        'results"', (tester) async {
+      seedTeamsAndOrgs();
+      teams.playingFor.assignAll([
+        PlayingForTeam(
+          id: 'p1',
+          name: 'Chennai Kings',
+          myPlayerName: 'Mohit Zatu',
+        ),
+      ]);
+      await pumpTab(tester);
+      await openSearch(tester);
+
+      await type(tester, 'chennai');
+
+      expect(find.text('Chennai Kings'), findsOneWidget);
+      expect(
+        find.text(
+          TranslationKeys.noTeamsSearchResults.trParams({'query': 'chennai'}),
+        ),
+        findsNothing,
+      );
+    });
+
     testWidgets('the back arrow closes the field and restores the lists', (
       tester,
     ) async {
