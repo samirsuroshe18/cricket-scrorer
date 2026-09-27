@@ -235,6 +235,7 @@ class TranslationKeys {
   static const String nonStriker = 'non_striker';
   static const String openingBatsmen = 'opening_batsmen';
   static const String chooseOpeners = 'choose_openers';
+  static const String pickPlayerOrTypeNew = 'pick_player_or_type_new';
   static const String enterStrikerName = 'enter_striker_name';
   static const String enterNonStrikerName = 'enter_non_striker_name';
   static const String startInnings = 'start_innings';

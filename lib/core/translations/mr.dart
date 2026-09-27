@@ -235,6 +235,7 @@ Map<String, String> mr = {
   TranslationKeys.nonStriker: 'नॉन-स्ट्रायकर',
   TranslationKeys.openingBatsmen: 'सलामीचे फलंदाज',
   TranslationKeys.chooseOpeners: 'गुण नोंदवण्यासाठी सलामीचे फलंदाज निवडा',
+  TranslationKeys.pickPlayerOrTypeNew: 'खेळाडू निवडा, किंवा नवीन नाव टाका',
   TranslationKeys.enterStrikerName: 'स्ट्रायकरचे नाव टाका',
   TranslationKeys.enterNonStrikerName: 'नॉन-स्ट्रायकरचे नाव टाका',
   TranslationKeys.startInnings: 'डाव सुरू करा',
