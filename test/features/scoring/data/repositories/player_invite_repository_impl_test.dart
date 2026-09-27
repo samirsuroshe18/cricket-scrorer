@@ -18,6 +18,25 @@ class _FakeMatchApiService implements MatchApiService {
   }
 
   @override
+  Future<Either<ApiResponseModel, CricketFailure>> getPlayingForTeams({
+    required int page,
+    required int limit,
+  }) => _record('getPlayingForTeams', {'page': page, 'limit': limit});
+
+  @override
+  Future<Either<ApiResponseModel, CricketFailure>> getTeamPlayerView({
+    required String teamId,
+  }) => _record('getTeamPlayerView', {'teamId': teamId});
+
+  @override
+  Future<Either<ApiResponseModel, CricketFailure>> getTeamPlayerMatches({
+    required String teamId,
+    required int page,
+    required int limit,
+    String status = 'all',
+  }) => _record('getTeamPlayerMatches', {'teamId': teamId});
+
+  @override
   Future<Either<ApiResponseModel, CricketFailure>> getMyPlayers({
     required String teamId,
     String? q,

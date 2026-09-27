@@ -10,11 +10,18 @@ import 'package:cricket_scorer/features/scoring/data/models/response/my_teams_re
 import 'package:cricket_scorer/features/scoring/domain/team_field_limits.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/create_team.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/get_my_teams.dart';
+import 'package:cricket_scorer/features/scoring/domain/usecases/get_playing_for_teams.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart';
 
 class _Unused1 implements GetMyTeamsUseCase {
+  @override
+  dynamic noSuchMethod(Invocation invocation) =>
+      throw UnimplementedError('Not exercised in this test.');
+}
+
+class _Unused4 implements GetPlayingForTeamsUseCase {
   @override
   dynamic noSuchMethod(Invocation invocation) =>
       throw UnimplementedError('Not exercised in this test.');
@@ -38,6 +45,7 @@ class _TeamsController extends MyTeamsController {
   _TeamsController()
     : super(
         getMyTeamsUseCase: _Unused1(),
+        getPlayingForTeamsUseCase: _Unused4(),
         createTeamUseCase: _Unused2(),
         createOrganizationTeamUseCase: _Unused3(),
       );

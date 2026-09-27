@@ -52,6 +52,13 @@ class AppRoutes {
 
   static String teamProfilePath(String teamId) => '/team/$teamId/profile';
 
+  /// The read-only team screen for a linked roster player. Registered with a
+  /// GetX path parameter; navigate with [teamPlayerViewPath].
+  static const String teamPlayerView = '/team/:teamId/player-view';
+
+  static String teamPlayerViewPath(String teamId) =>
+      '/team/$teamId/player-view';
+
   static const String organizations = '/organizations';
 
   /// Registered with a GetX path parameter. Never navigate with this

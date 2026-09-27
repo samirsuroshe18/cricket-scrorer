@@ -15,6 +15,7 @@ import 'package:cricket_scorer/features/scoring/domain/usecases/set_team_leaders
 import 'package:cricket_scorer/features/scoring/domain/usecases/update_team.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/update_team_logo.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/update_team_player.dart';
+import 'package:cricket_scorer/features/scoring/domain/usecases/remove_team_player.dart';
 import 'package:cricket_scorer/features/scoring/presentation/controllers/team_profile_controller.dart';
 import '../helpers/picker_fakes.dart';
 import 'package:cricket_scorer/features/scoring/presentation/widget/add_player_sheet.dart';
@@ -80,6 +81,8 @@ class _FakeAdd extends _Unused implements AddTeamPlayerUseCase {
         );
   }
 }
+
+class _FakeRemovePlayer extends _Unused implements RemoveTeamPlayerUseCase {}
 
 class _FakeUpdatePlayer extends _Unused implements UpdateTeamPlayerUseCase {
   UpdateTeamPlayerParams? lastParams;
@@ -154,6 +157,7 @@ void main() {
       deleteTeamUseCase: _UnusedDelete(),
       addTeamPlayerUseCase: add,
       updateTeamPlayerUseCase: updatePlayer,
+      removeTeamPlayerUseCase: _FakeRemovePlayer(),
       setTeamLeadershipUseCase: leadership,
       getMyPlayersUseCase: emptyMyPlayers(),
       lookupUserByEmailUseCase: FakeLookupUserByEmailUseCase(),

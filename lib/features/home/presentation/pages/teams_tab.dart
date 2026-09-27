@@ -16,11 +16,13 @@ import 'package:cricket_scorer/features/home/presentation/widgets/home_search_fi
 import 'package:cricket_scorer/features/home/presentation/widgets/home_section_header.dart';
 import 'package:cricket_scorer/features/home/presentation/widgets/home_status_strip.dart';
 import 'package:cricket_scorer/features/home/presentation/widgets/home_style.dart';
+import 'package:cricket_scorer/features/home/presentation/widgets/playing_for_section.dart';
 import 'package:cricket_scorer/features/home/presentation/widgets/team_row.dart';
 import 'package:cricket_scorer/features/organization/data/models/response/organization_summary_res.dart';
 import 'package:cricket_scorer/features/organization/presentation/controllers/organizations_list_controller.dart';
 import 'package:cricket_scorer/features/organization/presentation/pages/organizations_list_screen.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/my_teams_res.dart';
+import 'package:cricket_scorer/features/scoring/data/models/response/playing_for_teams_res.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -98,6 +100,10 @@ class _TeamsTabState extends State<TeamsTab> {
       team.name.toLowerCase().contains(_query) ||
       (team.organization?.name.toLowerCase().contains(_query) ?? false);
 
+  bool _playingForMatches(PlayingForTeam team) =>
+      team.name.toLowerCase().contains(_query) ||
+      team.myPlayerName.toLowerCase().contains(_query);
+
   bool _organizationMatches(OrganizationSummaryRes org) =>
       org.name.toLowerCase().contains(_query);
 
@@ -153,6 +159,7 @@ class _TeamsTabState extends State<TeamsTab> {
               child: RefreshIndicator(
                 onRefresh: () => Future.wait([
                   myTeams.loadMyTeams(),
+                  myTeams.loadPlayingFor(),
                   orgs.loadOrganizations(),
                 ]),
                 child: ListView(
@@ -164,6 +171,7 @@ class _TeamsTabState extends State<TeamsTab> {
                   padding: const EdgeInsets.fromLTRB(16, 8, 16, 44),
                   children: [
                     _buildMyTeams(),
+                    _buildPlayingFor(),
                     _buildOrganizations(),
                     _buildNoSearchResults(),
                   ],
@@ -239,7 +247,9 @@ class _TeamsTabState extends State<TeamsTab> {
                 // filtering only narrows what's already loaded (see the
                 // class doc comment), so a "load more" affordance under a
                 // filtered result would promise a search this app doesn't do.
-                if (!_isFiltering && _showAllTeams && myTeams.hasMore.value) ...[
+                if (!_isFiltering &&
+                    _showAllTeams &&
+                    myTeams.hasMore.value) ...[
                   8.h,
                   _LoadMoreTeamsButton(
                     isLoading: myTeams.isLoadingMore.value,
@@ -260,6 +270,22 @@ class _TeamsTabState extends State<TeamsTab> {
             ],
           ],
         ),
+      );
+    });
+  }
+
+  /// Teams run by someone else that the caller is on the roster of. Filtered
+  /// by the same search as My teams; drops out entirely when nothing matches.
+  Widget _buildPlayingFor() {
+    return Obx(() {
+      final shown = _isFiltering
+          ? myTeams.playingFor.where(_playingForMatches).toList()
+          : myTeams.playingFor.toList();
+
+      return PlayingForSection(
+        teams: shown,
+        onTap: (teamId) =>
+            Get.toNamed<dynamic>(AppRoutes.teamPlayerViewPath(teamId)),
       );
     });
   }
@@ -343,6 +369,7 @@ class _TeamsTabState extends State<TeamsTab> {
           myTeams.loadError.value != null || orgs.loadError.value != null;
       final anyMatch =
           myTeams.teams.any(_teamMatches) ||
+          myTeams.playingFor.any(_playingForMatches) ||
           orgs.organizations.any(_organizationMatches);
       if (!_isFiltering || busy || failed || anyMatch) {
         return const SizedBox.shrink();

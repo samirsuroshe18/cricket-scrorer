@@ -22,6 +22,7 @@ import 'package:cricket_scorer/features/scoring/domain/usecases/get_my_players.d
 import 'package:cricket_scorer/features/scoring/domain/usecases/invite_team_player.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/lookup_user_by_email.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/get_team_matches.dart';
+import 'package:cricket_scorer/features/scoring/domain/usecases/remove_team_player.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/set_team_leadership.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/update_team_player.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/get_team_profile.dart';
@@ -54,6 +55,7 @@ class TeamProfileController extends GetxController {
   final DeleteTeamUseCase deleteTeamUseCase;
   final AddTeamPlayerUseCase addTeamPlayerUseCase;
   final UpdateTeamPlayerUseCase updateTeamPlayerUseCase;
+  final RemoveTeamPlayerUseCase removeTeamPlayerUseCase;
   final SetTeamLeadershipUseCase setTeamLeadershipUseCase;
   final GetMyPlayersUseCase getMyPlayersUseCase;
   final LookupUserByEmailUseCase lookupUserByEmailUseCase;
@@ -70,6 +72,7 @@ class TeamProfileController extends GetxController {
     required this.deleteTeamUseCase,
     required this.addTeamPlayerUseCase,
     required this.updateTeamPlayerUseCase,
+    required this.removeTeamPlayerUseCase,
     required this.setTeamLeadershipUseCase,
     required this.getMyPlayersUseCase,
     required this.lookupUserByEmailUseCase,
@@ -380,6 +383,16 @@ class TeamProfileController extends GetxController {
           clearJerseyNumber: clearJerseyNumber,
         ),
       ),
+    );
+    return _afterRosterWrite(response);
+  }
+
+  /// Removes a player from the roster (never the `Player` document itself,
+  /// which may sit on other teams); same contract as [addPlayer]. Cancels any
+  /// invite that player still had pending, server-side.
+  Future<String?> removePlayer({required String playerId}) async {
+    final response = await removeTeamPlayerUseCase(
+      params: RemoveTeamPlayerParams(teamId: teamId, playerId: playerId),
     );
     return _afterRosterWrite(response);
   }

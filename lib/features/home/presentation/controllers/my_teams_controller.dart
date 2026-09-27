@@ -5,7 +5,9 @@ import 'package:cricket_scorer/features/organization/domain/usecases/create_orga
 import 'package:cricket_scorer/features/scoring/data/models/request/create_team_req.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/my_teams_res.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/create_team.dart';
+import 'package:cricket_scorer/features/scoring/data/models/response/playing_for_teams_res.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/get_my_teams.dart';
+import 'package:cricket_scorer/features/scoring/domain/usecases/get_playing_for_teams.dart';
 import 'package:get/get.dart';
 
 /// Every team the caller has ever created or played under — ad-hoc and
@@ -15,11 +17,13 @@ import 'package:get/get.dart';
 /// the Teams tab — and creates new teams for it.
 class MyTeamsController extends GetxController {
   final GetMyTeamsUseCase getMyTeamsUseCase;
+  final GetPlayingForTeamsUseCase getPlayingForTeamsUseCase;
   final CreateTeamUseCase createTeamUseCase;
   final CreateOrganizationTeamUseCase createOrganizationTeamUseCase;
 
   MyTeamsController({
     required this.getMyTeamsUseCase,
+    required this.getPlayingForTeamsUseCase,
     required this.createTeamUseCase,
     required this.createOrganizationTeamUseCase,
   });
@@ -27,6 +31,11 @@ class MyTeamsController extends GetxController {
   static const int _pageSize = 20;
 
   final teams = <TeamSummary>[].obs;
+
+  /// Teams the caller is on the roster of through a linked player — the Teams
+  /// tab's read-only "Teams I play for" section. Kept apart from [teams] so a
+  /// failure here can never blank My teams.
+  final playingFor = <PlayingForTeam>[].obs;
   final isLoading = true.obs;
   final isLoadingMore = false.obs;
   final hasMore = true.obs;
@@ -37,6 +46,7 @@ class MyTeamsController extends GetxController {
   void onInit() {
     super.onInit();
     loadMyTeams();
+    loadPlayingFor();
   }
 
   /// First page — also what a pull-to-refresh and a post-create reload fall
@@ -60,6 +70,21 @@ class MyTeamsController extends GetxController {
       hasMore.value = data?.hasMore ?? false;
     } else {
       loadError.value = response.fallback.message;
+    }
+  }
+
+  /// First page of the teams the caller plays for. A failure leaves the list
+  /// empty and silent: the section is a bonus over My teams, not something
+  /// worth an error strip when the network blips.
+  Future<void> loadPlayingFor() async {
+    final response = await getPlayingForTeamsUseCase(
+      params: const GetPlayingForTeamsParams(page: 1, limit: _pageSize),
+    );
+
+    if (response.isResult) {
+      playingFor.assignAll(response.result.data?.teams ?? []);
+    } else {
+      playingFor.clear();
     }
   }
 

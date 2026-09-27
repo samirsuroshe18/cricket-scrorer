@@ -7,6 +7,7 @@ import 'package:cricket_scorer/core/global/widgets/cricket_button.dart';
 import 'package:cricket_scorer/core/global/widgets/cricket_text.dart';
 import 'package:cricket_scorer/core/global/widgets/snackbars/cricket_snackbar.dart';
 import 'package:cricket_scorer/core/translations/translation_keys.dart';
+import 'package:cricket_scorer/features/home/presentation/controllers/my_teams_controller.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/player_invite_res.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/get_player_invite.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/respond_to_player_invite.dart';
@@ -101,6 +102,11 @@ class _PlayerInviteSheetBodyState extends State<PlayerInviteSheetBody> {
     // instead. The message is the server's own, localized (e.g. a lost claim
     // race says the player was already claimed).
     Get.back<void>();
+    // Accepting links the player to this account, which puts the team under
+    // "Teams I play for" — refresh it so it shows without a manual pull.
+    if (accept && response.isResult && Get.isRegistered<MyTeamsController>()) {
+      unawaited(Get.find<MyTeamsController>().loadPlayingFor());
+    }
     (widget.reportResult ?? _showSnackbar)(
       response.isResult,
       response.isResult ? response.result.message : response.fallback.message,
@@ -130,9 +136,11 @@ class _PlayerInviteSheetBodyState extends State<PlayerInviteSheetBody> {
     final invite = _invite!;
     if (!invite.isPending) {
       return CricketText(
-        text: invite.status == 'accepted'
-            ? TranslationKeys.inviteAlreadyAccepted.tr
-            : TranslationKeys.inviteAlreadyDeclined.tr,
+        text: switch (invite.status) {
+          'accepted' => TranslationKeys.inviteAlreadyAccepted.tr,
+          'cancelled' => TranslationKeys.inviteWithdrawn.tr,
+          _ => TranslationKeys.inviteAlreadyDeclined.tr,
+        },
         textAlign: TextAlign.center,
       );
     }
