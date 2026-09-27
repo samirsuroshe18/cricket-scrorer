@@ -11,6 +11,9 @@ import 'package:cricket_scorer/features/scoring/data/models/response/team_profil
 import 'package:cricket_scorer/features/scoring/data/models/response/scorer_candidates_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/assign_scorer_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/created_team_res.dart';
+import 'package:cricket_scorer/features/scoring/data/models/response/looked_up_user_res.dart';
+import 'package:cricket_scorer/features/scoring/data/models/response/my_players_res.dart';
+import 'package:cricket_scorer/features/scoring/data/models/response/team_invite_res.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/add_team_player.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/get_team_matches.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/set_team_leadership.dart';
@@ -22,6 +25,7 @@ import 'package:cricket_scorer/features/scoring/domain/usecases/update_team_logo
 import 'package:cricket_scorer/features/scoring/domain/usecases/update_team.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/delete_team.dart';
 import 'package:cricket_scorer/features/scoring/presentation/controllers/team_profile_controller.dart';
+import '../helpers/picker_fakes.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart' hide Response;
@@ -276,6 +280,9 @@ void main() {
   late _FakeAddTeamPlayerUseCase addTeamPlayerUseCase;
   late _FakeUpdateTeamPlayerUseCase updateTeamPlayerUseCase;
   late _FakeSetTeamLeadershipUseCase setTeamLeadershipUseCase;
+  late FakeGetMyPlayersUseCase getMyPlayersUseCase;
+  late FakeLookupUserByEmailUseCase lookupUserByEmailUseCase;
+  late FakeInviteTeamPlayerUseCase inviteTeamPlayerUseCase;
   late TeamProfileController controller;
 
   TeamProfileController makeController({GetTeamMatchesUseCase? matches}) =>
@@ -291,6 +298,9 @@ void main() {
         addTeamPlayerUseCase: addTeamPlayerUseCase,
         updateTeamPlayerUseCase: updateTeamPlayerUseCase,
         setTeamLeadershipUseCase: setTeamLeadershipUseCase,
+        getMyPlayersUseCase: getMyPlayersUseCase,
+        lookupUserByEmailUseCase: lookupUserByEmailUseCase,
+        inviteTeamPlayerUseCase: inviteTeamPlayerUseCase,
       );
 
   setUp(() {
@@ -305,6 +315,9 @@ void main() {
     addTeamPlayerUseCase = _FakeAddTeamPlayerUseCase();
     updateTeamPlayerUseCase = _FakeUpdateTeamPlayerUseCase();
     setTeamLeadershipUseCase = _FakeSetTeamLeadershipUseCase();
+    getMyPlayersUseCase = FakeGetMyPlayersUseCase();
+    lookupUserByEmailUseCase = FakeLookupUserByEmailUseCase();
+    inviteTeamPlayerUseCase = FakeInviteTeamPlayerUseCase();
     controller = TeamProfileController(
       teamId: 'team-1',
       getTeamProfileUseCase: profileUseCase,
@@ -317,6 +330,9 @@ void main() {
       addTeamPlayerUseCase: addTeamPlayerUseCase,
       updateTeamPlayerUseCase: updateTeamPlayerUseCase,
       setTeamLeadershipUseCase: setTeamLeadershipUseCase,
+      getMyPlayersUseCase: getMyPlayersUseCase,
+      lookupUserByEmailUseCase: lookupUserByEmailUseCase,
+      inviteTeamPlayerUseCase: inviteTeamPlayerUseCase,
     );
   });
 
@@ -554,6 +570,9 @@ void main() {
         addTeamPlayerUseCase: _FakeAddTeamPlayerUseCase(),
         updateTeamPlayerUseCase: _FakeUpdateTeamPlayerUseCase(),
         setTeamLeadershipUseCase: _FakeSetTeamLeadershipUseCase(),
+        getMyPlayersUseCase: FakeGetMyPlayersUseCase(),
+        lookupUserByEmailUseCase: FakeLookupUserByEmailUseCase(),
+        inviteTeamPlayerUseCase: FakeInviteTeamPlayerUseCase(),
       );
       profileUseCaseA.response = Either.result(
         CricketResponse(
@@ -581,6 +600,9 @@ void main() {
         addTeamPlayerUseCase: _FakeAddTeamPlayerUseCase(),
         updateTeamPlayerUseCase: _FakeUpdateTeamPlayerUseCase(),
         setTeamLeadershipUseCase: _FakeSetTeamLeadershipUseCase(),
+        getMyPlayersUseCase: FakeGetMyPlayersUseCase(),
+        lookupUserByEmailUseCase: FakeLookupUserByEmailUseCase(),
+        inviteTeamPlayerUseCase: FakeInviteTeamPlayerUseCase(),
       );
       profileUseCaseB.response = Either.result(
         CricketResponse(
@@ -975,6 +997,146 @@ void main() {
     },
   );
 
+  group('add-player picker actions', () {
+    MyPlayersRes myPlayers({int page = 1, int total = 1}) => MyPlayersRes(
+      players: [MyPlayerRow(playerId: 'p1', playerName: 'Rohit')],
+      page: page,
+      limit: 20,
+      total: total,
+    );
+
+    test(
+      'addExistingPlayer sends the playerId (no name) and refetches',
+      () async {
+        addTeamPlayerUseCase.response = Either.result(
+          CricketResponse(message: 'ok', data: rosterRow),
+        );
+        profileUseCase.response = profileWith();
+
+        final error = await controller.addExistingPlayer('p1');
+
+        expect(error, isNull);
+        expect(addTeamPlayerUseCase.lastParams?.teamId, 'team-1');
+        expect(addTeamPlayerUseCase.lastParams?.req.playerId, 'p1');
+        expect(addTeamPlayerUseCase.lastParams?.req.name, isNull);
+        expect(profileUseCase.lastTeamId, 'team-1');
+        expect(controller.profile.value?.name, 'Mumbai Indians');
+      },
+    );
+
+    test(
+      'addExistingPlayer returns the server message and does not refetch',
+      () async {
+        addTeamPlayerUseCase.response = Either.fallback(
+          CricketNotFoundErrorFailure(
+            statusCode: 404,
+            message: 'No such player',
+          ),
+        );
+
+        final error = await controller.addExistingPlayer('p1');
+
+        expect(error, 'No such player');
+        expect(profileUseCase.lastTeamId, isNull);
+      },
+    );
+
+    test(
+      'inviteUser invites the user on this team and refetches the profile',
+      () async {
+        inviteTeamPlayerUseCase.response = Either.result(
+          CricketResponse(
+            message: 'ok',
+            data: TeamInviteRes(
+              inviteId: 'i1',
+              status: 'pending',
+              player: rosterRow,
+            ),
+          ),
+        );
+        profileUseCase.response = profileWith();
+
+        final error = await controller.inviteUser('u1');
+
+        expect(error, isNull);
+        expect(inviteTeamPlayerUseCase.calls.single.teamId, 'team-1');
+        expect(inviteTeamPlayerUseCase.calls.single.userId, 'u1');
+        expect(profileUseCase.lastTeamId, 'team-1');
+      },
+    );
+
+    test('inviteUser returns the server message on failure', () async {
+      inviteTeamPlayerUseCase.response = Either.fallback(
+        CricketBadRequestFailure(statusCode: 409, message: 'Already claimed'),
+      );
+
+      final error = await controller.inviteUser('u1');
+
+      expect(error, 'Already claimed');
+      expect(profileUseCase.lastTeamId, isNull);
+    });
+
+    test('lookupUserByEmail returns the user, trimming the address', () async {
+      lookupUserByEmailUseCase.response = Either.result(
+        CricketResponse(
+          message: 'ok',
+          data: LookedUpUserRes(userId: 'u1', fullName: 'Rahul Sharma'),
+        ),
+      );
+
+      final (user, error) = await controller.lookupUserByEmail(
+        '  rahul@example.com ',
+      );
+
+      expect(error, isNull);
+      expect(user?.fullName, 'Rahul Sharma');
+      expect(lookupUserByEmailUseCase.calls.single.email, 'rahul@example.com');
+    });
+
+    test(
+      'lookupUserByEmail returns the server message when not found',
+      () async {
+        lookupUserByEmailUseCase.response = Either.fallback(
+          CricketNotFoundErrorFailure(
+            statusCode: 404,
+            message: 'User not found',
+          ),
+        );
+
+        final (user, error) = await controller.lookupUserByEmail('a@b.co');
+
+        expect(user, isNull);
+        expect(error, 'User not found');
+      },
+    );
+
+    test('loadMyPlayers passes teamId, q and page through', () async {
+      getMyPlayersUseCase.response = Either.result(
+        CricketResponse(message: 'ok', data: myPlayers(page: 2, total: 21)),
+      );
+
+      final (res, error) = await controller.loadMyPlayers(q: 'roh', page: 2);
+
+      expect(error, isNull);
+      expect(res?.hasMore, isFalse);
+      final call = getMyPlayersUseCase.calls.single;
+      expect(call.teamId, 'team-1');
+      expect(call.q, 'roh');
+      expect(call.page, 2);
+    });
+
+    test('loadMyPlayers returns the server message on failure', () async {
+      getMyPlayersUseCase.response = Either.fallback(
+        CricketForbiddenErrorFailure(statusCode: 403, message: 'Not yours'),
+      );
+
+      final (res, error) = await controller.loadMyPlayers();
+
+      expect(res, isNull);
+      expect(error, 'Not yours');
+    });
+  });
+
   test('updatePlayer sends the ids and refetches the profile', () async {
     updateTeamPlayerUseCase.response = Either.result(
       CricketResponse(message: 'ok', data: rosterRow),
@@ -1079,10 +1241,16 @@ void main() {
     },
   );
 
-  test('setLeader without a loaded profile does nothing and reports an error', () async {
-    final error = await controller.setLeader(playerId: 'p3', viceCaptain: false);
+  test(
+    'setLeader without a loaded profile does nothing and reports an error',
+    () async {
+      final error = await controller.setLeader(
+        playerId: 'p3',
+        viceCaptain: false,
+      );
 
-    expect(error, isNotNull);
-    expect(setTeamLeadershipUseCase.lastParams, isNull);
-  });
+      expect(error, isNotNull);
+      expect(setTeamLeadershipUseCase.lastParams, isNull);
+    },
+  );
 }

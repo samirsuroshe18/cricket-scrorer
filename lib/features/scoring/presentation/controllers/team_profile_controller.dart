@@ -15,7 +15,12 @@ import 'package:cricket_scorer/features/scoring/data/models/request/create_team_
 import 'package:cricket_scorer/features/scoring/data/models/request/set_team_leadership_req.dart';
 import 'package:cricket_scorer/features/scoring/data/models/request/update_team_player_req.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/team_profile_res.dart';
+import 'package:cricket_scorer/features/scoring/data/models/response/looked_up_user_res.dart';
+import 'package:cricket_scorer/features/scoring/data/models/response/my_players_res.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/add_team_player.dart';
+import 'package:cricket_scorer/features/scoring/domain/usecases/get_my_players.dart';
+import 'package:cricket_scorer/features/scoring/domain/usecases/invite_team_player.dart';
+import 'package:cricket_scorer/features/scoring/domain/usecases/lookup_user_by_email.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/get_team_matches.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/set_team_leadership.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/update_team_player.dart';
@@ -50,6 +55,9 @@ class TeamProfileController extends GetxController {
   final AddTeamPlayerUseCase addTeamPlayerUseCase;
   final UpdateTeamPlayerUseCase updateTeamPlayerUseCase;
   final SetTeamLeadershipUseCase setTeamLeadershipUseCase;
+  final GetMyPlayersUseCase getMyPlayersUseCase;
+  final LookupUserByEmailUseCase lookupUserByEmailUseCase;
+  final InviteTeamPlayerUseCase inviteTeamPlayerUseCase;
 
   TeamProfileController({
     required this.teamId,
@@ -63,6 +71,9 @@ class TeamProfileController extends GetxController {
     required this.addTeamPlayerUseCase,
     required this.updateTeamPlayerUseCase,
     required this.setTeamLeadershipUseCase,
+    required this.getMyPlayersUseCase,
+    required this.lookupUserByEmailUseCase,
+    required this.inviteTeamPlayerUseCase,
   });
 
   static const int _pageSize = 20;
@@ -294,10 +305,61 @@ class TeamProfileController extends GetxController {
     final response = await addTeamPlayerUseCase(
       params: AddTeamPlayerParams(
         teamId: teamId,
-        req: AddTeamPlayerReq(name: name, role: role, jerseyNumber: jerseyNumber),
+        req: AddTeamPlayerReq(
+          name: name,
+          role: role,
+          jerseyNumber: jerseyNumber,
+        ),
       ),
     );
     return _afterRosterWrite(response);
+  }
+
+  /// Adds one of the scorer's own existing players (from [loadMyPlayers]) to
+  /// the roster by id. Same contract as [addPlayer].
+  Future<String?> addExistingPlayer(String playerId) async {
+    final response = await addTeamPlayerUseCase(
+      params: AddTeamPlayerParams(
+        teamId: teamId,
+        req: AddTeamPlayerReq(playerId: playerId),
+      ),
+    );
+    return _afterRosterWrite(response);
+  }
+
+  /// Invites an app user (found with [lookupUserByEmail]) onto the roster: the
+  /// player is added immediately and the person links it by accepting. The
+  /// profile is re-fetched so the new row shows, with its "Invited" chip. Same
+  /// error contract as [addPlayer].
+  Future<String?> inviteUser(String userId) async {
+    final response = await inviteTeamPlayerUseCase(
+      params: InviteTeamPlayerParams(teamId: teamId, userId: userId),
+    );
+    return _afterRosterWrite(response);
+  }
+
+  /// One page of the scorer's own players for the picker, each flagged
+  /// `onTeam` for this team. Returns the server's own message on failure
+  /// rather than showing a snackbar, for the same reason as [addPlayer].
+  Future<(MyPlayersRes?, String?)> loadMyPlayers({
+    String q = '',
+    int page = 1,
+  }) async {
+    final response = await getMyPlayersUseCase(
+      params: GetMyPlayersParams(teamId: teamId, q: q, page: page),
+    );
+    if (!response.isResult) return (null, response.fallback.message);
+    return (response.result.data, null);
+  }
+
+  /// Finds one app user by exact email (trimmed). `(null, message)` when there
+  /// is no such account or the request failed.
+  Future<(LookedUpUserRes?, String?)> lookupUserByEmail(String email) async {
+    final response = await lookupUserByEmailUseCase(
+      params: LookupUserParams(email: email.trim()),
+    );
+    if (!response.isResult) return (null, response.fallback.message);
+    return (response.result.data, null);
   }
 
   /// Edits a rostered player's role and/or jersey number ([clearJerseyNumber]
@@ -331,7 +393,9 @@ class TeamProfileController extends GetxController {
     required bool viceCaptain,
   }) {
     final current = profile.value;
-    if (current == null) return Future.value(TranslationKeys.somethingWentWrong.tr);
+    if (current == null) {
+      return Future.value(TranslationKeys.somethingWentWrong.tr);
+    }
     final otherSlot = viceCaptain ? current.captainId : current.viceCaptainId;
     final keptOther = otherSlot == playerId ? null : otherSlot;
     return _writeLeaders(
@@ -345,7 +409,9 @@ class TeamProfileController extends GetxController {
   /// other. Same contract as [addPlayer].
   Future<String?> clearLeader({required bool viceCaptain}) {
     final current = profile.value;
-    if (current == null) return Future.value(TranslationKeys.somethingWentWrong.tr);
+    if (current == null) {
+      return Future.value(TranslationKeys.somethingWentWrong.tr);
+    }
     return _writeLeaders(
       current,
       captainId: viceCaptain ? current.captainId : null,

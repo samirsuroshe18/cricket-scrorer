@@ -11,12 +11,15 @@ import 'package:flutter_test/flutter_test.dart';
 void main() {
   const endpoint = MatchEndpoint();
 
-  test('percent-encodes characters that are not safe in a URL path segment', () {
-    expect(
-      endpoint.publicMatch('AB CD/12'),
-      '/v1/match/public/AB%20CD%2F12',
-    );
-  });
+  test(
+    'percent-encodes characters that are not safe in a URL path segment',
+    () {
+      expect(
+        endpoint.publicMatch('AB CD/12'),
+        '/v1/match/public/AB%20CD%2F12',
+      );
+    },
+  );
 
   test('leaves an ordinary alphanumeric share code untouched', () {
     expect(endpoint.publicMatch('AB12CD'), '/v1/match/public/AB12CD');
@@ -38,5 +41,14 @@ void main() {
       endpoint.teamMatches('665f1a2b3c4d5e6f7a8b9c01'),
       '/v1/team/665f1a2b3c4d5e6f7a8b9c01/matches',
     );
+  });
+
+  test('player picker and invite endpoints start at /v1, never /api/v1', () {
+    expect(endpoint.myPlayers, '/v1/player');
+    expect(endpoint.userLookup, '/v1/user/lookup');
+    expect(endpoint.teamInvites('t1'), '/v1/team/t1/invites');
+    expect(endpoint.playerInvite('i1'), '/v1/player-invite/i1');
+    expect(endpoint.acceptPlayerInvite('i1'), '/v1/player-invite/i1/accept');
+    expect(endpoint.declinePlayerInvite('i1'), '/v1/player-invite/i1/decline');
   });
 }

@@ -339,7 +339,8 @@ class _MatchFilterChips extends StatelessWidget {
               ChoiceChip(
                 label: CricketText(text: labelKey.tr),
                 selected: active == status,
-                onSelected: (_) => unawaited(controller.setStatusFilter(status)),
+                onSelected: (_) =>
+                    unawaited(controller.setStatusFilter(status)),
               ),
               8.w,
             ],
@@ -559,6 +560,10 @@ class _RosterRow extends StatelessWidget {
                   spoken: TranslationKeys.viceCaptain,
                 ),
               ],
+              if (player.inviteStatus == 'pending') ...[
+                6.w,
+                const _InvitedBadge(),
+              ],
               const Spacer(),
               if (player.jerseyNumber != null) ...[
                 CricketText(
@@ -612,6 +617,31 @@ class _RosterRow extends StatelessWidget {
 
 /// "C" / "VC" beside a rostered player. The visible letters are decoration;
 /// screen readers get the full word.
+/// Shown while a roster player's invite to a real account is unanswered — the
+/// player is on the roster already, just not linked to anyone yet.
+class _InvitedBadge extends StatelessWidget {
+  const _InvitedBadge();
+
+  @override
+  Widget build(BuildContext context) {
+    final color = context.colors.statusWarning;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: 6.radius,
+      ),
+      child: CricketText(
+        text: TranslationKeys.invited.tr,
+        style: context.textTheme.labelSmall?.copyWith(
+          color: color,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+    );
+  }
+}
+
 class _LeaderBadge extends StatelessWidget {
   const _LeaderBadge({required this.label, required this.spoken});
 

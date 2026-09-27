@@ -14,6 +14,7 @@ TeamRosterPlayer _$TeamRosterPlayerFromJson(Map<String, dynamic> json) =>
       role: json['role'] as String,
       isCaptain: json['isCaptain'] as bool? ?? false,
       isViceCaptain: json['isViceCaptain'] as bool? ?? false,
+      inviteStatus: json['inviteStatus'] as String?,
     );
 
 Map<String, dynamic> _$TeamRosterPlayerToJson(TeamRosterPlayer instance) =>
@@ -24,6 +25,7 @@ Map<String, dynamic> _$TeamRosterPlayerToJson(TeamRosterPlayer instance) =>
       'role': instance.role,
       'isCaptain': instance.isCaptain,
       'isViceCaptain': instance.isViceCaptain,
+      'inviteStatus': instance.inviteStatus,
     };
 
 TeamStatsRes _$TeamStatsResFromJson(Map<String, dynamic> json) => TeamStatsRes(

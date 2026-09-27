@@ -7,15 +7,22 @@ import 'package:cricket_scorer/features/scoring/data/data_sources/remote/match_a
 import 'package:cricket_scorer/features/scoring/data/data_sources/remote/match_socket_service/match_socket_service.dart';
 import 'package:cricket_scorer/features/scoring/data/match_endpoint.dart';
 import 'package:cricket_scorer/features/scoring/data/repositories/match_repository_impl.dart';
+import 'package:cricket_scorer/features/scoring/data/repositories/player_invite_repository_impl.dart';
 import 'package:cricket_scorer/features/scoring/data/repositories/team_repository_impl.dart';
 import 'package:cricket_scorer/features/scoring/data/repositories/squad_repository_impl.dart';
 import 'package:cricket_scorer/features/scoring/domain/repositories/squad_repository.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/save_squad.dart';
 import 'package:cricket_scorer/features/scoring/domain/repositories/match_repository.dart';
+import 'package:cricket_scorer/features/scoring/domain/repositories/player_invite_repository.dart';
 import 'package:cricket_scorer/features/scoring/domain/repositories/team_repository.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/create_match.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/create_team.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/add_team_player.dart';
+import 'package:cricket_scorer/features/scoring/domain/usecases/get_my_players.dart';
+import 'package:cricket_scorer/features/scoring/domain/usecases/get_player_invite.dart';
+import 'package:cricket_scorer/features/scoring/domain/usecases/invite_team_player.dart';
+import 'package:cricket_scorer/features/scoring/domain/usecases/lookup_user_by_email.dart';
+import 'package:cricket_scorer/features/scoring/domain/usecases/respond_to_player_invite.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/set_team_leadership.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/update_team.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/update_team_player.dart';
@@ -178,11 +185,49 @@ class ScoringInjection {
       fenix: true,
     );
     Get.lazyPut<SetTeamLeadershipUseCase>(
-      () => SetTeamLeadershipUseCase(teamRepository: Get.find<TeamRepository>()),
+      () =>
+          SetTeamLeadershipUseCase(teamRepository: Get.find<TeamRepository>()),
       fenix: true,
     );
     Get.lazyPut<DeleteTeamUseCase>(
       () => DeleteTeamUseCase(teamRepository: Get.find<TeamRepository>()),
+      fenix: true,
+    );
+
+    Get.lazyPut<PlayerInviteRepository>(
+      () => PlayerInviteRepositoryImpl(
+        matchApiService: Get.find<MatchApiService>(),
+      ),
+      fenix: true,
+    );
+    Get.lazyPut<GetMyPlayersUseCase>(
+      () => GetMyPlayersUseCase(
+        playerInviteRepository: Get.find<PlayerInviteRepository>(),
+      ),
+      fenix: true,
+    );
+    Get.lazyPut<LookupUserByEmailUseCase>(
+      () => LookupUserByEmailUseCase(
+        playerInviteRepository: Get.find<PlayerInviteRepository>(),
+      ),
+      fenix: true,
+    );
+    Get.lazyPut<InviteTeamPlayerUseCase>(
+      () => InviteTeamPlayerUseCase(
+        playerInviteRepository: Get.find<PlayerInviteRepository>(),
+      ),
+      fenix: true,
+    );
+    Get.lazyPut<GetPlayerInviteUseCase>(
+      () => GetPlayerInviteUseCase(
+        playerInviteRepository: Get.find<PlayerInviteRepository>(),
+      ),
+      fenix: true,
+    );
+    Get.lazyPut<RespondToPlayerInviteUseCase>(
+      () => RespondToPlayerInviteUseCase(
+        playerInviteRepository: Get.find<PlayerInviteRepository>(),
+      ),
       fenix: true,
     );
 

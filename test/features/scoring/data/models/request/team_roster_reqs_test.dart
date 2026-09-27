@@ -9,6 +9,21 @@ void main() {
       expect(AddTeamPlayerReq(name: 'Rohit').toJson(), {'name': 'Rohit'});
     });
 
+    test('sends playerId and omits name when only playerId is set', () {
+      expect(AddTeamPlayerReq(playerId: 'p1').toJson(), {'playerId': 'p1'});
+    });
+
+    test('sends playerId together with role and jerseyNumber', () {
+      expect(
+        AddTeamPlayerReq(
+          playerId: 'p1',
+          role: 'bowler',
+          jerseyNumber: 7,
+        ).toJson(),
+        {'playerId': 'p1', 'role': 'bowler', 'jerseyNumber': 7},
+      );
+    });
+
     test('includes role and jerseyNumber when set', () {
       expect(
         AddTeamPlayerReq(
@@ -58,12 +73,15 @@ void main() {
       );
     });
 
-    test('clearJerseyNumber sends an explicit null so the server removes it', () {
-      final json = UpdateTeamPlayerReq(clearJerseyNumber: true).toJson();
+    test(
+      'clearJerseyNumber sends an explicit null so the server removes it',
+      () {
+        final json = UpdateTeamPlayerReq(clearJerseyNumber: true).toJson();
 
-      expect(json.containsKey('jerseyNumber'), isTrue);
-      expect(json['jerseyNumber'], isNull);
-    });
+        expect(json.containsKey('jerseyNumber'), isTrue);
+        expect(json['jerseyNumber'], isNull);
+      },
+    );
 
     test('clearJerseyNumber wins over a jerseyNumber value', () {
       final json = UpdateTeamPlayerReq(

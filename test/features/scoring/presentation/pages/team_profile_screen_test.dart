@@ -9,6 +9,9 @@ import 'package:cricket_scorer/core/utils/either_util.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/match_history_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/team_profile_res.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/add_team_player.dart';
+import 'package:cricket_scorer/features/scoring/domain/usecases/get_my_players.dart';
+import 'package:cricket_scorer/features/scoring/domain/usecases/invite_team_player.dart';
+import 'package:cricket_scorer/features/scoring/domain/usecases/lookup_user_by_email.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/get_team_matches.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/set_team_leadership.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/update_team_player.dart';
@@ -23,6 +26,8 @@ import 'package:cricket_scorer/features/scoring/presentation/pages/team_profile_
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart' hide Response;
+import 'package:cricket_scorer/features/scoring/presentation/widget/add_player_picker.dart';
+import '../helpers/picker_fakes.dart';
 
 /// Returns whichever profile matches the requested teamId — the real
 /// regression surface for the GetX lazyPut-singleton bug: a fake keyed off
@@ -164,6 +169,9 @@ void _putUnusedRosterUseCases() {
   Get.put<AddTeamPlayerUseCase>(_UnusedAddTeamPlayerUseCase());
   Get.put<UpdateTeamPlayerUseCase>(_UnusedUpdateTeamPlayerUseCase());
   Get.put<SetTeamLeadershipUseCase>(_UnusedSetTeamLeadershipUseCase());
+  Get.put<GetMyPlayersUseCase>(emptyMyPlayers());
+  Get.put<LookupUserByEmailUseCase>(FakeLookupUserByEmailUseCase());
+  Get.put<InviteTeamPlayerUseCase>(FakeInviteTeamPlayerUseCase());
 }
 
 void main() {
@@ -377,7 +385,9 @@ void main() {
     TeamProfileRes profile, {
     GetTeamMatchesUseCase? matches,
   }) async {
-    Get.put<GetTeamProfileUseCase>(_MultiTeamProfileUseCase({'team-1': profile}));
+    Get.put<GetTeamProfileUseCase>(
+      _MultiTeamProfileUseCase({'team-1': profile}),
+    );
     Get.put<GetTeamMatchesUseCase>(matches ?? _EmptyMatchesUseCase());
     Get.put<GetScorerCandidatesUseCase>(_UnusedGetScorerCandidatesUseCase());
     Get.put<AssignScorerUseCase>(_UnusedAssignScorerUseCase());
@@ -501,13 +511,42 @@ void main() {
             role: 'allrounder',
             isViceCaptain: true,
           ),
-          TeamRosterPlayer(playerId: 'p3', playerName: 'Bumrah', role: 'bowler'),
+          TeamRosterPlayer(
+            playerId: 'p3',
+            playerName: 'Bumrah',
+            role: 'bowler',
+          ),
         ],
       ),
     );
 
     expect(find.text(TranslationKeys.captainShort), findsOneWidget);
     expect(find.text(TranslationKeys.viceCaptainShort), findsOneWidget);
+  });
+
+  testWidgets('roster shows the Invited chip only for a pending invite', (
+    tester,
+  ) async {
+    await pumpProfile(
+      tester,
+      profileWith(
+        roster: [
+          TeamRosterPlayer(
+            playerId: 'p1',
+            playerName: 'Rahul',
+            role: 'batsman',
+            inviteStatus: 'pending',
+          ),
+          TeamRosterPlayer(
+            playerId: 'p2',
+            playerName: 'Rohit',
+            role: 'batsman',
+          ),
+        ],
+      ),
+    );
+
+    expect(find.text(TranslationKeys.invited), findsOneWidget);
   });
 
   testWidgets('a manager sees add player and a menu on each roster row', (
@@ -517,7 +556,11 @@ void main() {
       tester,
       profileWith(
         roster: [
-          TeamRosterPlayer(playerId: 'p1', playerName: 'Rohit', role: 'batsman'),
+          TeamRosterPlayer(
+            playerId: 'p1',
+            playerName: 'Rohit',
+            role: 'batsman',
+          ),
         ],
       ),
     );
@@ -526,22 +569,29 @@ void main() {
     expect(find.byIcon(Icons.more_vert), findsOneWidget);
   });
 
-  testWidgets('add player and the row menu are hidden when canManage is false', (
-    tester,
-  ) async {
-    await pumpProfile(
+  testWidgets(
+    'add player and the row menu are hidden when canManage is false',
+    (
       tester,
-      profileWith(
-        canManage: false,
-        roster: [
-          TeamRosterPlayer(playerId: 'p1', playerName: 'Rohit', role: 'batsman'),
-        ],
-      ),
-    );
+    ) async {
+      await pumpProfile(
+        tester,
+        profileWith(
+          canManage: false,
+          roster: [
+            TeamRosterPlayer(
+              playerId: 'p1',
+              playerName: 'Rohit',
+              role: 'batsman',
+            ),
+          ],
+        ),
+      );
 
-    expect(find.text(TranslationKeys.addPlayer), findsNothing);
-    expect(find.byIcon(Icons.more_vert), findsNothing);
-  });
+      expect(find.text(TranslationKeys.addPlayer), findsNothing);
+      expect(find.byIcon(Icons.more_vert), findsNothing);
+    },
+  );
 
   testWidgets('tapping add player opens the add player sheet', (tester) async {
     await pumpProfile(tester, profileWith());
@@ -549,6 +599,7 @@ void main() {
     await tester.tap(find.text(TranslationKeys.addPlayer));
     await tester.pumpAndSettle();
 
-    expect(find.text(TranslationKeys.playerName), findsWidgets);
+    expect(find.byType(AddPlayerPicker), findsOneWidget);
+    expect(find.text(TranslationKeys.createNewPlayer), findsOneWidget);
   });
 }

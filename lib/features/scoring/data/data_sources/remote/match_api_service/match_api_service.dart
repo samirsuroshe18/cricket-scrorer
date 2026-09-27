@@ -153,6 +153,65 @@ class MatchApiService {
     );
   }
 
+  /// `GET /v1/player` — the caller's own players, flagged with `onTeam` for
+  /// [teamId]. `q` is omitted when blank.
+  Future<Either<ApiResponseModel, CricketFailure>> getMyPlayers({
+    required String teamId,
+    String? q,
+    required int page,
+    required int limit,
+  }) async {
+    return await apiClient.get(
+      endpoint: matchEndpoint.myPlayers,
+      queryParameters: {
+        'teamId': teamId,
+        'page': page,
+        'limit': limit,
+        if (q != null && q.trim().isNotEmpty) 'q': q.trim(),
+      },
+    );
+  }
+
+  /// `GET /v1/user/lookup?email=`.
+  Future<Either<ApiResponseModel, CricketFailure>> lookupUserByEmail({
+    required String email,
+  }) async {
+    return await apiClient.get(
+      endpoint: matchEndpoint.userLookup,
+      queryParameters: {'email': email},
+    );
+  }
+
+  /// `POST /v1/team/:teamId/invites`.
+  Future<Either<ApiResponseModel, CricketFailure>> inviteTeamPlayer({
+    required String teamId,
+    required String userId,
+  }) async {
+    return await apiClient.post(
+      endpoint: matchEndpoint.teamInvites(teamId),
+      data: {'userId': userId},
+    );
+  }
+
+  /// `GET /v1/player-invite/:inviteId`.
+  Future<Either<ApiResponseModel, CricketFailure>> getPlayerInvite({
+    required String inviteId,
+  }) async {
+    return await apiClient.get(endpoint: matchEndpoint.playerInvite(inviteId));
+  }
+
+  /// `POST /v1/player-invite/:inviteId/accept` or `/decline`.
+  Future<Either<ApiResponseModel, CricketFailure>> respondToPlayerInvite({
+    required String inviteId,
+    required bool accept,
+  }) async {
+    return await apiClient.post(
+      endpoint: accept
+          ? matchEndpoint.acceptPlayerInvite(inviteId)
+          : matchEndpoint.declinePlayerInvite(inviteId),
+    );
+  }
+
   /// `PATCH /v1/team/:teamId/players/:playerId`.
   Future<Either<ApiResponseModel, CricketFailure>> updateTeamPlayer({
     required String teamId,

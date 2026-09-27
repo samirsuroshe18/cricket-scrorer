@@ -6,6 +6,7 @@ import 'package:cricket_scorer/core/global/widgets/cricket_text.dart';
 import 'package:cricket_scorer/core/global/widgets/cricket_text_field.dart';
 import 'package:cricket_scorer/core/translations/translation_keys.dart';
 import 'package:cricket_scorer/features/scoring/presentation/controllers/team_profile_controller.dart';
+import 'package:cricket_scorer/features/scoring/presentation/widget/add_player_picker.dart';
 import 'package:cricket_scorer/features/scoring/presentation/widget/roster_role_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -13,17 +14,19 @@ import 'package:get/get.dart';
 /// Player.name's own limit (`Player.name` maxlength on the backend).
 const int _maxPlayerNameLength = 50;
 
-/// Adds a player to the team's roster by name. Typing a name the scorer has
-/// used before adds that same player rather than a duplicate — see
-/// `POST /v1/team/:teamId/players` in docs/api.md.
+/// Opens the add-player picker: one of the scorer's existing players, an app
+/// user found by email (invited, linking only when they accept), or the
+/// original create-by-name form as a step inside the same sheet. Typing a name
+/// the scorer has used before adds that same player rather than a duplicate —
+/// see `POST /v1/team/:teamId/players` in docs/api.md.
 Future<void> showAddPlayerSheet({
   required TeamProfileController controller,
 }) async {
   await CustomBottomSheet.wrapBottomSheet<bool>(
     headlineText: TranslationKeys.addPlayer.tr,
-    child: AddPlayerForm(
+    child: AddPlayerPicker(
       controller: controller,
-      onAdded: () => Get.back<bool>(result: true),
+      onDone: () => Get.back<bool>(result: true),
     ),
   );
 }
