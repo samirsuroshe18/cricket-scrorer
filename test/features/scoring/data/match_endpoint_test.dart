@@ -11,12 +11,15 @@ import 'package:flutter_test/flutter_test.dart';
 void main() {
   const endpoint = MatchEndpoint();
 
-  test('percent-encodes characters that are not safe in a URL path segment', () {
-    expect(
-      endpoint.publicMatch('AB CD/12'),
-      '/v1/match/public/AB%20CD%2F12',
-    );
-  });
+  test(
+    'percent-encodes characters that are not safe in a URL path segment',
+    () {
+      expect(
+        endpoint.publicMatch('AB CD/12'),
+        '/v1/match/public/AB%20CD%2F12',
+      );
+    },
+  );
 
   test('leaves an ordinary alphanumeric share code untouched', () {
     expect(endpoint.publicMatch('AB12CD'), '/v1/match/public/AB12CD');

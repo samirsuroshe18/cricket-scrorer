@@ -185,7 +185,8 @@ class ScoringInjection {
       fenix: true,
     );
     Get.lazyPut<SetTeamLeadershipUseCase>(
-      () => SetTeamLeadershipUseCase(teamRepository: Get.find<TeamRepository>()),
+      () =>
+          SetTeamLeadershipUseCase(teamRepository: Get.find<TeamRepository>()),
       fenix: true,
     );
     Get.lazyPut<DeleteTeamUseCase>(
