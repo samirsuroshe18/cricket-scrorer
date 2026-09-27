@@ -4,6 +4,7 @@ import 'dart:io';
 
 import 'package:cricket_scorer/config/flavors.dart';
 import 'package:cricket_scorer/core/services/notification_service.dart';
+import 'package:cricket_scorer/features/notifications/presentation/controllers/notifications_controller.dart';
 import 'package:cricket_scorer/features/notifications/presentation/utils/notification_navigation.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -53,6 +54,12 @@ class FirebaseService extends GetxService {
     FirebaseMessaging.onMessage.listen((RemoteMessage message) async {
       if (kDebugMode) {
         print('Foreground message : ${message.data}');
+      }
+
+      // Keep the Home bell badge in step with the push; the controller only
+      // exists once the home shell is up (not on the login screen).
+      if (Get.isRegistered<NotificationsController>()) {
+        unawaited(Get.find<NotificationsController>().refreshUnreadCount());
       }
 
       if (Platform.isAndroid) {

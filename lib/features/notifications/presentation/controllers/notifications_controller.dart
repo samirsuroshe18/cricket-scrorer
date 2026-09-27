@@ -6,13 +6,15 @@ import 'package:cricket_scorer/features/notifications/domain/usecases/get_notifi
 import 'package:cricket_scorer/features/notifications/domain/usecases/get_unread_count.dart';
 import 'package:cricket_scorer/features/notifications/domain/usecases/mark_all_notifications_read.dart';
 import 'package:cricket_scorer/features/notifications/domain/usecases/mark_notification_read.dart';
+import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
 
 /// Owns both the full inbox list (for the Notifications screen) and the
 /// unread badge count (for the Home tab's bell icon) — registered once in
 /// the home shell's binding, alongside `HomeController`, so the badge and
 /// the list share one source of truth instead of drifting apart.
-class NotificationsController extends GetxController {
+class NotificationsController extends GetxController
+    with WidgetsBindingObserver {
   final GetNotificationsUseCase getNotificationsUseCase;
   final GetUnreadCountUseCase getUnreadCountUseCase;
   final MarkNotificationReadUseCase markNotificationReadUseCase;
@@ -39,7 +41,21 @@ class NotificationsController extends GetxController {
   @override
   void onInit() {
     super.onInit();
+    WidgetsBinding.instance.addObserver(this);
     unawaited(refreshUnreadCount());
+  }
+
+  @override
+  void onClose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.onClose();
+  }
+
+  /// Pushes that arrived while backgrounded never hit `onMessage`, so the
+  /// badge is re-read when the app returns to the foreground.
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) unawaited(refreshUnreadCount());
   }
 
   /// Cheap and independent of the full list — called from Home's `onInit`

@@ -18,6 +18,7 @@ import 'package:cricket_scorer/features/home/presentation/widgets/home_recent_re
 import 'package:cricket_scorer/features/home/presentation/widgets/home_section_header.dart';
 import 'package:cricket_scorer/features/home/presentation/widgets/home_skeleton.dart';
 import 'package:cricket_scorer/features/home/presentation/widgets/home_state_placeholders.dart';
+import 'package:cricket_scorer/features/notifications/presentation/controllers/notifications_controller.dart';
 import 'package:cricket_scorer/features/home/presentation/widgets/home_stat_chips.dart';
 import 'package:cricket_scorer/features/home/presentation/widgets/home_status_strip.dart';
 import 'package:cricket_scorer/features/home/presentation/widgets/match_actions_sheet.dart';
@@ -47,6 +48,7 @@ class HomeDashboardTab extends StatelessWidget {
   Future<void> _refresh() => Future.wait([
     Get.find<HomeController>().loadHistory(),
     Get.find<MyStatsController>().load(),
+    Get.find<NotificationsController>().refreshUnreadCount(),
   ]);
 
   void _startMatch() => unawaited(Get.toNamed<dynamic>(AppRoutes.createMatch));
