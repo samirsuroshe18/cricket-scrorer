@@ -644,6 +644,9 @@ class TranslationKeys {
   static const String declineInvite = 'decline_invite';
   static const String inviteAlreadyAccepted = 'invite_already_accepted';
   static const String inviteAlreadyDeclined = 'invite_already_declined';
+  static const String teamsIPlayFor = 'teams_i_play_for';
+  static const String playingAs = 'playing_as';
+  static const String readOnlyTeamNote = 'read_only_team_note';
   static const String saveAndContinue = 'save_and_continue';
   static const String captain = 'captain';
   static const String viceCaptain = 'vice_captain';
@@ -653,6 +656,13 @@ class TranslationKeys {
   static const String wicketkeeperShort = 'wicketkeeper_short';
   static const String squadEmptyHint = 'squad_empty_hint';
   static const String removePlayer = 'remove_player';
+  static const String removeFromTeam = 'remove_from_team';
+  static const String removeFromTeamConfirmTitle =
+      'remove_from_team_confirm_title';
+  static const String removeFromTeamConfirmMessage =
+      'remove_from_team_confirm_message';
+  static const String playerRemovedFromTeam = 'player_removed_from_team';
+  static const String inviteWithdrawn = 'invite_withdrawn';
   static const String teamMatchesSection = 'team_matches_section';
   static const String winPercentage = 'win_percentage';
   static const String recentForm = 'recent_form';

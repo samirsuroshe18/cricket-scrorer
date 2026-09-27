@@ -628,13 +628,19 @@ Map<String, String> en = {
   TranslationKeys.noPlayersYet: 'You haven\'t created any players yet',
   TranslationKeys.loadMorePlayers: 'Load more',
   TranslationKeys.backToPlayers: 'Back to players',
-  TranslationKeys.findUserByEmailHint: 'Enter the email address of their account',
+  TranslationKeys.findUserByEmailHint:
+      'Enter the email address of their account',
   TranslationKeys.playerInviteTitle: 'Team invite',
-  TranslationKeys.playerInviteMessage: '@inviter added you to @team as @player. Accept to link this player to your account.',
+  TranslationKeys.playerInviteMessage:
+      '@inviter added you to @team as @player. Accept to link this player to your account.',
   TranslationKeys.acceptInvite: 'Accept',
   TranslationKeys.declineInvite: 'Decline',
   TranslationKeys.inviteAlreadyAccepted: 'You already accepted this invite',
   TranslationKeys.inviteAlreadyDeclined: 'You declined this invite',
+  TranslationKeys.teamsIPlayFor: 'Teams I play for',
+  TranslationKeys.playingAs: 'Playing as @player',
+  TranslationKeys.readOnlyTeamNote:
+      'You are viewing this team as a player. Only the scorer can make changes.',
   TranslationKeys.saveAndContinue: 'Save & continue',
   TranslationKeys.captain: 'Captain',
   TranslationKeys.viceCaptain: 'Vice-captain',
@@ -645,6 +651,12 @@ Map<String, String> en = {
   TranslationKeys.squadEmptyHint:
       'No players yet — add them below, or skip and type names as you score',
   TranslationKeys.removePlayer: 'Remove player',
+  TranslationKeys.removeFromTeam: 'Remove from team',
+  TranslationKeys.removeFromTeamConfirmTitle: 'Remove this player?',
+  TranslationKeys.removeFromTeamConfirmMessage:
+      '@player will be taken off the roster. Their past match stats are unaffected.',
+  TranslationKeys.playerRemovedFromTeam: 'Player removed',
+  TranslationKeys.inviteWithdrawn: 'This invite was withdrawn',
   TranslationKeys.teamMatchesSection: 'Matches',
   TranslationKeys.winPercentage: 'Win %',
   TranslationKeys.recentForm: 'Recent form',

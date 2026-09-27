@@ -1,3 +1,8 @@
+import 'package:cricket_scorer/features/scoring/data/repositories/team_player_view_repository_impl.dart';
+import 'package:cricket_scorer/features/scoring/domain/repositories/team_player_view_repository.dart';
+import 'package:cricket_scorer/features/scoring/domain/usecases/get_playing_for_teams.dart';
+import 'package:cricket_scorer/features/scoring/domain/usecases/get_team_player_view.dart';
+import 'package:cricket_scorer/features/scoring/domain/usecases/get_team_player_matches.dart';
 import 'package:cricket_scorer/core/network/api_client_service.dart';
 import 'package:cricket_scorer/core/network/socket_client_service.dart';
 import 'package:cricket_scorer/features/scoring/data/data_sources/local/database/scoring_queue_dao.dart';
@@ -26,6 +31,7 @@ import 'package:cricket_scorer/features/scoring/domain/usecases/respond_to_playe
 import 'package:cricket_scorer/features/scoring/domain/usecases/set_team_leadership.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/update_team.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/update_team_player.dart';
+import 'package:cricket_scorer/features/scoring/domain/usecases/remove_team_player.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/delete_team.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/score_ball.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/select_bowler.dart';
@@ -184,6 +190,10 @@ class ScoringInjection {
       () => UpdateTeamPlayerUseCase(teamRepository: Get.find<TeamRepository>()),
       fenix: true,
     );
+    Get.lazyPut<RemoveTeamPlayerUseCase>(
+      () => RemoveTeamPlayerUseCase(teamRepository: Get.find<TeamRepository>()),
+      fenix: true,
+    );
     Get.lazyPut<SetTeamLeadershipUseCase>(
       () =>
           SetTeamLeadershipUseCase(teamRepository: Get.find<TeamRepository>()),
@@ -197,6 +207,30 @@ class ScoringInjection {
     Get.lazyPut<PlayerInviteRepository>(
       () => PlayerInviteRepositoryImpl(
         matchApiService: Get.find<MatchApiService>(),
+      ),
+      fenix: true,
+    );
+    Get.lazyPut<TeamPlayerViewRepository>(
+      () => TeamPlayerViewRepositoryImpl(
+        matchApiService: Get.find<MatchApiService>(),
+      ),
+      fenix: true,
+    );
+    Get.lazyPut<GetPlayingForTeamsUseCase>(
+      () => GetPlayingForTeamsUseCase(
+        teamPlayerViewRepository: Get.find<TeamPlayerViewRepository>(),
+      ),
+      fenix: true,
+    );
+    Get.lazyPut<GetTeamPlayerViewUseCase>(
+      () => GetTeamPlayerViewUseCase(
+        teamPlayerViewRepository: Get.find<TeamPlayerViewRepository>(),
+      ),
+      fenix: true,
+    );
+    Get.lazyPut<GetTeamPlayerMatchesUseCase>(
+      () => GetTeamPlayerMatchesUseCase(
+        teamPlayerViewRepository: Get.find<TeamPlayerViewRepository>(),
       ),
       fenix: true,
     );

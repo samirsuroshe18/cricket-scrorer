@@ -75,7 +75,7 @@ MatchHistoryItem _$MatchHistoryItemFromJson(Map<String, dynamic> json) =>
               json['assignedScorer'] as Map<String, dynamic>,
             ),
       createdAt: json['createdAt'] as String,
-      syncStatus: json['syncStatus'] as String,
+      syncStatus: json['syncStatus'] as String? ?? 'synced',
       currentInnings: json['currentInnings'] == null
           ? null
           : CurrentInningsSummary.fromJson(

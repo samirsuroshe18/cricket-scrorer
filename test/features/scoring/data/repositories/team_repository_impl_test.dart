@@ -71,6 +71,20 @@ class _FakeMatchApiService implements MatchApiService {
     return rosterResponse!;
   }
 
+  Either<ApiResponseModel, CricketFailure>? removePlayerResponse;
+  String? lastRemovePlayerTeamId;
+  String? lastRemovePlayerId;
+
+  @override
+  Future<Either<ApiResponseModel, CricketFailure>> removeTeamPlayer({
+    required String teamId,
+    required String playerId,
+  }) async {
+    lastRemovePlayerTeamId = teamId;
+    lastRemovePlayerId = playerId;
+    return removePlayerResponse!;
+  }
+
   @override
   dynamic noSuchMethod(Invocation invocation) =>
       throw UnimplementedError('Not exercised in this test.');
@@ -136,6 +150,42 @@ void main() {
     expect(apiService.lastDeleteTeamId, 'team-1');
   });
 
+  test('removePlayer returns a null-data success on 200', () async {
+    apiService.removePlayerResponse = Either.result(
+      ApiResponseModel(
+        statusCode: 200,
+        data: {'playerId': 'p1'},
+        message: 'Player removed',
+        success: true,
+      ),
+    );
+
+    final result = await repository.removePlayer(
+      teamId: 'team-1',
+      playerId: 'p1',
+    );
+
+    expect(result.isResult, isTrue);
+    expect(apiService.lastRemovePlayerTeamId, 'team-1');
+    expect(apiService.lastRemovePlayerId, 'p1');
+  });
+
+  test('removePlayer passes through a failure', () async {
+    apiService.removePlayerResponse = Either.fallback(
+      CricketNotFoundErrorFailure(
+        message: "That player isn't on this team's roster",
+      ),
+    );
+
+    final result = await repository.removePlayer(
+      teamId: 'team-1',
+      playerId: 'p1',
+    );
+
+    expect(result.isResult, isFalse);
+    expect(result.fallback.message, "That player isn't on this team's roster");
+  });
+
   test('deleteTeam passes through a failure', () async {
     apiService.deleteTeamResponse = Either.fallback(
       CricketConflictFailure(
@@ -164,7 +214,12 @@ void main() {
 
   test('addPlayer parses the roster row and forwards the request', () async {
     apiService.rosterResponse = Either.result(
-      ApiResponseModel(statusCode: 201, data: rosterRow, message: 'ok', success: true),
+      ApiResponseModel(
+        statusCode: 201,
+        data: rosterRow,
+        message: 'ok',
+        success: true,
+      ),
     );
     final req = AddTeamPlayerReq(name: 'Rohit', role: 'batsman');
 
@@ -178,7 +233,12 @@ void main() {
 
   test('updatePlayer parses the roster row and forwards ids', () async {
     apiService.rosterResponse = Either.result(
-      ApiResponseModel(statusCode: 200, data: rosterRow, message: 'ok', success: true),
+      ApiResponseModel(
+        statusCode: 200,
+        data: rosterRow,
+        message: 'ok',
+        success: true,
+      ),
     );
 
     final result = await repository.updatePlayer(

@@ -630,11 +630,17 @@ Map<String, String> hi = {
   TranslationKeys.backToPlayers: 'खिलाड़ियों पर वापस',
   TranslationKeys.findUserByEmailHint: 'उनके खाते का ईमेल पता दर्ज करें',
   TranslationKeys.playerInviteTitle: 'टीम आमंत्रण',
-  TranslationKeys.playerInviteMessage: '@inviter ने आपको @team में @player के रूप में जोड़ा है। इस खिलाड़ी को अपने खाते से जोड़ने के लिए स्वीकार करें।',
+  TranslationKeys.playerInviteMessage:
+      '@inviter ने आपको @team में @player के रूप में जोड़ा है। इस खिलाड़ी को अपने खाते से जोड़ने के लिए स्वीकार करें।',
   TranslationKeys.acceptInvite: 'स्वीकार करें',
   TranslationKeys.declineInvite: 'अस्वीकार करें',
-  TranslationKeys.inviteAlreadyAccepted: 'आप यह आमंत्रण पहले ही स्वीकार कर चुके हैं',
+  TranslationKeys.inviteAlreadyAccepted:
+      'आप यह आमंत्रण पहले ही स्वीकार कर चुके हैं',
   TranslationKeys.inviteAlreadyDeclined: 'आपने यह आमंत्रण अस्वीकार कर दिया',
+  TranslationKeys.teamsIPlayFor: 'मैं जिन टीमों में खेलता हूँ',
+  TranslationKeys.playingAs: '@player के रूप में खेल रहे हैं',
+  TranslationKeys.readOnlyTeamNote:
+      'आप इस टीम को एक खिलाड़ी के रूप में देख रहे हैं। बदलाव केवल स्कोरर कर सकता है।',
   TranslationKeys.saveAndContinue: 'सेव करें और आगे बढ़ें',
   TranslationKeys.captain: 'कप्तान',
   TranslationKeys.viceCaptain: 'उप-कप्तान',
@@ -645,6 +651,12 @@ Map<String, String> hi = {
   TranslationKeys.squadEmptyHint:
       'अभी कोई खिलाड़ी नहीं — नीचे जोड़ें, या स्किप करके स्कोर करते समय नाम डालें',
   TranslationKeys.removePlayer: 'खिलाड़ी हटाएं',
+  TranslationKeys.removeFromTeam: 'टीम से हटाएं',
+  TranslationKeys.removeFromTeamConfirmTitle: 'इस खिलाड़ी को हटाएं?',
+  TranslationKeys.removeFromTeamConfirmMessage:
+      '@player को रोस्टर से हटा दिया जाएगा। उनके पिछले मैच के आंकड़े प्रभावित नहीं होंगे।',
+  TranslationKeys.playerRemovedFromTeam: 'खिलाड़ी हटाया गया',
+  TranslationKeys.inviteWithdrawn: 'यह आमंत्रण वापस ले लिया गया',
   TranslationKeys.teamMatchesSection: 'मैच',
   TranslationKeys.winPercentage: 'जीत %',
   TranslationKeys.recentForm: 'हाल का प्रदर्शन',

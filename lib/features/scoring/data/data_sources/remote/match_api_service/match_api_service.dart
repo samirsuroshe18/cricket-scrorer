@@ -193,6 +193,42 @@ class MatchApiService {
     );
   }
 
+  /// `GET /v1/team/playing-for`.
+  Future<Either<ApiResponseModel, CricketFailure>> getPlayingForTeams({
+    required int page,
+    required int limit,
+  }) async {
+    return await apiClient.get(
+      endpoint: matchEndpoint.playingFor,
+      queryParameters: {'page': page, 'limit': limit},
+    );
+  }
+
+  /// `GET /v1/team/:teamId/player-view`.
+  Future<Either<ApiResponseModel, CricketFailure>> getTeamPlayerView({
+    required String teamId,
+  }) async {
+    return await apiClient.get(endpoint: matchEndpoint.teamPlayerView(teamId));
+  }
+
+  /// `GET /v1/team/:teamId/player-view/matches` — `all` is the server default,
+  /// so it is left off the wire.
+  Future<Either<ApiResponseModel, CricketFailure>> getTeamPlayerMatches({
+    required String teamId,
+    required int page,
+    required int limit,
+    String status = 'all',
+  }) async {
+    return await apiClient.get(
+      endpoint: matchEndpoint.teamPlayerViewMatches(teamId),
+      queryParameters: {
+        'page': page,
+        'limit': limit,
+        if (status != 'all') 'status': status,
+      },
+    );
+  }
+
   /// `GET /v1/player-invite/:inviteId`.
   Future<Either<ApiResponseModel, CricketFailure>> getPlayerInvite({
     required String inviteId,
@@ -213,6 +249,16 @@ class MatchApiService {
   }
 
   /// `PATCH /v1/team/:teamId/players/:playerId`.
+  /// `DELETE /v1/team/:teamId/players/:playerId`.
+  Future<Either<ApiResponseModel, CricketFailure>> removeTeamPlayer({
+    required String teamId,
+    required String playerId,
+  }) async {
+    return await apiClient.delete(
+      endpoint: matchEndpoint.teamPlayer(teamId, playerId),
+    );
+  }
+
   Future<Either<ApiResponseModel, CricketFailure>> updateTeamPlayer({
     required String teamId,
     required String playerId,

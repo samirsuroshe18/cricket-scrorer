@@ -1,3 +1,4 @@
+import 'package:cricket_scorer/features/scoring/domain/usecases/get_playing_for_teams.dart';
 import 'package:cricket_scorer/core/utils/current_user.dart';
 import 'package:cricket_scorer/features/home/presentation/controllers/home_sync_status_controller.dart';
 import 'package:cricket_scorer/features/scoring/data/data_sources/local/offline_sync_service.dart';
@@ -64,6 +65,7 @@ class HomeBinding extends Bindings {
     Get.lazyPut(
       () => MyTeamsController(
         getMyTeamsUseCase: Get.find<GetMyTeamsUseCase>(),
+        getPlayingForTeamsUseCase: Get.find<GetPlayingForTeamsUseCase>(),
         createTeamUseCase: Get.find<CreateTeamUseCase>(),
         createOrganizationTeamUseCase:
             Get.find<CreateOrganizationTeamUseCase>(),

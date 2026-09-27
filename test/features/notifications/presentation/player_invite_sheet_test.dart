@@ -3,8 +3,13 @@ import 'package:cricket_scorer/core/error/cricket_failure.dart';
 import 'package:cricket_scorer/core/network/models/cricket_response.dart';
 import 'package:cricket_scorer/core/translations/translation_keys.dart';
 import 'package:cricket_scorer/core/utils/either_util.dart';
+import 'package:cricket_scorer/features/home/presentation/controllers/my_teams_controller.dart';
 import 'package:cricket_scorer/features/notifications/presentation/widget/player_invite_sheet.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/player_invite_res.dart';
+import 'package:cricket_scorer/features/organization/domain/usecases/create_organization_team.dart';
+import 'package:cricket_scorer/features/scoring/domain/usecases/create_team.dart';
+import 'package:cricket_scorer/features/scoring/domain/usecases/get_my_teams.dart';
+import 'package:cricket_scorer/features/scoring/domain/usecases/get_playing_for_teams.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/get_player_invite.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/respond_to_player_invite.dart';
 import 'package:flutter/material.dart';
@@ -52,6 +57,47 @@ class _FakeRespond implements RespondToPlayerInviteUseCase {
   @override
   dynamic noSuchMethod(Invocation invocation) =>
       throw UnimplementedError('Not exercised in this test.');
+}
+
+/// Only counts refreshes; every use case is unreachable.
+class _CountingTeamsController extends MyTeamsController {
+  _CountingTeamsController()
+    : super(
+        getMyTeamsUseCase: _UnusedGetMyTeams(),
+        getPlayingForTeamsUseCase: _UnusedGetPlayingFor(),
+        createTeamUseCase: _UnusedCreateTeam(),
+        createOrganizationTeamUseCase: _UnusedCreateOrgTeam(),
+      );
+
+  int playingForLoads = 0;
+
+  // Skips super: it would fetch through the unusable use cases below.
+  @override
+  // ignore: must_call_super
+  void onInit() {}
+
+  @override
+  Future<void> loadPlayingFor() async => playingForLoads++;
+}
+
+class _UnusedGetMyTeams implements GetMyTeamsUseCase {
+  @override
+  dynamic noSuchMethod(Invocation invocation) => throw UnimplementedError();
+}
+
+class _UnusedGetPlayingFor implements GetPlayingForTeamsUseCase {
+  @override
+  dynamic noSuchMethod(Invocation invocation) => throw UnimplementedError();
+}
+
+class _UnusedCreateTeam implements CreateTeamUseCase {
+  @override
+  dynamic noSuchMethod(Invocation invocation) => throw UnimplementedError();
+}
+
+class _UnusedCreateOrgTeam implements CreateOrganizationTeamUseCase {
+  @override
+  dynamic noSuchMethod(Invocation invocation) => throw UnimplementedError();
 }
 
 Either<CricketResponse<PlayerInviteRes>, CricketFailure> _invite(
@@ -140,6 +186,31 @@ void main() {
       expect(reported, [(true, 'Server says done')]);
     },
   );
+
+  testWidgets('accepting refreshes the Teams I play for list', (tester) async {
+    final teams = _CountingTeamsController();
+    Get.put<MyTeamsController>(teams);
+    getInvite.response = _invite('pending');
+    await pumpSheet(tester);
+
+    await tester.tap(find.text(TranslationKeys.acceptInvite));
+    await tester.pumpAndSettle();
+
+    expect(teams.playingForLoads, 1);
+  });
+
+  testWidgets('declining does not refresh it', (
+    tester,
+  ) async {
+    final teams = _CountingTeamsController();
+    Get.put<MyTeamsController>(teams);
+    getInvite.response = _invite('pending');
+    await pumpSheet(tester);
+    await tester.tap(find.text(TranslationKeys.declineInvite));
+    await tester.pumpAndSettle();
+
+    expect(teams.playingForLoads, 0);
+  });
 
   testWidgets('Decline responds with accept: false and closes', (tester) async {
     getInvite.response = _invite('pending');

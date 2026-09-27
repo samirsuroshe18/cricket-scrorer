@@ -24,6 +24,7 @@ class MatchHistoryCard extends StatelessWidget {
     this.onAssignScorer,
     this.isDeleting,
     this.highlightTeamId,
+    this.linkTeamNames = true,
   });
 
   final MatchHistoryItem item;
@@ -57,6 +58,11 @@ class MatchHistoryCard extends StatelessWidget {
   /// title.
   final String? highlightTeamId;
 
+  /// Whether a team name opens that team's profile. Off for a viewer who does
+  /// not run the teams (a linked player): the profile is the scorer's, and
+  /// would only answer them with a 403.
+  final bool linkTeamNames;
+
   void _openTeamProfile(String teamId) {
     Get.toNamed<dynamic>(AppRoutes.teamProfilePath(teamId));
   }
@@ -66,6 +72,14 @@ class MatchHistoryCard extends StatelessWidget {
   // card uses — wrapped in an InkWell (not a bare GestureDetector) so the
   // tap gets the same ripple feedback as the card's own outer InkWell.
   Widget _teamNameLink(BuildContext context, String teamId, String label) {
+    if (!linkTeamNames) {
+      return CricketText(
+        text: label,
+        style: context.textTheme.titleSmall,
+        maxLines: 1,
+        textOverflow: TextOverflow.ellipsis,
+      );
+    }
     return InkWell(
       onTap: () => _openTeamProfile(teamId),
       borderRadius: 4.radius,

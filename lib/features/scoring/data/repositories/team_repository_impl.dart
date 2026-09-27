@@ -99,6 +99,21 @@ class TeamRepositoryImpl extends TeamRepository {
   }
 
   @override
+  Future<Either<CricketResponse<void>, CricketFailure>> removePlayer({
+    required String teamId,
+    required String playerId,
+  }) async {
+    final response = await matchApiService.removeTeamPlayer(
+      teamId: teamId,
+      playerId: playerId,
+    );
+    if (response.isResult) {
+      return Either.result(CricketResponse(message: response.result.message));
+    }
+    return Either.fallback(response.fallback);
+  }
+
+  @override
   Future<Either<CricketResponse<CreatedTeamRes>, CricketFailure>>
   setLeadership({
     required String teamId,

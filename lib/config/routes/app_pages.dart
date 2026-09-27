@@ -28,6 +28,7 @@ import 'package:cricket_scorer/features/scoring/presentation/bindings/player_sta
 import 'package:cricket_scorer/features/scoring/presentation/bindings/score_ball_binding.dart';
 import 'package:cricket_scorer/features/scoring/presentation/bindings/squad_binding.dart';
 import 'package:cricket_scorer/features/scoring/presentation/bindings/spectator_binding.dart';
+import 'package:cricket_scorer/features/scoring/presentation/bindings/team_player_view_binding.dart';
 import 'package:cricket_scorer/features/scoring/presentation/bindings/team_profile_binding.dart';
 import 'package:cricket_scorer/features/scoring/presentation/bindings/claim_player_binding.dart';
 import 'package:cricket_scorer/features/scoring/presentation/pages/create_match_screen.dart';
@@ -38,6 +39,7 @@ import 'package:cricket_scorer/features/scoring/presentation/pages/claim_player_
 import 'package:cricket_scorer/features/scoring/presentation/pages/score_ball_screen.dart';
 import 'package:cricket_scorer/features/scoring/presentation/pages/squad_screen.dart';
 import 'package:cricket_scorer/features/scoring/presentation/pages/spectator_screen.dart';
+import 'package:cricket_scorer/features/scoring/presentation/pages/team_player_view_screen.dart';
 import 'package:cricket_scorer/features/scoring/presentation/pages/team_profile_screen.dart';
 import 'package:cricket_scorer/features/organization/presentation/bindings/organization_detail_binding.dart';
 import 'package:cricket_scorer/features/organization/presentation/bindings/organizations_list_binding.dart';
@@ -165,6 +167,11 @@ abstract class AppPages {
       name: AppRoutes.teamProfile,
       page: () => const TeamProfileScreen(),
       binding: TeamProfileBinding(),
+    ),
+    GetPage(
+      name: AppRoutes.teamPlayerView,
+      page: () => const TeamPlayerViewScreen(),
+      binding: TeamPlayerViewBinding(),
     ),
     GetPage(
       name: AppRoutes.organizations,

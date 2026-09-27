@@ -1,3 +1,4 @@
+import 'package:cricket_scorer/features/scoring/domain/usecases/remove_team_player.dart';
 import 'dart:async';
 
 import 'package:cricket_scorer/core/error/cricket_failure.dart';
@@ -161,6 +162,12 @@ class _UnusedDeleteTeam implements DeleteTeamUseCase {
       throw UnimplementedError('Not exercised in this test.');
 }
 
+class _UnusedRemoveTeamPlayer implements RemoveTeamPlayerUseCase {
+  @override
+  dynamic noSuchMethod(Invocation invocation) =>
+      throw UnimplementedError('Not exercised in this test.');
+}
+
 class _UnusedUpdateTeamPlayer implements UpdateTeamPlayerUseCase {
   @override
   dynamic noSuchMethod(Invocation invocation) =>
@@ -194,6 +201,7 @@ TeamProfileController buildPickerTestController({
     deleteTeamUseCase: _UnusedDeleteTeam(),
     addTeamPlayerUseCase: add,
     updateTeamPlayerUseCase: _UnusedUpdateTeamPlayer(),
+    removeTeamPlayerUseCase: _UnusedRemoveTeamPlayer(),
     setTeamLeadershipUseCase: _UnusedSetTeamLeadership(),
     getMyPlayersUseCase: myPlayers,
     lookupUserByEmailUseCase: lookup,

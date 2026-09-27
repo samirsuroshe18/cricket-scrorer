@@ -44,6 +44,13 @@ abstract class TeamRepository {
     required UpdateTeamPlayerReq params,
   });
 
+  /// `DELETE /v1/team/:teamId/players/:playerId` — removes the player from the
+  /// roster. Never deletes the `Player` document itself.
+  Future<Either<CricketResponse<void>, CricketFailure>> removePlayer({
+    required String teamId,
+    required String playerId,
+  });
+
   /// `PATCH /v1/team/:teamId` with `captainId` / `viceCaptainId`.
   Future<Either<CricketResponse<CreatedTeamRes>, CricketFailure>>
   setLeadership({
