@@ -14,6 +14,7 @@ import 'package:cricket_scorer/features/scoring/domain/usecases/get_team_profile
 import 'package:cricket_scorer/features/scoring/domain/usecases/update_team.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/update_team_logo.dart';
 import 'package:cricket_scorer/features/scoring/presentation/controllers/team_profile_controller.dart';
+import '../helpers/picker_fakes.dart';
 import 'package:cricket_scorer/features/scoring/presentation/widget/edit_team_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -110,6 +111,9 @@ void main() {
       addTeamPlayerUseCase: _UnusedAddTeamPlayerUseCase(),
       updateTeamPlayerUseCase: _UnusedUpdateTeamPlayerUseCase(),
       setTeamLeadershipUseCase: _UnusedSetTeamLeadershipUseCase(),
+      getMyPlayersUseCase: FakeGetMyPlayersUseCase(),
+      lookupUserByEmailUseCase: FakeLookupUserByEmailUseCase(),
+      inviteTeamPlayerUseCase: FakeInviteTeamPlayerUseCase(),
     );
 
     await tester.pumpWidget(

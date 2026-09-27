@@ -1,4 +1,7 @@
 import 'package:cricket_scorer/features/scoring/domain/usecases/add_team_player.dart';
+import 'package:cricket_scorer/features/scoring/domain/usecases/get_my_players.dart';
+import 'package:cricket_scorer/features/scoring/domain/usecases/invite_team_player.dart';
+import 'package:cricket_scorer/features/scoring/domain/usecases/lookup_user_by_email.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/get_team_matches.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/set_team_leadership.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/update_team_player.dart';
@@ -28,6 +31,9 @@ class TeamProfileBinding extends Bindings {
         addTeamPlayerUseCase: Get.find<AddTeamPlayerUseCase>(),
         updateTeamPlayerUseCase: Get.find<UpdateTeamPlayerUseCase>(),
         setTeamLeadershipUseCase: Get.find<SetTeamLeadershipUseCase>(),
+        getMyPlayersUseCase: Get.find<GetMyPlayersUseCase>(),
+        lookupUserByEmailUseCase: Get.find<LookupUserByEmailUseCase>(),
+        inviteTeamPlayerUseCase: Get.find<InviteTeamPlayerUseCase>(),
       ),
       tag: teamId,
     );

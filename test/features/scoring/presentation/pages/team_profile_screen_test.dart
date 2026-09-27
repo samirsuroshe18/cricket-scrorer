@@ -9,6 +9,9 @@ import 'package:cricket_scorer/core/utils/either_util.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/match_history_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/team_profile_res.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/add_team_player.dart';
+import 'package:cricket_scorer/features/scoring/domain/usecases/get_my_players.dart';
+import 'package:cricket_scorer/features/scoring/domain/usecases/invite_team_player.dart';
+import 'package:cricket_scorer/features/scoring/domain/usecases/lookup_user_by_email.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/get_team_matches.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/set_team_leadership.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/update_team_player.dart';
@@ -23,6 +26,7 @@ import 'package:cricket_scorer/features/scoring/presentation/pages/team_profile_
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart' hide Response;
+import '../helpers/picker_fakes.dart';
 
 /// Returns whichever profile matches the requested teamId — the real
 /// regression surface for the GetX lazyPut-singleton bug: a fake keyed off
@@ -164,6 +168,9 @@ void _putUnusedRosterUseCases() {
   Get.put<AddTeamPlayerUseCase>(_UnusedAddTeamPlayerUseCase());
   Get.put<UpdateTeamPlayerUseCase>(_UnusedUpdateTeamPlayerUseCase());
   Get.put<SetTeamLeadershipUseCase>(_UnusedSetTeamLeadershipUseCase());
+  Get.put<GetMyPlayersUseCase>(FakeGetMyPlayersUseCase());
+  Get.put<LookupUserByEmailUseCase>(FakeLookupUserByEmailUseCase());
+  Get.put<InviteTeamPlayerUseCase>(FakeInviteTeamPlayerUseCase());
 }
 
 void main() {

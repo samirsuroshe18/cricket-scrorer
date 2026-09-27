@@ -16,6 +16,7 @@ import 'package:cricket_scorer/features/scoring/domain/usecases/update_team.dart
 import 'package:cricket_scorer/features/scoring/domain/usecases/update_team_logo.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/update_team_player.dart';
 import 'package:cricket_scorer/features/scoring/presentation/controllers/team_profile_controller.dart';
+import '../helpers/picker_fakes.dart';
 import 'package:cricket_scorer/features/scoring/presentation/widget/add_player_sheet.dart';
 import 'package:cricket_scorer/features/scoring/presentation/widget/edit_roster_player_sheet.dart';
 import 'package:flutter/material.dart';
@@ -72,7 +73,7 @@ class _FakeAdd extends _Unused implements AddTeamPlayerUseCase {
             message: 'ok',
             data: TeamRosterPlayer(
               playerId: 'p1',
-              playerName: params!.req.name,
+              playerName: params!.req.name!,
               role: 'unknown',
             ),
           ),
@@ -154,6 +155,9 @@ void main() {
       addTeamPlayerUseCase: add,
       updateTeamPlayerUseCase: updatePlayer,
       setTeamLeadershipUseCase: leadership,
+      getMyPlayersUseCase: FakeGetMyPlayersUseCase(),
+      lookupUserByEmailUseCase: FakeLookupUserByEmailUseCase(),
+      inviteTeamPlayerUseCase: FakeInviteTeamPlayerUseCase(),
     );
     controller.profile.value = profile;
     await tester.pumpWidget(
@@ -308,17 +312,20 @@ void main() {
       expect(updatePlayer.lastParams?.req.jerseyNumber, 7);
     });
 
-    testWidgets('clearing a previously set jersey number asks the server to remove it', (
-      tester,
-    ) async {
-      await pumpEditSheet(tester);
+    testWidgets(
+      'clearing a previously set jersey number asks the server to remove it',
+      (
+        tester,
+      ) async {
+        await pumpEditSheet(tester);
 
-      await tester.enterText(find.widgetWithText(TextField, '45'), '');
-      await tester.tap(find.text(TranslationKeys.saveChanges).last);
-      await tester.pumpAndSettle();
+        await tester.enterText(find.widgetWithText(TextField, '45'), '');
+        await tester.tap(find.text(TranslationKeys.saveChanges).last);
+        await tester.pumpAndSettle();
 
-      expect(updatePlayer.lastParams?.req.clearJerseyNumber, isTrue);
-    });
+        expect(updatePlayer.lastParams?.req.clearJerseyNumber, isTrue);
+      },
+    );
 
     testWidgets('leaving the jersey number alone does not clear it', (
       tester,
