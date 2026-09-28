@@ -591,10 +591,14 @@ class ScoreBallController extends GetxController {
       ? match.teamB.id
       : match.teamA.id;
 
-  /// The bowlers the next-bowler sheet offers: everyone seen, narrowed to the
-  /// bowling side's Playing XI when one is set.
+  /// The bowlers the next-bowler sheet offers: everyone seen, or — when the
+  /// bowling side has a Playing XI set — exactly that XI, read from the squad
+  /// rather than from [bowlersSeen], which is empty on a fresh match (`GET
+  /// .../bowlers` needs an innings) and would leave a locked sheet with nobody
+  /// to pick.
   List<BowlerRef> pickerBowlers() =>
-      _xi.bowlers(_bowlingTeamId, bowlersSeen.toList());
+      _xi.xiBowlers(_bowlingTeamId, bowlersSeen.toList()) ??
+      bowlersSeen.toList();
 
   /// Opens the Squad screen for this live match, then re-reads the squad so a
   /// bench/XI move made there applies to the very next picker.
@@ -609,8 +613,8 @@ class ScoreBallController extends GetxController {
     await loadSquad();
   }
 
-  /// One team's roster for the pickers, narrowed to its Playing XI when one is
-  /// set, or `[]` on any failure. Best-
+  /// One team's roster for the pickers: its Playing XI when one is set (no
+  /// network), else its team roster, or `[]` on any failure. Best-
   /// effort and silent, same reasoning as [_seedBowlerRosterFromServer]: this
   /// only ever adds convenience chips to a picker that already works from a
   /// bare text field, so a failed or offline fetch is not worth a snackbar —
@@ -618,10 +622,15 @@ class ScoreBallController extends GetxController {
   /// is not guaranteed to return rather than throw in every test double, so
   /// this guards with try/catch rather than trusting `isResult` alone.
   Future<List<TeamRosterPlayer>> fetchPickerRoster(String teamId) async {
+    // A locked side is served from the squad already in memory: its picker has
+    // no typing fallback, so it must not hinge on a request that can fail or
+    // hang offline.
+    final xi = _xi.xiRoster(teamId);
+    if (xi != null) return xi;
     try {
       final response = await matchRepository.getTeamProfile(teamId: teamId);
       if (!response.isResult) return const [];
-      return _xi.roster(teamId, response.result.data?.roster ?? const []);
+      return response.result.data?.roster ?? const [];
     } catch (_) {
       return const [];
     }

@@ -3958,6 +3958,30 @@ void main() {
       expect(xiController.xiLockedFor('team-b'), isFalse);
     });
 
+    test('a locked side\'s roster is served from the squad, with no network', () async {
+      // team-b has no profile registered, so any fetch for it would throw.
+      squadFake.squad = squad(xiB: ['b1']);
+      xiController.onInit();
+      await pumpEventQueue();
+
+      final roster = await xiController.fetchPickerRoster('team-b');
+
+      expect(roster.map((p) => p.playerName), ['Bumrah']);
+    });
+
+    test('a fresh match, where GET bowlers is not available yet, still offers the whole bowling XI', () async {
+      squadFake.squad = squad(xiB: ['b1', 'b2']);
+      xiRepo.bowlersResponse = null;
+      xiController.onInit();
+      await pumpEventQueue();
+
+      expect(xiController.bowlersSeen, isEmpty);
+      expect(
+        xiController.pickerBowlers().map((b) => b.name),
+        ['Bumrah', 'Bench Bowl'],
+      );
+    });
+
     test('a failed squad fetch leaves the pickers unrestricted', () async {
       squadFake.squad = null;
       xiController.onInit();

@@ -220,8 +220,11 @@ class SquadController extends GetxController with WidgetsBindingObserver {
     if (keeper != null) draft = draft.setKeeper(keeper);
 
     // A saved squad without an XI was given one by the first-11 rule just now;
-    // saving is what makes that choice the scorer's.
-    if (xiIds == null) _dirty.add(forSide);
+    // saving is what makes that choice the scorer's. Not mid-match, though: a
+    // match under way may have players who joined it while scoring and are not
+    // in this squad, so a Save the scorer never meant would lock the pickers to
+    // a guess that leaves them out. There only an explicit move saves.
+    if (xiIds == null && !midMatch.value) _dirty.add(forSide);
     return draft;
   }
 
@@ -241,7 +244,8 @@ class SquadController extends GetxController with WidgetsBindingObserver {
     ];
     // A prefilled side is the scorer's squad as it stands, so it counts as
     // unsaved: Save & continue must persist it even if they never touch it.
-    if (rows.isNotEmpty) _dirty.add(forSide);
+    // Not mid-match, for the reason given in [_seedFromSaved].
+    if (rows.isNotEmpty && !midMatch.value) _dirty.add(forSide);
     return SquadDraft.seeded(rows);
   }
 

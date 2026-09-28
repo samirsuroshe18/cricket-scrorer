@@ -768,5 +768,44 @@ void main() {
       expect(teamInvites.asked, containsAll(['ta', 'tb']));
       controller.onClose();
     });
+
+    test('mid-match, opening the screen and saving does not lock the pickers to a guessed XI', () async {
+      final players = [for (var i = 1; i <= 12; i++) sp('p$i', 'Player $i')];
+      final controller = build(
+        squad: squadOf(
+          side('ta', players: players, savedAt: '2026-09-28T10:00:00.000Z'),
+          inningsStarted: true,
+        ),
+        returnToScoring: true,
+      );
+      await controller.loadRosters();
+
+      await controller.saveAndContinue();
+
+      expect(savePlayingXi.calls, isEmpty);
+      expect(save.calls, isEmpty);
+      expect(closed, 1);
+    });
+
+    test('mid-match, a side seeded from the roster is not saved until the scorer changes it', () async {
+      final controller = build(
+        squad: squadOf(side('ta'), inningsStarted: true),
+        rosters: {
+          'ta': [
+            TeamRosterPlayer(playerId: 'p1', playerName: 'Rohit', role: 'batsman'),
+          ],
+        },
+        returnToScoring: true,
+      );
+      await controller.loadRosters();
+      expect(controller.teamA.value.rows.single.name, 'Rohit');
+
+      await controller.saveAndContinue();
+      expect(savePlayingXi.calls, isEmpty);
+
+      controller.moveToBench('Rohit');
+      await controller.saveAndContinue();
+      expect(savePlayingXi.calls.single.req.playingXI, isEmpty);
+    });
   });
 }
