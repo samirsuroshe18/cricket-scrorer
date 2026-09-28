@@ -9,6 +9,7 @@ import 'package:cricket_scorer/core/global/widgets/cricket_text_field.dart';
 import 'package:cricket_scorer/core/global/widgets/snackbars/cricket_snackbar.dart';
 import 'package:cricket_scorer/core/translations/translation_keys.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/strike.dart';
+import 'package:cricket_scorer/features/scoring/data/models/response/team_profile_res.dart';
 import 'package:cricket_scorer/features/scoring/data/scoring_constants.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -26,6 +27,7 @@ class WicketBottomSheet extends StatefulWidget {
     required this.isFinalWicket,
     required this.isSubmitting,
     required this.onSubmit,
+    this.xiRoster,
     super.key,
   });
 
@@ -52,6 +54,12 @@ class WicketBottomSheet extends StatefulWidget {
   })
   onSubmit;
 
+  /// The batting side's Playing XI when one is set — null otherwise. Set, the
+  /// server accepts no one else as the incoming batsman, so the name is picked
+  /// from these chips (whoever is at the crease left out) and the field stops
+  /// taking typing.
+  final List<TeamRosterPlayer>? xiRoster;
+
   static Future<void> show({
     required Strike? strike,
     required String? extraType,
@@ -64,6 +72,7 @@ class WicketBottomSheet extends StatefulWidget {
       String? incomingBatsmanName,
     })
     onSubmit,
+    List<TeamRosterPlayer>? xiRoster,
   }) {
     return CustomBottomSheet.cricketCustomBottomSheet<void>(
       headlineText: TranslationKeys.howOut.tr,
@@ -74,6 +83,7 @@ class WicketBottomSheet extends StatefulWidget {
         isFinalWicket: isFinalWicket,
         isSubmitting: isSubmitting,
         onSubmit: onSubmit,
+        xiRoster: xiRoster,
       ),
     );
   }
@@ -110,6 +120,11 @@ class _WicketBottomSheetState extends State<WicketBottomSheet> {
   String get _disabledReason => widget.extraType == ExtraType.noBall
       ? TranslationKeys.notPossibleOffNoBall.tr
       : TranslationKeys.notPossibleOffWide.tr;
+
+  bool _atCrease(String name) => <String?>[
+    widget.strike?.strikerName,
+    widget.strike?.nonStrikerName,
+  ].whereType<String>().any((n) => n.toLowerCase() == name.toLowerCase());
 
   String? _validateIncoming(String? value) {
     if (value == null || value.trim().isEmpty) {
@@ -254,6 +269,27 @@ class _WicketBottomSheetState extends State<WicketBottomSheet> {
 
             if (!widget.isFinalWicket) ...[
               16.h,
+              if (widget.xiRoster != null) ...[
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    for (final player in widget.xiRoster!.where(
+                      (p) => !_atCrease(p.playerName),
+                    ))
+                      ChoiceChip(
+                        label: CricketText(text: player.playerName),
+                        selected:
+                            _incomingController.text.trim() ==
+                            player.playerName,
+                        onSelected: (_) => setState(
+                          () => _incomingController.text = player.playerName,
+                        ),
+                      ),
+                  ],
+                ),
+                8.h,
+              ],
               CricketTextField(
                 controller: _incomingController,
                 labelText: TranslationKeys.newBatsman.tr,
@@ -261,6 +297,7 @@ class _WicketBottomSheetState extends State<WicketBottomSheet> {
                 textCapitalization: TextCapitalization.words,
                 maxLength: 50,
                 isRequired: true,
+                readOnly: widget.xiRoster != null,
                 validator: _validateIncoming,
               ),
             ],

@@ -42,6 +42,7 @@ class NextBowlerBottomSheet extends StatefulWidget {
     required this.canUndo,
     required this.isUndoing,
     required this.onUndo,
+    this.lockToRoster = false,
     super.key,
   });
 
@@ -77,6 +78,11 @@ class NextBowlerBottomSheet extends StatefulWidget {
   /// unfinished again and nobody is owed.
   final Future<bool> Function() onUndo;
 
+  /// True when the bowling side has a Playing XI set: [knownBowlers] is then
+  /// the XI, the server refuses anyone else, and the name field stops taking
+  /// typing so a chip is the only way to choose.
+  final bool lockToRoster;
+
   static Future<void> show({
     required String? excludedBowlerName,
     required List<BowlerRef> knownBowlers,
@@ -86,6 +92,7 @@ class NextBowlerBottomSheet extends StatefulWidget {
     required bool Function() canUndo,
     required RxBool isUndoing,
     required Future<bool> Function() onUndo,
+    bool lockToRoster = false,
   }) {
     return CustomBottomSheet.cricketCustomBottomSheet<void>(
       headlineText: TranslationKeys.selectBowler.tr,
@@ -100,6 +107,7 @@ class NextBowlerBottomSheet extends StatefulWidget {
         canUndo: canUndo,
         isUndoing: isUndoing,
         onUndo: onUndo,
+        lockToRoster: lockToRoster,
       ),
     );
   }
@@ -176,9 +184,7 @@ class _NextBowlerBottomSheetState extends State<NextBowlerBottomSheet> {
     // id. This is what tells the server "this exact returning bowler" apart
     // from "a new player who happens to share a name".
     final picked = _picked;
-    final bowlerId = (picked != null && picked.name == name)
-        ? picked.id
-        : null;
+    final bowlerId = (picked != null && picked.name == name) ? picked.id : null;
 
     // Navigator.pop rather than Get.back() — see _undo()'s comment below for
     // why: GetX's `back()` closes an open snackbar instead of this sheet
@@ -273,6 +279,7 @@ class _NextBowlerBottomSheetState extends State<NextBowlerBottomSheet> {
               textCapitalization: TextCapitalization.words,
               maxLength: 50,
               isRequired: true,
+              readOnly: widget.lockToRoster,
               validator: _validateName,
             ),
 

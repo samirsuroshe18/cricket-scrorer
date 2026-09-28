@@ -29,7 +29,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart' hide Response;
 import 'package:cricket_scorer/features/scoring/presentation/widget/add_player_picker.dart';
+import 'package:cricket_scorer/features/scoring/data/models/response/team_invites_res.dart';
+import 'package:cricket_scorer/features/scoring/domain/usecases/cancel_team_invite.dart';
+import 'package:cricket_scorer/features/scoring/domain/usecases/get_team_invites.dart';
+import 'package:cricket_scorer/features/scoring/presentation/widget/invitations_section.dart';
 import '../helpers/picker_fakes.dart';
+import '../helpers/squad_fakes.dart';
+
+/// What the fake invitations use case returns, per team; a test sets it before
+/// pumping the profile.
+Map<String, List<TeamInviteItemRes>> _invitesByTeam = {};
 
 /// Returns whichever profile matches the requested teamId — the real
 /// regression surface for the GetX lazyPut-singleton bug: a fake keyed off
@@ -202,6 +211,8 @@ void _putUnusedRosterUseCases({RemoveTeamPlayerUseCase? removePlayer}) {
   Get.put<GetMyPlayersUseCase>(emptyMyPlayers());
   Get.put<LookupUserByEmailUseCase>(FakeLookupUserByEmailUseCase());
   Get.put<InviteTeamPlayerUseCase>(FakeInviteTeamPlayerUseCase());
+  Get.put<GetTeamInvitesUseCase>(FakeGetTeamInvites(_invitesByTeam));
+  Get.put<CancelTeamInviteUseCase>(FakeCancelTeamInvite());
   // A single Get.put call for this type per test: GetX's Get.put only
   // replaces an existing registration while it is still "dirty" (unfetched),
   // so a second Get.put for the same type is silently ignored once anything
@@ -563,9 +574,7 @@ void main() {
     expect(find.text(TranslationKeys.viceCaptainShort), findsOneWidget);
   });
 
-  testWidgets('roster shows the Invited chip only for a pending invite', (
-    tester,
-  ) async {
+  testWidgets('the roster no longer carries an Invited chip', (tester) async {
     await pumpProfile(
       tester,
       profileWith(
@@ -574,18 +583,55 @@ void main() {
             playerId: 'p1',
             playerName: 'Rahul',
             role: 'batsman',
-            inviteStatus: 'pending',
-          ),
-          TeamRosterPlayer(
-            playerId: 'p2',
-            playerName: 'Rohit',
-            role: 'batsman',
           ),
         ],
       ),
     );
 
-    expect(find.text(TranslationKeys.invited), findsOneWidget);
+    expect(find.text(TranslationKeys.invited), findsNothing);
+  });
+
+  testWidgets('a manager sees the invitations below the roster', (
+    tester,
+  ) async {
+    _invitesByTeam = {
+      'team-1': [
+        TeamInviteItemRes(
+          inviteId: 'i1',
+          status: 'pending',
+          player: InvitedPlayerRes(playerId: 'p1', playerName: 'Pia'),
+          invitee: InviteeUserRes(userId: 'u1', fullName: 'Pia'),
+        ),
+      ],
+    };
+    addTearDown(() => _invitesByTeam = {});
+
+    await pumpProfile(tester, profileWith(roster: const []));
+
+    expect(find.byType(InvitationsSection), findsOneWidget);
+    expect(find.text('Pia'), findsOneWidget);
+    expect(find.text(TranslationKeys.inviteStatusWaiting), findsOneWidget);
+  });
+
+  testWidgets('a viewer who cannot manage sees no invitations', (tester) async {
+    _invitesByTeam = {
+      'team-1': [
+        TeamInviteItemRes(
+          inviteId: 'i1',
+          status: 'pending',
+          player: InvitedPlayerRes(playerId: 'p1', playerName: 'Pia'),
+          invitee: InviteeUserRes(userId: 'u1', fullName: 'Pia'),
+        ),
+      ],
+    };
+    addTearDown(() => _invitesByTeam = {});
+
+    await pumpProfile(
+      tester,
+      profileWith(canManage: false, roster: const []),
+    );
+
+    expect(find.text('Pia'), findsNothing);
   });
 
   testWidgets('a manager sees add player and a menu on each roster row', (

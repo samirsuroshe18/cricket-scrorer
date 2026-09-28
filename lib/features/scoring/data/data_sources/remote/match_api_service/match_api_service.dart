@@ -7,6 +7,7 @@ import 'package:cricket_scorer/features/scoring/data/models/request/create_match
 import 'package:cricket_scorer/features/scoring/data/models/request/add_team_player_req.dart';
 import 'package:cricket_scorer/features/scoring/data/models/request/create_team_req.dart';
 import 'package:cricket_scorer/features/scoring/data/models/request/set_team_leadership_req.dart';
+import 'package:cricket_scorer/features/scoring/data/models/request/save_playing_xi_req.dart';
 import 'package:cricket_scorer/features/scoring/data/models/request/save_squad_req.dart';
 import 'package:cricket_scorer/features/scoring/data/models/request/score_ball_req.dart';
 import 'package:cricket_scorer/features/scoring/data/models/request/select_bowler_req.dart';
@@ -309,6 +310,50 @@ class MatchApiService {
     return await apiClient.put(
       endpoint: matchEndpoint.saveSquad(matchId, params.side),
       data: params.toJson(),
+    );
+  }
+
+  /// `GET /v1/match/:matchId/squad`.
+  Future<Either<ApiResponseModel, CricketFailure>> getMatchSquad({
+    required String matchId,
+  }) async {
+    return await apiClient.get(endpoint: matchEndpoint.matchSquad(matchId));
+  }
+
+  /// `POST /v1/match/:matchId/squad/acknowledge`.
+  Future<Either<ApiResponseModel, CricketFailure>> acknowledgeSquad({
+    required String matchId,
+  }) async {
+    return await apiClient.post(
+      endpoint: matchEndpoint.squadAcknowledge(matchId),
+    );
+  }
+
+  /// `PATCH /v1/match/:matchId/squad/:side/playing-xi`.
+  Future<Either<ApiResponseModel, CricketFailure>> savePlayingXi({
+    required String matchId,
+    required SavePlayingXiReq params,
+  }) async {
+    return await apiClient.patch(
+      endpoint: matchEndpoint.playingXi(matchId, params.side),
+      data: params.toJson(),
+    );
+  }
+
+  /// `GET /v1/team/:teamId/invites`.
+  Future<Either<ApiResponseModel, CricketFailure>> getTeamInvites({
+    required String teamId,
+  }) async {
+    return await apiClient.get(endpoint: matchEndpoint.teamInvites(teamId));
+  }
+
+  /// `DELETE /v1/team/:teamId/invites/:inviteId`.
+  Future<Either<ApiResponseModel, CricketFailure>> cancelTeamInvite({
+    required String teamId,
+    required String inviteId,
+  }) async {
+    return await apiClient.delete(
+      endpoint: matchEndpoint.teamInvite(teamId, inviteId),
     );
   }
 

@@ -3,7 +3,9 @@ import 'package:cricket_scorer/core/network/models/api_response_model.dart';
 import 'package:cricket_scorer/core/network/models/cricket_response.dart';
 import 'package:cricket_scorer/core/utils/either_util.dart';
 import 'package:cricket_scorer/features/scoring/data/data_sources/remote/match_api_service/match_api_service.dart';
+import 'package:cricket_scorer/features/scoring/data/models/request/save_playing_xi_req.dart';
 import 'package:cricket_scorer/features/scoring/data/models/request/save_squad_req.dart';
+import 'package:cricket_scorer/features/scoring/data/models/response/match_squad_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/squad_res.dart';
 import 'package:cricket_scorer/features/scoring/domain/repositories/squad_repository.dart';
 
@@ -31,5 +33,48 @@ class SquadRepositoryImpl extends SquadRepository {
     } else {
       return Either.fallback(response.fallback);
     }
+  }
+
+  @override
+  Future<Either<CricketResponse<MatchSquadRes>, CricketFailure>> getMatchSquad({
+    required String matchId,
+  }) async => _parse(
+    await matchApiService.getMatchSquad(matchId: matchId),
+    MatchSquadRes.fromJson,
+  );
+
+  @override
+  Future<Either<CricketResponse<void>, CricketFailure>> acknowledgeSquad({
+    required String matchId,
+  }) async {
+    final response = await matchApiService.acknowledgeSquad(matchId: matchId);
+    if (response.isResult) {
+      return Either.result(CricketResponse(message: response.result.message));
+    }
+    return Either.fallback(response.fallback);
+  }
+
+  @override
+  Future<Either<CricketResponse<SquadSideRes>, CricketFailure>> savePlayingXi({
+    required String matchId,
+    required SavePlayingXiReq params,
+  }) async => _parse(
+    await matchApiService.savePlayingXi(matchId: matchId, params: params),
+    SquadSideRes.fromJson,
+  );
+
+  Either<CricketResponse<T>, CricketFailure> _parse<T>(
+    Either<ApiResponseModel, CricketFailure> response,
+    T Function(Map<String, dynamic>) fromJson,
+  ) {
+    if (response.isResult) {
+      return Either.result(
+        CricketResponse(
+          data: fromJson(response.result.data as Map<String, dynamic>),
+          message: response.result.message,
+        ),
+      );
+    }
+    return Either.fallback(response.fallback);
   }
 }

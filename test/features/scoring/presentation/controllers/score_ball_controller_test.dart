@@ -40,6 +40,7 @@ import 'package:cricket_scorer/features/scoring/data/models/response/start_innin
 import 'package:cricket_scorer/features/scoring/data/models/response/strike.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/sync_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/team_organization_res.dart';
+import 'package:cricket_scorer/features/scoring/data/models/response/match_squad_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/team_profile_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/undo_ball_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/scorer_candidates_res.dart';
@@ -53,9 +54,12 @@ import 'package:cricket_scorer/features/scoring/domain/usecases/start_innings.da
 import 'package:cricket_scorer/features/scoring/domain/usecases/sync_match.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/undo_ball.dart';
 import 'package:cricket_scorer/features/scoring/presentation/controllers/score_ball_controller.dart';
+import 'package:cricket_scorer/features/scoring/presentation/controllers/squad_controller.dart';
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart';
+
+import '../helpers/squad_fakes.dart';
 
 /// Answers [startInnings] with a canned success and refuses every ball/bowler
 /// call with [CricketNoInternetFailure] — every delivery in these tests is
@@ -302,6 +306,10 @@ class _MixedMatchRepository implements MatchRepository {
   /// Settable per test — null falls back to an empty roster, the harmless
   /// default every test that never sets it relies on.
   MatchBowlersRes? bowlersResponse;
+
+  /// Team profiles by team id, for the pickers' roster fetch. An id with no
+  /// entry throws, which the controller's roster fetch already swallows.
+  final Map<String, TeamProfileRes> profiles = {};
 
   final List<String> _ballIds = [];
   // Runs credited by each ball still on the server, in the same order as
@@ -573,8 +581,13 @@ class _MixedMatchRepository implements MatchRepository {
 
   @override
   Future<Either<CricketResponse<TeamProfileRes>, CricketFailure>>
-  getTeamProfile({required String teamId}) =>
+  getTeamProfile({required String teamId}) async {
+    final profile = profiles[teamId];
+    if (profile == null) {
       throw UnimplementedError('Not exercised in this test.');
+    }
+    return Either.result(CricketResponse(message: 'ok', data: profile));
+  }
 
   @override
   Future<Either<CricketResponse<MatchHistoryRes>, CricketFailure>>
@@ -3833,6 +3846,196 @@ void main() {
         await db.close();
       },
     );
+  });
+
+  group('the Playing XI narrows the pickers', () {
+    late _MixedMatchRepository xiRepo;
+    late ScoringQueueDatabase xiDb;
+    late FakeGetMatchSquad squadFake;
+    late ScoreBallController xiController;
+    late List<SquadArgs> routed;
+
+    SquadSidePlayerRes sp(String id, String name) =>
+        SquadSidePlayerRes(playerId: id, name: name, role: 'batsman');
+
+    MatchSquadRes squad({List<String>? xiA, List<String>? xiB}) =>
+        MatchSquadRes(
+          matchId: 'match-1',
+          teamA: SquadSideRes(
+            teamId: 'team-a',
+            players: [sp('a1', 'Rohit'), sp('a2', 'Pant'), sp('a3', 'Bench')],
+            playingXI: xiA,
+          ),
+          teamB: SquadSideRes(
+            teamId: 'team-b',
+            players: [sp('b1', 'Bumrah'), sp('b2', 'Bench Bowl')],
+            playingXI: xiB,
+          ),
+        );
+
+    setUp(() {
+      xiRepo = _MixedMatchRepository();
+      xiDb = ScoringQueueDatabase.forTesting(NativeDatabase.memory());
+      squadFake = FakeGetMatchSquad();
+      routed = [];
+      final offlineSyncService = OfflineSyncService(
+        dao: ScoringQueueDao(xiDb),
+        syncMatchUseCase: SyncMatchUseCase(matchRepository: xiRepo),
+        startInningsUseCase: StartInningsUseCase(matchRepository: xiRepo),
+      );
+      xiController = ScoreBallController(
+        scoreBallUseCase: ScoreBallUseCase(matchRepository: xiRepo),
+        startInningsUseCase: StartInningsUseCase(matchRepository: xiRepo),
+        selectBowlerUseCase: SelectBowlerUseCase(matchRepository: xiRepo),
+        undoBallUseCase: UndoBallUseCase(matchRepository: xiRepo),
+        abandonMatchUseCase: AbandonMatchUseCase(matchRepository: xiRepo),
+        matchRepository: xiRepo,
+        offlineSyncService: offlineSyncService,
+        getMatchSquadUseCase: squadFake,
+        openSquadRoute: (args) async => routed.add(args),
+      );
+      xiRepo.profiles['team-a'] = TeamProfileRes(
+        teamId: 'team-a',
+        name: 'Team A',
+        canManage: true,
+        roster: [
+          TeamRosterPlayer(
+            playerId: 'a1',
+            playerName: 'Rohit',
+            role: 'batsman',
+          ),
+          TeamRosterPlayer(
+            playerId: 'a2',
+            playerName: 'Pant',
+            role: 'batsman',
+          ),
+          TeamRosterPlayer(
+            playerId: 'a3',
+            playerName: 'Bench',
+            role: 'batsman',
+          ),
+        ],
+      );
+      Get.testMode = true;
+      Get.routing.args = CreateMatchRes(
+        matchId: 'match-1',
+        joinCode: null,
+        teamA: TeamRef(id: 'team-a', name: 'Team A'),
+        teamB: TeamRef(id: 'team-b', name: 'Team B'),
+        totalOvers: 2,
+        status: 'live',
+        syncStatus: 'synced',
+        createdAt: '2026-01-01T00:00:00.000Z',
+      );
+    });
+
+    tearDown(() async {
+      await xiRepo.watchScoreUpdatesController.close();
+      await xiDb.close();
+    });
+
+    test('with no XI set the roster is whole and nothing is locked', () async {
+      squadFake.squad = squad();
+      xiController.onInit();
+      await pumpEventQueue();
+
+      final roster = await xiController.fetchPickerRoster('team-a');
+
+      expect(roster.map((p) => p.playerName), ['Rohit', 'Pant', 'Bench']);
+      expect(xiController.xiLockedFor('team-a'), isFalse);
+    });
+
+    test('a set XI narrows the roster to it and locks that side', () async {
+      squadFake.squad = squad(xiA: ['a1', 'a2']);
+      xiController.onInit();
+      await pumpEventQueue();
+
+      final roster = await xiController.fetchPickerRoster('team-a');
+
+      expect(roster.map((p) => p.playerName), ['Rohit', 'Pant']);
+      expect(xiController.xiLockedFor('team-a'), isTrue);
+      expect(xiController.xiLockedFor('team-b'), isFalse);
+    });
+
+    test('a locked side\'s roster is served from the squad, with no network', () async {
+      // team-b has no profile registered, so any fetch for it would throw.
+      squadFake.squad = squad(xiB: ['b1']);
+      xiController.onInit();
+      await pumpEventQueue();
+
+      final roster = await xiController.fetchPickerRoster('team-b');
+
+      expect(roster.map((p) => p.playerName), ['Bumrah']);
+    });
+
+    test('a fresh match, where GET bowlers is not available yet, still offers the whole bowling XI', () async {
+      squadFake.squad = squad(xiB: ['b1', 'b2']);
+      xiRepo.bowlersResponse = null;
+      xiController.onInit();
+      await pumpEventQueue();
+
+      expect(xiController.bowlersSeen, isEmpty);
+      expect(
+        xiController.pickerBowlers().map((b) => b.name),
+        ['Bumrah', 'Bench Bowl'],
+      );
+    });
+
+    test('a failed squad fetch leaves the pickers unrestricted', () async {
+      squadFake.squad = null;
+      xiController.onInit();
+      await pumpEventQueue();
+
+      final roster = await xiController.fetchPickerRoster('team-a');
+
+      expect(roster, hasLength(3));
+      expect(xiController.xiLockedFor('team-a'), isFalse);
+    });
+
+    test('the next-bowler chips are narrowed to the bowling side XI', () async {
+      squadFake.squad = squad(xiB: ['b1']);
+      xiRepo.bowlersResponse = MatchBowlersRes(
+        bowlers: [
+          BowlerFigureRes(
+            id: 'b1',
+            name: 'Bumrah',
+            legalDeliveries: 6,
+            runsConceded: 4,
+            wickets: 0,
+          ),
+          BowlerFigureRes(
+            id: 'b2',
+            name: 'Bench Bowl',
+            legalDeliveries: 0,
+            runsConceded: 0,
+            wickets: 0,
+          ),
+        ],
+      );
+      xiController.onInit();
+      await pumpEventQueue();
+
+      expect(
+        xiController.bowlersSeen.map((b) => b.name),
+        containsAll(['Bumrah', 'Bench Bowl']),
+      );
+      expect(xiController.pickerBowlers().map((b) => b.name), ['Bumrah']);
+    });
+
+    test('openSquad routes to the Squad screen and re-reads the squad', () async {
+      squadFake.squad = squad();
+      xiController.onInit();
+      await pumpEventQueue();
+      final before = squadFake.calls;
+      squadFake.squad = squad(xiA: ['a1']);
+
+      await xiController.openSquad();
+
+      expect(routed.single.returnToScoring, isTrue);
+      expect(routed.single.match.matchId, 'match-1');
+      expect(squadFake.calls, before + 1);
+      expect(xiController.xiLockedFor('team-a'), isTrue);
+    });
   });
 }
 

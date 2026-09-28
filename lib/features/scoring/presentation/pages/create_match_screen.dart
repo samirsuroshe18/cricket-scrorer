@@ -908,9 +908,14 @@ class _BottomActionBar extends StatelessWidget {
           heightFactor: 1,
           child: Padding(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
-            child: CricketButton(
-              buttonText: TranslationKeys.createMatch.tr,
-              onPressed: controller.createMatch,
+            // Disabled until both teams are chosen; the checks inside
+            // createMatch stay as a backstop.
+            child: Obx(
+              () => CricketButton(
+                buttonText: TranslationKeys.createMatch.tr,
+                isDisabled: !controller.canCreate.value,
+                onPressed: controller.createMatch,
+              ),
             ),
           ),
         ),

@@ -28,6 +28,9 @@ SquadRes _$SquadResFromJson(Map<String, dynamic> json) => SquadRes(
   captainId: json['captainId'] as String?,
   viceCaptainId: json['viceCaptainId'] as String?,
   keeperId: json['keeperId'] as String?,
+  playingXI: (json['playingXI'] as List<dynamic>?)
+      ?.map((e) => e as String)
+      .toList(),
 );
 
 Map<String, dynamic> _$SquadResToJson(SquadRes instance) => <String, dynamic>{
@@ -36,4 +39,5 @@ Map<String, dynamic> _$SquadResToJson(SquadRes instance) => <String, dynamic>{
   'captainId': instance.captainId,
   'viceCaptainId': instance.viceCaptainId,
   'keeperId': instance.keeperId,
+  'playingXI': instance.playingXI,
 };

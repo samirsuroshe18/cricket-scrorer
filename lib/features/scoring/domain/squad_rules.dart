@@ -5,6 +5,11 @@ const List<String> squadRoles = ['batsman', 'bowler', 'allrounder'];
 
 const String defaultSquadRole = 'batsman';
 
+/// How many players start in the Playing XI when a squad is seeded, and the
+/// point past which a newly typed player lands on the Bench instead. A starting
+/// heuristic only — the scorer can move anyone, and the XI has no cap.
+const int defaultXiSize = 11;
+
 class SquadRow {
   /// Set only for a returning player seeded from a team roster.
   final String? playerId;
@@ -32,14 +37,36 @@ class SquadDraft {
   final String? viceCaptain;
   final String? keeper;
 
+  /// Keys (trimmed, lower-cased names) of the [rows] in the Playing XI. Every
+  /// other row is on the Bench. Always a subset of the row keys.
+  final Set<String> xi;
+
   const SquadDraft({
     required this.rows,
     this.captain,
     this.viceCaptain,
     this.keeper,
+    this.xi = const {},
   });
 
   factory SquadDraft.empty() => const SquadDraft(rows: []);
+
+  /// A draft over [rows]. With no [xi] the first [defaultXiSize] rows are the
+  /// XI; an explicit [xi] (names, any case) is used as given — including an
+  /// empty one — and anything in it that is not a row is dropped.
+  factory SquadDraft.seeded(List<SquadRow> rows, {Set<String>? xi}) {
+    final rowKeys = {for (final row in rows) _key(row.name)};
+    final keys = xi == null
+        ? {for (final row in rows.take(defaultXiSize)) _key(row.name)}
+        : {for (final name in xi) _key(name)}.intersection(rowKeys);
+    return SquadDraft(rows: rows, xi: keys);
+  }
+
+  bool isInXi(SquadRow row) => xi.contains(_key(row.name));
+
+  List<SquadRow> get xiRows => rows.where(isInXi).toList();
+
+  List<SquadRow> get benchRows => rows.where((row) => !isInXi(row)).toList();
 
   bool _has(String name) => rows.any((row) => _key(row.name) == _key(name));
 
@@ -58,14 +85,17 @@ class SquadDraft {
     String? Function()? captain,
     String? Function()? viceCaptain,
     String? Function()? keeper,
+    Set<String>? xi,
   }) => SquadDraft(
     rows: rows ?? this.rows,
     captain: captain != null ? captain() : this.captain,
     viceCaptain: viceCaptain != null ? viceCaptain() : this.viceCaptain,
     keeper: keeper != null ? keeper() : this.keeper,
+    xi: xi ?? this.xi,
   );
 
-  /// Ignores a blank name and a name already in the squad.
+  /// Ignores a blank name and a name already in the squad. The new player joins
+  /// the Playing XI while it has fewer than [defaultXiSize], else the Bench.
   SquadDraft addPlayer(
     String name, {
     String? role = defaultSquadRole,
@@ -78,16 +108,43 @@ class SquadDraft {
         ...rows,
         SquadRow(playerId: playerId, name: trimmed, role: role),
       ],
+      xi: xi.length < defaultXiSize ? {...xi, _key(trimmed)} : xi,
     );
   }
 
-  /// Also clears any designation the removed player held.
+  /// Like [addPlayer] but always onto the Bench — used for a player who joined
+  /// the team (an accepted invitee), so the XI never changes without the
+  /// scorer's own action.
+  SquadDraft addToBench(String name, {String? role, String? playerId}) {
+    final trimmed = name.trim();
+    if (trimmed.isEmpty || _has(trimmed)) return this;
+    return _copy(
+      rows: [
+        ...rows,
+        SquadRow(playerId: playerId, name: trimmed, role: role),
+      ],
+    );
+  }
+
+  /// No-op for a name that is not in the squad. The XI has no size cap.
+  SquadDraft moveToXi(String name) {
+    if (!_has(name)) return this;
+    return _copy(xi: {...xi, _key(name)});
+  }
+
+  SquadDraft moveToBench(String name) {
+    if (!_has(name)) return this;
+    return _copy(xi: {...xi}..remove(_key(name)));
+  }
+
+  /// Also clears any designation the removed player held, and their XI place.
   SquadDraft removePlayer(String name) {
     return _copy(
       rows: rows.where((row) => _key(row.name) != _key(name)).toList(),
       captain: () => _same(captain, name) ? null : captain,
       viceCaptain: () => _same(viceCaptain, name) ? null : viceCaptain,
       keeper: () => _same(keeper, name) ? null : keeper,
+      xi: {...xi}..remove(_key(name)),
     );
   }
 
@@ -146,6 +203,9 @@ class SquadDraft {
       captain: captain,
       viceCaptain: viceCaptain,
       keeper: keeper,
+      // Always an explicit array: saving is the scorer choosing an XI, even an
+      // empty one. (Skip is the only way to leave it unset, and sends nothing.)
+      playingXI: [for (final row in xiRows) row.name],
     );
   }
 }

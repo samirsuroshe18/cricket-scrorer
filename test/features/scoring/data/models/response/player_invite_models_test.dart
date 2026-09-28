@@ -78,24 +78,22 @@ void main() {
   });
 
   group('TeamInviteRes', () {
-    Map<String, dynamic> player({String? inviteStatus}) => {
+    Map<String, dynamic> player() => {
       'playerId': 'p1',
       'playerName': 'Rahul Sharma',
       'role': 'unknown',
-      'inviteStatus': inviteStatus,
     };
 
     test('parses a new pending invite with its roster row', () {
       final res = TeamInviteRes.fromJson({
         'inviteId': 'i1',
         'status': 'pending',
-        'player': player(inviteStatus: 'pending'),
+        'player': player(),
       });
 
       expect(res.inviteId, 'i1');
       expect(res.status, 'pending');
       expect(res.player.playerName, 'Rahul Sharma');
-      expect(res.player.inviteStatus, 'pending');
     });
 
     test('parses the already-linked case: null inviteId, accepted', () {

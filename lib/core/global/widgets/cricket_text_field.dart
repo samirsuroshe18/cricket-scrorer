@@ -20,6 +20,9 @@ class CricketTextField extends StatelessWidget {
   final void Function(String)? onChanged;
   final bool isRequired;
 
+  /// Shows the value but refuses typing — for a field a picker fills.
+  final bool readOnly;
+
   /// Null everywhere except an actual credential field — a text field with
   /// no hint is invisible to a password manager, which is exactly what left
   /// every email/password field in this app unfillable and unsaveable. See
@@ -44,6 +47,7 @@ class CricketTextField extends StatelessWidget {
     this.validator,
     this.onChanged,
     this.isRequired = false,
+    this.readOnly = false,
     this.autofillHints,
   });
 
@@ -64,6 +68,7 @@ class CricketTextField extends StatelessWidget {
 
     final field = TextFormField(
       controller: controller,
+      readOnly: readOnly,
       obscureText: obscureText,
       keyboardType: keyboardType,
       validator: validator,

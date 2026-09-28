@@ -35,6 +35,10 @@ class NotificationsController extends GetxController
   final hasMore = true.obs;
   final loadError = Rxn<String>();
   final unreadCount = 0.obs;
+
+  /// Bumped when an invite accept/decline push arrives in the foreground, so a
+  /// screen showing that team's invitations (the Squad screen) can re-read them.
+  final inviteResponseTick = 0.obs;
   int _page = 1;
   bool _isLoadingList = false;
 
@@ -57,6 +61,8 @@ class NotificationsController extends GetxController
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) unawaited(refreshUnreadCount());
   }
+
+  void notifyInviteResponse() => inviteResponseTick.value++;
 
   /// Cheap and independent of the full list — called from Home's `onInit`
   /// (for the badge, without paying for the full inbox fetch) and again

@@ -42,6 +42,7 @@ class OpenersBottomSheet extends StatefulWidget {
     required this.onUndo,
     this.battingRoster = const [],
     this.bowlingRoster = const [],
+    this.lockToRoster = false,
     this.previousInningsRuns,
     this.previousInningsWickets,
     this.previousInningsOvers,
@@ -74,6 +75,11 @@ class OpenersBottomSheet extends StatefulWidget {
 
   /// The bowling side's roster, for the opening-bowler picker.
   final List<TeamRosterPlayer> bowlingRoster;
+
+  /// True when a Playing XI is set for the side(s): the rosters above are then
+  /// the XI, the server refuses anyone else, and the name fields stop taking
+  /// typing so a chip is the only way to fill them.
+  final bool lockToRoster;
 
   /// Innings 1's final score, shown above the form so a mis-tapped last ball
   /// is visible before the scorer commits to opening innings 2 — the point at
@@ -112,6 +118,7 @@ class OpenersBottomSheet extends StatefulWidget {
     required Future<bool> Function() onUndo,
     List<TeamRosterPlayer> battingRoster = const [],
     List<TeamRosterPlayer> bowlingRoster = const [],
+    bool lockToRoster = false,
     int? previousInningsRuns,
     int? previousInningsWickets,
     String? previousInningsOvers,
@@ -129,6 +136,7 @@ class OpenersBottomSheet extends StatefulWidget {
         onUndo: onUndo,
         battingRoster: battingRoster,
         bowlingRoster: bowlingRoster,
+        lockToRoster: lockToRoster,
         previousInningsRuns: previousInningsRuns,
         previousInningsWickets: previousInningsWickets,
         previousInningsOvers: previousInningsOvers,
@@ -316,6 +324,7 @@ class _OpenersBottomSheetState extends State<OpenersBottomSheet> {
           textCapitalization: TextCapitalization.words,
           maxLength: 50,
           isRequired: true,
+          readOnly: widget.lockToRoster,
           validator: validator,
         ),
       ],

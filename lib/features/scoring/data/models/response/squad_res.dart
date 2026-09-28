@@ -30,12 +30,16 @@ class SquadRes {
   final String? viceCaptainId;
   final String? keeperId;
 
+  /// Player ids; null when the side has no XI set.
+  final List<String>? playingXI;
+
   SquadRes({
     required this.side,
     required this.players,
     this.captainId,
     this.viceCaptainId,
     this.keeperId,
+    this.playingXI,
   });
 
   factory SquadRes.fromJson(Map<String, dynamic> json) =>

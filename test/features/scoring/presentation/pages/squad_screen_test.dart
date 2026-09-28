@@ -4,15 +4,21 @@ import 'package:cricket_scorer/core/network/models/cricket_response.dart';
 import 'package:cricket_scorer/core/translations/translation_keys.dart';
 import 'package:cricket_scorer/core/utils/either_util.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/create_match_res.dart';
+import 'package:cricket_scorer/features/scoring/data/models/response/match_squad_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/squad_res.dart';
+import 'package:cricket_scorer/features/scoring/data/models/response/team_invites_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/team_profile_res.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/get_team_profile.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/save_squad.dart';
 import 'package:cricket_scorer/features/scoring/presentation/controllers/squad_controller.dart';
 import 'package:cricket_scorer/features/scoring/presentation/pages/squad_screen.dart';
+import 'package:cricket_scorer/features/scoring/presentation/widget/invite_by_email_panel.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart';
+
+import '../helpers/picker_fakes.dart';
+import '../helpers/squad_fakes.dart';
 
 class _EmptyProfile implements GetTeamProfileUseCase {
   @override
@@ -65,9 +71,17 @@ void main() {
   late List<String> errors;
   var openedCount = 0;
   late SquadController controller;
+  late FakeGetTeamInvites teamInvites;
+  late FakeCancelTeamInvite cancelInvite;
 
-  Future<void> pump(WidgetTester tester) async {
+  Future<void> pump(
+    WidgetTester tester, {
+    MatchSquadRes? squad,
+    Map<String, List<TeamInviteItemRes>> invites = const {},
+  }) async {
     save = _Save();
+    teamInvites = FakeGetTeamInvites({...invites});
+    cancelInvite = FakeCancelTeamInvite();
     errors = [];
     openedCount = 0;
     controller = Get.put<SquadController>(
@@ -83,6 +97,13 @@ void main() {
         ),
         getTeamProfileUseCase: _EmptyProfile(),
         saveSquadUseCase: save,
+        getMatchSquadUseCase: FakeGetMatchSquad()..squad = squad,
+        savePlayingXiUseCase: FakeSavePlayingXi(),
+        getTeamInvitesUseCase: teamInvites,
+        cancelTeamInviteUseCase: cancelInvite,
+        acknowledgeSquadUseCase: FakeAcknowledgeSquad(),
+        lookupUserByEmailUseCase: FakeLookupUserByEmailUseCase(),
+        inviteTeamPlayerUseCase: FakeInviteTeamPlayerUseCase(),
         showError: errors.add,
         openScoring: (_) => openedCount += 1,
       ),
@@ -217,4 +238,190 @@ void main() {
       handle.dispose();
     },
   );
+
+  group('Playing XI, Bench and Invitations', () {
+    SquadSidePlayerRes sp(String id, String name) =>
+        SquadSidePlayerRes(playerId: id, name: name, role: 'batsman');
+
+    MatchSquadRes squad({bool inningsStarted = false}) => MatchSquadRes(
+      matchId: 'm1',
+      inningsStarted: inningsStarted,
+      teamA: SquadSideRes(
+        teamId: 'ta',
+        players: [sp('p1', 'Rohit'), sp('p2', 'Pant'), sp('p3', 'Bumrah')],
+        playingXI: ['p1', 'p2'],
+        savedAt: '2026-09-28T10:00:00.000Z',
+      ),
+      teamB: SquadSideRes(teamId: 'tb'),
+    );
+
+    TeamInviteItemRes invite(String id, String status, String name) =>
+        TeamInviteItemRes(
+          inviteId: id,
+          status: status,
+          respondedAt: status == 'pending' ? null : '2026-09-28T09:00:00.000Z',
+          player: InvitedPlayerRes(playerId: 'p-$id', playerName: name),
+          invitee: InviteeUserRes(userId: 'u-$id', fullName: name),
+        );
+
+    // A ListView only builds what is on screen; these tests look at both
+    // sections and the invitations, so give them room.
+    void tall(WidgetTester tester) {
+      tester.view.physicalSize = const Size(1000, 3000);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+    }
+
+    String headerText(WidgetTester tester, String key) => tester
+        .widgetList<Text>(
+          find.descendant(
+            of: find.byKey(Key(key)),
+            matching: find.byType(Text),
+          ),
+        )
+        .single
+        .data!;
+
+    testWidgets('players sit under Playing XI and Bench with their counts', (
+      tester,
+    ) async {
+      tall(tester);
+      await pump(tester, squad: squad());
+      await tester.pump();
+
+      expect(
+        headerText(tester, 'squad_section_xi'),
+        '${TranslationKeys.squadPlayingXi} (2)',
+      );
+      expect(
+        headerText(tester, 'squad_section_bench'),
+        '${TranslationKeys.squadBench} (1)',
+      );
+      expect(find.byKey(const Key('squad_toBench_Rohit')), findsOneWidget);
+      expect(find.byKey(const Key('squad_toBench_Pant')), findsOneWidget);
+      expect(find.byKey(const Key('squad_toXi_Bumrah')), findsOneWidget);
+      expect(find.byKey(const Key('squad_toXi_Rohit')), findsNothing);
+    });
+
+    testWidgets('moving a player between the sections updates both counts', (
+      tester,
+    ) async {
+      tall(tester);
+      await pump(tester, squad: squad());
+      await tester.pump();
+
+      await tester.tap(find.byKey(const Key('squad_toXi_Bumrah')));
+      await tester.pump();
+      expect(
+        headerText(tester, 'squad_section_xi'),
+        '${TranslationKeys.squadPlayingXi} (3)',
+      );
+      expect(find.byKey(const Key('squad_toBench_Bumrah')), findsOneWidget);
+
+      await tester.tap(find.byKey(const Key('squad_toBench_Rohit')));
+      await tester.pump();
+      expect(
+        headerText(tester, 'squad_section_xi'),
+        '${TranslationKeys.squadPlayingXi} (2)',
+      );
+      expect(
+        headerText(tester, 'squad_section_bench'),
+        '${TranslationKeys.squadBench} (1)',
+      );
+      expect(find.byKey(const Key('squad_toXi_Rohit')), findsOneWidget);
+    });
+
+    testWidgets('Invite by email opens the invite panel', (tester) async {
+      tall(tester);
+      await pump(tester);
+
+      await tester.tap(find.byKey(const Key('squad_inviteButton')));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(InviteByEmailPanel), findsOneWidget);
+    });
+
+    testWidgets(
+      'once the innings has started only XI moves and invites are offered',
+      (
+        tester,
+      ) async {
+        await pump(tester, squad: squad(inningsStarted: true));
+        await tester.pump();
+
+        expect(find.byKey(const Key('squad_nameField')), findsNothing);
+        expect(find.byKey(const Key('squad_addButton')), findsNothing);
+        expect(find.byKey(const Key('squad_c_Rohit')), findsNothing);
+        expect(find.byKey(const Key('squad_role_Rohit_batsman')), findsNothing);
+        expect(find.byKey(const Key('squad_remove_Rohit')), findsNothing);
+        expect(find.byKey(const Key('squad_toBench_Rohit')), findsOneWidget);
+        expect(find.byKey(const Key('squad_toXi_Bumrah')), findsOneWidget);
+        expect(find.byKey(const Key('squad_inviteButton')), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'invitations show their status and Cancel asks the controller',
+      (
+        tester,
+      ) async {
+        await pump(
+          tester,
+          invites: {
+            'ta': [
+              invite('i1', 'pending', 'Pia'),
+              invite('i2', 'declined', 'Dev'),
+            ],
+          },
+        );
+        await tester.pump();
+
+        expect(find.byKey(const Key('squad_section_invites')), findsOneWidget);
+        expect(find.text(TranslationKeys.inviteStatusWaiting), findsOneWidget);
+        expect(find.text(TranslationKeys.inviteStatusDeclined), findsOneWidget);
+
+        await tester.tap(find.byKey(const Key('invite_cancel_i1')));
+        await tester.pump();
+
+        expect(cancelInvite.calls.single.inviteId, 'i1');
+        expect(cancelInvite.calls.single.teamId, 'ta');
+      },
+    );
+
+    testWidgets('the other team shows its own invitations', (tester) async {
+      tall(tester);
+      await pump(
+        tester,
+        invites: {
+          'tb': [invite('i9', 'pending', 'Other Side')],
+        },
+      );
+      await tester.pump();
+      expect(find.text('Other Side'), findsNothing);
+
+      await tester.tap(find.byKey(const Key('squad_side_teamB')));
+      await tester.pump();
+
+      expect(find.text('Other Side'), findsOneWidget);
+    });
+
+    testWidgets('pulling down re-reads the invitations', (tester) async {
+      tall(tester);
+      await pump(tester);
+      await tester.pump();
+      final before = teamInvites.asked.length;
+
+      // RefreshIndicator wants a pull of about a quarter of the viewport.
+      await tester.drag(
+        find.byType(ListView).first,
+        const Offset(0, 1200),
+        touchSlopY: 0,
+      );
+      await tester.pump();
+      await tester.pump(const Duration(seconds: 1));
+      await tester.pumpAndSettle();
+
+      expect(teamInvites.asked.length, greaterThan(before));
+    });
+  });
 }

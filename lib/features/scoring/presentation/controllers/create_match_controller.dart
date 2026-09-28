@@ -42,6 +42,12 @@ class CreateMatchController extends GetxController {
   final selectedTeamAId = Rxn<String>();
   final selectedTeamBId = Rxn<String>();
 
+  /// True only while both sides hold a team name — chosen from the picker
+  /// (existing team) or typed there (new one). Drives the Create Match button,
+  /// which stays disabled until then. [createMatch] still re-checks the names as
+  /// a backstop.
+  final canCreate = false.obs;
+
   final selectedOversPreset = OversPreset.five.obs;
   static const Map<OversPreset, String> _oversPresetValues = {
     OversPreset.five: '5',
@@ -91,6 +97,8 @@ class CreateMatchController extends GetxController {
     super.onInit();
     teamAController.addListener(_handleTeamATextChanged);
     teamBController.addListener(_handleTeamBTextChanged);
+    teamAController.addListener(_updateCanCreate);
+    teamBController.addListener(_updateCanCreate);
     oversController.text = _oversPresetValues[OversPreset.five]!;
     oversController.addListener(_handleOversTextChanged);
   }
@@ -110,6 +118,12 @@ class CreateMatchController extends GetxController {
   /// instead.
   String? _selectedTeamAName;
   String? _selectedTeamBName;
+
+  void _updateCanCreate() {
+    canCreate.value =
+        teamAController.text.trim().isNotEmpty &&
+        teamBController.text.trim().isNotEmpty;
+  }
 
   void _handleTeamATextChanged() {
     if (selectedTeamAId.value == null) return;

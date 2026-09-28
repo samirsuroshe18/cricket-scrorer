@@ -159,6 +159,14 @@ class MatchHistoryItem {
   /// [CurrentInningsSummary] and docs/api.md.
   final CurrentInningsSummary? currentInnings;
 
+  /// True once the scorer has tapped Skip or Save & continue on the Squad
+  /// screen for this match. An `upcoming` match with this false opens that
+  /// screen instead of the scoring console. Defaults to true so an older
+  /// server, which never sends it, cannot strand a scorer on a screen it has
+  /// no way to clear.
+  @JsonKey(defaultValue: true)
+  final bool squadAcknowledged;
+
   MatchHistoryItem({
     required this.matchId,
     required this.teamA,
@@ -174,6 +182,7 @@ class MatchHistoryItem {
     required this.createdAt,
     required this.syncStatus,
     this.currentInnings,
+    this.squadAcknowledged = true,
   });
 
   /// Used after a successful `PATCH /v1/match/:matchId/scorer` to patch the
@@ -194,6 +203,7 @@ class MatchHistoryItem {
     createdAt: createdAt,
     syncStatus: syncStatus,
     currentInnings: currentInnings,
+    squadAcknowledged: squadAcknowledged,
   );
 
   factory MatchHistoryItem.fromJson(Map<String, dynamic> json) =>

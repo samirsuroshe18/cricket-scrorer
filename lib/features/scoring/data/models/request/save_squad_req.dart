@@ -25,7 +25,9 @@ class SquadPlayerReq {
 
 /// Body of `PUT /v1/match/:matchId/squad/:side`. [side] (`teamA` / `teamB`)
 /// belongs to the path, so it is kept off the JSON body. [captain],
-/// [viceCaptain] and [keeper] name a player in [players].
+/// [viceCaptain] and [keeper] name a player in [players]. [playingXI] names a
+/// subset of [players]; null leaves the stored XI alone and an empty list is a
+/// deliberately empty XI.
 @JsonSerializable(includeIfNull: false, explicitToJson: true)
 class SaveSquadReq {
   @JsonKey(includeToJson: false)
@@ -34,6 +36,7 @@ class SaveSquadReq {
   final String? captain;
   final String? viceCaptain;
   final String? keeper;
+  final List<String>? playingXI;
 
   SaveSquadReq({
     required this.side,
@@ -41,6 +44,7 @@ class SaveSquadReq {
     this.captain,
     this.viceCaptain,
     this.keeper,
+    this.playingXI,
   });
 
   factory SaveSquadReq.fromJson(Map<String, dynamic> json) =>

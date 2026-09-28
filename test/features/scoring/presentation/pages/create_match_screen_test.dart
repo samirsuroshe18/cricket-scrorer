@@ -139,4 +139,58 @@ void main() {
     expect(find.text('Mumbai Indians'), findsOneWidget);
     expect(controller.selectedTeamBId.value, 'team-1');
   });
+
+  group('the Create Match button', () {
+    Future<CreateMatchController> pump(WidgetTester tester) async {
+      final controller = Get.put<CreateMatchController>(
+        CreateMatchController(
+          createMatchUseCase: _UnusedCreateMatchUseCase(),
+          getMyTeamsUseCase: _UnusedGetMyTeamsUseCase(),
+        ),
+      );
+      await tester.pumpWidget(
+        GetMaterialApp(
+          theme: AppTheme.lightTheme,
+          home: const CreateMatchScreen(),
+        ),
+      );
+      return controller;
+    }
+
+    bool enabled(WidgetTester tester) => tester
+        .widget<ElevatedButton>(
+          find.ancestor(
+            of: find.text(TranslationKeys.createMatch),
+            matching: find.byType(ElevatedButton),
+          ),
+        )
+        .onPressed !=
+        null;
+
+    testWidgets('is disabled until both teams are selected', (tester) async {
+      final controller = await pump(tester);
+      expect(enabled(tester), isFalse);
+
+      controller.setTeamAFreeText('Team One');
+      await tester.pump();
+      expect(enabled(tester), isFalse);
+
+      controller.setTeamBFreeText('Team Two');
+      await tester.pump();
+      expect(enabled(tester), isTrue);
+    });
+
+    testWidgets('is disabled again when a side is cleared', (tester) async {
+      final controller = await pump(tester);
+      controller.setTeamAFreeText('Team One');
+      controller.setTeamBFreeText('Team Two');
+      await tester.pump();
+      expect(enabled(tester), isTrue);
+
+      controller.teamAController.clear();
+      await tester.pump();
+
+      expect(enabled(tester), isFalse);
+    });
+  });
 }

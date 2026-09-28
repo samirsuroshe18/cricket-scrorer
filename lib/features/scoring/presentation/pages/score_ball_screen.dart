@@ -685,6 +685,12 @@ class ScoreBallScreen extends GetView<ScoreBallController> {
         // the 6 button is a control that gets tapped by accident during fast
         // scoring. Reaching for it should take a moment.
         actions: [
+          IconButton(
+            key: const Key('score_squad_action'),
+            tooltip: TranslationKeys.squadEditTooltip.tr,
+            onPressed: () => unawaited(controller.openSquad()),
+            icon: const Icon(Icons.groups_outlined),
+          ),
           // Older matches (created before share codes existed) have no
           // joinCode — hide the action rather than offer to copy null.
           if (controller.match.joinCode != null)

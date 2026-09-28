@@ -13,20 +13,14 @@ import 'package:cricket_scorer/features/auth/data/models/user.dart';
 import 'package:cricket_scorer/core/services/firebase_service.dart';
 import 'package:cricket_scorer/features/auth/domain/usecases/logout.dart';
 import 'package:cricket_scorer/features/auth/domain/usecases/update_fcm_token.dart';
-import 'package:cricket_scorer/features/scoring/data/models/response/create_match_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/match_history_res.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/delete_match.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/get_match_history.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/get_scorer_candidates.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/assign_scorer.dart';
 import 'package:flutter/foundation.dart';
+import 'package:cricket_scorer/features/scoring/presentation/utils/open_match.dart';
 import 'package:get/get.dart';
-
-/// The statuses `_promptIfNeeded` can still resume a console from — an
-/// innings that's started but not finished, or a match that's been created
-/// but never opened. Anything else (`completed`/`abandoned`) is terminal and
-/// routes to the result screen instead.
-const _liveStatuses = {'upcoming', 'live', 'innings_break'};
 
 class HomeController extends GetxController {
   final LogoutUseCase logoutUseCase;
@@ -395,31 +389,7 @@ class HomeController extends GetxController {
   /// still-live states reopen the scoring console (which resumes correctly
   /// from server state via `_promptIfNeeded`, the same as an app restart
   /// mid-match), terminal ones open the result screen.
-  void openMatch(MatchHistoryItem item) {
-    if (_liveStatuses.contains(item.status)) {
-      unawaited(
-        Get.toNamed<dynamic>(
-          AppRoutes.scoreBall,
-          arguments: CreateMatchRes(
-            matchId: item.matchId,
-            joinCode: item.joinCode,
-            teamA: item.teamA,
-            teamB: item.teamB,
-            totalOvers: item.totalOvers,
-            tossWinner: item.tossWinner,
-            tossDecision: item.tossDecision,
-            status: item.status,
-            syncStatus: 'synced',
-            createdAt: item.createdAt,
-          ),
-        ),
-      );
-    } else {
-      unawaited(
-        Get.toNamed<dynamic>(AppRoutes.matchResultPath(item.matchId)),
-      );
-    }
-  }
+  void openMatch(MatchHistoryItem item) => openMatchFromHistory(item);
 
   /// Matches with an in-flight delete — a card reads its own matchId out of
   /// this to show a spinner instead of the delete icon, rather than one

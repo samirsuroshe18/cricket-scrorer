@@ -35,8 +35,11 @@ import 'package:cricket_scorer/features/scoring/domain/run_rate.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/abandon_match.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/score_ball.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/select_bowler.dart';
+import 'package:cricket_scorer/features/scoring/domain/playing_xi_filter.dart';
+import 'package:cricket_scorer/features/scoring/domain/usecases/get_match_squad.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/start_innings.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/undo_ball.dart';
+import 'package:cricket_scorer/features/scoring/presentation/controllers/squad_controller.dart';
 import 'package:cricket_scorer/features/scoring/presentation/widget/next_bowler_bottom_sheet.dart';
 import 'package:cricket_scorer/features/scoring/presentation/widget/openers_bottom_sheet.dart';
 import 'package:cricket_scorer/features/scoring/presentation/widget/sync_blocked_bottom_sheet.dart';
@@ -56,6 +59,14 @@ class ScoreBallController extends GetxController {
   final MatchRepository matchRepository;
   final OfflineSyncService offlineSyncService;
 
+  /// Optional so the console still works where the squad can't be read; without
+  /// it no Playing XI is ever applied and the pickers behave as before.
+  final GetMatchSquadUseCase? getMatchSquadUseCase;
+
+  /// Opens the Squad screen; injectable so tests need no routing. Defaults to
+  /// the real route, arguments and all.
+  final Future<void> Function(SquadArgs args)? openSquadRoute;
+
   ScoreBallController({
     required this.scoreBallUseCase,
     required this.startInningsUseCase,
@@ -64,6 +75,8 @@ class ScoreBallController extends GetxController {
     required this.abandonMatchUseCase,
     required this.matchRepository,
     required this.offlineSyncService,
+    this.getMatchSquadUseCase,
+    this.openSquadRoute,
   });
 
   late final CreateMatchRes match;
@@ -518,6 +531,7 @@ class ScoreBallController extends GetxController {
         });
 
     unawaited(_seedBowlerRosterFromServer());
+    unawaited(loadSquad());
   }
 
   /// Fills [bowlersSeen] with the bowling side's full roster on launch, so a
@@ -545,14 +559,74 @@ class ScoreBallController extends GetxController {
     }
   }
 
-  /// One team's roster for the openers picker, or `[]` on any failure. Best-
+  /// The saved squad, as last read. Drives which players the pickers offer — see
+  /// [PlayingXiFilter]. Unknown until [loadSquad] answers, which leaves nothing
+  /// restricted.
+  PlayingXiFilter _xi = const PlayingXiFilter(null);
+
+  /// Reads the match's squad (and so each side's Playing XI). Best-effort and
+  /// silent, like the roster fetches: a failure keeps whatever was known.
+  Future<void> loadSquad() async {
+    final useCase = getMatchSquadUseCase;
+    if (useCase == null) return;
+    try {
+      final response = await useCase(
+        params: GetMatchSquadParams(matchId: match.matchId),
+      );
+      if (response.isResult) _xi = PlayingXiFilter(response.result.data);
+    } catch (_) {
+      // Keep the last known squad.
+    }
+  }
+
+  /// True when [teamId]'s side has a Playing XI set — the server then accepts
+  /// only its players, so the pickers stop taking typed names for it.
+  bool xiLockedFor(String teamId) => _xi.isLocked(teamId);
+
+  String get _battingTeamId => (_currentBattingTeam ?? 'teamA') == 'teamA'
+      ? match.teamA.id
+      : match.teamB.id;
+
+  String get _bowlingTeamId => (_currentBattingTeam ?? 'teamA') == 'teamA'
+      ? match.teamB.id
+      : match.teamA.id;
+
+  /// The bowlers the next-bowler sheet offers: everyone seen, or — when the
+  /// bowling side has a Playing XI set — exactly that XI, read from the squad
+  /// rather than from [bowlersSeen], which is empty on a fresh match (`GET
+  /// .../bowlers` needs an innings) and would leave a locked sheet with nobody
+  /// to pick.
+  List<BowlerRef> pickerBowlers() =>
+      _xi.xiBowlers(_bowlingTeamId, bowlersSeen.toList()) ??
+      bowlersSeen.toList();
+
+  /// Opens the Squad screen for this live match, then re-reads the squad so a
+  /// bench/XI move made there applies to the very next picker.
+  Future<void> openSquad() async {
+    final args = SquadArgs(match: match, returnToScoring: true);
+    final route = openSquadRoute;
+    if (route != null) {
+      await route(args);
+    } else {
+      await Get.toNamed<dynamic>(AppRoutes.squad, arguments: args);
+    }
+    await loadSquad();
+  }
+
+  /// One team's roster for the pickers: its Playing XI when one is set (no
+  /// network), else its team roster, or `[]` on any failure. Best-
   /// effort and silent, same reasoning as [_seedBowlerRosterFromServer]: this
   /// only ever adds convenience chips to a picker that already works from a
   /// bare text field, so a failed or offline fetch is not worth a snackbar —
   /// and, unlike [matchRepository]'s other calls, [MatchRepository.getTeamProfile]
   /// is not guaranteed to return rather than throw in every test double, so
   /// this guards with try/catch rather than trusting `isResult` alone.
-  Future<List<TeamRosterPlayer>> _fetchRoster(String teamId) async {
+  Future<List<TeamRosterPlayer>> fetchPickerRoster(String teamId) async {
+    // A locked side is served from the squad already in memory: its picker has
+    // no typing fallback, so it must not hinge on a request that can fail or
+    // hang offline.
+    final xi = _xi.xiRoster(teamId);
+    if (xi != null) return xi;
     try {
       final response = await matchRepository.getTeamProfile(teamId: teamId);
       if (!response.isResult) return const [];
@@ -792,13 +866,15 @@ class ScoreBallController extends GetxController {
               ? match.teamB.id
               : match.teamA.id;
           final rosters = await Future.wait([
-            _fetchRoster(battingTeamId),
-            _fetchRoster(bowlingTeamId),
+            fetchPickerRoster(battingTeamId),
+            fetchPickerRoster(bowlingTeamId),
           ]);
           await OpenersBottomSheet.show(
             isSubmitting: isStartingInnings,
             battingRoster: rosters[0],
             bowlingRoster: rosters[1],
+            lockToRoster:
+                xiLockedFor(battingTeamId) && xiLockedFor(bowlingTeamId),
             onSubmit:
                 (
                   strikerName,
@@ -828,7 +904,8 @@ class ScoreBallController extends GetxController {
         } else if (needsBowler.value) {
           await NextBowlerBottomSheet.show(
             excludedBowlerName: excludedBowler.value,
-            knownBowlers: bowlersSeen.toList(),
+            knownBowlers: pickerBowlers(),
+            lockToRoster: xiLockedFor(_bowlingTeamId),
             isSubmitting: isSelectingBowler,
             onSubmit: selectBowler,
             // The sheet is undismissable, so the console's own undo control is
@@ -1892,7 +1969,14 @@ class ScoreBallController extends GetxController {
     if (isInningsComplete.value) return;
     if (Get.isBottomSheetOpen ?? false) return;
 
+    // With a Playing XI set the incoming batsman can only be one of its
+    // players, so the sheet offers those as chips instead of a typed name.
+    final xiRoster = (wickets.value < 9 && xiLockedFor(_battingTeamId))
+        ? await fetchPickerRoster(_battingTeamId)
+        : null;
+
     await WicketBottomSheet.show(
+      xiRoster: xiRoster,
       strike: strike.value,
       extraType: selectedFault.value,
       // The next wicket is the last one, so nobody comes in. `wickets` lags

@@ -75,6 +75,17 @@ class _FakeMatchApiService implements MatchApiService {
   });
 
   @override
+  Future<Either<ApiResponseModel, CricketFailure>> getTeamInvites({
+    required String teamId,
+  }) => _record('getTeamInvites', {'teamId': teamId});
+
+  @override
+  Future<Either<ApiResponseModel, CricketFailure>> cancelTeamInvite({
+    required String teamId,
+    required String inviteId,
+  }) => _record('cancelTeamInvite', {'teamId': teamId, 'inviteId': inviteId});
+
+  @override
   dynamic noSuchMethod(Invocation invocation) =>
       throw UnimplementedError('Not exercised in this test.');
 }
@@ -198,5 +209,37 @@ void main() {
       expect(result.isResult, isFalse);
       expect(result.fallback, same(failure));
     }
+  });
+
+  test('getTeamInvites parses TeamInvitesRes', () async {
+    api.response = _ok({
+      'invites': [
+        {
+          'inviteId': 'i1',
+          'status': 'declined',
+          'respondedAt': '2026-09-28T10:00:00.000Z',
+          'player': {'playerId': 'p1', 'playerName': 'Rahul'},
+          'invitee': {'userId': 'u1', 'fullName': 'Rahul', 'photoUrl': null},
+        },
+      ],
+    });
+
+    final result = await repository.getTeamInvites(teamId: 't1');
+
+    expect(result.result.data?.invites.single.status, 'declined');
+    expect(api.calls['getTeamInvites'], {'teamId': 't1'});
+  });
+
+  test('cancelTeamInvite forwards both ids and returns the message', () async {
+    api.response = _ok({'inviteId': 'i1', 'status': 'cancelled'});
+
+    final result = await repository.cancelTeamInvite(
+      teamId: 't1',
+      inviteId: 'i1',
+    );
+
+    expect(result.isResult, isTrue);
+    expect(result.result.message, 'ok');
+    expect(api.calls['cancelTeamInvite'], {'teamId': 't1', 'inviteId': 'i1'});
   });
 }

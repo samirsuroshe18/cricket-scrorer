@@ -22,6 +22,7 @@ import 'package:cricket_scorer/features/scoring/domain/usecases/update_team_play
 import 'package:cricket_scorer/features/scoring/presentation/controllers/team_profile_controller.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/invite_team_player.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/lookup_user_by_email.dart';
+import 'squad_fakes.dart';
 
 /// Configurable stand-ins for the add-player picker's three use cases. A test
 /// that never opens the picker just constructs them and leaves `response`
@@ -206,5 +207,7 @@ TeamProfileController buildPickerTestController({
     getMyPlayersUseCase: myPlayers,
     lookupUserByEmailUseCase: lookup,
     inviteTeamPlayerUseCase: invite,
+    getTeamInvitesUseCase: FakeGetTeamInvites({}),
+    cancelTeamInviteUseCase: FakeCancelTeamInvite(),
   );
 }

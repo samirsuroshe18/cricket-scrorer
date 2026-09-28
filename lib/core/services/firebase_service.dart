@@ -61,6 +61,7 @@ class FirebaseService extends GetxService {
       if (Get.isRegistered<NotificationsController>()) {
         unawaited(Get.find<NotificationsController>().refreshUnreadCount());
       }
+      refreshOnInviteResponse(message.data);
 
       if (Platform.isAndroid) {
         unawaited(

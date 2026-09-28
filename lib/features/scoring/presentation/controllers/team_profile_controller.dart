@@ -1,14 +1,12 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:cricket_scorer/config/routes/app_routes.dart';
 import 'package:cricket_scorer/core/error/cricket_failure.dart';
 import 'package:cricket_scorer/core/global/widgets/dialogue/custom_dialog.dart';
 import 'package:cricket_scorer/core/global/widgets/snackbars/cricket_snackbar.dart';
 import 'package:cricket_scorer/core/network/models/cricket_response.dart';
 import 'package:cricket_scorer/core/utils/either_util.dart';
 import 'package:cricket_scorer/core/translations/translation_keys.dart';
-import 'package:cricket_scorer/features/scoring/data/models/response/create_match_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/match_history_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/request/add_team_player_req.dart';
 import 'package:cricket_scorer/features/scoring/data/models/request/create_team_req.dart';
@@ -16,8 +14,11 @@ import 'package:cricket_scorer/features/scoring/data/models/request/set_team_lea
 import 'package:cricket_scorer/features/scoring/data/models/request/update_team_player_req.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/team_profile_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/looked_up_user_res.dart';
+import 'package:cricket_scorer/features/scoring/data/models/response/team_invites_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/my_players_res.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/add_team_player.dart';
+import 'package:cricket_scorer/features/scoring/domain/usecases/cancel_team_invite.dart';
+import 'package:cricket_scorer/features/scoring/domain/usecases/get_team_invites.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/get_my_players.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/invite_team_player.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/lookup_user_by_email.dart';
@@ -31,12 +32,8 @@ import 'package:cricket_scorer/features/scoring/domain/usecases/assign_scorer.da
 import 'package:cricket_scorer/features/scoring/domain/usecases/update_team_logo.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/update_team.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/delete_team.dart';
+import 'package:cricket_scorer/features/scoring/presentation/utils/open_match.dart';
 import 'package:get/get.dart';
-
-/// The same still-live/terminal split `HomeController.openMatch` routes on —
-/// duplicated here rather than shared, matching this file's own pagination
-/// duplication (see class doc below).
-const _liveStatuses = {'upcoming', 'live', 'innings_break'};
 
 /// One team's profile: its identity/roster (a one-shot fetch) plus its
 /// past results (a paginated list). The paginated half deliberately
@@ -60,6 +57,8 @@ class TeamProfileController extends GetxController {
   final GetMyPlayersUseCase getMyPlayersUseCase;
   final LookupUserByEmailUseCase lookupUserByEmailUseCase;
   final InviteTeamPlayerUseCase inviteTeamPlayerUseCase;
+  final GetTeamInvitesUseCase getTeamInvitesUseCase;
+  final CancelTeamInviteUseCase cancelTeamInviteUseCase;
 
   TeamProfileController({
     required this.teamId,
@@ -77,6 +76,8 @@ class TeamProfileController extends GetxController {
     required this.getMyPlayersUseCase,
     required this.lookupUserByEmailUseCase,
     required this.inviteTeamPlayerUseCase,
+    required this.getTeamInvitesUseCase,
+    required this.cancelTeamInviteUseCase,
   });
 
   static const int _pageSize = 20;
@@ -88,6 +89,10 @@ class TeamProfileController extends GetxController {
   final isLoadingProfile = true.obs;
   final profileError = Rxn<String>();
   final profile = Rxn<TeamProfileRes>();
+
+  /// The team's invitations (waiting, accepted, declined), for a viewer who can
+  /// manage it. An invitee is not on the roster until they accept.
+  final invites = <TeamInviteItemRes>[].obs;
   bool _isLoadingProfile = false;
 
   final matches = <MatchHistoryItem>[].obs;
@@ -143,10 +148,37 @@ class TeamProfileController extends GetxController {
 
     if (response.isResult) {
       profile.value = response.result.data;
+      if (profile.value?.canManage ?? false) await loadInvites();
     } else {
       profileError.value = response.fallback.message;
     }
   }
+
+  /// Best-effort: a failed fetch keeps the list already on screen, since the
+  /// invitations are informational and never block the roster.
+  Future<void> loadInvites() async {
+    final response = await getTeamInvitesUseCase(
+      params: GetTeamInvitesParams(teamId: teamId),
+    );
+    if (response.isResult) {
+      invites.assignAll(response.result.data?.invites ?? const []);
+    }
+  }
+
+  /// Withdraws a waiting invite, then re-reads the list. Returns the server's
+  /// own message on failure (the row stays), null on success.
+  Future<String?> cancelInvite(TeamInviteItemRes invite) async {
+    final response = await cancelTeamInviteUseCase(
+      params: CancelTeamInviteParams(teamId: teamId, inviteId: invite.inviteId),
+    );
+    if (!response.isResult) return response.fallback.message;
+    await loadInvites();
+    return null;
+  }
+
+  /// Sends a declined invitee a fresh invite. Same contract as [inviteUser].
+  Future<String?> inviteAgain(TeamInviteItemRes invite) =>
+      inviteUser(invite.invitee.userId);
 
   /// Uploads (or replaces) the team's logo, then re-fetches the profile so the
   /// new `logoUrl` shows immediately. A failure surfaces the server's own
@@ -330,10 +362,10 @@ class TeamProfileController extends GetxController {
     return _afterRosterWrite(response);
   }
 
-  /// Invites an app user (found with [lookupUserByEmail]) onto the roster: the
-  /// player is added immediately and the person links it by accepting. The
-  /// profile is re-fetched so the new row shows, with its "Invited" chip. Same
-  /// error contract as [addPlayer].
+  /// Invites an app user (found with [lookupUserByEmail]) to the team. They join
+  /// the roster, and link their player, only by accepting — until then the
+  /// invite shows in [invites], which is re-read here (through the profile
+  /// re-fetch). Same error contract as [addPlayer].
   Future<String?> inviteUser(String userId) async {
     final response = await inviteTeamPlayerUseCase(
       params: InviteTeamPlayerParams(teamId: teamId, userId: userId),
@@ -509,29 +541,7 @@ class TeamProfileController extends GetxController {
     return true;
   }
 
-  /// Same routing rule as `HomeController.openMatch`: still-live states
-  /// reopen the scoring console, terminal ones open the result screen.
-  void openMatch(MatchHistoryItem item) {
-    if (_liveStatuses.contains(item.status)) {
-      unawaited(
-        Get.toNamed<dynamic>(
-          AppRoutes.scoreBall,
-          arguments: CreateMatchRes(
-            matchId: item.matchId,
-            joinCode: item.joinCode,
-            teamA: item.teamA,
-            teamB: item.teamB,
-            totalOvers: item.totalOvers,
-            tossWinner: item.tossWinner,
-            tossDecision: item.tossDecision,
-            status: item.status,
-            syncStatus: 'synced',
-            createdAt: item.createdAt,
-          ),
-        ),
-      );
-    } else {
-      unawaited(Get.toNamed<dynamic>(AppRoutes.matchResultPath(item.matchId)));
-    }
-  }
+  /// Same rule as `HomeController.openMatch` — one shared implementation, so
+  /// the two lists cannot disagree about where a card goes.
+  void openMatch(MatchHistoryItem item) => openMatchFromHistory(item);
 }
