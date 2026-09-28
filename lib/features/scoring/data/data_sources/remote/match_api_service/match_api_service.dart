@@ -320,6 +320,15 @@ class MatchApiService {
     return await apiClient.get(endpoint: matchEndpoint.matchSquad(matchId));
   }
 
+  /// `POST /v1/match/:matchId/squad/acknowledge`.
+  Future<Either<ApiResponseModel, CricketFailure>> acknowledgeSquad({
+    required String matchId,
+  }) async {
+    return await apiClient.post(
+      endpoint: matchEndpoint.squadAcknowledge(matchId),
+    );
+  }
+
   /// `PATCH /v1/match/:matchId/squad/:side/playing-xi`.
   Future<Either<ApiResponseModel, CricketFailure>> savePlayingXi({
     required String matchId,

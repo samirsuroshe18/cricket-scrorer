@@ -21,6 +21,12 @@ abstract class SquadRepository {
     required String matchId,
   });
 
+  /// `POST /v1/match/:matchId/squad/acknowledge` — the scorer dealt with the
+  /// Squad screen. Idempotent.
+  Future<Either<CricketResponse<void>, CricketFailure>> acknowledgeSquad({
+    required String matchId,
+  });
+
   /// `PATCH /v1/match/:matchId/squad/:side/playing-xi` — moves by player id;
   /// works after scoring has started.
   Future<Either<CricketResponse<SquadSideRes>, CricketFailure>> savePlayingXi({

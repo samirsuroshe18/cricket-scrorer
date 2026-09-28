@@ -101,6 +101,7 @@ void main() {
         savePlayingXiUseCase: FakeSavePlayingXi(),
         getTeamInvitesUseCase: teamInvites,
         cancelTeamInviteUseCase: cancelInvite,
+        acknowledgeSquadUseCase: FakeAcknowledgeSquad(),
         lookupUserByEmailUseCase: FakeLookupUserByEmailUseCase(),
         inviteTeamPlayerUseCase: FakeInviteTeamPlayerUseCase(),
         showError: errors.add,

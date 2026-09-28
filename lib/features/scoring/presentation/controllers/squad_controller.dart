@@ -9,6 +9,7 @@ import 'package:cricket_scorer/features/scoring/data/models/response/match_squad
 import 'package:cricket_scorer/features/scoring/data/models/response/team_invites_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/team_profile_res.dart';
 import 'package:cricket_scorer/features/scoring/domain/squad_rules.dart';
+import 'package:cricket_scorer/features/scoring/domain/usecases/acknowledge_squad.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/cancel_team_invite.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/get_match_squad.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/get_team_invites.dart';
@@ -17,6 +18,7 @@ import 'package:cricket_scorer/features/scoring/domain/usecases/invite_team_play
 import 'package:cricket_scorer/features/scoring/domain/usecases/lookup_user_by_email.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/save_playing_xi.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/save_squad.dart';
+import 'package:cricket_scorer/features/scoring/presentation/utils/open_match.dart';
 import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
 
@@ -54,6 +56,7 @@ class SquadController extends GetxController with WidgetsBindingObserver {
   final CancelTeamInviteUseCase cancelTeamInviteUseCase;
   final LookupUserByEmailUseCase lookupUserByEmailUseCase;
   final InviteTeamPlayerUseCase inviteTeamPlayerUseCase;
+  final AcknowledgeSquadUseCase acknowledgeSquadUseCase;
 
   /// Bumped when an invite accept/decline push arrives in the foreground (see
   /// `NotificationsController.inviteResponseTick`); null when unavailable.
@@ -76,6 +79,7 @@ class SquadController extends GetxController with WidgetsBindingObserver {
     required this.cancelTeamInviteUseCase,
     required this.lookupUserByEmailUseCase,
     required this.inviteTeamPlayerUseCase,
+    required this.acknowledgeSquadUseCase,
     this.inviteResponseTick,
     void Function(String message)? showError,
     void Function(CreateMatchRes match)? openScoring,
@@ -439,7 +443,29 @@ class SquadController extends GetxController with WidgetsBindingObserver {
     _leave();
   }
 
-  void skip() => _leave();
+  Future<void> skip() async => _leave();
 
-  void _leave() => returnToScoring ? close() : openScoring(match);
+  void _leave() {
+    if (returnToScoring) {
+      close();
+      return;
+    }
+    _acknowledge();
+    openScoring(match);
+  }
+
+  /// Marks this match's Squad screen as dealt with — Skip, or Save & continue
+  /// once both sides saved — so opening the match goes straight to scoring from
+  /// now on. Remembered in memory at once and sent to the server without being
+  /// waited on: a Skip must never be held up (or blocked) by a request that
+  /// may be offline. If it never lands, the server still says "not
+  /// acknowledged" and the screen returns after the next app start.
+  void _acknowledge() {
+    SquadAcknowledgements.remember(match.matchId);
+    unawaited(
+      acknowledgeSquadUseCase(
+        params: AcknowledgeSquadParams(matchId: match.matchId),
+      ),
+    );
+  }
 }

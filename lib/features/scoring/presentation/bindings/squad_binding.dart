@@ -1,5 +1,6 @@
 import 'package:cricket_scorer/features/notifications/presentation/controllers/notifications_controller.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/create_match_res.dart';
+import 'package:cricket_scorer/features/scoring/domain/usecases/acknowledge_squad.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/cancel_team_invite.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/get_match_squad.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/get_team_invites.dart';
@@ -32,6 +33,7 @@ class SquadBinding extends Bindings {
         cancelTeamInviteUseCase: Get.find<CancelTeamInviteUseCase>(),
         lookupUserByEmailUseCase: Get.find<LookupUserByEmailUseCase>(),
         inviteTeamPlayerUseCase: Get.find<InviteTeamPlayerUseCase>(),
+        acknowledgeSquadUseCase: Get.find<AcknowledgeSquadUseCase>(),
         // Only there once the home shell is up; the screen refreshes on resume
         // and pull-to-refresh regardless.
         inviteResponseTick: Get.isRegistered<NotificationsController>()

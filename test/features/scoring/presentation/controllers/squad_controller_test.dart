@@ -22,6 +22,8 @@ import 'package:cricket_scorer/features/scoring/presentation/controllers/squad_c
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart';
 
+import 'package:cricket_scorer/features/scoring/presentation/utils/open_match.dart';
+
 import '../helpers/squad_fakes.dart';
 
 class _FakeGetTeamProfile implements GetTeamProfileUseCase {
@@ -136,6 +138,7 @@ void main() {
   late FakeSavePlayingXi savePlayingXi;
   late FakeGetTeamInvites teamInvites;
   late FakeCancelTeamInvite cancelInvite;
+  late FakeAcknowledgeSquad acknowledge;
   late _FakeInviteTeamPlayer inviteTeamPlayer;
   late List<String> errors;
   late List<CreateMatchRes> opened;
@@ -154,6 +157,7 @@ void main() {
     savePlayingXi = FakeSavePlayingXi();
     teamInvites = FakeGetTeamInvites(invites ?? {});
     cancelInvite = FakeCancelTeamInvite();
+    acknowledge = FakeAcknowledgeSquad();
     inviteTeamPlayer = _FakeInviteTeamPlayer();
     errors = [];
     opened = [];
@@ -167,6 +171,7 @@ void main() {
       savePlayingXiUseCase: savePlayingXi,
       getTeamInvitesUseCase: teamInvites,
       cancelTeamInviteUseCase: cancelInvite,
+      acknowledgeSquadUseCase: acknowledge,
       lookupUserByEmailUseCase: _FakeLookup(),
       inviteTeamPlayerUseCase: inviteTeamPlayer,
       inviteResponseTick: tick,
@@ -806,6 +811,73 @@ void main() {
       controller.moveToBench('Rohit');
       await controller.saveAndContinue();
       expect(savePlayingXi.calls.single.req.playingXI, isEmpty);
+    });
+  });
+
+  group('acknowledging the Squad screen', () {
+    setUp(SquadAcknowledgements.reset);
+
+    test('Skip acknowledges the match and goes to scoring', () async {
+      final controller = build();
+
+      await controller.skip();
+
+      expect(acknowledge.calls, ['m1']);
+      expect(opened.single.matchId, 'm1');
+      expect(SquadAcknowledgements.contains('m1'), isTrue);
+    });
+
+    test('Save & continue acknowledges once both sides have saved', () async {
+      final controller = build();
+      controller.addPlayer('Rohit');
+
+      await controller.saveAndContinue();
+
+      expect(save.calls, isNotEmpty);
+      expect(acknowledge.calls, ['m1']);
+      expect(opened.single.matchId, 'm1');
+    });
+
+    test('a failed save does not acknowledge, so the screen returns next time', () async {
+      final controller = build();
+      controller.addPlayer('Rohit');
+      save.fail = true;
+
+      await controller.saveAndContinue();
+
+      expect(acknowledge.calls, isEmpty);
+      expect(SquadAcknowledgements.contains('m1'), isFalse);
+      expect(opened, isEmpty);
+    });
+
+    test('Skip is never held up by the acknowledge request', () async {
+      final controller = build();
+      acknowledge.gate = Completer<void>(); // an offline call that never answers
+
+      await controller.skip();
+
+      expect(opened.single.matchId, 'm1');
+      expect(SquadAcknowledgements.contains('m1'), isTrue);
+    });
+
+    test('a failed acknowledge still lets the scorer through', () async {
+      final controller = build();
+      acknowledge.fail = true;
+
+      await controller.skip();
+      await Future<void>.delayed(Duration.zero);
+
+      expect(opened.single.matchId, 'm1');
+      expect(errors, isEmpty);
+    });
+
+    test('opened from the scoring console it does not acknowledge', () async {
+      final controller = build(returnToScoring: true);
+
+      await controller.skip();
+
+      expect(acknowledge.calls, isEmpty);
+      expect(closed, 1);
     });
   });
 }

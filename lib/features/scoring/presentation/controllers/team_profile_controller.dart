@@ -1,14 +1,12 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:cricket_scorer/config/routes/app_routes.dart';
 import 'package:cricket_scorer/core/error/cricket_failure.dart';
 import 'package:cricket_scorer/core/global/widgets/dialogue/custom_dialog.dart';
 import 'package:cricket_scorer/core/global/widgets/snackbars/cricket_snackbar.dart';
 import 'package:cricket_scorer/core/network/models/cricket_response.dart';
 import 'package:cricket_scorer/core/utils/either_util.dart';
 import 'package:cricket_scorer/core/translations/translation_keys.dart';
-import 'package:cricket_scorer/features/scoring/data/models/response/create_match_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/match_history_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/request/add_team_player_req.dart';
 import 'package:cricket_scorer/features/scoring/data/models/request/create_team_req.dart';
@@ -34,12 +32,8 @@ import 'package:cricket_scorer/features/scoring/domain/usecases/assign_scorer.da
 import 'package:cricket_scorer/features/scoring/domain/usecases/update_team_logo.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/update_team.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/delete_team.dart';
+import 'package:cricket_scorer/features/scoring/presentation/utils/open_match.dart';
 import 'package:get/get.dart';
-
-/// The same still-live/terminal split `HomeController.openMatch` routes on —
-/// duplicated here rather than shared, matching this file's own pagination
-/// duplication (see class doc below).
-const _liveStatuses = {'upcoming', 'live', 'innings_break'};
 
 /// One team's profile: its identity/roster (a one-shot fetch) plus its
 /// past results (a paginated list). The paginated half deliberately
@@ -547,29 +541,7 @@ class TeamProfileController extends GetxController {
     return true;
   }
 
-  /// Same routing rule as `HomeController.openMatch`: still-live states
-  /// reopen the scoring console, terminal ones open the result screen.
-  void openMatch(MatchHistoryItem item) {
-    if (_liveStatuses.contains(item.status)) {
-      unawaited(
-        Get.toNamed<dynamic>(
-          AppRoutes.scoreBall,
-          arguments: CreateMatchRes(
-            matchId: item.matchId,
-            joinCode: item.joinCode,
-            teamA: item.teamA,
-            teamB: item.teamB,
-            totalOvers: item.totalOvers,
-            tossWinner: item.tossWinner,
-            tossDecision: item.tossDecision,
-            status: item.status,
-            syncStatus: 'synced',
-            createdAt: item.createdAt,
-          ),
-        ),
-      );
-    } else {
-      unawaited(Get.toNamed<dynamic>(AppRoutes.matchResultPath(item.matchId)));
-    }
-  }
+  /// Same rule as `HomeController.openMatch` — one shared implementation, so
+  /// the two lists cannot disagree about where a card goes.
+  void openMatch(MatchHistoryItem item) => openMatchFromHistory(item);
 }

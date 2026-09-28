@@ -68,6 +68,11 @@ class MatchEndpoint {
   /// `GET /v1/match/:matchId/squad` — both sides as saved.
   String matchSquad(String matchId) => '/v1/match/$matchId/squad';
 
+  /// `POST /v1/match/:matchId/squad/acknowledge` — the scorer dealt with the
+  /// Squad screen (Skip or Save & continue).
+  String squadAcknowledge(String matchId) =>
+      '/v1/match/$matchId/squad/acknowledge';
+
   /// `PATCH /v1/match/:matchId/squad/:side/playing-xi` — XI moves by id, at
   /// any point short of a finished match.
   String playingXi(String matchId, String side) =>

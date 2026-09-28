@@ -1,3 +1,4 @@
+import 'package:cricket_scorer/features/scoring/domain/usecases/acknowledge_squad.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/cancel_team_invite.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/get_match_squad.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/get_team_invites.dart';
@@ -173,6 +174,12 @@ class ScoringInjection {
 
     Get.lazyPut<SaveSquadUseCase>(
       () => SaveSquadUseCase(squadRepository: Get.find<SquadRepository>()),
+      fenix: true,
+    );
+    Get.lazyPut<AcknowledgeSquadUseCase>(
+      () => AcknowledgeSquadUseCase(
+        squadRepository: Get.find<SquadRepository>(),
+      ),
       fenix: true,
     );
     Get.lazyPut<GetMatchSquadUseCase>(

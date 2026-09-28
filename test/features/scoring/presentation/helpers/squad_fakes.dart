@@ -3,6 +3,9 @@ import 'package:cricket_scorer/core/network/models/cricket_response.dart';
 import 'package:cricket_scorer/core/utils/either_util.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/match_squad_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/team_invites_res.dart';
+import 'dart:async';
+
+import 'package:cricket_scorer/features/scoring/domain/usecases/acknowledge_squad.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/cancel_team_invite.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/get_match_squad.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/get_team_invites.dart';
@@ -93,6 +96,29 @@ class FakeCancelTeamInvite implements CancelTeamInviteUseCase {
     calls.add(params!);
     if (fail) return Either.fallback(CricketFailure(message: 'cancel refused'));
     onSuccess?.call();
+    return Either.result(const CricketResponse(message: 'ok'));
+  }
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) =>
+      throw UnimplementedError('Not exercised in this test.');
+}
+
+class FakeAcknowledgeSquad implements AcknowledgeSquadUseCase {
+  final List<String> calls = [];
+  bool fail = false;
+
+  /// When set, a call waits on it — lets a test hold the request in flight, as
+  /// an offline one that never answers would.
+  Completer<void>? gate;
+
+  @override
+  Future<Either<CricketResponse<void>, CricketFailure>> call({
+    AcknowledgeSquadParams? params,
+  }) async {
+    calls.add(params!.matchId);
+    await gate?.future;
+    if (fail) return Either.fallback(CricketFailure(message: 'offline'));
     return Either.result(const CricketResponse(message: 'ok'));
   }
 

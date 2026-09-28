@@ -81,6 +81,7 @@ MatchHistoryItem _$MatchHistoryItemFromJson(Map<String, dynamic> json) =>
           : CurrentInningsSummary.fromJson(
               json['currentInnings'] as Map<String, dynamic>,
             ),
+      squadAcknowledged: json['squadAcknowledged'] as bool? ?? true,
     );
 
 Map<String, dynamic> _$MatchHistoryItemToJson(MatchHistoryItem instance) =>
@@ -99,6 +100,7 @@ Map<String, dynamic> _$MatchHistoryItemToJson(MatchHistoryItem instance) =>
       'createdAt': instance.createdAt,
       'syncStatus': instance.syncStatus,
       'currentInnings': instance.currentInnings?.toJson(),
+      'squadAcknowledged': instance.squadAcknowledged,
     };
 
 MatchHistoryRes _$MatchHistoryResFromJson(Map<String, dynamic> json) =>

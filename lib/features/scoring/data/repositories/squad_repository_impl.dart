@@ -44,6 +44,17 @@ class SquadRepositoryImpl extends SquadRepository {
   );
 
   @override
+  Future<Either<CricketResponse<void>, CricketFailure>> acknowledgeSquad({
+    required String matchId,
+  }) async {
+    final response = await matchApiService.acknowledgeSquad(matchId: matchId);
+    if (response.isResult) {
+      return Either.result(CricketResponse(message: response.result.message));
+    }
+    return Either.fallback(response.fallback);
+  }
+
+  @override
   Future<Either<CricketResponse<SquadSideRes>, CricketFailure>> savePlayingXi({
     required String matchId,
     required SavePlayingXiReq params,
