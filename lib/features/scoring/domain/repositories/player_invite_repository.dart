@@ -5,6 +5,7 @@ import 'package:cricket_scorer/features/scoring/data/models/response/looked_up_u
 import 'package:cricket_scorer/features/scoring/data/models/response/my_players_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/player_invite_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/team_invite_res.dart';
+import 'package:cricket_scorer/features/scoring/data/models/response/team_invites_res.dart';
 
 /// The add-player picker's data (the caller's own players, finding an app user
 /// by email, inviting them) and the invitee's side of a player invite. A
@@ -26,6 +27,16 @@ abstract class PlayerInviteRepository {
   /// `POST /v1/team/:teamId/invites`.
   Future<Either<CricketResponse<TeamInviteRes>, CricketFailure>>
   inviteTeamPlayer({required String teamId, required String userId});
+
+  /// `GET /v1/team/:teamId/invites` — the scorer's view: one row per invitee.
+  Future<Either<CricketResponse<TeamInvitesRes>, CricketFailure>>
+  getTeamInvites({required String teamId});
+
+  /// `DELETE /v1/team/:teamId/invites/:inviteId` — withdraw a pending invite.
+  Future<Either<CricketResponse<void>, CricketFailure>> cancelTeamInvite({
+    required String teamId,
+    required String inviteId,
+  });
 
   /// `GET /v1/player-invite/:inviteId`.
   Future<Either<CricketResponse<PlayerInviteRes>, CricketFailure>>

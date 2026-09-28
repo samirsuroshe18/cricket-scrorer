@@ -65,6 +65,19 @@ class MatchEndpoint {
   String saveSquad(String matchId, String side) =>
       '/v1/match/$matchId/squad/$side';
 
+  /// `GET /v1/match/:matchId/squad` — both sides as saved.
+  String matchSquad(String matchId) => '/v1/match/$matchId/squad';
+
+  /// `PATCH /v1/match/:matchId/squad/:side/playing-xi` — XI moves by id, at
+  /// any point short of a finished match.
+  String playingXi(String matchId, String side) =>
+      '/v1/match/$matchId/squad/$side/playing-xi';
+
+  /// `DELETE /v1/team/:teamId/invites/:inviteId` — withdraw a pending invite.
+  /// (`GET /v1/team/:teamId/invites` reuses [teamInvites].)
+  String teamInvite(String teamId, String inviteId) =>
+      '/v1/team/$teamId/invites/$inviteId';
+
   String startInnings(String matchId) => '/v1/match/$matchId/start-innings';
 
   String selectBowler(String matchId) => '/v1/match/$matchId/select-bowler';

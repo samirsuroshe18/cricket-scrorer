@@ -25,6 +25,10 @@ class _FakeSquadRepository implements SquadRepository {
       ),
     );
   }
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) =>
+      throw UnimplementedError('Not exercised in this test.');
 }
 
 void main() {

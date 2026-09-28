@@ -7,6 +7,7 @@ import 'package:cricket_scorer/features/scoring/data/models/response/looked_up_u
 import 'package:cricket_scorer/features/scoring/data/models/response/my_players_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/player_invite_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/team_invite_res.dart';
+import 'package:cricket_scorer/features/scoring/data/models/response/team_invites_res.dart';
 import 'package:cricket_scorer/features/scoring/domain/repositories/player_invite_repository.dart';
 
 class PlayerInviteRepositoryImpl extends PlayerInviteRepository {
@@ -44,6 +45,28 @@ class PlayerInviteRepositoryImpl extends PlayerInviteRepository {
         await matchApiService.inviteTeamPlayer(teamId: teamId, userId: userId),
         TeamInviteRes.fromJson,
       );
+
+  @override
+  Future<Either<CricketResponse<TeamInvitesRes>, CricketFailure>>
+  getTeamInvites({required String teamId}) async => _parse(
+    await matchApiService.getTeamInvites(teamId: teamId),
+    TeamInvitesRes.fromJson,
+  );
+
+  @override
+  Future<Either<CricketResponse<void>, CricketFailure>> cancelTeamInvite({
+    required String teamId,
+    required String inviteId,
+  }) async {
+    final response = await matchApiService.cancelTeamInvite(
+      teamId: teamId,
+      inviteId: inviteId,
+    );
+    if (response.isResult) {
+      return Either.result(CricketResponse(message: response.result.message));
+    }
+    return Either.fallback(response.fallback);
+  }
 
   @override
   Future<Either<CricketResponse<PlayerInviteRes>, CricketFailure>>

@@ -1,3 +1,7 @@
+import 'package:cricket_scorer/features/scoring/domain/usecases/cancel_team_invite.dart';
+import 'package:cricket_scorer/features/scoring/domain/usecases/get_match_squad.dart';
+import 'package:cricket_scorer/features/scoring/domain/usecases/get_team_invites.dart';
+import 'package:cricket_scorer/features/scoring/domain/usecases/save_playing_xi.dart';
 import 'package:cricket_scorer/features/scoring/data/repositories/team_player_view_repository_impl.dart';
 import 'package:cricket_scorer/features/scoring/domain/repositories/team_player_view_repository.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/get_playing_for_teams.dart';
@@ -171,6 +175,14 @@ class ScoringInjection {
       () => SaveSquadUseCase(squadRepository: Get.find<SquadRepository>()),
       fenix: true,
     );
+    Get.lazyPut<GetMatchSquadUseCase>(
+      () => GetMatchSquadUseCase(squadRepository: Get.find<SquadRepository>()),
+      fenix: true,
+    );
+    Get.lazyPut<SavePlayingXiUseCase>(
+      () => SavePlayingXiUseCase(squadRepository: Get.find<SquadRepository>()),
+      fenix: true,
+    );
 
     Get.lazyPut<CreateTeamUseCase>(
       () => CreateTeamUseCase(teamRepository: Get.find<TeamRepository>()),
@@ -248,6 +260,18 @@ class ScoringInjection {
     );
     Get.lazyPut<InviteTeamPlayerUseCase>(
       () => InviteTeamPlayerUseCase(
+        playerInviteRepository: Get.find<PlayerInviteRepository>(),
+      ),
+      fenix: true,
+    );
+    Get.lazyPut<GetTeamInvitesUseCase>(
+      () => GetTeamInvitesUseCase(
+        playerInviteRepository: Get.find<PlayerInviteRepository>(),
+      ),
+      fenix: true,
+    );
+    Get.lazyPut<CancelTeamInviteUseCase>(
+      () => CancelTeamInviteUseCase(
         playerInviteRepository: Get.find<PlayerInviteRepository>(),
       ),
       fenix: true,

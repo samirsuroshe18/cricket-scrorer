@@ -28,6 +28,9 @@ SaveSquadReq _$SaveSquadReqFromJson(Map<String, dynamic> json) => SaveSquadReq(
   captain: json['captain'] as String?,
   viceCaptain: json['viceCaptain'] as String?,
   keeper: json['keeper'] as String?,
+  playingXI: (json['playingXI'] as List<dynamic>?)
+      ?.map((e) => e as String)
+      .toList(),
 );
 
 Map<String, dynamic> _$SaveSquadReqToJson(SaveSquadReq instance) =>
@@ -36,4 +39,5 @@ Map<String, dynamic> _$SaveSquadReqToJson(SaveSquadReq instance) =>
       'captain': ?instance.captain,
       'viceCaptain': ?instance.viceCaptain,
       'keeper': ?instance.keeper,
+      'playingXI': ?instance.playingXI,
     };
