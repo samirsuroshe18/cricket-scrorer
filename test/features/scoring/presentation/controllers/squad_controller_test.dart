@@ -10,13 +10,9 @@ import 'package:cricket_scorer/features/scoring/data/models/response/squad_res.d
 import 'package:cricket_scorer/features/scoring/data/models/response/team_invite_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/team_invites_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/team_profile_res.dart';
-import 'package:cricket_scorer/features/scoring/domain/usecases/cancel_team_invite.dart';
-import 'package:cricket_scorer/features/scoring/domain/usecases/get_match_squad.dart';
-import 'package:cricket_scorer/features/scoring/domain/usecases/get_team_invites.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/get_team_profile.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/invite_team_player.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/lookup_user_by_email.dart';
-import 'package:cricket_scorer/features/scoring/domain/usecases/save_playing_xi.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/save_squad.dart';
 import 'package:cricket_scorer/features/scoring/presentation/controllers/squad_controller.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -326,7 +322,7 @@ void main() {
     final controller = build();
     controller.addPlayer('Rohit');
 
-    controller.skip();
+    await controller.skip();
 
     expect(save.calls, isEmpty);
     expect(opened.single.matchId, 'm1');
@@ -552,7 +548,7 @@ void main() {
     test('Skip while returning to scoring closes without saving', () async {
       final controller = build(returnToScoring: true);
 
-      controller.skip();
+      await controller.skip();
 
       expect(closed, 1);
       expect(opened, isEmpty);

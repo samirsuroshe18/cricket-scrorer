@@ -49,7 +49,6 @@ import 'package:cricket_scorer/features/scoring/domain/offline/pre_event_state.d
 import 'package:cricket_scorer/features/scoring/domain/repositories/match_repository.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/abandon_match.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/score_ball.dart';
-import 'package:cricket_scorer/features/scoring/domain/usecases/get_match_squad.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/select_bowler.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/start_innings.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/sync_match.dart';

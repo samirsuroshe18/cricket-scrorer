@@ -16,7 +16,6 @@ import 'package:cricket_scorer/features/scoring/data/models/response/assign_scor
 import 'package:cricket_scorer/features/scoring/data/models/response/created_team_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/looked_up_user_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/my_players_res.dart';
-import 'package:cricket_scorer/features/scoring/data/models/response/team_invite_res.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/add_team_player.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/get_team_matches.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/set_team_leadership.dart';
