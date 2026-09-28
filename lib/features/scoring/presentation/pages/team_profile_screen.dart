@@ -15,12 +15,14 @@ import 'package:cricket_scorer/core/global/widgets/snackbars/cricket_snackbar.da
 import 'package:cricket_scorer/core/services/compression_service.dart';
 import 'package:cricket_scorer/core/translations/translation_keys.dart';
 import 'package:cricket_scorer/core/utils/current_user.dart';
+import 'package:cricket_scorer/features/scoring/data/models/response/team_invites_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/team_profile_res.dart';
 import 'package:cricket_scorer/features/scoring/presentation/controllers/team_profile_controller.dart';
 import 'package:cricket_scorer/features/scoring/presentation/widget/add_player_sheet.dart';
 import 'package:cricket_scorer/features/scoring/presentation/widget/assign_scorer_sheet.dart';
 import 'package:cricket_scorer/features/scoring/presentation/widget/edit_roster_player_sheet.dart';
 import 'package:cricket_scorer/features/scoring/presentation/widget/edit_team_sheet.dart';
+import 'package:cricket_scorer/features/scoring/presentation/widget/invitations_section.dart';
 import 'package:cricket_scorer/features/scoring/presentation/widget/match_history_card.dart';
 import 'package:cricket_scorer/features/scoring/presentation/widget/team_stats_strip.dart';
 import 'package:flutter/material.dart';
@@ -109,6 +111,16 @@ class _TeamProfileScreenState extends State<TeamProfileScreen> {
       currentName: data.name,
       currentShortName: data.shortName,
     );
+  }
+
+  Future<void> _cancelInvite(TeamInviteItemRes invite) async {
+    final error = await controller.cancelInvite(invite);
+    if (error != null) CricketSnackbar.showErrorMessage(error);
+  }
+
+  Future<void> _inviteAgain(TeamInviteItemRes invite) async {
+    final error = await controller.inviteAgain(invite);
+    if (error != null) CricketSnackbar.showErrorMessage(error);
   }
 
   Future<void> _confirmRemovePlayer(TeamRosterPlayer player) async {
@@ -225,6 +237,21 @@ class _TeamProfileScreenState extends State<TeamProfileScreen> {
                     onRemovePlayer: (player) =>
                         unawaited(_confirmRemovePlayer(player)),
                   ),
+                  Obx(() {
+                    final invites = controller.invites.toList();
+                    if (!data.canManage || invites.isEmpty) {
+                      return const SizedBox.shrink();
+                    }
+                    return Padding(
+                      padding: const EdgeInsets.only(top: 16),
+                      child: InvitationsSection(
+                        invites: invites,
+                        onCancel: (invite) => unawaited(_cancelInvite(invite)),
+                        onInviteAgain: (invite) =>
+                            unawaited(_inviteAgain(invite)),
+                      ),
+                    );
+                  }),
                   24.h,
                   CricketText(
                     text: TranslationKeys.teamMatchesSection.tr,
@@ -587,10 +614,6 @@ class _RosterRow extends StatelessWidget {
                   spoken: TranslationKeys.viceCaptain,
                 ),
               ],
-              if (player.inviteStatus == 'pending') ...[
-                6.w,
-                const _InvitedBadge(),
-              ],
               const Spacer(),
               if (player.jerseyNumber != null) ...[
                 CricketText(
@@ -654,31 +677,6 @@ class _RosterRow extends StatelessWidget {
 
 /// "C" / "VC" beside a rostered player. The visible letters are decoration;
 /// screen readers get the full word.
-/// Shown while a roster player's invite to a real account is unanswered — the
-/// player is on the roster already, just not linked to anyone yet.
-class _InvitedBadge extends StatelessWidget {
-  const _InvitedBadge();
-
-  @override
-  Widget build(BuildContext context) {
-    final color = context.colors.statusWarning;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.12),
-        borderRadius: 6.radius,
-      ),
-      child: CricketText(
-        text: TranslationKeys.invited.tr,
-        style: context.textTheme.labelSmall?.copyWith(
-          color: color,
-          fontWeight: FontWeight.w600,
-        ),
-      ),
-    );
-  }
-}
-
 class _LeaderBadge extends StatelessWidget {
   const _LeaderBadge({required this.label, required this.spoken});
 

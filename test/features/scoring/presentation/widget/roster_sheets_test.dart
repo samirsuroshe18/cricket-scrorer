@@ -23,6 +23,7 @@ import 'package:cricket_scorer/features/scoring/presentation/widget/edit_roster_
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart' hide Response;
+import '../helpers/squad_fakes.dart';
 
 class _Unused {
   @override
@@ -162,6 +163,8 @@ void main() {
       getMyPlayersUseCase: emptyMyPlayers(),
       lookupUserByEmailUseCase: FakeLookupUserByEmailUseCase(),
       inviteTeamPlayerUseCase: FakeInviteTeamPlayerUseCase(),
+      getTeamInvitesUseCase: FakeGetTeamInvites({}),
+      cancelTeamInviteUseCase: FakeCancelTeamInvite(),
     );
     controller.profile.value = profile;
     await tester.pumpWidget(

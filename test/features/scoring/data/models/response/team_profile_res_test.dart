@@ -126,29 +126,15 @@ void main() {
     },
   );
 
-  group('TeamRosterPlayer.inviteStatus', () {
-    Map<String, dynamic> row({Object? inviteStatus = _absent}) => {
+  test('a roster row ignores an inviteStatus an older server still sends', () {
+    final row = TeamRosterPlayer.fromJson({
       'playerId': 'p1',
       'playerName': 'Rahul',
       'role': 'batsman',
-      if (!identical(inviteStatus, _absent)) 'inviteStatus': inviteStatus,
-    };
-
-    test('parses "pending"', () {
-      expect(
-        TeamRosterPlayer.fromJson(row(inviteStatus: 'pending')).inviteStatus,
-        'pending',
-      );
+      'inviteStatus': 'pending',
     });
 
-    test('reads null and an absent key (older server) as null', () {
-      expect(
-        TeamRosterPlayer.fromJson(row(inviteStatus: null)).inviteStatus,
-        isNull,
-      );
-      expect(TeamRosterPlayer.fromJson(row()).inviteStatus, isNull);
-    });
+    expect(row.playerName, 'Rahul');
+    expect(row.toJson().containsKey('inviteStatus'), isFalse);
   });
 }
-
-const Object _absent = Object();

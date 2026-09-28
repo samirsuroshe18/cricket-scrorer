@@ -26,10 +26,6 @@ class TeamRosterPlayer {
   @JsonKey(defaultValue: false)
   final bool isViceCaptain;
 
-  /// `pending` while the player has an unanswered invite to a real account;
-  /// null otherwise (and on an older server that doesn't send it).
-  final String? inviteStatus;
-
   TeamRosterPlayer({
     required this.playerId,
     required this.playerName,
@@ -37,7 +33,6 @@ class TeamRosterPlayer {
     required this.role,
     this.isCaptain = false,
     this.isViceCaptain = false,
-    this.inviteStatus,
   });
 
   factory TeamRosterPlayer.fromJson(Map<String, dynamic> json) =>

@@ -1,3 +1,5 @@
+import 'package:cricket_scorer/features/scoring/data/models/response/team_invite_res.dart';
+import 'package:cricket_scorer/features/scoring/data/models/response/team_invites_res.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/remove_team_player.dart';
 import 'dart:async';
 import 'dart:io';
@@ -30,6 +32,7 @@ import '../helpers/picker_fakes.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart' hide Response;
+import '../helpers/squad_fakes.dart';
 
 class _FakeGetTeamProfileUseCase implements GetTeamProfileUseCase {
   Either<CricketResponse<TeamProfileRes>, CricketFailure>? response;
@@ -302,6 +305,8 @@ void main() {
   late FakeGetMyPlayersUseCase getMyPlayersUseCase;
   late FakeLookupUserByEmailUseCase lookupUserByEmailUseCase;
   late FakeInviteTeamPlayerUseCase inviteTeamPlayerUseCase;
+  late FakeGetTeamInvites teamInvites;
+  late FakeCancelTeamInvite cancelInvite;
   late TeamProfileController controller;
 
   TeamProfileController makeController({GetTeamMatchesUseCase? matches}) =>
@@ -321,6 +326,8 @@ void main() {
         getMyPlayersUseCase: getMyPlayersUseCase,
         lookupUserByEmailUseCase: lookupUserByEmailUseCase,
         inviteTeamPlayerUseCase: inviteTeamPlayerUseCase,
+        getTeamInvitesUseCase: teamInvites,
+        cancelTeamInviteUseCase: cancelInvite,
       );
 
   setUp(() {
@@ -339,6 +346,8 @@ void main() {
     getMyPlayersUseCase = FakeGetMyPlayersUseCase();
     lookupUserByEmailUseCase = FakeLookupUserByEmailUseCase();
     inviteTeamPlayerUseCase = FakeInviteTeamPlayerUseCase();
+    teamInvites = FakeGetTeamInvites({});
+    cancelInvite = FakeCancelTeamInvite();
     controller = TeamProfileController(
       teamId: 'team-1',
       getTeamProfileUseCase: profileUseCase,
@@ -354,6 +363,8 @@ void main() {
       getMyPlayersUseCase: getMyPlayersUseCase,
       lookupUserByEmailUseCase: lookupUserByEmailUseCase,
       inviteTeamPlayerUseCase: inviteTeamPlayerUseCase,
+      getTeamInvitesUseCase: teamInvites,
+      cancelTeamInviteUseCase: cancelInvite,
       removeTeamPlayerUseCase: removeTeamPlayerUseCase,
     );
   });
@@ -595,6 +606,8 @@ void main() {
         getMyPlayersUseCase: FakeGetMyPlayersUseCase(),
         lookupUserByEmailUseCase: FakeLookupUserByEmailUseCase(),
         inviteTeamPlayerUseCase: FakeInviteTeamPlayerUseCase(),
+        getTeamInvitesUseCase: FakeGetTeamInvites({}),
+        cancelTeamInviteUseCase: FakeCancelTeamInvite(),
         removeTeamPlayerUseCase: _FakeRemoveTeamPlayerUseCase(),
       );
       profileUseCaseA.response = Either.result(
@@ -626,6 +639,8 @@ void main() {
         getMyPlayersUseCase: FakeGetMyPlayersUseCase(),
         lookupUserByEmailUseCase: FakeLookupUserByEmailUseCase(),
         inviteTeamPlayerUseCase: FakeInviteTeamPlayerUseCase(),
+        getTeamInvitesUseCase: FakeGetTeamInvites({}),
+        cancelTeamInviteUseCase: FakeCancelTeamInvite(),
         removeTeamPlayerUseCase: _FakeRemoveTeamPlayerUseCase(),
       );
       profileUseCaseB.response = Either.result(
@@ -1306,4 +1321,131 @@ void main() {
       expect(setTeamLeadershipUseCase.lastParams, isNull);
     },
   );
+
+  group('invitations', () {
+    void profileIs({required bool canManage}) {
+      profileUseCase.response = Either.result(
+        CricketResponse(
+          message: 'ok',
+          data: TeamProfileRes(
+            teamId: 'team-1',
+            name: 'Mumbai Indians',
+            canManage: canManage,
+            roster: const [],
+          ),
+        ),
+      );
+    }
+
+    TeamInviteItemRes invite(String id, String status, {String user = 'u1'}) =>
+        TeamInviteItemRes(
+          inviteId: id,
+          status: status,
+          player: InvitedPlayerRes(playerId: 'p-$id', playerName: 'Rahul'),
+          invitee: InviteeUserRes(userId: user, fullName: 'Rahul'),
+        );
+
+    test('a manager\'s profile load also loads the invitations', () async {
+      profileIs(canManage: true);
+      teamInvites.byTeam['team-1'] = [invite('i1', 'pending')];
+
+      await controller.loadProfile();
+
+      expect(teamInvites.asked, ['team-1']);
+      expect(controller.invites.single.inviteId, 'i1');
+    });
+
+    test('a viewer who cannot manage never requests invitations', () async {
+      profileIs(canManage: false);
+
+      await controller.loadProfile();
+
+      expect(teamInvites.asked, isEmpty);
+      expect(controller.invites, isEmpty);
+    });
+
+    test('cancelInvite sends both ids, then refetches the list', () async {
+      profileIs(canManage: true);
+      teamInvites.byTeam['team-1'] = [invite('i1', 'pending')];
+      await controller.loadProfile();
+      cancelInvite.onSuccess = () => teamInvites.byTeam['team-1'] = [];
+
+      final error = await controller.cancelInvite(controller.invites.single);
+
+      expect(error, isNull);
+      expect(cancelInvite.calls.single.teamId, 'team-1');
+      expect(cancelInvite.calls.single.inviteId, 'i1');
+      expect(controller.invites, isEmpty);
+    });
+
+    test(
+      'a failed cancel returns the server message and keeps the row',
+      () async {
+        profileIs(canManage: true);
+        teamInvites.byTeam['team-1'] = [invite('i1', 'pending')];
+        await controller.loadProfile();
+        cancelInvite.fail = true;
+
+        final error = await controller.cancelInvite(controller.invites.single);
+
+        expect(error, 'cancel refused');
+        expect(controller.invites, hasLength(1));
+      },
+    );
+
+    test(
+      'inviteUser refreshes the invitations after a successful invite',
+      () async {
+        profileIs(canManage: true);
+        await controller.loadProfile();
+        teamInvites.byTeam['team-1'] = [invite('i2', 'pending')];
+        inviteTeamPlayerUseCase.response = Either.result(
+          CricketResponse(
+            message: 'ok',
+            data: TeamInviteRes(
+              inviteId: 'i2',
+              status: 'pending',
+              player: TeamRosterPlayer(
+                playerId: 'p-i2',
+                playerName: 'Rahul',
+                role: 'unknown',
+              ),
+            ),
+          ),
+        );
+
+        final error = await controller.inviteUser('u1');
+
+        expect(error, isNull);
+        expect(controller.invites.single.inviteId, 'i2');
+      },
+    );
+
+    test('inviteAgain invites the same user once more', () async {
+      profileIs(canManage: true);
+      await controller.loadProfile();
+      inviteTeamPlayerUseCase.response = Either.result(
+        CricketResponse(
+          message: 'ok',
+          data: TeamInviteRes(
+            inviteId: 'i3',
+            status: 'pending',
+            player: TeamRosterPlayer(
+              playerId: 'p-i3',
+              playerName: 'Rahul',
+              role: 'unknown',
+            ),
+          ),
+        ),
+      );
+
+      final error = await controller.inviteAgain(
+        invite('i1', 'declined', user: 'u7'),
+      );
+
+      expect(error, isNull);
+      expect(inviteTeamPlayerUseCase.calls.single.userId, 'u7');
+      expect(inviteTeamPlayerUseCase.calls.single.teamId, 'team-1');
+    });
+  });
 }

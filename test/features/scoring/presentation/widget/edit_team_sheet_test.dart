@@ -20,6 +20,7 @@ import 'package:cricket_scorer/features/scoring/presentation/widget/edit_team_sh
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart' hide Response;
+import '../helpers/squad_fakes.dart';
 
 class _UnusedGetTeamProfileUseCase implements GetTeamProfileUseCase {
   @override
@@ -122,6 +123,8 @@ void main() {
       getMyPlayersUseCase: FakeGetMyPlayersUseCase(),
       lookupUserByEmailUseCase: FakeLookupUserByEmailUseCase(),
       inviteTeamPlayerUseCase: FakeInviteTeamPlayerUseCase(),
+      getTeamInvitesUseCase: FakeGetTeamInvites({}),
+      cancelTeamInviteUseCase: FakeCancelTeamInvite(),
     );
 
     await tester.pumpWidget(
