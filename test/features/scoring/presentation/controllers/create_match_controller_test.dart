@@ -354,4 +354,64 @@ void main() {
       widgetController.onClose();
     },
   );
+
+  group('canCreate', () {
+    test('is false until a team is chosen on each side', () {
+      expect(controller.canCreate.value, isFalse);
+
+      controller.setTeamAFreeText('Team One');
+      expect(controller.canCreate.value, isFalse);
+    });
+
+    test('is false with only Team B filled', () {
+      controller.setTeamBFreeText('Team Two');
+
+      expect(controller.canCreate.value, isFalse);
+    });
+
+    test('is true once both sides are filled, however each was chosen', () {
+      controller.selectTeamA(TeamSummary(id: 'team-1', name: 'Mumbai Indians'));
+      expect(controller.canCreate.value, isFalse);
+
+      controller.setTeamBFreeText('Brand New Team');
+
+      expect(controller.canCreate.value, isTrue);
+    });
+
+    test('goes false again when a side is cleared', () {
+      controller.setTeamAFreeText('Team One');
+      controller.setTeamBFreeText('Team Two');
+      expect(controller.canCreate.value, isTrue);
+
+      controller.teamBController.clear();
+
+      expect(controller.canCreate.value, isFalse);
+    });
+
+    test('a side holding only spaces does not count', () {
+      controller.setTeamAFreeText('Team One');
+      controller.setTeamBFreeText('   ');
+
+      expect(controller.canCreate.value, isFalse);
+    });
+
+    test('replacing a selected team with another keeps it true', () {
+      controller.selectTeamA(TeamSummary(id: 'team-1', name: 'Mumbai Indians'));
+      controller.setTeamBFreeText('Team Two');
+
+      controller.selectTeamA(TeamSummary(id: 'team-2', name: 'Chennai Kings'));
+
+      expect(controller.canCreate.value, isTrue);
+    });
+
+    test('swapping two filled sides stays true; swapping with one filled stays false', () {
+      controller.setTeamAFreeText('Team One');
+      controller.swapTeams();
+      expect(controller.canCreate.value, isFalse);
+
+      controller.setTeamAFreeText('Team Zero');
+      controller.swapTeams();
+      expect(controller.canCreate.value, isTrue);
+    });
+  });
 }
