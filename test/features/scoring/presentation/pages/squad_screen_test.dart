@@ -14,6 +14,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart';
 
+import '../helpers/picker_fakes.dart';
+import '../helpers/squad_fakes.dart';
+
 class _EmptyProfile implements GetTeamProfileUseCase {
   @override
   Future<Either<CricketResponse<TeamProfileRes>, CricketFailure>> call({
@@ -83,6 +86,12 @@ void main() {
         ),
         getTeamProfileUseCase: _EmptyProfile(),
         saveSquadUseCase: save,
+        getMatchSquadUseCase: FakeGetMatchSquad(),
+        savePlayingXiUseCase: FakeSavePlayingXi(),
+        getTeamInvitesUseCase: FakeGetTeamInvites({}),
+        cancelTeamInviteUseCase: FakeCancelTeamInvite(),
+        lookupUserByEmailUseCase: FakeLookupUserByEmailUseCase(),
+        inviteTeamPlayerUseCase: FakeInviteTeamPlayerUseCase(),
         showError: errors.add,
         openScoring: (_) => openedCount += 1,
       ),
