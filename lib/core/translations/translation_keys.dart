@@ -676,4 +676,16 @@ class TranslationKeys {
   static const String formLost = 'form_lost';
   static const String formTied = 'form_tied';
   static const String formNoResult = 'form_no_result';
+  static const String squadInvitations = 'squad_invitations';
+  static const String inviteStatusWaiting = 'invite_status_waiting';
+  static const String inviteStatusAccepted = 'invite_status_accepted';
+  static const String inviteStatusDeclined = 'invite_status_declined';
+  static const String cancelInvite = 'cancel_invite';
+  static const String inviteAgain = 'invite_again';
+  static const String squadPlayingXi = 'squad_playing_xi';
+  static const String squadBench = 'squad_bench';
+  static const String moveToBench = 'move_to_bench';
+  static const String moveToXi = 'move_to_xi';
+  static const String inviteByEmail = 'invite_by_email';
+  static const String squadEditTooltip = 'squad_edit_tooltip';
 }

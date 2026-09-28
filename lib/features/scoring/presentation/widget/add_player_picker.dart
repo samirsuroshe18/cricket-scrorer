@@ -2,14 +2,13 @@ import 'dart:async';
 
 import 'package:cricket_scorer/core/extensions/space_extension.dart';
 import 'package:cricket_scorer/core/extensions/theme_x.dart';
-import 'package:cricket_scorer/core/global/widgets/cricket_button.dart';
 import 'package:cricket_scorer/core/global/widgets/cricket_text.dart';
 import 'package:cricket_scorer/core/global/widgets/cricket_text_field.dart';
 import 'package:cricket_scorer/core/translations/translation_keys.dart';
-import 'package:cricket_scorer/features/scoring/data/models/response/looked_up_user_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/my_players_res.dart';
 import 'package:cricket_scorer/features/scoring/presentation/controllers/team_profile_controller.dart';
 import 'package:cricket_scorer/features/scoring/presentation/widget/add_player_sheet.dart';
+import 'package:cricket_scorer/features/scoring/presentation/widget/invite_by_email_panel.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -19,10 +18,6 @@ enum _Tab { myPlayers, appUsers }
 
 /// Pauses typing before the "My players" search re-queries the server.
 const Duration _searchDebounce = Duration(milliseconds: 350);
-
-/// Loose shape check that only gates the Find button; the server does the real
-/// validation and answers the same `USER_NOT_FOUND` for anything it can't match.
-final RegExp _looksLikeEmail = RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$');
 
 /// The add-player sheet's body: pick one of the scorer's existing players,
 /// find an app user by exact email and invite them, or fall through to the
@@ -50,7 +45,6 @@ class AddPlayerPicker extends StatefulWidget {
 
 class _AddPlayerPickerState extends State<AddPlayerPicker> {
   final _search = TextEditingController();
-  final _email = TextEditingController();
 
   _Step _step = _Step.picker;
   _Tab _tab = _Tab.myPlayers;
@@ -68,19 +62,6 @@ class _AddPlayerPickerState extends State<AddPlayerPicker> {
   /// Bumped per query; a slower response for an older query is dropped.
   int _generation = 0;
 
-  // App users
-  LookedUpUserRes? _found;
-  String? _lookupError;
-  bool _lookingUp = false;
-
-  /// Bumped whenever the email is edited or a lookup starts. A lookup only
-  /// applies if it is still the latest, so an answer for an address the scorer
-  /// has since changed can never surface a card — and an Invite button — for
-  /// someone they did not ask about.
-  int _lookupGeneration = 0;
-  bool _inviting = false;
-  String? _inviteError;
-
   @override
   void initState() {
     super.initState();
@@ -91,7 +72,6 @@ class _AddPlayerPickerState extends State<AddPlayerPicker> {
   void dispose() {
     _debounce?.cancel();
     _search.dispose();
-    _email.dispose();
     super.dispose();
   }
 
@@ -150,48 +130,6 @@ class _AddPlayerPickerState extends State<AddPlayerPicker> {
     }
   }
 
-  Future<void> _find() async {
-    if (_lookingUp) return;
-    final generation = ++_lookupGeneration;
-    setState(() {
-      _lookingUp = true;
-      _found = null;
-      _lookupError = null;
-      _inviteError = null;
-    });
-
-    final (user, error) = await widget.controller.lookupUserByEmail(
-      _email.text,
-    );
-
-    if (!mounted || generation != _lookupGeneration) return;
-    setState(() {
-      _lookingUp = false;
-      _found = user;
-      _lookupError = error;
-    });
-  }
-
-  Future<void> _invite(LookedUpUserRes user) async {
-    if (_inviting) return;
-    setState(() {
-      _inviting = true;
-      _inviteError = null;
-    });
-
-    final error = await widget.controller.inviteUser(user.userId);
-
-    if (!mounted) return;
-    if (error == null) {
-      widget.onDone();
-    } else {
-      setState(() {
-        _inviting = false;
-        _inviteError = error;
-      });
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     if (_step == _Step.createForm) {
@@ -243,7 +181,11 @@ class _AddPlayerPickerState extends State<AddPlayerPicker> {
           child: SingleChildScrollView(
             child: _tab == _Tab.myPlayers
                 ? _myPlayersBody(context)
-                : _appUsersBody(context),
+                : InviteByEmailPanel(
+                    lookup: widget.controller.lookupUserByEmail,
+                    invite: widget.controller.inviteUser,
+                    onDone: widget.onDone,
+                  ),
           ),
         ),
         12.h,
@@ -353,80 +295,6 @@ class _AddPlayerPickerState extends State<AddPlayerPicker> {
         ),
       ),
       trailing: trailing,
-    );
-  }
-
-  Widget _appUsersBody(BuildContext context) {
-    final user = _found;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        CricketText(
-          text: TranslationKeys.findUserByEmailHint.tr,
-          style: context.textTheme.bodySmall?.copyWith(
-            color: context.colorScheme.onSurfaceVariant,
-          ),
-        ),
-        8.h,
-        CricketTextField(
-          controller: _email,
-          hintText: TranslationKeys.email.tr,
-          labelText: TranslationKeys.email.tr,
-          prefixIcon: const Icon(Icons.mail_outline),
-          keyboardType: TextInputType.emailAddress,
-          hideCounter: true,
-          onChanged: (_) => setState(() {
-            _lookupGeneration++;
-            _lookingUp = false;
-            _found = null;
-            _lookupError = null;
-            _inviteError = null;
-          }),
-        ),
-        12.h,
-        CricketButton(
-          buttonText: TranslationKeys.findUser.tr,
-          isDisabled:
-              _lookingUp || !_looksLikeEmail.hasMatch(_email.text.trim()),
-          onPressed: _find,
-        ),
-        if (_lookupError != null) _errorLine(context, _lookupError!),
-        if (user != null) ...[
-          12.h,
-          _userCard(context, user),
-          if (_inviteError != null) _errorLine(context, _inviteError!),
-        ],
-      ],
-    );
-  }
-
-  Widget _userCard(BuildContext context, LookedUpUserRes user) {
-    final photo = user.photoUrl;
-    return Card(
-      margin: EdgeInsets.zero,
-      child: ListTile(
-        leading: CircleAvatar(
-          foregroundImage: photo != null ? NetworkImage(photo) : null,
-          child: CricketText(
-            text: user.fullName.isEmpty ? '?' : user.fullName[0].toUpperCase(),
-          ),
-        ),
-        title: CricketText(text: user.fullName),
-        subtitle: user.userName == null
-            ? null
-            : CricketText(text: '@${user.userName}'),
-        trailing: _inviting
-            ? const SizedBox(
-                width: 20,
-                height: 20,
-                child: CircularProgressIndicator(strokeWidth: 2),
-              )
-            : TextButton(
-                key: const ValueKey('invite-user'),
-                onPressed: () => _invite(user),
-                child: CricketText(text: TranslationKeys.invite.tr),
-              ),
-      ),
     );
   }
 }
