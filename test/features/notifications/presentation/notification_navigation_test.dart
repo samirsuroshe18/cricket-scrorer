@@ -75,4 +75,83 @@ void main() {
     expect(shell.tabIndex.value, 1);
     expect(find.text('home'), findsOneWidget);
   });
+
+  group('a scorer\'s invite-response notifications', () {
+    testWidgets(
+      'accepted and declined open that team\'s profile, never the invite sheet',
+      (tester) async {
+        await pumpApp(tester);
+        final invites = <String>[];
+        final teams = <String>[];
+
+        for (final type in [
+          'player_invite_accepted',
+          'player_invite_declined',
+        ]) {
+          navigateForNotificationData(
+            {'type': type, 'teamId': 't1', 'teamName': 'Riverside'},
+            showInvite: (id) async => invites.add(id),
+            showTeamProfile: teams.add,
+          );
+        }
+
+        expect(teams, ['t1', 't1']);
+        expect(invites, isEmpty);
+      },
+    );
+
+    testWidgets(
+      'one that also carries an inviteId still is not the invitee sheet',
+      (
+        tester,
+      ) async {
+        await pumpApp(tester);
+        final invites = <String>[];
+        final teams = <String>[];
+
+        navigateForNotificationData(
+          {'type': 'player_invite_accepted', 'inviteId': 'i1', 'teamId': 't1'},
+          showInvite: (id) async => invites.add(id),
+          showTeamProfile: teams.add,
+        );
+
+        expect(invites, isEmpty);
+        expect(teams, ['t1']);
+      },
+    );
+
+    testWidgets('without a teamId there is nowhere to go and nothing throws', (
+      tester,
+    ) async {
+      await pumpApp(tester);
+      final teams = <String>[];
+
+      for (final data in <Map<String, dynamic>>[
+        {'type': 'player_invite_accepted'},
+        {'type': 'player_invite_declined', 'teamId': ''},
+        {'type': 'player_invite_accepted', 'teamId': 42},
+      ]) {
+        navigateForNotificationData(data, showTeamProfile: teams.add);
+      }
+
+      expect(teams, isEmpty);
+    });
+
+    testWidgets(
+      'a legacy payload with only an inviteId still opens the invite sheet',
+      (
+        tester,
+      ) async {
+        await pumpApp(tester);
+        final invites = <String>[];
+
+        navigateForNotificationData(
+          {'inviteId': 'i9'},
+          showInvite: (id) async => invites.add(id),
+        );
+
+        expect(invites, ['i9']);
+      },
+    );
+  });
 }
