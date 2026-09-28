@@ -6,9 +6,13 @@ import 'package:cricket_scorer/features/scoring/domain/squad_rules.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-/// One player of the squad being edited: name, role chips, and the C / VC /
-/// WK toggles. Stateless — every change goes back out through a callback so
+/// One player of the squad being edited: name, role chips, the C / VC / WK
+/// toggles, and a button that moves them between the Playing XI and the Bench.
+/// Stateless — every change goes back out through a callback so
 /// `SquadController` stays the single owner of the draft.
+///
+/// [compact] is for a match already under way, where only the XI move can be
+/// saved: the role chips, designations and remove button are left out.
 class SquadPlayerRow extends StatelessWidget {
   const SquadPlayerRow({
     super.key,
@@ -21,6 +25,9 @@ class SquadPlayerRow extends StatelessWidget {
     required this.onViceCaptain,
     required this.onKeeper,
     required this.onRemove,
+    required this.inXi,
+    required this.onMove,
+    this.compact = false,
   });
 
   final SquadRow row;
@@ -33,6 +40,12 @@ class SquadPlayerRow extends StatelessWidget {
   final VoidCallback onKeeper;
   final VoidCallback onRemove;
 
+  /// Whether the player is in the Playing XI (else the Bench); decides which
+  /// way the move button sends them.
+  final bool inXi;
+  final VoidCallback onMove;
+  final bool compact;
+
   static String roleLabel(String role) => switch (role) {
     'bowler' => TranslationKeys.roleBowler.tr,
     'allrounder' => TranslationKeys.roleAllrounder.tr,
@@ -41,6 +54,15 @@ class SquadPlayerRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final moveButton = TextButton.icon(
+      key: Key(inXi ? 'squad_toBench_${row.name}' : 'squad_toXi_${row.name}'),
+      onPressed: onMove,
+      icon: Icon(inXi ? Icons.arrow_downward : Icons.arrow_upward, size: 16),
+      label: Text(
+        (inXi ? TranslationKeys.moveToBench : TranslationKeys.moveToXi).tr,
+      ),
+    );
+
     return Container(
       key: Key('squad_row_${row.name}'),
       margin: const EdgeInsets.only(bottom: 8),
@@ -63,47 +85,53 @@ class SquadPlayerRow extends StatelessWidget {
                   style: context.textTheme.titleSmall,
                 ),
               ),
-              _Badge(
-                badgeKey: Key('squad_c_${row.name}'),
-                label: TranslationKeys.captainShort.tr,
-                semantics: '${TranslationKeys.captain.tr}, ${row.name}',
-                selected: isCaptain,
-                onTap: onCaptain,
-              ),
-              _Badge(
-                badgeKey: Key('squad_vc_${row.name}'),
-                label: TranslationKeys.viceCaptainShort.tr,
-                semantics: '${TranslationKeys.viceCaptain.tr}, ${row.name}',
-                selected: isViceCaptain,
-                onTap: onViceCaptain,
-              ),
-              _Badge(
-                badgeKey: Key('squad_wk_${row.name}'),
-                label: TranslationKeys.wicketkeeperShort.tr,
-                semantics: '${TranslationKeys.wicketkeeper.tr}, ${row.name}',
-                selected: isKeeper,
-                onTap: onKeeper,
-              ),
-              IconButton(
-                key: Key('squad_remove_${row.name}'),
-                tooltip: '${TranslationKeys.removePlayer.tr}, ${row.name}',
-                icon: const Icon(Icons.close, size: 18),
-                onPressed: onRemove,
-              ),
-            ],
-          ),
-          Wrap(
-            spacing: 8,
-            children: [
-              for (final role in squadRoles)
-                ChoiceChip(
-                  key: Key('squad_role_${row.name}_$role'),
-                  label: Text(roleLabel(role)),
-                  selected: row.role == role,
-                  onSelected: (_) => onRole(role),
+              if (compact) moveButton,
+              if (!compact) ...[
+                _Badge(
+                  badgeKey: Key('squad_c_${row.name}'),
+                  label: TranslationKeys.captainShort.tr,
+                  semantics: '${TranslationKeys.captain.tr}, ${row.name}',
+                  selected: isCaptain,
+                  onTap: onCaptain,
                 ),
+                _Badge(
+                  badgeKey: Key('squad_vc_${row.name}'),
+                  label: TranslationKeys.viceCaptainShort.tr,
+                  semantics: '${TranslationKeys.viceCaptain.tr}, ${row.name}',
+                  selected: isViceCaptain,
+                  onTap: onViceCaptain,
+                ),
+                _Badge(
+                  badgeKey: Key('squad_wk_${row.name}'),
+                  label: TranslationKeys.wicketkeeperShort.tr,
+                  semantics: '${TranslationKeys.wicketkeeper.tr}, ${row.name}',
+                  selected: isKeeper,
+                  onTap: onKeeper,
+                ),
+                IconButton(
+                  key: Key('squad_remove_${row.name}'),
+                  tooltip: '${TranslationKeys.removePlayer.tr}, ${row.name}',
+                  icon: const Icon(Icons.close, size: 18),
+                  onPressed: onRemove,
+                ),
+              ],
             ],
           ),
+          if (!compact)
+            Wrap(
+              spacing: 8,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              children: [
+                for (final role in squadRoles)
+                  ChoiceChip(
+                    key: Key('squad_role_${row.name}_$role'),
+                    label: Text(roleLabel(role)),
+                    selected: row.role == role,
+                    onSelected: (_) => onRole(role),
+                  ),
+                moveButton,
+              ],
+            ),
         ],
       ),
     );
