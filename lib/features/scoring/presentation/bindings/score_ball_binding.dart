@@ -1,5 +1,6 @@
 import 'package:cricket_scorer/features/scoring/data/data_sources/local/offline_sync_service.dart';
 import 'package:cricket_scorer/features/scoring/domain/repositories/match_repository.dart';
+import 'package:cricket_scorer/features/scoring/domain/usecases/get_match_squad.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/abandon_match.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/score_ball.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/select_bowler.dart';
@@ -20,6 +21,7 @@ class ScoreBallBinding extends Bindings {
         abandonMatchUseCase: Get.find<AbandonMatchUseCase>(),
         matchRepository: Get.find<MatchRepository>(),
         offlineSyncService: Get.find<OfflineSyncService>(),
+        getMatchSquadUseCase: Get.find<GetMatchSquadUseCase>(),
       ),
     );
   }
