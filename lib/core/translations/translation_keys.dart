@@ -174,6 +174,11 @@ class TranslationKeys {
   static const String teamNameRequired = 'team_name_required';
   static const String invalidOvers = 'invalid_overs';
   static const String teamNamesMustDiffer = 'team_names_must_differ';
+  static const String matchSectionPlayingXi = 'match_section_playing_xi';
+  static const String playingXiMinLabel = 'playing_xi_min_label';
+  static const String playingXiMaxLabel = 'playing_xi_max_label';
+  static const String invalidPlayingXiMin = 'invalid_playing_xi_min';
+  static const String invalidPlayingXiMax = 'invalid_playing_xi_max';
 
   /// Create-match screen sections and the team-search field
   static const String matchSectionTeams = 'match_section_teams';
@@ -683,6 +688,7 @@ class TranslationKeys {
   static const String cancelInvite = 'cancel_invite';
   static const String inviteAgain = 'invite_again';
   static const String squadPlayingXi = 'squad_playing_xi';
+  static const String squadPlayingXiSizeHint = 'squad_playing_xi_size_hint';
   static const String squadBench = 'squad_bench';
   static const String moveToBench = 'move_to_bench';
   static const String moveToXi = 'move_to_xi';

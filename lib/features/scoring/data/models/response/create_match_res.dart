@@ -33,6 +33,13 @@ class CreateMatchRes {
   final TeamRef teamB;
   final int totalOvers;
 
+  /// The Playing XI size range this match holds both sides to. Present when
+  /// this response came straight from `POST /create`; `null` when it was
+  /// synthesized from match-history data (see `toCreateMatchRes`), in which
+  /// case the Squad screen just doesn't show the size hint.
+  final int? minPlayingXi;
+  final int? maxPlayingXi;
+
   /// Both null when the toss was skipped. `teamA` / `teamB`.
   final String? tossWinner;
 
@@ -49,6 +56,8 @@ class CreateMatchRes {
     required this.teamA,
     required this.teamB,
     required this.totalOvers,
+    this.minPlayingXi,
+    this.maxPlayingXi,
     this.tossWinner,
     this.tossDecision,
     required this.status,

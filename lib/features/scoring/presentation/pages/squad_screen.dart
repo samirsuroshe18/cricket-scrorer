@@ -32,6 +32,7 @@ class SquadScreen extends GetView<SquadController> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             _SideToggle(controller: controller),
+            _PlayingXiSizeHint(controller: controller),
             12.h,
             _AddRow(controller: controller),
             12.h,
@@ -114,6 +115,36 @@ class _SideToggle extends StatelessWidget {
               ),
             ),
         ],
+      ),
+    );
+  }
+}
+
+/// "Select N–M players for this match" — shown only when the match this
+/// screen was opened from carried its Playing XI range (the create-match
+/// flow always does; a match reopened from history may not, in which case
+/// this stays hidden and the save-time server error is the backstop).
+class _PlayingXiSizeHint extends StatelessWidget {
+  const _PlayingXiSizeHint({required this.controller});
+
+  final SquadController controller;
+
+  @override
+  Widget build(BuildContext context) {
+    final min = controller.match.minPlayingXi;
+    final max = controller.match.maxPlayingXi;
+    if (min == null || max == null) return const SizedBox.shrink();
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 8),
+      child: CricketText(
+        text: TranslationKeys.squadPlayingXiSizeHint.trParams({
+          'min': '$min',
+          'max': '$max',
+        }),
+        style: context.textTheme.bodySmall?.copyWith(
+          color: context.colorScheme.onSurfaceVariant,
+        ),
       ),
     );
   }

@@ -27,4 +27,18 @@ void main() {
     expect(req.toJson()['teamAId'], '665f1a2b3c4d5e6f7a8b9c01');
     expect(req.toJson()['teamBId'], isNull);
   });
+
+  test('toJson carries minPlayingXi/maxPlayingXi', () {
+    final req = CreateMatchReq(
+      teamAName: 'Mumbai Indians',
+      teamBName: 'Chennai Super Kings',
+      totalOvers: 20,
+      minPlayingXi: 6,
+      maxPlayingXi: 8,
+    );
+
+    final json = req.toJson();
+    expect(json['minPlayingXi'], 6);
+    expect(json['maxPlayingXi'], 8);
+  });
 }
