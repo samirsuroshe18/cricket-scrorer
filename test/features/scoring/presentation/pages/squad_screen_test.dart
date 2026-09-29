@@ -78,6 +78,8 @@ void main() {
     WidgetTester tester, {
     MatchSquadRes? squad,
     Map<String, List<TeamInviteItemRes>> invites = const {},
+    int? minPlayingXi,
+    int? maxPlayingXi,
   }) async {
     save = _Save();
     teamInvites = FakeGetTeamInvites({...invites});
@@ -91,6 +93,8 @@ void main() {
           teamA: TeamRef(id: 'ta', name: 'Mumbai Indians'),
           teamB: TeamRef(id: 'tb', name: 'Chennai Kings'),
           totalOvers: 5,
+          minPlayingXi: minPlayingXi,
+          maxPlayingXi: maxPlayingXi,
           status: 'upcoming',
           syncStatus: 'local',
           createdAt: '2026-09-26T00:00:00.000Z',
@@ -137,6 +141,38 @@ void main() {
           .controller!
           .text,
       isEmpty,
+    );
+  });
+
+  testWidgets('shows no Playing XI size hint when the match carries no range', (
+    tester,
+  ) async {
+    await pump(tester);
+
+    expect(
+      find.text(
+        TranslationKeys.squadPlayingXiSizeHint.trParams({
+          'min': '2',
+          'max': '11',
+        }),
+      ),
+      findsNothing,
+    );
+  });
+
+  testWidgets('shows the Playing XI size hint when the match carries a range', (
+    tester,
+  ) async {
+    await pump(tester, minPlayingXi: 6, maxPlayingXi: 8);
+
+    expect(
+      find.text(
+        TranslationKeys.squadPlayingXiSizeHint.trParams({
+          'min': '6',
+          'max': '8',
+        }),
+      ),
+      findsOneWidget,
     );
   });
 

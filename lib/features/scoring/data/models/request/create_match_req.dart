@@ -8,6 +8,14 @@ class CreateMatchReq {
   final String teamBName;
   final int totalOvers;
 
+  /// The Playing XI size range this match holds both sides to — same pair
+  /// for both sides. Optional on the wire (the backend defaults to 2/11),
+  /// but the Create Match screen always sends both, pre-filled.
+  final int? minPlayingXi;
+
+  /// See [minPlayingXi]. No ceiling.
+  final int? maxPlayingXi;
+
   /// Both null (toss skipped) or both non-null — the server rejects one
   /// without the other. `teamA` / `teamB`.
   final String? tossWinner;
@@ -29,6 +37,8 @@ class CreateMatchReq {
     required this.teamAName,
     required this.teamBName,
     required this.totalOvers,
+    this.minPlayingXi,
+    this.maxPlayingXi,
     this.tossWinner,
     this.tossDecision,
     this.teamAId,

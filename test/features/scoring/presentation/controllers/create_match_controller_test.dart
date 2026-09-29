@@ -84,6 +84,46 @@ void main() {
     expect(controller.selectedOversPreset.value, OversPreset.five);
   });
 
+  test('Playing XI size defaults to 2/11 on init', () {
+    expect(controller.minPlayingXiController.text, '2');
+    expect(controller.maxPlayingXiController.text, '11');
+  });
+
+  group('validateMinPlayingXi', () {
+    test('rejects below the floor of 2', () {
+      expect(controller.validateMinPlayingXi('1'), isNotNull);
+      expect(controller.validateMinPlayingXi('0'), isNotNull);
+    });
+
+    test('rejects non-integer input', () {
+      expect(controller.validateMinPlayingXi('abc'), isNotNull);
+      expect(controller.validateMinPlayingXi(''), isNotNull);
+    });
+
+    test('accepts 2 and above', () {
+      expect(controller.validateMinPlayingXi('2'), isNull);
+      expect(controller.validateMinPlayingXi('9'), isNull);
+    });
+  });
+
+  group('validateMaxPlayingXi', () {
+    test('rejects a max below the current min', () {
+      controller.minPlayingXiController.text = '6';
+      expect(controller.validateMaxPlayingXi('5'), isNotNull);
+    });
+
+    test('accepts a max equal to or above the current min, with no ceiling', () {
+      controller.minPlayingXiController.text = '6';
+      expect(controller.validateMaxPlayingXi('6'), isNull);
+      expect(controller.validateMaxPlayingXi('99'), isNull);
+    });
+
+    test('rejects non-integer input', () {
+      expect(controller.validateMaxPlayingXi('abc'), isNotNull);
+      expect(controller.validateMaxPlayingXi(''), isNotNull);
+    });
+  });
+
   test('selecting a team sets its id, logo and fills the name field', () async {
     final team = TeamSummary(
       id: 'team-1',
@@ -348,6 +388,8 @@ void main() {
       expect(sent.teamAName, 'Mumbai Indians');
       expect(sent.teamBId, isNull);
       expect(sent.teamBName, 'Chennai Super Kings');
+      expect(sent.minPlayingXi, 2);
+      expect(sent.maxPlayingXi, 11);
       expect(Get.currentRoute, AppRoutes.squad);
       expect(Get.arguments, isA<CreateMatchRes>());
 

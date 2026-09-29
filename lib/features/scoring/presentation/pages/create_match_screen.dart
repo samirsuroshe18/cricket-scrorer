@@ -37,6 +37,11 @@ class CreateMatchScreen extends GetView<CreateMatchController> {
               ),
               16.h,
               _SectionCard(
+                title: TranslationKeys.matchSectionPlayingXi.tr,
+                child: _PlayingXiSection(controller: controller),
+              ),
+              16.h,
+              _SectionCard(
                 title: TranslationKeys.tossOptional.tr,
                 child: _TossSection(controller: controller),
               ),
@@ -482,6 +487,46 @@ class _MatchFormatSection extends StatelessWidget {
           validator: controller.validateOvers,
           keyboardType: TextInputType.number,
           isRequired: true,
+        ),
+      ],
+    );
+  }
+}
+
+/// Two fields side by side — min and max Playing XI size for this match,
+/// pre-filled with the backend's own defaults (2/11) so most scorers never
+/// need to touch them. Both are real FormFields, validated the same way
+/// overs is.
+class _PlayingXiSection extends StatelessWidget {
+  const _PlayingXiSection({required this.controller});
+
+  final CreateMatchController controller;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(
+          child: CricketTextField(
+            controller: controller.minPlayingXiController,
+            labelText: TranslationKeys.playingXiMinLabel.tr,
+            prefixIcon: const Icon(Icons.groups_outlined),
+            validator: controller.validateMinPlayingXi,
+            keyboardType: TextInputType.number,
+            isRequired: true,
+          ),
+        ),
+        12.w,
+        Expanded(
+          child: CricketTextField(
+            controller: controller.maxPlayingXiController,
+            labelText: TranslationKeys.playingXiMaxLabel.tr,
+            prefixIcon: const Icon(Icons.groups_outlined),
+            validator: controller.validateMaxPlayingXi,
+            keyboardType: TextInputType.number,
+            isRequired: true,
+          ),
         ),
       ],
     );

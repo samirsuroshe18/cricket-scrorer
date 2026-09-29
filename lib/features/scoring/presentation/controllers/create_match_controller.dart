@@ -35,6 +35,14 @@ class CreateMatchController extends GetxController {
   final teamBController = TextEditingController();
   final oversController = TextEditingController();
 
+  /// Playing XI size range for this match, same pair for both sides.
+  /// [playingXiMinFloor] is the hard floor the min can never go below; the
+  /// max has no ceiling. Pre-filled with the backend's own defaults (2/11)
+  /// so the scorer can leave them untouched.
+  static const int playingXiMinFloor = 2;
+  final minPlayingXiController = TextEditingController();
+  final maxPlayingXiController = TextEditingController();
+
   /// Non-null exactly while side A's field holds a selected, existing
   /// team's own name untouched — see [_handleTeamATextChanged]. Null means
   /// free-text mode: submitting creates a brand-new team from whatever name
@@ -92,6 +100,23 @@ class CreateMatchController extends GetxController {
     return null;
   }
 
+  String? validateMinPlayingXi(String? value) {
+    final min = int.tryParse(value?.trim() ?? '');
+    if (min == null || min < playingXiMinFloor) {
+      return TranslationKeys.invalidPlayingXiMin.tr;
+    }
+    return null;
+  }
+
+  String? validateMaxPlayingXi(String? value) {
+    final max = int.tryParse(value?.trim() ?? '');
+    final min = int.tryParse(minPlayingXiController.text.trim());
+    if (max == null || (min != null && max < min)) {
+      return TranslationKeys.invalidPlayingXiMax.tr;
+    }
+    return null;
+  }
+
   @override
   void onInit() {
     super.onInit();
@@ -101,6 +126,8 @@ class CreateMatchController extends GetxController {
     teamBController.addListener(_updateCanCreate);
     oversController.text = _oversPresetValues[OversPreset.five]!;
     oversController.addListener(_handleOversTextChanged);
+    minPlayingXiController.text = playingXiMinFloor.toString();
+    maxPlayingXiController.text = '11';
   }
 
   /// The selected team's own logo — `null` in free-text mode, or when the
@@ -306,6 +333,8 @@ class CreateMatchController extends GetxController {
             teamAName: teamAName,
             teamBName: teamBName,
             totalOvers: int.parse(oversController.text.trim()),
+            minPlayingXi: int.parse(minPlayingXiController.text.trim()),
+            maxPlayingXi: int.parse(maxPlayingXiController.text.trim()),
             tossWinner: tossWinner.value,
             tossDecision: tossDecision.value,
             teamAId: teamAId,
@@ -333,6 +362,8 @@ class CreateMatchController extends GetxController {
     teamAController.dispose();
     teamBController.dispose();
     oversController.dispose();
+    minPlayingXiController.dispose();
+    maxPlayingXiController.dispose();
     super.onClose();
   }
 }
