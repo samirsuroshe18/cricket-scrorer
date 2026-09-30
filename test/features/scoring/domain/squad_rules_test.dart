@@ -213,13 +213,25 @@ void main() {
       expect(draft.xi.contains('player 1'), isFalse);
     });
 
-    test('moving a player does not touch captain, vice-captain or keeper', () {
+    test('moving to the Bench clears that player\'s leader role', () {
       final draft = SquadDraft.seeded(rows(3))
           .setCaptain('Player 1')
           .setViceCaptain('Player 2')
           .setKeeper('Player 3')
           .moveToBench('Player 1')
           .moveToBench('Player 3');
+
+      expect(draft.captain, isNull);
+      expect(draft.viceCaptain, 'Player 2');
+      expect(draft.keeper, isNull);
+    });
+
+    test('moving a player to the XI does not touch any leader role', () {
+      final draft = SquadDraft.seeded(rows(3), xi: {'player 2'})
+          .setCaptain('Player 1')
+          .setViceCaptain('Player 2')
+          .setKeeper('Player 3')
+          .moveToXi('Player 1');
 
       expect(draft.captain, 'Player 1');
       expect(draft.viceCaptain, 'Player 2');

@@ -119,7 +119,12 @@ void main() {
   }
 
   Future<void> addPlayer(WidgetTester tester, String name) async {
-    await tester.enterText(find.byKey(const Key('squad_nameField')), name);
+    final field = find.byKey(const Key('squad_nameField'));
+    if (field.evaluate().isEmpty) {
+      await tester.tap(find.byKey(const Key('squad_addPlayerRow')));
+      await tester.pump();
+    }
+    await tester.enterText(field, name);
     await tester.tap(find.byKey(const Key('squad_addButton')));
     await tester.pump();
   }
@@ -176,6 +181,121 @@ void main() {
     );
   });
 
+  group(
+    'the team-tab badge reflects the min/max range, not a fixed target',
+    () {
+      // addPlayer already seeds each new name straight into the XI (the
+      // first-11 heuristic), so no extra move is needed for these small
+      // counts.
+      testWidgets('no badge while the squad is completely empty', (
+        tester,
+      ) async {
+        await pump(tester, minPlayingXi: 3, maxPlayingXi: 5);
+
+        expect(find.byKey(const Key('squad_xi_badge_teamA')), findsNothing);
+      });
+
+      testWidgets('a plain outlined count below the minimum — no denominator', (
+        tester,
+      ) async {
+        await pump(tester, minPlayingXi: 3, maxPlayingXi: 5);
+        await addPlayer(tester, 'P1');
+        await addPlayer(tester, 'P2');
+
+        expect(find.byKey(const Key('squad_xi_badge_teamA')), findsOneWidget);
+        expect(
+          find.descendant(
+            of: find.byKey(const Key('squad_xi_badge_teamA')),
+            matching: find.text('2'),
+          ),
+          findsOneWidget,
+        );
+        expect(
+          find.text(
+            TranslationKeys.squadXiBelowMinHint.trParams({
+              'count': '2',
+              'more': '1',
+              'min': '3',
+            }),
+          ),
+          findsOneWidget,
+        );
+      });
+
+      testWidgets(
+        'a done badge once within range — reaching the max is not required',
+        (
+          tester,
+        ) async {
+          await pump(tester, minPlayingXi: 3, maxPlayingXi: 5);
+          await addPlayer(tester, 'P1');
+          await addPlayer(tester, 'P2');
+          await addPlayer(tester, 'P3');
+
+          expect(
+            find.descendant(
+              of: find.byKey(const Key('squad_xi_badge_teamA')),
+              matching: find.text('3'),
+            ),
+            findsOneWidget,
+          );
+          expect(
+            find.descendant(
+              of: find.byKey(const Key('squad_xi_badge_teamA')),
+              matching: find.byIcon(Icons.check),
+            ),
+            findsOneWidget,
+          );
+          expect(
+            find.text(
+              TranslationKeys.squadXiReadyHint.trParams({'count': '3'}),
+            ),
+            findsOneWidget,
+          );
+        },
+      );
+
+      testWidgets('a warning badge over the maximum', (tester) async {
+        // Six rows plus the leader strip and add row don't all fit the
+        // default test viewport, and a tap on an off-screen "Add player"
+        // silently misses — give it room.
+        tester.view.physicalSize = const Size(1000, 3000);
+        tester.view.devicePixelRatio = 1;
+        addTearDown(tester.view.reset);
+
+        await pump(tester, minPlayingXi: 3, maxPlayingXi: 5);
+        for (final name in ['P1', 'P2', 'P3', 'P4', 'P5', 'P6']) {
+          await addPlayer(tester, name);
+        }
+
+        expect(
+          find.descendant(
+            of: find.byKey(const Key('squad_xi_badge_teamA')),
+            matching: find.text('6'),
+          ),
+          findsOneWidget,
+        );
+        expect(
+          find.descendant(
+            of: find.byKey(const Key('squad_xi_badge_teamA')),
+            matching: find.byIcon(Icons.priority_high),
+          ),
+          findsOneWidget,
+        );
+        expect(
+          find.text(
+            TranslationKeys.squadXiAboveMaxHint.trParams({
+              'count': '6',
+              'over': '1',
+              'max': '5',
+            }),
+          ),
+          findsOneWidget,
+        );
+      });
+    },
+  );
+
   testWidgets('the Team A / Team B toggle swaps the visible squad', (
     tester,
   ) async {
@@ -199,12 +319,16 @@ void main() {
     await pump(tester);
     await addPlayer(tester, 'Rohit');
 
-    await tester.tap(find.byKey(const Key('squad_c_Rohit')));
-    await tester.pump();
+    await tester.tap(find.byKey(const Key('squad_leader_captain')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('leader_picker_row_Rohit')));
+    await tester.pumpAndSettle();
     expect(controller.current.captain, 'Rohit');
 
-    await tester.tap(find.byKey(const Key('squad_vc_Rohit')));
-    await tester.pump();
+    await tester.tap(find.byKey(const Key('squad_leader_vc')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('leader_picker_row_Rohit')));
+    await tester.pumpAndSettle();
     expect(controller.current.captain, isNull);
     expect(controller.current.viceCaptain, 'Rohit');
   });
@@ -213,21 +337,31 @@ void main() {
     await pump(tester);
     await addPlayer(tester, 'Pant');
 
-    await tester.tap(find.byKey(const Key('squad_wk_Pant')));
-    await tester.pump();
+    await tester.tap(find.byKey(const Key('squad_leader_wk')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('leader_picker_row_Pant')));
+    await tester.pumpAndSettle();
 
     expect(controller.current.keeper, 'Pant');
   });
 
-  testWidgets('Skip opens scoring without a request', (tester) async {
+  testWidgets('picking the same captain again clears it via the clear row', (
+    tester,
+  ) async {
     await pump(tester);
     await addPlayer(tester, 'Rohit');
 
-    await tester.tap(find.byKey(const Key('squad_skip')));
-    await tester.pump();
+    await tester.tap(find.byKey(const Key('squad_leader_captain')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('leader_picker_row_Rohit')));
+    await tester.pumpAndSettle();
+    expect(controller.current.captain, 'Rohit');
 
-    expect(openedCount, 1);
-    expect(save.calls, isEmpty);
+    await tester.tap(find.byKey(const Key('squad_leader_captain')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('leader_picker_clear')));
+    await tester.pumpAndSettle();
+    expect(controller.current.captain, isNull);
   });
 
   testWidgets('Save & continue saves and opens scoring', (tester) async {
@@ -254,21 +388,22 @@ void main() {
     expect(errors, ['nope']);
     expect(openedCount, 0);
     expect(find.byKey(const Key('squad_row_Rohit')), findsOneWidget);
-    expect(find.text(TranslationKeys.skip.tr), findsOneWidget);
+    expect(find.byKey(const Key('squad_save')), findsOneWidget);
   });
 
   testWidgets(
-    'the C badge is reachable through semantics and names its player',
+    'the captain picker is reachable through semantics and names its player',
     (tester) async {
       final handle = tester.ensureSemantics();
       await pump(tester);
       await addPlayer(tester, 'Rohit');
 
-      final label = '${TranslationKeys.captain.tr}, Rohit';
-      expect(find.bySemanticsLabel(label), findsOneWidget);
+      await tester.tap(find.byKey(const Key('squad_leader_captain')));
+      await tester.pumpAndSettle();
 
-      tester.semantics.tap(find.semantics.byLabel(label));
-      await tester.pump();
+      expect(find.bySemanticsLabel('Rohit'), findsOneWidget);
+      tester.semantics.tap(find.semantics.byLabel('Rohit'));
+      await tester.pumpAndSettle();
 
       expect(controller.current.captain, 'Rohit');
       handle.dispose();
@@ -308,38 +443,24 @@ void main() {
       addTearDown(tester.view.reset);
     }
 
-    String headerText(WidgetTester tester, String key) => tester
-        .widgetList<Text>(
-          find.descendant(
-            of: find.byKey(Key(key)),
-            matching: find.byType(Text),
-          ),
-        )
-        .single
-        .data!;
+    testWidgets(
+      'players sit under Playing XI and Bench, each tappable in whichever '
+      'direction moves them',
+      (tester) async {
+        tall(tester);
+        await pump(tester, squad: squad());
+        await tester.pump();
 
-    testWidgets('players sit under Playing XI and Bench with their counts', (
-      tester,
-    ) async {
-      tall(tester);
-      await pump(tester, squad: squad());
-      await tester.pump();
+        expect(controller.teamA.value.xiRows.length, 2);
+        expect(controller.teamA.value.benchRows.length, 1);
+        expect(find.byKey(const Key('squad_toBench_Rohit')), findsOneWidget);
+        expect(find.byKey(const Key('squad_toBench_Pant')), findsOneWidget);
+        expect(find.byKey(const Key('squad_toXi_Bumrah')), findsOneWidget);
+        expect(find.byKey(const Key('squad_toXi_Rohit')), findsNothing);
+      },
+    );
 
-      expect(
-        headerText(tester, 'squad_section_xi'),
-        '${TranslationKeys.squadPlayingXi} (2)',
-      );
-      expect(
-        headerText(tester, 'squad_section_bench'),
-        '${TranslationKeys.squadBench} (1)',
-      );
-      expect(find.byKey(const Key('squad_toBench_Rohit')), findsOneWidget);
-      expect(find.byKey(const Key('squad_toBench_Pant')), findsOneWidget);
-      expect(find.byKey(const Key('squad_toXi_Bumrah')), findsOneWidget);
-      expect(find.byKey(const Key('squad_toXi_Rohit')), findsNothing);
-    });
-
-    testWidgets('moving a player between the sections updates both counts', (
+    testWidgets('moving a player between XI and Bench flips its key', (
       tester,
     ) async {
       tall(tester);
@@ -348,22 +469,13 @@ void main() {
 
       await tester.tap(find.byKey(const Key('squad_toXi_Bumrah')));
       await tester.pump();
-      expect(
-        headerText(tester, 'squad_section_xi'),
-        '${TranslationKeys.squadPlayingXi} (3)',
-      );
+      expect(controller.teamA.value.xiRows.length, 3);
       expect(find.byKey(const Key('squad_toBench_Bumrah')), findsOneWidget);
 
       await tester.tap(find.byKey(const Key('squad_toBench_Rohit')));
       await tester.pump();
-      expect(
-        headerText(tester, 'squad_section_xi'),
-        '${TranslationKeys.squadPlayingXi} (2)',
-      );
-      expect(
-        headerText(tester, 'squad_section_bench'),
-        '${TranslationKeys.squadBench} (1)',
-      );
+      expect(controller.teamA.value.xiRows.length, 2);
+      expect(controller.teamA.value.benchRows.length, 1);
       expect(find.byKey(const Key('squad_toXi_Rohit')), findsOneWidget);
     });
 

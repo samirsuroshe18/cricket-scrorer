@@ -18,7 +18,9 @@ import 'package:cricket_scorer/features/scoring/domain/usecases/invite_team_play
 import 'package:cricket_scorer/features/scoring/domain/usecases/lookup_user_by_email.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/save_playing_xi.dart';
 import 'package:cricket_scorer/features/scoring/domain/usecases/save_squad.dart';
+import 'package:cricket_scorer/core/translations/translation_keys.dart';
 import 'package:cricket_scorer/features/scoring/presentation/utils/open_match.dart';
+import 'package:cricket_scorer/features/scoring/presentation/utils/xi_range.dart';
 import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
 
@@ -35,9 +37,11 @@ class SquadArgs {
 /// Drives `SquadScreen`: one [SquadDraft] per side — Playing XI, Bench and the
 /// designations — plus the team's invitations, saved one side at a time.
 ///
-/// Optional throughout — [skip] leaves without touching the server, and a
-/// failed save never blocks the scorer: the draft stays on screen and they can
-/// retry or skip.
+/// A failed save never blocks the scorer: the draft stays on screen and they
+/// can retry. [skip] leaves without touching the server, but has no button on
+/// `SquadScreen` any more — it is kept for its acknowledge-on-skip behaviour
+/// and existing test coverage, unreachable from the UI. `saveAndContinue` and
+/// a back-navigation (`blockedFromLeaving`) are the two real exit paths now.
 ///
 /// Two save modes, chosen by the server (`inningsStarted`): before the innings
 /// a side is saved with `PUT` (names, roles, designations, XI); after it, only
@@ -432,6 +436,11 @@ class SquadController extends GetxController with WidgetsBindingObserver {
 
   Future<void> saveAndContinue() async {
     if (isSaving.value) return;
+    final error = _xiRangeError(forSave: true);
+    if (error != null) {
+      showError(error);
+      return;
+    }
     isSaving.value = true;
     try {
       for (final forSide in const [sideA, sideB]) {
@@ -443,7 +452,75 @@ class SquadController extends GetxController with WidgetsBindingObserver {
     _leave();
   }
 
-  Future<void> skip() async => _leave();
+  Future<void> skip() async {
+    final error = _xiRangeError(forSave: false);
+    if (error != null) {
+      showError(error);
+      return;
+    }
+    _leave();
+  }
+
+  /// The same check as [skip], exposed for `SquadScreen`'s back-navigation
+  /// handler so the AppBar back arrow and the OS swipe-back gesture are
+  /// validated the same way as every other way of leaving the screen.
+  String? blockedFromLeaving() => _xiRangeError(forSave: false);
+
+  /// Blocks Skip, Save & continue and back-navigation when a side's Playing
+  /// XI is partially filled — some players chosen, but outside the match's
+  /// configured min/max. A fully empty XI (0) is allowed on Skip and
+  /// back-navigation: that is the deliberate "leave it unset" choice, since
+  /// neither one sends a request. [forSave] is true only for Save & continue,
+  /// where a dirty side with an empty XI *does* go over the wire as an
+  /// explicit `playingXI: []` — the server rejects that against `minPlayingXi`
+  /// regardless of whether the count is 0, so that combination is blocked here
+  /// too rather than surfacing as a raw server error. Exempt entirely
+  /// mid-match, where a legitimately reduced XI (e.g. an injury) must not be
+  /// blocked — the range is a pre-match setup gate. Skips the check entirely
+  /// for a match with no configured range, matching `_PlayingXiSizeHint`'s own
+  /// fallback — the server stays the backstop.
+  String? _xiRangeError({required bool forSave}) {
+    if (midMatch.value) return null;
+    for (final (forSide, name) in [
+      (sideA, match.teamA.name),
+      (sideB, match.teamB.name),
+    ]) {
+      final range = XiRange.of(
+        _draft(forSide).value.xiRows.length,
+        match.minPlayingXi,
+        match.maxPlayingXi,
+      );
+      final sendsEmptyOnSave =
+          forSave &&
+          range.status == XiRangeStatus.empty &&
+          _dirty.contains(forSide);
+      if (!range.blocksLeaving && !sendsEmptyOnSave) continue;
+
+      final belowMin = switch (range.status) {
+        XiRangeStatus.belowMin => true,
+        XiRangeStatus.empty => sendsEmptyOnSave,
+        XiRangeStatus.aboveMax => false,
+        XiRangeStatus.hidden || XiRangeStatus.ready => throw StateError(
+          'unreachable: $range does not block leaving',
+        ),
+      };
+
+      return belowMin
+          ? TranslationKeys.squadXiBelowMinError.trParams({
+              'team': name,
+              'min': '${range.min}',
+              'count': '${range.count}',
+              'more': '${range.short}',
+            })
+          : TranslationKeys.squadXiAboveMaxError.trParams({
+              'team': name,
+              'max': '${range.max}',
+              'count': '${range.count}',
+              'over': '${range.over}',
+            });
+    }
+    return null;
+  }
 
   void _leave() {
     if (returnToScoring) {

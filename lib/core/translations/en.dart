@@ -185,7 +185,8 @@ Map<String, String> en = {
   TranslationKeys.playingXiMinLabel: 'Min players',
   TranslationKeys.playingXiMaxLabel: 'Max players',
   TranslationKeys.invalidPlayingXiMin: 'Minimum must be a number, at least 2',
-  TranslationKeys.invalidPlayingXiMax: 'Maximum must be a number, not less than the minimum',
+  TranslationKeys.invalidPlayingXiMax:
+      'Maximum must be a number, not less than the minimum',
   TranslationKeys.matchSectionTeams: 'Teams',
   TranslationKeys.matchSectionFormat: 'Match format',
   TranslationKeys.searchOrAddTeam: 'Search or add a team',
@@ -654,8 +655,9 @@ Map<String, String> en = {
   TranslationKeys.captainShort: 'C',
   TranslationKeys.viceCaptainShort: 'VC',
   TranslationKeys.wicketkeeperShort: 'WK',
+  TranslationKeys.squadEmptyTitle: 'Build your squad',
   TranslationKeys.squadEmptyHint:
-      'No players yet — add them below, or skip and type names as you score',
+      'Add your players, then choose your Playing XI',
   TranslationKeys.removePlayer: 'Remove player',
   TranslationKeys.removeFromTeam: 'Remove from team',
   TranslationKeys.removeFromTeamConfirmTitle: 'Remove this player?',
@@ -682,10 +684,28 @@ Map<String, String> en = {
   TranslationKeys.cancelInvite: 'Cancel invite',
   TranslationKeys.inviteAgain: 'Invite again',
   TranslationKeys.squadPlayingXi: 'Playing XI',
-  TranslationKeys.squadPlayingXiSizeHint: 'Select {{min}}–{{max}} players for this match',
+  TranslationKeys.squadPlayingXiSizeHint:
+      'Select @min–@max players for this match',
+  TranslationKeys.squadXiBelowMinHint:
+      '@count selected — add @more more to reach the @min-player minimum',
+  TranslationKeys.squadXiReadyHint: '@count selected — Playing XI ready',
+  TranslationKeys.squadXiAboveMaxHint:
+      '@count selected — @over over the @max-player limit, move some to the Bench',
+  TranslationKeys.squadXiBelowMinError:
+      '@team needs at least @min in the Playing XI — currently @count. Add @more more, or clear it back to 0.',
+  TranslationKeys.squadXiAboveMaxError:
+      "@team's Playing XI is over the @max-player limit by @over. Move some to the Bench.",
   TranslationKeys.squadBench: 'Bench',
   TranslationKeys.moveToBench: 'Move to Bench',
   TranslationKeys.moveToXi: 'Move to XI',
   TranslationKeys.inviteByEmail: 'Invite by email',
   TranslationKeys.squadEditTooltip: 'Squad',
+  TranslationKeys.makeKeeper: 'Make keeper',
+  TranslationKeys.removeKeeper: 'Remove as keeper',
+  TranslationKeys.chooseCaptain: 'Choose captain',
+  TranslationKeys.chooseViceCaptain: 'Choose vice-captain',
+  TranslationKeys.chooseKeeper: 'Choose keeper',
+  TranslationKeys.squadChoosePlaceholder: 'Choose',
+  TranslationKeys.squadPlayerOptions: 'Player options',
+  TranslationKeys.squadSetRole: 'Set role',
 };
