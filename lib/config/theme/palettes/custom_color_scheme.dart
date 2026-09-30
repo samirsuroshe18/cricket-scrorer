@@ -12,7 +12,11 @@ class CustomColorScheme {
     primary: AppColor.primaryRed,
     onPrimary: Colors.white,
 
-    secondary: Color(0xff1F78E6),
+    // Darkened from the original 0xff1F78E6 (~4.3:1 against white, failing
+    // WCAG AA normal text) to ~5.6:1 — this is the default TextButton
+    // foreground app-wide (Skip, Move to Bench/XI, etc.), so it must clear
+    // 4.5:1 as plain text, not just as a UI accent.
+    secondary: Color(0xff1966C2),
     onSecondary: Colors.white,
 
     // Background & Surface

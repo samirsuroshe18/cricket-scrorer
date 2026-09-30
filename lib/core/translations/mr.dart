@@ -186,7 +186,8 @@ Map<String, String> mr = {
   TranslationKeys.playingXiMinLabel: 'किमान खेळाडू',
   TranslationKeys.playingXiMaxLabel: 'कमाल खेळाडू',
   TranslationKeys.invalidPlayingXiMin: 'किमान एक संख्या असावी, किमान 2',
-  TranslationKeys.invalidPlayingXiMax: 'कमाल एक संख्या असावी, किमानपेक्षा कमी नसावी',
+  TranslationKeys.invalidPlayingXiMax:
+      'कमाल एक संख्या असावी, किमानपेक्षा कमी नसावी',
   TranslationKeys.matchSectionTeams: 'संघ',
   TranslationKeys.matchSectionFormat: 'सामना फॉरमॅट',
   TranslationKeys.searchOrAddTeam: 'संघ शोधा किंवा जोडा',
@@ -652,8 +653,9 @@ Map<String, String> mr = {
   TranslationKeys.captainShort: 'क',
   TranslationKeys.viceCaptainShort: 'उक',
   TranslationKeys.wicketkeeperShort: 'यष्टी',
+  TranslationKeys.squadEmptyTitle: 'तुमचा स्क्वाड तयार करा',
   TranslationKeys.squadEmptyHint:
-      'अजून खेळाडू नाहीत — खाली जोडा, किंवा वगळा आणि स्कोअर करताना नावे टाका',
+      'तुमचे खेळाडू जोडा, मग तुमची प्लेइंग इलेव्हन निवडा',
   TranslationKeys.removePlayer: 'खेळाडू काढा',
   TranslationKeys.removeFromTeam: 'संघातून काढा',
   TranslationKeys.removeFromTeamConfirmTitle: 'या खेळाडूला काढायचे?',
@@ -680,10 +682,28 @@ Map<String, String> mr = {
   TranslationKeys.cancelInvite: 'आमंत्रण रद्द करा',
   TranslationKeys.inviteAgain: 'पुन्हा आमंत्रित करा',
   TranslationKeys.squadPlayingXi: 'प्लेइंग इलेव्हन',
-  TranslationKeys.squadPlayingXiSizeHint: 'या सामन्यासाठी {{min}}–{{max}} खेळाडू निवडा',
+  TranslationKeys.squadPlayingXiSizeHint:
+      'या सामन्यासाठी @min–@max खेळाडू निवडा',
+  TranslationKeys.squadXiBelowMinHint:
+      '@count निवडले — किमान @min खेळाडूंपर्यंत पोहोचण्यासाठी आणखी @more जोडा',
+  TranslationKeys.squadXiReadyHint: '@count निवडले — प्लेइंग इलेव्हन तयार आहे',
+  TranslationKeys.squadXiAboveMaxHint:
+      '@count निवडले — @max च्या मर्यादेपेक्षा @over जास्त, काहींना बेंचवर पाठवा',
+  TranslationKeys.squadXiBelowMinError:
+      '@team ला प्लेइंग इलेव्हनमध्ये किमान @min खेळाडू हवेत — सध्या @count आहेत. आणखी @more जोडा, किंवा ती पुन्हा 0 वर आणा.',
+  TranslationKeys.squadXiAboveMaxError:
+      '@team ची प्लेइंग इलेव्हन @max खेळाडूंच्या मर्यादेपेक्षा @over जास्त आहे. काहींना बेंचवर पाठवा.',
   TranslationKeys.squadBench: 'बेंच',
   TranslationKeys.moveToBench: 'बेंचवर पाठवा',
   TranslationKeys.moveToXi: 'इलेव्हनमध्ये आणा',
   TranslationKeys.inviteByEmail: 'ईमेलने आमंत्रित करा',
   TranslationKeys.squadEditTooltip: 'स्क्वाड',
+  TranslationKeys.makeKeeper: 'यष्टिरक्षक करा',
+  TranslationKeys.removeKeeper: 'यष्टिरक्षक पद काढा',
+  TranslationKeys.chooseCaptain: 'कर्णधार निवडा',
+  TranslationKeys.chooseViceCaptain: 'उप-कर्णधार निवडा',
+  TranslationKeys.chooseKeeper: 'यष्टिरक्षक निवडा',
+  TranslationKeys.squadChoosePlaceholder: 'निवडा',
+  TranslationKeys.squadPlayerOptions: 'खेळाडू पर्याय',
+  TranslationKeys.squadSetRole: 'भूमिका निवडा',
 };

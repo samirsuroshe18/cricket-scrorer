@@ -661,6 +661,7 @@ class TranslationKeys {
   static const String viceCaptainShort = 'vice_captain_short';
   static const String wicketkeeperShort = 'wicketkeeper_short';
   static const String squadEmptyHint = 'squad_empty_hint';
+  static const String squadEmptyTitle = 'squad_empty_title';
   static const String removePlayer = 'remove_player';
   static const String removeFromTeam = 'remove_from_team';
   static const String removeFromTeamConfirmTitle =
@@ -689,9 +690,22 @@ class TranslationKeys {
   static const String inviteAgain = 'invite_again';
   static const String squadPlayingXi = 'squad_playing_xi';
   static const String squadPlayingXiSizeHint = 'squad_playing_xi_size_hint';
+  static const String squadXiBelowMinHint = 'squad_xi_below_min_hint';
+  static const String squadXiReadyHint = 'squad_xi_ready_hint';
+  static const String squadXiAboveMaxHint = 'squad_xi_above_max_hint';
+  static const String squadXiBelowMinError = 'squad_xi_below_min_error';
+  static const String squadXiAboveMaxError = 'squad_xi_above_max_error';
   static const String squadBench = 'squad_bench';
   static const String moveToBench = 'move_to_bench';
   static const String moveToXi = 'move_to_xi';
   static const String inviteByEmail = 'invite_by_email';
   static const String squadEditTooltip = 'squad_edit_tooltip';
+  static const String makeKeeper = 'make_keeper';
+  static const String removeKeeper = 'remove_keeper';
+  static const String chooseCaptain = 'choose_captain';
+  static const String chooseViceCaptain = 'choose_vice_captain';
+  static const String chooseKeeper = 'choose_keeper';
+  static const String squadChoosePlaceholder = 'squad_choose_placeholder';
+  static const String squadPlayerOptions = 'squad_player_options';
+  static const String squadSetRole = 'squad_set_role';
 }

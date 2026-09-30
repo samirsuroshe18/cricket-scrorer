@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:cricket_scorer/core/error/cricket_failure.dart';
 import 'package:cricket_scorer/core/network/models/cricket_response.dart';
+import 'package:cricket_scorer/core/translations/translation_keys.dart';
 import 'package:cricket_scorer/core/utils/either_util.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/create_match_res.dart';
 import 'package:cricket_scorer/features/scoring/data/models/response/looked_up_user_res.dart';
@@ -115,11 +116,13 @@ class _FakeLookup implements LookupUserByEmailUseCase {
       throw UnimplementedError('Not exercised in this test.');
 }
 
-CreateMatchRes _match() => CreateMatchRes(
+CreateMatchRes _match({int? minPlayingXi, int? maxPlayingXi}) => CreateMatchRes(
   matchId: 'm1',
   teamA: TeamRef(id: 'ta', name: 'Team A'),
   teamB: TeamRef(id: 'tb', name: 'Team B'),
   totalOvers: 5,
+  minPlayingXi: minPlayingXi,
+  maxPlayingXi: maxPlayingXi,
   status: 'upcoming',
   syncStatus: 'local',
   createdAt: '2026-09-26T00:00:00.000Z',
@@ -146,6 +149,8 @@ void main() {
     Map<String, List<TeamInviteItemRes>>? invites,
     bool returnToScoring = false,
     RxInt? tick,
+    int? minPlayingXi,
+    int? maxPlayingXi,
   }) {
     profile = _FakeGetTeamProfile(rosters ?? {});
     save = _FakeSaveSquad();
@@ -159,7 +164,7 @@ void main() {
     opened = [];
     closed = 0;
     return SquadController(
-      match: _match(),
+      match: _match(minPlayingXi: minPlayingXi, maxPlayingXi: maxPlayingXi),
       returnToScoring: returnToScoring,
       getTeamProfileUseCase: profile,
       saveSquadUseCase: save,
@@ -326,6 +331,131 @@ void main() {
 
     expect(save.calls, isEmpty);
     expect(opened.single.matchId, 'm1');
+  });
+
+  group('Playing XI range check on Skip and Save & continue', () {
+    // Side A's XI: only the players moved into it, in order.
+    SquadController buildWithRange({int min = 3, int max = 5}) {
+      final controller = build(minPlayingXi: min, maxPlayingXi: max);
+      for (final name in ['P1', 'P2', 'P3', 'P4', 'P5', 'P6']) {
+        controller.addPlayer(name);
+        controller.moveToBench(name);
+      }
+      return controller;
+    }
+
+    test(
+      'a fully empty XI is allowed through both Skip and Save & continue',
+      () async {
+        final controller = buildWithRange();
+
+        await controller.skip();
+        expect(opened.single.matchId, 'm1');
+        expect(errors, isEmpty);
+      },
+    );
+
+    test('Skip is blocked when the XI is short of the minimum', () async {
+      final controller = buildWithRange(min: 3, max: 5);
+      controller.moveToXi('P1');
+      controller.moveToXi('P2');
+
+      await controller.skip();
+
+      expect(opened, isEmpty);
+      expect(errors, [
+        TranslationKeys.squadXiBelowMinError.trParams({
+          'team': 'Team A',
+          'min': '3',
+          'count': '2',
+          'more': '1',
+        }),
+      ]);
+    });
+
+    test('Skip is blocked when the XI is over the maximum', () async {
+      final controller = buildWithRange(min: 3, max: 5);
+      for (final name in ['P1', 'P2', 'P3', 'P4', 'P5', 'P6']) {
+        controller.moveToXi(name);
+      }
+
+      await controller.skip();
+
+      expect(opened, isEmpty);
+      expect(errors, [
+        TranslationKeys.squadXiAboveMaxError.trParams({
+          'team': 'Team A',
+          'max': '5',
+          'count': '6',
+          'over': '1',
+        }),
+      ]);
+    });
+
+    test('Skip proceeds once the XI is within range', () async {
+      final controller = buildWithRange(min: 3, max: 5);
+      controller.moveToXi('P1');
+      controller.moveToXi('P2');
+      controller.moveToXi('P3');
+
+      await controller.skip();
+
+      expect(opened.single.matchId, 'm1');
+      expect(errors, isEmpty);
+    });
+
+    test('Save & continue is blocked the same way, without saving', () async {
+      final controller = buildWithRange(min: 3, max: 5);
+      controller.moveToXi('P1');
+
+      await controller.saveAndContinue();
+
+      expect(opened, isEmpty);
+      expect(save.calls, isEmpty);
+      expect(errors, [
+        TranslationKeys.squadXiBelowMinError.trParams({
+          'team': 'Team A',
+          'min': '3',
+          'count': '1',
+          'more': '2',
+        }),
+      ]);
+    });
+
+    test(
+      'the check is skipped entirely when the match carries no range',
+      () async {
+        final controller = build();
+        controller.addPlayer('P1');
+        controller.moveToXi('P1');
+
+        await controller.skip();
+
+        expect(opened.single.matchId, 'm1');
+        expect(errors, isEmpty);
+      },
+    );
+
+    test('the other side is checked too, even while viewing side A', () async {
+      final controller = buildWithRange(min: 3, max: 5);
+      // Side A stays empty (allowed); give side B a short XI instead.
+      await controller.selectSide(SquadController.sideB);
+      controller.addPlayer('Q1');
+      controller.moveToXi('Q1');
+      await controller.selectSide(SquadController.sideA);
+
+      await controller.skip();
+
+      expect(opened, isEmpty);
+      expect(errors, [
+        TranslationKeys.squadXiBelowMinError.trParams({
+          'team': 'Team B',
+          'min': '3',
+          'count': '1',
+          'more': '2',
+        }),
+      ]);
+    });
   });
 
   test(
@@ -770,44 +900,54 @@ void main() {
       controller.onClose();
     });
 
-    test('mid-match, opening the screen and saving does not lock the pickers to a guessed XI', () async {
-      final players = [for (var i = 1; i <= 12; i++) sp('p$i', 'Player $i')];
-      final controller = build(
-        squad: squadOf(
-          side('ta', players: players, savedAt: '2026-09-28T10:00:00.000Z'),
-          inningsStarted: true,
-        ),
-        returnToScoring: true,
-      );
-      await controller.loadRosters();
+    test(
+      'mid-match, opening the screen and saving does not lock the pickers to a guessed XI',
+      () async {
+        final players = [for (var i = 1; i <= 12; i++) sp('p$i', 'Player $i')];
+        final controller = build(
+          squad: squadOf(
+            side('ta', players: players, savedAt: '2026-09-28T10:00:00.000Z'),
+            inningsStarted: true,
+          ),
+          returnToScoring: true,
+        );
+        await controller.loadRosters();
 
-      await controller.saveAndContinue();
+        await controller.saveAndContinue();
 
-      expect(savePlayingXi.calls, isEmpty);
-      expect(save.calls, isEmpty);
-      expect(closed, 1);
-    });
+        expect(savePlayingXi.calls, isEmpty);
+        expect(save.calls, isEmpty);
+        expect(closed, 1);
+      },
+    );
 
-    test('mid-match, a side seeded from the roster is not saved until the scorer changes it', () async {
-      final controller = build(
-        squad: squadOf(side('ta'), inningsStarted: true),
-        rosters: {
-          'ta': [
-            TeamRosterPlayer(playerId: 'p1', playerName: 'Rohit', role: 'batsman'),
-          ],
-        },
-        returnToScoring: true,
-      );
-      await controller.loadRosters();
-      expect(controller.teamA.value.rows.single.name, 'Rohit');
+    test(
+      'mid-match, a side seeded from the roster is not saved until the scorer changes it',
+      () async {
+        final controller = build(
+          squad: squadOf(side('ta'), inningsStarted: true),
+          rosters: {
+            'ta': [
+              TeamRosterPlayer(
+                playerId: 'p1',
+                playerName: 'Rohit',
+                role: 'batsman',
+              ),
+            ],
+          },
+          returnToScoring: true,
+        );
+        await controller.loadRosters();
+        expect(controller.teamA.value.rows.single.name, 'Rohit');
 
-      await controller.saveAndContinue();
-      expect(savePlayingXi.calls, isEmpty);
+        await controller.saveAndContinue();
+        expect(savePlayingXi.calls, isEmpty);
 
-      controller.moveToBench('Rohit');
-      await controller.saveAndContinue();
-      expect(savePlayingXi.calls.single.req.playingXI, isEmpty);
-    });
+        controller.moveToBench('Rohit');
+        await controller.saveAndContinue();
+        expect(savePlayingXi.calls.single.req.playingXI, isEmpty);
+      },
+    );
   });
 
   group('acknowledging the Squad screen', () {
@@ -834,21 +974,25 @@ void main() {
       expect(opened.single.matchId, 'm1');
     });
 
-    test('a failed save does not acknowledge, so the screen returns next time', () async {
-      final controller = build();
-      controller.addPlayer('Rohit');
-      save.fail = true;
+    test(
+      'a failed save does not acknowledge, so the screen returns next time',
+      () async {
+        final controller = build();
+        controller.addPlayer('Rohit');
+        save.fail = true;
 
-      await controller.saveAndContinue();
+        await controller.saveAndContinue();
 
-      expect(acknowledge.calls, isEmpty);
-      expect(SquadAcknowledgements.contains('m1'), isFalse);
-      expect(opened, isEmpty);
-    });
+        expect(acknowledge.calls, isEmpty);
+        expect(SquadAcknowledgements.contains('m1'), isFalse);
+        expect(opened, isEmpty);
+      },
+    );
 
     test('Skip is never held up by the acknowledge request', () async {
       final controller = build();
-      acknowledge.gate = Completer<void>(); // an offline call that never answers
+      acknowledge.gate =
+          Completer<void>(); // an offline call that never answers
 
       await controller.skip();
 

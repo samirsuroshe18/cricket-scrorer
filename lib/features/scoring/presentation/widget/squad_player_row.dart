@@ -6,13 +6,16 @@ import 'package:cricket_scorer/features/scoring/domain/squad_rules.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-/// One player of the squad being edited: name, role chips, the C / VC / WK
-/// toggles, and a button that moves them between the Playing XI and the Bench.
-/// Stateless — every change goes back out through a callback so
-/// `SquadController` stays the single owner of the draft.
+/// One player of the squad being edited. Tapping the row toggles it between
+/// the Playing XI and the Bench; a trailing menu holds the role and Remove.
+/// Captain / vice-captain / keeper are shown as tags next to the name but set
+/// from the leader-picker sheet above the list, not from this row. Stateless
+/// — every change goes back out through a callback so `SquadController`
+/// stays the single owner of the draft.
 ///
 /// [compact] is for a match already under way, where only the XI move can be
-/// saved: the role chips, designations and remove button are left out.
+/// saved: the row keeps its original layout with an explicit move button and
+/// no menu, role or tags.
 class SquadPlayerRow extends StatelessWidget {
   const SquadPlayerRow({
     super.key,
@@ -21,9 +24,6 @@ class SquadPlayerRow extends StatelessWidget {
     required this.isViceCaptain,
     required this.isKeeper,
     required this.onRole,
-    required this.onCaptain,
-    required this.onViceCaptain,
-    required this.onKeeper,
     required this.onRemove,
     required this.inXi,
     required this.onMove,
@@ -35,13 +35,10 @@ class SquadPlayerRow extends StatelessWidget {
   final bool isViceCaptain;
   final bool isKeeper;
   final ValueChanged<String> onRole;
-  final VoidCallback onCaptain;
-  final VoidCallback onViceCaptain;
-  final VoidCallback onKeeper;
   final VoidCallback onRemove;
 
   /// Whether the player is in the Playing XI (else the Bench); decides which
-  /// way the move button sends them.
+  /// way tapping the row (or, in [compact] mode, the move button) sends them.
   final bool inXi;
   final VoidCallback onMove;
   final bool compact;
@@ -52,8 +49,197 @@ class SquadPlayerRow extends StatelessWidget {
     _ => TranslationKeys.roleBatsman.tr,
   };
 
+  List<String> get _tags => [
+    if (isCaptain) TranslationKeys.captainShort.tr,
+    if (isViceCaptain) TranslationKeys.viceCaptainShort.tr,
+    if (isKeeper) TranslationKeys.wicketkeeperShort.tr,
+  ];
+
+  String _semanticsLabel() {
+    final parts = [
+      row.name,
+      if (row.role != null) roleLabel(row.role!),
+      if (isCaptain) TranslationKeys.captain.tr,
+      if (isViceCaptain) TranslationKeys.viceCaptain.tr,
+      if (isKeeper) TranslationKeys.wicketkeeper.tr,
+    ];
+    return parts.join(', ');
+  }
+
   @override
   Widget build(BuildContext context) {
+    if (compact) return _compactRow(context);
+
+    final roleText = row.role == null ? null : roleLabel(row.role!);
+
+    return Container(
+      key: Key('squad_row_${row.name}'),
+      margin: const EdgeInsets.only(bottom: 8),
+      decoration: BoxDecoration(
+        color: inXi ? context.colors.chipSelected : context.colorScheme.surface,
+        borderRadius: 12.radius,
+        border: context.isDark
+            ? null
+            : Border.all(color: context.colorScheme.outline),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: 12.radius,
+        child: InkWell(
+          key: Key(
+            inXi ? 'squad_toBench_${row.name}' : 'squad_toXi_${row.name}',
+          ),
+          borderRadius: 12.radius,
+          onTap: onMove,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(12, 8, 4, 8),
+            child: Row(
+              children: [
+                // Semantics scoped to the move affordance only, so the
+                // trailing menu below keeps its own accessible entry point
+                // instead of being swallowed by excludeSemantics.
+                Expanded(
+                  child: Semantics(
+                    label: _semanticsLabel(),
+                    selected: inXi,
+                    button: true,
+                    excludeSemantics: true,
+                    child: Row(
+                      children: [
+                        _avatar(context),
+                        12.w,
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Wrap(
+                                crossAxisAlignment: WrapCrossAlignment.center,
+                                spacing: 6,
+                                children: [
+                                  CricketText(
+                                    text: row.name,
+                                    style: context.textTheme.titleSmall,
+                                  ),
+                                  for (final tag in _tags)
+                                    _tagChip(context, tag),
+                                ],
+                              ),
+                              if (roleText != null)
+                                CricketText(
+                                  text: roleText,
+                                  style: context.textTheme.bodySmall?.copyWith(
+                                    color: context.colorScheme.onSurfaceVariant,
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                _menu(context),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _avatar(BuildContext context) {
+    final initials = row.name.isEmpty ? '?' : row.name[0].toUpperCase();
+    return SizedBox(
+      width: 40,
+      height: 40,
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          CircleAvatar(
+            backgroundColor: inXi
+                ? context.colors.chipSelected
+                : context.colors.chipBackground,
+            foregroundColor: inXi
+                ? context.colorScheme.onSurface
+                : context.colorScheme.onSurfaceVariant,
+            child: CricketText(
+              text: initials,
+              style: context.textTheme.titleSmall?.copyWith(
+                color: inXi
+                    ? context.colorScheme.onSurface
+                    : context.colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ),
+          if (inXi)
+            Positioned(
+              right: -2,
+              bottom: -2,
+              child: Container(
+                padding: const EdgeInsets.all(1),
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: context.colorScheme.surface,
+                ),
+                child: Icon(
+                  Icons.check_circle,
+                  size: 16,
+                  color: context.colors.statusSuccess,
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _tagChip(BuildContext context, String label) => Container(
+    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+    decoration: BoxDecoration(
+      color: context.colorScheme.primary,
+      borderRadius: 9.radius,
+    ),
+    child: CricketText(
+      text: label,
+      style: context.textTheme.labelSmall?.copyWith(
+        color: context.colorScheme.onPrimary,
+      ),
+    ),
+  );
+
+  Widget _menu(BuildContext context) => PopupMenuButton<String>(
+    key: Key('squad_menu_${row.name}'),
+    tooltip: TranslationKeys.squadPlayerOptions.tr,
+    icon: const Icon(Icons.more_vert),
+    onSelected: (value) => value == 'remove' ? onRemove() : onRole(value),
+    itemBuilder: (context) => [
+      PopupMenuItem<String>(
+        enabled: false,
+        height: 32,
+        child: CricketText(
+          text: TranslationKeys.squadSetRole.tr,
+          style: context.textTheme.labelSmall?.copyWith(
+            color: context.colorScheme.onSurfaceVariant,
+          ),
+        ),
+      ),
+      for (final role in squadRoles)
+        CheckedPopupMenuItem<String>(
+          key: Key('squad_role_${row.name}_$role'),
+          value: role,
+          checked: row.role == role,
+          child: Text(roleLabel(role)),
+        ),
+      const PopupMenuDivider(),
+      PopupMenuItem<String>(
+        key: Key('squad_remove_${row.name}'),
+        value: 'remove',
+        child: Text(TranslationKeys.removePlayer.tr),
+      ),
+    ],
+  );
+
+  Widget _compactRow(BuildContext context) {
     final moveButton = TextButton.icon(
       key: Key(inXi ? 'squad_toBench_${row.name}' : 'squad_toXi_${row.name}'),
       onPressed: onMove,
@@ -74,116 +260,16 @@ class SquadPlayerRow extends StatelessWidget {
             ? null
             : Border.all(color: context.colorScheme.outline),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
         children: [
-          Row(
-            children: [
-              Expanded(
-                child: CricketText(
-                  text: row.name,
-                  style: context.textTheme.titleSmall,
-                ),
-              ),
-              if (compact) moveButton,
-              if (!compact) ...[
-                _Badge(
-                  badgeKey: Key('squad_c_${row.name}'),
-                  label: TranslationKeys.captainShort.tr,
-                  semantics: '${TranslationKeys.captain.tr}, ${row.name}',
-                  selected: isCaptain,
-                  onTap: onCaptain,
-                ),
-                _Badge(
-                  badgeKey: Key('squad_vc_${row.name}'),
-                  label: TranslationKeys.viceCaptainShort.tr,
-                  semantics: '${TranslationKeys.viceCaptain.tr}, ${row.name}',
-                  selected: isViceCaptain,
-                  onTap: onViceCaptain,
-                ),
-                _Badge(
-                  badgeKey: Key('squad_wk_${row.name}'),
-                  label: TranslationKeys.wicketkeeperShort.tr,
-                  semantics: '${TranslationKeys.wicketkeeper.tr}, ${row.name}',
-                  selected: isKeeper,
-                  onTap: onKeeper,
-                ),
-                IconButton(
-                  key: Key('squad_remove_${row.name}'),
-                  tooltip: '${TranslationKeys.removePlayer.tr}, ${row.name}',
-                  icon: const Icon(Icons.close, size: 18),
-                  onPressed: onRemove,
-                ),
-              ],
-            ],
-          ),
-          if (!compact)
-            Wrap(
-              spacing: 8,
-              crossAxisAlignment: WrapCrossAlignment.center,
-              children: [
-                for (final role in squadRoles)
-                  ChoiceChip(
-                    key: Key('squad_role_${row.name}_$role'),
-                    label: Text(roleLabel(role)),
-                    selected: row.role == role,
-                    onSelected: (_) => onRole(role),
-                  ),
-                moveButton,
-              ],
+          Expanded(
+            child: CricketText(
+              text: row.name,
+              style: context.textTheme.titleSmall,
             ),
+          ),
+          moveButton,
         ],
-      ),
-    );
-  }
-}
-
-class _Badge extends StatelessWidget {
-  const _Badge({
-    required this.badgeKey,
-    required this.label,
-    required this.semantics,
-    required this.selected,
-    required this.onTap,
-  });
-
-  final Key badgeKey;
-  final String label;
-  final String semantics;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = context.colorScheme;
-    return Semantics(
-      label: semantics,
-      button: true,
-      selected: selected,
-      onTap: onTap,
-      excludeSemantics: true,
-      child: InkWell(
-        key: badgeKey,
-        onTap: onTap,
-        borderRadius: 20.radius,
-        child: Container(
-          constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
-          alignment: Alignment.center,
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            decoration: BoxDecoration(
-              color: selected ? scheme.primary : Colors.transparent,
-              borderRadius: 20.radius,
-              border: Border.all(color: scheme.primary),
-            ),
-            child: Text(
-              label,
-              style: context.textTheme.labelMedium?.copyWith(
-                color: selected ? scheme.onPrimary : scheme.primary,
-              ),
-            ),
-          ),
-        ),
       ),
     );
   }

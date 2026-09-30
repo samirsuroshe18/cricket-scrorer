@@ -555,7 +555,7 @@ class _OversPresetTiles extends StatelessWidget {
   Widget build(BuildContext context) {
     final accent = context.colorScheme.secondary;
     // Darkened so white text on the selected tile clears 4.5:1 in both
-    // themes (10.06:1 light, 10.17:1 dark, checked with contrast.py).
+    // themes (9.88:1 light, 10.17:1 dark, checked with contrast.py).
     final selectedFill = HSLColor.fromColor(
       accent,
     ).withLightness(0.28).toColor();

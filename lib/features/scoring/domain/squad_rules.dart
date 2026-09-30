@@ -132,9 +132,18 @@ class SquadDraft {
     return _copy(xi: {...xi, _key(name)});
   }
 
+  /// Also clears any designation the player held: the leader-picker sheet
+  /// only offers the Playing XI as candidates, so a demoted captain/
+  /// vice-captain/keeper would otherwise be stuck referenced by a chip with
+  /// no way to reassign or confirm them from that list.
   SquadDraft moveToBench(String name) {
     if (!_has(name)) return this;
-    return _copy(xi: {...xi}..remove(_key(name)));
+    return _copy(
+      captain: () => _same(captain, name) ? null : captain,
+      viceCaptain: () => _same(viceCaptain, name) ? null : viceCaptain,
+      keeper: () => _same(keeper, name) ? null : keeper,
+      xi: {...xi}..remove(_key(name)),
+    );
   }
 
   /// Also clears any designation the removed player held, and their XI place.
